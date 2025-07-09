@@ -1,0 +1,41 @@
+@using MercuriusAalstLanParty.Client.Models
+@code {
+    [Parameter] public IEnumerable<Placement> Placements { get; set; }
+}
+<div>
+    <h2>Resultaten</h2>
+    @if (Placements == null || !Placements.Any())
+    {
+        <p>Geen resultaten gevonden.</p>
+    }
+    else
+    {
+        <ol>
+            @foreach (var placement in Placements.OrderBy(p => p.Place))
+            {
+                <li>
+                    <b>Plaats @placement.Place:</b>
+                    <ul>
+                        @foreach (var participant in placement.Participants)
+                        {
+                            <li>
+                                @switch (placement.Participants.FirstOrDefault())
+                                {
+                                    case Player:
+                                        @( ((Player)participant).Username )
+                                        break;
+                                    case Team:
+                                        @( ((Team)participant).Name )
+                                        break;
+                                    default:
+                                        @participant.Id
+                                        break;
+                                }
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ol>
+    }
+</div>

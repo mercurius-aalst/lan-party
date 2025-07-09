@@ -1,0 +1,11 @@
+@using MercuriusAalstLanParty.Client.Models
+@code {
+    [Parameter] public GameExtended Game { get; set; }
+}
+<div>
+    <h2>Overzicht</h2>
+    <p><b>Naam:</b> @Game.Name</p>
+    <p><b>Status:</b> @Game.Status</p>
+    <p><b>Type:</b> @Game.BracketType</p>
+    <p><b>Beschrijving:</b> @Game.Description</p>
+</div>

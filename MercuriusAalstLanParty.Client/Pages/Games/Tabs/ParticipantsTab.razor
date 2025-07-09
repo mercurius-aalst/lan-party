@@ -1,0 +1,35 @@
+@using MercuriusAalstLanParty.Client.Models
+<div>
+    <h2>Deelnemers</h2>
+    @if (Participants == null || !Participants.Any())
+    {
+        <p>Geen deelnemers gevonden.</p>
+    }
+    else
+    {
+<ul>
+    @foreach (var participant in Participants)
+    {
+        <li>
+            @switch (ParticipantType)
+            {
+                case ParticipantType.Player:
+                    @( ((Player)participant).Username )
+                    break;
+                case ParticipantType.Team:
+                    @( ((Team)participant).Name )
+                    break;
+                default:
+                    @participant.Id
+                    break;
+            }
+        </li>
+    }
+</ul>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public ParticipantType ParticipantType { get; set; } // Enum: Team or Player
+}

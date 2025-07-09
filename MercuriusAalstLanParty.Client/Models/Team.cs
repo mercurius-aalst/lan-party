@@ -1,0 +1,12 @@
+using System.Collections.Generic;
+
+namespace MercuriusAalstLanParty.Client.Models
+{
+    public class Team : Participant
+    {
+        public string Name { get; set; }
+        public int CaptainId { get; set; }
+        public IEnumerable<Player> Players { get; set; } = new List<Player>();
+        public IEnumerable<TeamInvite> TeamInvites { get; set; } = new List<TeamInvite>();
+    }
+}
