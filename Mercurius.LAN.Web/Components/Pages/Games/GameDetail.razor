@@ -1,0 +1,77 @@
+@page "/games/{GameId:int}"
+@using Mercurius.LAN.Web.Models
+@using Mercurius.LAN.Web.Services
+@using Mercurius.LAN.Web.Components.Pages.Games.Tabs
+@inject NavigationManager Navigation
+@inject IGameService GameService
+
+<PageTitle>Game Detail</PageTitle>
+@if (game == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="game-detail">
+        <div class="game-header-tabs">
+            <h1>@game.Name</h1>
+            <div class="tabs">
+                <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overzicht</button>
+                <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(selectedTab == 1)">Matches</button>
+                <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(selectedTab == 2)">Deelnemers</button>
+                <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(selectedTab == 3)">Resultaten</button>
+            </div>
+            <div class="tabs-dropdown">
+                <select @onchange="OnTabDropdownChanged" value="@selectedTab">
+                    <option value="0">Overzicht</option>
+                    <option value="1">Matches</option>
+                    <option value="2">Deelnemers</option>
+                    <option value="3">Resultaten</option>
+                </select>
+            </div>
+        </div>
+        <div class="tab-content">
+            @if (selectedTab == 0)
+            {
+                <OverviewTab Game="@game" />
+            }
+            else if (selectedTab == 1)
+            {
+                <MatchesTab Matches="@game.Matches.Where(m => !m.IsLowerBracketMatch)" Participants="@game.Participants"/>
+            }
+            else if (selectedTab == 2)
+            {
+                <ParticipantsTab Participants="@game.Participants" />
+            }
+            else if (selectedTab == 3)
+            {
+                <PlacementsTab Placements="@game.Placements" />
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int GameId { get; set; }
+    private GameExtended? game;
+    private int selectedTab = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // TODO: Replace with real data service
+        game = await GameService.GetGameByIdAsync(GameId);
+    }
+
+    private void SelectTab(int tab)
+    {
+        selectedTab = tab;
+    }
+
+    private void OnTabDropdownChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int tab))
+        {
+            selectedTab = tab;
+        }
+    }
+}

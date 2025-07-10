@@ -1,0 +1,35 @@
+@using Mercurius.LAN.Web.Models
+<div>
+    <h2>Deelnemers</h2>
+    @if (Participants == null || !Participants.Any())
+    {
+        <p>Geen deelnemers gevonden.</p>
+    }
+    else
+    {
+<ul>
+    @foreach (var participant in Participants)
+    {
+        <li>
+            @if (participant is Player player)
+            {
+                @player.Username
+            }
+            else if (participant is Team team)
+            {
+                @team.Name
+            }
+            else
+            {
+                @participant.Id
+            }
+        </li>
+    }
+</ul>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public ParticipantType ParticipantType { get; set; } // Enum: Team or Player
+}

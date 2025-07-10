@@ -1,0 +1,87 @@
+@page "/"
+@page "/games"
+@using Mercurius.LAN.Web.Models
+@using Mercurius.LAN.Web.Services
+@using Microsoft.AspNetCore.Components.Web
+@inject IGameService GameService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Home</PageTitle>
+
+<h1>Games</h1>
+
+<div class="search-bar-container">
+    <input type="text" class="form-control search-bar-input" placeholder="Zoeken op game titel..." @bind="searchTerm" />
+</div>
+
+@if (_games == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="card-deck">
+        @foreach (var game in filteredGames)
+        {
+            <div class="card mb-3" style="max-width: 540px; cursor:pointer;" @onclick="() => GoToGameDetail(game.Id)">
+                <div class="row no-gutters">
+                    <div class="col-md-4">
+                        <img src="@game.PictureUrl" class="card-img" alt="@game.Name">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <h5 class="card-title">@game.Name</h5>
+                            <p class="card-text">
+                                <span class="game-status @GetStatusClass(game.Status)">@GetStatusLabel(game.Status)</span>
+                            </p>
+                            <p class="card-text"><small>@game.BracketType</small></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Game> _games;
+    private string searchTerm = string.Empty;
+    private List<Game> filteredGames =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? _games
+            : _games?.Where(g => g.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<Game>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _games = await GameService.GetGamesAsync();
+    }
+
+    private void GoToGameDetail(int gameId)
+    {
+        NavigationManager.NavigateTo($"/games/{gameId}");
+    }
+
+    private string GetStatusClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "scheduled" => "status-scheduled",
+            "inprogress" => "status-inprogress",
+            "completed" => "status-completed",
+            "canceled" => "status-canceled",
+            _ => string.Empty
+        };
+    }
+
+    private string GetStatusLabel(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "scheduled" => "Open",
+            "inprogress" => "Bezig",
+            "completed" => "Afgerond",
+            "canceled" => "Geannuleerd",
+            _ => status
+        };
+    }
+}

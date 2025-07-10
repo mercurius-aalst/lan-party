@@ -1,0 +1,12 @@
+@using Mercurius.LAN.Web.Models
+@using Mercurius.LAN.Web.Services
+
+<div>
+    <h2>Bracket</h2>
+    <SingleEliminationBracketComponent Matches="@Matches.Where(m => !m.IsLowerBracketMatch)" Participants="Participants" />
+</div>
+
+@code {
+    [Parameter] public IEnumerable<Match> Matches { get; set; }
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+}
