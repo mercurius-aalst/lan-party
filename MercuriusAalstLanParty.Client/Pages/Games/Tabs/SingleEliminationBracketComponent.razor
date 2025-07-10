@@ -1,0 +1,157 @@
+@using MercuriusAalstLanParty.Client.Models
+@inject IJSRuntime JS
+
+<div class="bracket-root" id="bracket-root">
+    @if(Matches == null || !Matches.Any())
+    {
+        <p>Geen matches gevonden.</p>
+    }
+    else
+    {
+        var rounds = Matches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
+        int lastRound = rounds.Max(r => r.Key);
+        int semiFinalRound = lastRound - 1;
+
+        int matchHeight = 60;
+        int matchWidth = 220; // match .bracket-match width
+        int verticalGap = 32;
+        int columnWidth = 260; // matchWidth + spacing
+        int numRounds = rounds.Count;
+
+        <div class="bracket-columns" style="min-width: @(numRounds * columnWidth)px;">
+            <div class="bracket-titles" style="position: relative; height: @(matchHeight)px;">
+                @for(int roundIdx = 0; roundIdx < rounds.Count; roundIdx++)
+                {
+                    int colX = roundIdx * columnWidth + (columnWidth - matchWidth) / 2;
+                    <div class="bracket-title" style="position: absolute; left: @(colX)px; width: @(matchWidth)px; text-align: center;">
+                        <b>
+                            @if(rounds[roundIdx].Key == lastRound)
+                            {
+                                @:Final
+                            }
+                            else if(rounds[roundIdx].Key == semiFinalRound)
+                            {
+                                @:Semi-Final
+                            }
+                            else
+                            {
+                                @($"Ronde {rounds[roundIdx].Key}")
+                            }
+                        </b>
+                    </div>
+                }
+            </div>
+            <div class="bracket-absolute-container" style="width: @(numRounds * columnWidth)px;">
+                @{
+                    var roundMatches = rounds.ToDictionary(r => r.Key, r => r.OrderBy(m => m.MatchNumber).ToList());
+                    int firstRound = rounds.Min(r => r.Key);
+                    int numFirstRoundMatches = roundMatches[firstRound].Count;
+                    int reservedHeight = matchHeight + verticalGap;
+                    var matchPositions = new Dictionary<(int round, int match), (int left, int y)>();
+                    for(int i = 0; i < numFirstRoundMatches; i++)
+                    {
+                        int colX = 0 * columnWidth + (columnWidth - matchWidth) / 2;
+                        int y = i * reservedHeight;
+                        matchPositions[(firstRound, i)] = (colX, y);
+                    }
+                    for(int r = firstRound + 1; r <= lastRound; r++)
+                    {
+                        var matches = roundMatches[r];
+                        for(int i = 0; i < matches.Count; i++)
+                        {
+                            int colX = (r - firstRound) * columnWidth + (columnWidth - matchWidth) / 2;
+                            int srcIdx1 = i * 2;
+                            int srcIdx2 = i * 2 + 1;
+                            int y1 = matchPositions[(r - 1, srcIdx1)].y;
+                            int y2 = matchPositions[(r - 1, srcIdx2)].y;
+                            int y = (y1 + y2 + matchHeight) / 2 - matchHeight / 2;
+                            matchPositions[(r, i)] = (colX, y);
+                        }
+                    }
+                    int svgWidth = numRounds * columnWidth;
+                    int svgHeight = numFirstRoundMatches * reservedHeight - verticalGap;
+                }
+                <svg class="bracket-svg" width="@svgWidth" height="@svgHeight">
+                    @for(int r = firstRound + 1; r <= lastRound; r++)
+                    {
+                        var matches = roundMatches[r];
+                        for(int i = 0; i < matches.Count; i++)
+                        {
+                            int srcIdx1 = i * 2;
+                            int srcIdx2 = i * 2 + 1;
+                            int x0a = matchPositions[(r - 1, srcIdx1)].left + matchWidth;
+                            int y0a = matchPositions[(r - 1, srcIdx1)].y + matchHeight / 2;
+                            int x0b = matchPositions[(r - 1, srcIdx2)].left + matchWidth;
+                            int y0b = matchPositions[(r - 1, srcIdx2)].y + matchHeight / 2;
+                            int x1 = matchPositions[(r, i)].left;
+                            int y1 = matchPositions[(r, i)].y + matchHeight / 2;
+                            int elbowXa = (x0a + x1) / 2;
+                            int elbowXb = (x0b + x1) / 2;
+                            <polyline points="@x0a,@y0a @elbowXa,@y0a @elbowXa,@y1 @x1,@y1" fill="none" stroke="#4caf50" stroke-width="3" />
+                            <polyline points="@x0b,@y0b @elbowXb,@y0b @elbowXb,@y1 @x1,@y1" fill="none" stroke="#4caf50" stroke-width="3" />
+                        }
+                    }
+                </svg>
+                @foreach(var round in rounds)
+                {
+                    int r = round.Key;
+                    var matches = roundMatches[r];
+                    for(int i = 0; i < matches.Count; i++)
+                    {
+                        var match = matches[i];
+                        var pos = matchPositions[(r, i)];
+                        <div class="bracket-match" style="left:@(pos.left)px; top:@(pos.y)px;">
+                            <div class="participant-row">
+                                <span class="participant-name">@GetParticipantName(match, match.Participant1Id)</span>
+                                <span class="participant-score">@GetParticipantScore(match, 1)</span>
+                            </div>
+                            <div class="participant-row">
+                                <span class="participant-name">@GetParticipantName(match, match.Participant2Id)</span>
+                                <span class="participant-score">@GetParticipantScore(match, 2)</span>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public IEnumerable<Match> Matches { get; set; }
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("makeDraggable", "bracket-root");
+        }
+    }
+
+    private string GetParticipantName(Match? match, int? participantId)
+    {
+        var participantName = "TBD";
+
+        var participant = Participants?.SingleOrDefault(p => p.Id == participantId.Value);
+        participantName = match.ParticipantType switch
+        {
+            ParticipantType.Player when participant is Player player => player.Username,
+            ParticipantType.Team when participant is Team team => team.Name,
+            _ => participantId.Value.ToString()
+        };
+
+        return participantName;
+    }
+
+    private string GetParticipantScore(Match match, int participantNumber)
+    {
+        var participantScore = participantNumber switch
+        {
+            1 => match.Participant1Score,
+            2 => match.Participant2Score,
+            _ => 0
+        };
+        return $"[{participantScore}]";
+    }
+}

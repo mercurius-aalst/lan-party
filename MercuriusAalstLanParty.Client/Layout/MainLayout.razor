@@ -1,10 +1,4 @@
 ﻿@inherits LayoutComponentBase
-
-
-
-
-
-
 <button class="menu-toggle @(sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
     <span class="menu-toggle-inner">
         <span class="bar"></span>
@@ -30,17 +24,8 @@
     private bool sidebarOpen = false;
     void ToggleSidebar() => sidebarOpen = !sidebarOpen;
 
-    [Inject] private IJSRuntime JS { get; set; }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            JS.InvokeVoidAsync("showSidebarToggleOnMobile");
-        }
-    }
 }
-<script src="/showSidebarToggle.js"></script>
+<script src="/uiInteractions.js"></script>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

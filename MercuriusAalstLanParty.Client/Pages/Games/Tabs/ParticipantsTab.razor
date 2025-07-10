@@ -11,17 +11,17 @@
     @foreach (var participant in Participants)
     {
         <li>
-            @switch (ParticipantType)
+            @if (participant is Player player)
             {
-                case ParticipantType.Player:
-                    @( ((Player)participant).Username )
-                    break;
-                case ParticipantType.Team:
-                    @( ((Team)participant).Name )
-                    break;
-                default:
-                    @participant.Id
-                    break;
+                @player.Username
+            }
+            else if (participant is Team team)
+            {
+                @team.Name
+            }
+            else
+            {
+                @participant.Id
             }
         </li>
     }
