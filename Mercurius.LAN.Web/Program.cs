@@ -1,11 +1,13 @@
 using Mercurius.LAN.Web;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Components;
+using Mercurius.LAN.Web.Models;
 using Mercurius.LAN.Web.Services;
 using Polly;
 using Refit;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Mercurius.LAN.Web
 {
@@ -25,7 +27,9 @@ namespace Mercurius.LAN.Web
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                Converters = { new JsonStringEnumConverter() }
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() },
+                AllowOutOfOrderMetadataProperties = true
             };
 
             var refitSettings = new RefitSettings
@@ -45,7 +49,7 @@ namespace Mercurius.LAN.Web
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
+            if(!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error", createScopeForErrors: true);
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.

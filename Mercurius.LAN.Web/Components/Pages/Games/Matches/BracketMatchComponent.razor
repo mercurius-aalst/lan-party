@@ -1,0 +1,13 @@
+@using Mercurius.LAN.Web.Models
+
+<div class="bracket-match" style="left:@(Position.left)px; top:@(Position.y)px;">
+    <MatchParticipantRow Match="Match" ParticipantId="Match.Participant1Id" Participants="Participants" SequenceNumber="1"></MatchParticipantRow>
+    <MatchParticipantRow Match="Match" ParticipantId="Match.Participant2Id" Participants="Participants" SequenceNumber="2"></MatchParticipantRow>
+</div>
+
+@code {
+    [Parameter] public Match Match { get; set; }
+    [Parameter] public (int left, int y) Position { get; set; }
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+
+}

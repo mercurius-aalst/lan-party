@@ -1,0 +1,49 @@
+﻿<div class="participant-row @(_isWinner ? "winner" : "")">
+    <span class="participant-name">@GetParticipantName(ParticipantId)</span>
+    <span class="participant-score">@GetParticipantScore(Match, SequenceNumber)</span>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public Match Match { get; set; }
+    [Parameter] public int? ParticipantId { get; set; }
+    [Parameter] public int SequenceNumber { get; set; }
+
+    private bool _isWinner = false;
+
+    protected override void OnParametersSet()
+    {
+        _isWinner = (Match.WinnerId is not null && Match.WinnerId == ParticipantId);
+        base.OnParametersSet();
+    }
+     
+    private string GetParticipantName(int? participantId)
+    {
+        var participantName = "TBD";
+        if(participantId is null || Participants is null)
+            return participantName;
+
+        var participant = Participants.SingleOrDefault(p => p.Id == participantId.Value);
+        if(participant == null)
+            return participantName;
+
+        participantName = Match.ParticipantType switch
+        {
+            ParticipantType.Player when participant is Player player => player.Username,
+            ParticipantType.Team when participant is Team team => team.Name,
+            _ => participantId.Value.ToString()
+        };
+        return participantName;
+    }
+
+    private string GetParticipantScore(Match match, int participantNumber)
+    {
+        var participantScore = participantNumber switch
+        {
+            1 => match.Participant1Score ?? 0,
+            2 => match.Participant2Score ?? 0,
+            _ => 0
+        };
+        return $"[{participantScore}]";
+    }
+}
