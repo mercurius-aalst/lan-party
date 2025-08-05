@@ -6,7 +6,7 @@ public class Game
     public string Name { get; set; }
     public string PictureUrl { get; set; }
     public string Status { get; set; }
-    public string BracketType { get; set; }
+    public BracketType BracketType { get; set; }
     public string Format { get; set; }
     public string FinalsFormat { get; set; }
     public ParticipantType ParticipantType { get; set; }

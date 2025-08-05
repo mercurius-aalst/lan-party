@@ -1,4 +1,5 @@
 @page "/games/{GameId:int}"
+@using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models
 @using Mercurius.LAN.Web.Services
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
@@ -37,7 +38,7 @@ else
             }
             else if (selectedTab == 1)
             {
-                <MatchesTab Matches="@game.Matches.Where(m => !m.IsLowerBracketMatch)" Participants="@game.Participants"/>
+                <MatchesTab BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants"/>
             }
             else if (selectedTab == 2)
             {

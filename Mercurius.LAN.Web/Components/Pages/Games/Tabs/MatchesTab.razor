@@ -3,10 +3,24 @@
 
 <div>
     <h2>Bracket</h2>
-    <SingleEliminationBracketComponent Matches="@Matches.Where(m => !m.IsLowerBracketMatch)" Participants="Participants" />
+    @switch(BracketType){
+        case BracketType.DoubleElimination:
+            <DoubleEliminationBracketComponent Matches="@Matches" Participants="@Participants" />
+            break;
+        case BracketType.SingleElimination:
+            <SingleEliminationBracketComponent Matches="@Matches" Participants="@Participants" />
+            break;
+        default:
+            <p>ERROR</p>
+            break;
+    }
+}
+    
 </div>
 
 @code {
     [Parameter] public IEnumerable<Match> Matches { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public BracketType BracketType { get; set; }
+
 }

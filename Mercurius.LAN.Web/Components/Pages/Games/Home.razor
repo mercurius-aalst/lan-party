@@ -1,5 +1,6 @@
 @page "/"
 @page "/games"
+@using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models
 @using Mercurius.LAN.Web.Services
 @using Microsoft.AspNetCore.Components.Web
@@ -32,9 +33,9 @@ else
                         <div class="card-body">
                             <h5 class="card-title">@game.Name</h5>
                             <p class="card-text">
-                                <span class="game-status @GetStatusClass(game.Status)">@GetStatusLabel(game.Status)</span>
+                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
                             </p>
-                            <p class="card-text"><small>@game.BracketType</small></p>
+                            <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
                         </div>
                     </div>
                 </div>
@@ -59,29 +60,5 @@ else
     private void GoToGameDetail(int gameId)
     {
         NavigationManager.NavigateTo($"/games/{gameId}");
-    }
-
-    private string GetStatusClass(string status)
-    {
-        return status?.ToLower() switch
-        {
-            "scheduled" => "status-scheduled",
-            "inprogress" => "status-inprogress",
-            "completed" => "status-completed",
-            "canceled" => "status-canceled",
-            _ => string.Empty
-        };
-    }
-
-    private string GetStatusLabel(string status)
-    {
-        return status?.ToLower() switch
-        {
-            "scheduled" => "Open",
-            "inprogress" => "Bezig",
-            "completed" => "Afgerond",
-            "canceled" => "Geannuleerd",
-            _ => status
-        };
     }
 }

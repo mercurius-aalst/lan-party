@@ -18,7 +18,7 @@
         int columnWidth = 260; // matchWidth + spacing
         int numRounds = rounds.Count;
 
-        <div class="bracket-columns" style="min-width: @(numRounds * columnWidth)px;">
+        <div class="bracket-columns" style="min-width: @(numRounds* columnWidth)px;">
             <div class="bracket-titles" style="position: relative; height: @(matchHeight)px;">
                 @for(int roundIdx = 0; roundIdx < rounds.Count; roundIdx++)
                 {
@@ -41,7 +41,7 @@
                     </div>
                 }
             </div>
-            <div class="bracket-absolute-container" style="width: @(numRounds * columnWidth)px;">
+            <div class="bracket-absolute-container" style="width: @(numRounds* columnWidth)px;">
                 @{
                     var roundMatches = rounds.ToDictionary(r => r.Key, r => r.OrderBy(m => m.MatchNumber).ToList());
                     int firstRound = rounds.Min(r => r.Key);
@@ -100,16 +100,7 @@
                     {
                         var match = matches[i];
                         var pos = matchPositions[(r, i)];
-                        <div class="bracket-match" style="left:@(pos.left)px; top:@(pos.y)px;">
-                            <div class="participant-row">
-                                <span class="participant-name">@GetParticipantName(match, match.Participant1Id)</span>
-                                <span class="participant-score">@GetParticipantScore(match, 1)</span>
-                            </div>
-                            <div class="participant-row">
-                                <span class="participant-name">@GetParticipantName(match, match.Participant2Id)</span>
-                                <span class="participant-score">@GetParticipantScore(match, 2)</span>
-                            </div>
-                        </div>
+                        <BracketMatchComponent Match="match" Participants="Participants" Position="pos"></BracketMatchComponent>
                     }
                 }
             </div>
@@ -123,7 +114,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if(firstRender)
         {
             await JS.InvokeVoidAsync("makeDraggable", "bracket-root");
         }
@@ -132,6 +123,8 @@
     private string GetParticipantName(Match? match, int? participantId)
     {
         var participantName = "TBD";
+        if(participantId is null)
+            return participantName;
 
         var participant = Participants?.SingleOrDefault(p => p.Id == participantId.Value);
         participantName = match.ParticipantType switch
@@ -154,4 +147,4 @@
         };
         return $"[{participantScore}]";
     }
-}}
+}

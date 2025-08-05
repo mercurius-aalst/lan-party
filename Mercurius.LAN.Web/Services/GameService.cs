@@ -12,14 +12,15 @@ namespace Mercurius.LAN.Web.Services
             _lANClient = lANClient;
         }
 
-        public async Task<List<Game>> GetGamesAsync()
+        public Task<List<Game>> GetGamesAsync()
         {
-            return await _lANClient.GetGamesAsync();
+            return _lANClient.GetGamesAsync();
+
         }
 
-        public async Task<GameExtended?> GetGameByIdAsync(int id)
+        public Task<GameExtended?> GetGameByIdAsync(int id)
         {
-            return await _lANClient.GetGameByIdAsync(id);
+            return _lANClient.GetGameByIdAsync(id);
         }
 
         public Task<Game> RegisterForGameAsync() => throw new NotImplementedException();
