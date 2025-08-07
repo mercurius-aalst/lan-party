@@ -1,4 +1,6 @@
 @using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Components.Shared
+
 <div>
     <h2>Deelnemers</h2>
     @if (Participants == null || !Participants.Any())
@@ -7,29 +9,53 @@
     }
     else
     {
-<ul>
-    @foreach (var participant in Participants)
-    {
-        <li>
-            @if (participant is Player player)
+        <div class="participants-overview-grid">
+            @foreach (var participant in Participants)
             {
-                @player.Username
+                <div class="participant-overview-card" @onclick="() => ShowParticipantPopup(participant)">
+                    @if (participant is Player player)
+                    {
+                        <div class="participant-avatar player-avatar">@player.Username.Substring(0,1).ToUpper()</div>
+                        <div class="participant-overview-name">@player.Username</div>
+                    }
+                    else if (participant is Team team)
+                    {
+                        <div class="participant-avatar team-avatar">@team.Name.Substring(0,1).ToUpper()</div>
+                        <div class="participant-overview-name">@team.Name</div>
+                    }
+                    else
+                    {
+                        <div class="participant-overview-name">@participant.Id</div>
+                    }
+                </div>
             }
-            else if (participant is Team team)
-            {
-                @team.Name
-            }
-            else
-            {
-                @participant.Id
-            }
-        </li>
-    }
-</ul>
+        </div>
+        @if (SelectedParticipant != null)
+        {
+            <div class="participants-modal-overlay" @onclick="ClosePopup">
+                <div class="participants-modal-dialog" @onclick:stopPropagation>
+                    <button class="participants-modal-close" @onclick="ClosePopup">&times;</button>
+                    <ParticipantComponent 
+                        Participant="SelectedParticipant" />
+                </div>
+            </div>
+        }
     }
 </div>
 
 @code {
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public ParticipantType ParticipantType { get; set; } // Enum: Team or Player
+
+    private Participant SelectedParticipant { get; set; }
+
+    private void ShowParticipantPopup(Participant participant)
+    {
+        SelectedParticipant = participant;
+    }
+
+    private void ClosePopup()
+    {
+        SelectedParticipant = null;
+    }
 }
