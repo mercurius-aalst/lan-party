@@ -1,4 +1,7 @@
-﻿<div class="participant-row @(_isWinner ? "winner" : "")">
+﻿@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Models.Matches
+
+<div class="participant-row @(_isWinner ? "winner" : "")">
     <span class="participant-name">@GetParticipantName(ParticipantId)</span>
     <span class="participant-score">@GetParticipantScore(Match, SequenceNumber)</span>
 </div>

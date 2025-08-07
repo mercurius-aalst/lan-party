@@ -1,4 +1,8 @@
-namespace Mercurius.LAN.Web.Models
+using System;
+using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Participants;
+
+namespace Mercurius.LAN.Web.Models.Matches
 {
     public class Match
     {

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Mercurius.LAN.Web.Models.Matches;
+using Mercurius.LAN.Web.Models.Participants;
 
-namespace Mercurius.LAN.Web.Models
+namespace Mercurius.LAN.Web.Models.Games
 {
     public class GameExtended : Game
     {

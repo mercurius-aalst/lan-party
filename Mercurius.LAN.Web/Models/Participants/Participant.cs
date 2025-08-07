@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Mercurius.LAN.Web.Models
+namespace Mercurius.LAN.Web.Models.Participants
 {
     [JsonDerivedType(typeof(Player), nameof(ParticipantType.Player))]
     [JsonDerivedType(typeof(Team), nameof(ParticipantType.Team))]

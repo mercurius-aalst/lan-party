@@ -1,4 +1,4 @@
-namespace Mercurius.LAN.Web.Models
+namespace Mercurius.LAN.Web.Models.Games
 {
     public enum BracketType
     {

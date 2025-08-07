@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Mercurius.LAN.Web.Models
+namespace Mercurius.LAN.Web.Models.Participants
 {
     public class Team : Participant
     {

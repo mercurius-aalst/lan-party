@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.Models;
+using Mercurius.LAN.Web.Models.Games;
 
 namespace Mercurius.LAN.Web.Extensions;
 
