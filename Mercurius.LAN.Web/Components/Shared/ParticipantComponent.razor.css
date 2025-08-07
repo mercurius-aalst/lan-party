@@ -1,0 +1,68 @@
+.participant-card {
+    background: #f8f8f8;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
+    padding: 1.1em 1.5em 1.1em 1.5em;
+    min-width: 220px;
+    max-width: 320px;
+    border: 2px solid #e0e0e0;
+    position: relative;
+    transition: border 0.2s;
+}
+.participant-header-row {
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+    margin-bottom: 0.3em;
+}
+.participant-type {
+    font-size: 1.05em;
+    font-weight: 600;
+    color: #4caf50;
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+}
+.participant-name {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 0;
+}
+.captain-label {
+    font-size: 0.95em;
+    color: #388e3c;
+    font-weight: 600;
+    margin-top: 0.5em;
+}
+.captain-name {
+    font-size: 1.08em;
+    font-weight: 600;
+    margin-bottom: 0.2em;
+}
+.participant-table {
+    width: 100%;
+    font-size: 0.98em;
+    margin-bottom: 0.5em;
+    border-collapse: collapse;
+}
+.participant-table td {
+    padding: 0.1em 0.3em;
+    color: #444;
+}
+.platform-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 0.3em;
+}
+.discord-icon {
+    background: url('/img/discord.svg') no-repeat center center/contain;
+}
+.steam-icon {
+    background: url('/img/steam.svg') no-repeat center center/contain;
+}
+.riot-icon {
+    background: url('/img/riot.svg') no-repeat center center/contain;
+}

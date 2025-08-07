@@ -20,10 +20,10 @@
 }
 
 .participant-score {
-    flex: 0 0 auto;
-    text-align: right;
-    font-size: 0.95em;
+    font-size: 1.1em;
+    color: #388e3c;
     margin-left: 0.5em;
+    text-align: right;
 }
 
 .winner {

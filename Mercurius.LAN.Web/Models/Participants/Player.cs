@@ -9,5 +9,7 @@ namespace Mercurius.LAN.Web.Models.Participants
         public string? SteamId { get; set; } = string.Empty;
         public string? RiotId { get; set; } = string.Empty;
         public string Email { get; set; }
+
+        public override ParticipantType Type => ParticipantType.Player;
     }
 }

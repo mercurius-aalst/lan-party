@@ -2,12 +2,14 @@ using System.Text.Json.Serialization;
 
 namespace Mercurius.LAN.Web.Models.Participants
 {
-    [JsonDerivedType(typeof(Player), nameof(ParticipantType.Player))]
-    [JsonDerivedType(typeof(Team), nameof(ParticipantType.Team))]
-    public class Participant
+    [JsonPolymorphic(TypeDiscriminatorPropertyName = "$type")]
+    [JsonDerivedType(typeof(Team), typeDiscriminator: nameof(ParticipantType.Team))]
+    [JsonDerivedType(typeof(Player), typeDiscriminator: nameof(ParticipantType.Player))]
+    public abstract class Participant
     {
-        [JsonPropertyName("$type")]
-        public ParticipantType Type { get; set; }
+        [JsonIgnore]
+        public abstract ParticipantType Type { get;}
+  
         public int Id { get; set; }
     }
 }

@@ -19,12 +19,16 @@
         _isWinner = (Match.WinnerId is not null && Match.WinnerId == ParticipantId);
         base.OnParametersSet();
     }
-     
+
     private string GetParticipantName(int? participantId)
     {
         var participantName = "TBD";
         if(participantId is null || Participants is null)
+        {
+            if(Match.RoundNumber == 1 && !Match.IsLowerBracketMatch)
+                participantName = "BYE";
             return participantName;
+        }
 
         var participant = Participants.SingleOrDefault(p => p.Id == participantId.Value);
         if(participant == null)

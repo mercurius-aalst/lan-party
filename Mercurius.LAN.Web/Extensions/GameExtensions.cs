@@ -29,6 +29,17 @@ public static class GameExtensions
         };
     }
 
+    public static string GetLabel(this GameFormat gameFormat)
+    {
+        return gameFormat switch
+        {
+            GameFormat.BestOf1 => "Best of 1",
+            GameFormat.BestOf3 => "Best of 3",
+            GameFormat.BestOf5 => "Best of 5",
+            _ => gameFormat.ToString()
+        };
+    }
+
     public static string GetStatusClass(this string status)
     {
         return status?.ToLower() switch
