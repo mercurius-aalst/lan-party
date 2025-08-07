@@ -3,25 +3,27 @@
 @using Mercurius.LAN.Web.Extensions;
 @using Mercurius.LAN.Web.Components.Shared;
 
-<div class="modal-overlay" @onclick="OnClose">
-    <div class="modal-dialog" @onclick:stopPropagation>
-        <button class="modal-close" @onclick="OnClose">&times;</button>
-        <div class="match-header">
-            <span class="match-header-name">@GetParticipantName(Match.Participant1Id) <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span></span>
-            <span class="match-header-vs">vs</span>
-            <span class="match-header-name">@GetParticipantName(Match.Participant2Id) <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span></span>
-        </div>
-        <div class="match-format">@Match.Format.GetLabel()</div>
-        <div class="participants-grid">
-            <div class="@(GetCardClass(Match.Participant1Id, Match.Participant2Id))">
-                <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" />
+<CascadingValue Value="Match">
+    <div class="modal-overlay" @onclick="OnClose">
+        <div class="modal-dialog" @onclick:stopPropagation>
+            <button class="modal-close" @onclick="OnClose">&times;</button>
+            <div class="match-header">
+                <span class="match-header-name">@GetParticipantName(Match.Participant1Id) <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span></span>
+                <span class="match-header-vs">vs</span>
+                <span class="match-header-name">@GetParticipantName(Match.Participant2Id) <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span></span>
             </div>
-            <div class="@(GetCardClass(Match.Participant2Id, Match.Participant1Id))">
-                <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" />
+            <div class="match-format">@Match.Format.GetLabel()</div>
+            <div class="participants-grid">
+                <div class="@(GetCardClass(Match.Participant1Id, Match.Participant2Id))">
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" EmptyLabel="@GetTbdOrBye()" />
+                </div>
+                <div class="@(GetCardClass(Match.Participant2Id, Match.Participant1Id))">
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" EmptyLabel="@GetTbdOrBye()" />
+                </div>
             </div>
         </div>
     </div>
-</div>
+</CascadingValue>
 
 @code {
     [Parameter] public Match Match { get; set; }
@@ -30,7 +32,7 @@
 
     private Participant GetParticipantById(int? participantId)
     {
-        if (participantId == null || Participants == null)
+        if(participantId == null || Participants == null)
             return null;
         return Participants.FirstOrDefault(p => p.Id == participantId.Value);
     }
@@ -39,36 +41,38 @@
 
     private bool IsLoser(int? participantId, int? opponentId)
     {
-        if (Match.WinnerId == null)
+        if(Match.WinnerId == null)
             return false;
-        if (participantId is null || participantId != Match.WinnerId)
+        if(participantId is null || participantId != Match.WinnerId)
             return true;
         return false;
     }
 
     private string GetCardClass(int? participantId, int? opponentId)
     {
-        if (IsWinner(participantId))
+        if(IsWinner(participantId))
             return "participant-card winner-card";
-        if (IsLoser(participantId, opponentId))
+        if(IsLoser(participantId, opponentId))
             return "participant-card loser-card";
         return "participant-card";
     }
 
-    private string GetTbdOrBye(bool isFirst)
+    private string GetTbdOrBye()
     {
-        if (Match.RoundNumber == 1 && !Match.IsLowerBracketMatch)
+        if(Match.RoundNumber == 1 && !Match.IsLowerBracketMatch)
             return "BYE";
         return "TBD";
     }
 
     private string GetParticipantName(int? participantId)
     {
-        if (participantId == null || Participants == null)
+        if(Participants == null)
             return "TBD";
+        if(participantId is null)
+            return GetTbdOrBye();
         var participant = Participants.FirstOrDefault(p => p.Id == participantId.Value);
-        if (participant == null)
-            return "TBD";
+        if(participant == null)
+            return GetTbdOrBye();
         return participant.Type switch
         {
             ParticipantType.Player when participant is Player player => player.Username,
