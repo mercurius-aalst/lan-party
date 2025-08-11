@@ -6,15 +6,15 @@ namespace Mercurius.LAN.Web.APIClients
     public interface IAuthenticationClient
     {
         [Post("/auth/register")]
-        Task Register([Body] LoginRequest request);
+        Task RegisterAsync([Body] LoginRequest request);
 
         [Post("/auth/login")]
-        Task<AuthTokenResponse> Login([Body] LoginRequest request);
+        Task<AuthTokenResponse> LoginAsync([Body] LoginRequest request);
 
         [Post("/auth/refresh")]
-        Task<AuthTokenResponse> Refresh([Body] RefreshTokenRequest request);
+        Task<AuthTokenResponse> RefreshAsync([Body] RefreshTokenRequest request);
 
         [Post("/auth/revoke")]
-        Task Revoke([Body] RevokeTokenRequest request);
+        Task RevokeAsync([Body] RevokeTokenRequest request);
     }
 }

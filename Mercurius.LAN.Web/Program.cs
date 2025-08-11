@@ -1,13 +1,15 @@
-using Mercurius.LAN.Web;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Components;
-using Mercurius.LAN.Web.Models;
 using Mercurius.LAN.Web.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.IdentityModel.Tokens;
 using Polly;
 using Refit;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace Mercurius.LAN.Web
 {
@@ -19,7 +21,8 @@ namespace Mercurius.LAN.Web
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
-                .AddInteractiveServerComponents();
+                .AddInteractiveServerComponents()
+                .AddInteractiveWebAssemblyComponents();
             builder.Services.AddScoped<IGameService, GameService>();
 
             // Configure JsonSerializerOptions globally
@@ -45,6 +48,46 @@ namespace Mercurius.LAN.Web
                     TimeSpan.FromSeconds(5),
                     TimeSpan.FromSeconds(10)
                 }));
+            builder.Services.AddRefitClient<IAuthenticationClient>(refitSettings)
+                            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri($"https://localhost:7047/"));
+
+            // Register services
+            //Authentication
+            builder.Services.AddAuthorization();
+
+            //The cookie authentication is never used, but it is required to prevent a runtime error
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        context.Token = context.Request.Cookies["access_token"];
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+            builder.Services.AddCascadingAuthenticationState();
 
             var app = builder.Build();
 
@@ -60,9 +103,14 @@ namespace Mercurius.LAN.Web
 
             app.UseAntiforgery();
 
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode();
+                .AddInteractiveServerRenderMode()
+                .AddInteractiveWebAssemblyRenderMode();
+
 
             app.Run();
         }
