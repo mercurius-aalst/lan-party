@@ -155,3 +155,29 @@ main {
         padding-right: 0;
         padding-left: 0;
     }
+
+/* Moved from Home.razor.css */
+.game-status {
+    font-weight: bold;
+    padding: 0.2em 0.7em;
+    border-radius: 1em;
+    font-size: 1em;
+    display: inline-block;
+    margin-bottom: 0.2em;
+    letter-spacing: 1px;
+}
+.status-scheduled {
+    background: #e8f5e9;
+    color: #217226;
+    border: 1px solid #217226;
+}
+.status-inprogress {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px solid #ef6c00;
+}
+.status-completed {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #c62828;
+}

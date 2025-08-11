@@ -3,10 +3,17 @@
 @code {
     [Parameter] public GameExtended Game { get; set; }
 }
-<div>
-    <h2>Overzicht</h2>
-    <p><b>Naam:</b> @Game.Name</p>
-    <p><b>Status:</b> @Game.Status.GetStatusLabel()</p>
-    <p><b>Type:</b> @Game.BracketType.GetLabel()</p>
-    <p><b>Beschrijving:</b> @Game.Description</p>
+
+<link rel="stylesheet" href="OverviewTab.razor.css">
+
+<div class="overview-container">
+    <h2 class="overview-header">Overview</h2>
+    <div class="overview-details">
+        <p><b>Name:</b> @Game.Name</p>
+        <p class="card-text">
+           <b>Status:</b> <span class="game-status @Game.Status.GetStatusClass()">@Game.Status.GetStatusLabel()</span>
+        </p>
+        <p class="card-text"><b>Bracket type:</b> <small>@Game.BracketType.GetLabel()</small></p>
+        <p><b>Description:</b> @Game.Description</p>
+    </div>
 </div>
