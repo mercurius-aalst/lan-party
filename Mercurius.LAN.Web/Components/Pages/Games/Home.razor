@@ -14,12 +14,12 @@
 <h1>Games</h1>
 
 <div class="search-bar-container">
-    <input type="text" class="form-control search-bar-input" placeholder="Zoeken op game titel..." @bind="searchTerm" />
+    <input type="text" class="form-control search-bar-input" placeholder="Search by game title..." @bind="searchTerm" />
 </div>
 
 @if (_games == null)
 {
-    <LoadingScreen Message="Laden..." />
+    <LoadingScreen Message="Loading..." />
 }
 else
 {

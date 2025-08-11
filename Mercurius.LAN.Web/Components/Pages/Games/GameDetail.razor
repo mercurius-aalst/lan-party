@@ -10,7 +10,7 @@
 <PageTitle>Game Detail</PageTitle>
 @if (game == null)
 {
-    <LoadingScreen Message="Laden..." />
+    <LoadingScreen Message="Loading..." />
 }
 else
 {
@@ -18,17 +18,17 @@ else
         <div class="game-header-tabs">
             <h1>@game.Name</h1>
             <div class="tabs">
-                <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overzicht</button>
+                <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overview</button>
                 <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(selectedTab == 1)">Matches</button>
-                <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(selectedTab == 2)">Deelnemers</button>
-                <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(selectedTab == 3)">Resultaten</button>
+                <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(selectedTab == 2)">Participants</button>
+                <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(selectedTab == 3)">Results</button>
             </div>
             <div class="tabs-dropdown">
                 <select @onchange="OnTabDropdownChanged" value="@selectedTab">
-                    <option value="0">Overzicht</option>
+                    <option value="0">Overview</option>
                     <option value="1">Matches</option>
-                    <option value="2">Deelnemers</option>
-                    <option value="3">Resultaten</option>
+                    <option value="2">Participants</option>
+                    <option value="3">Results</option>
                 </select>
             </div>
         </div>

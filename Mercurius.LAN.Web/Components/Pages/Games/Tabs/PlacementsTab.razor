@@ -1,25 +1,21 @@
 @using Mercurius.LAN.Web.Models
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Models.Matches
-@code {
-    [Parameter] public IEnumerable<Placement> Placements { get; set; }
-}
-
 <div class="placements-container">
-    @if (Placements == null || !Placements.Any())
+    @if(Placements == null || !Placements.Any())
     {
-        <p>Geen resultaten gevonden.</p>
+        <p>No results found.</p>
     }
     else
     {
         <div class="podium">
-            @foreach (var placement in Placements.OrderBy(p => p.Place).Take(3))
+            @foreach(var placement in Placements.OrderBy(p => p.Place).Take(3))
             {
                 <div class="podium-step @(placement.Place == 1 ? "gold" : placement.Place == 2 ? "silver" : "bronze")">
                     <div class="team-name">
-                        @foreach (var participant in placement.Participants)
+                        @foreach(var participant in placement.Participants)
                         {
-                            @switch (participant)
+                            @switch(participant)
                             {
                                 case Player player:
                                     @player.Username
@@ -33,19 +29,20 @@
                             }
                         }
                     </div>
+                    <div class="placement-title">@GetOrdinal(placement.Place)</div>
                 </div>
             }
         </div>
         <ol class="placements-list">
-            @foreach (var placement in Placements.OrderBy(p => p.Place).Skip(3))
+            @foreach(var placement in Placements.OrderBy(p => p.Place).Skip(3))
             {
                 <li class="placement-item">
-                    <span class="placement-title">Plaats @placement.Place:</span>
+                    <span class="placement-title">@GetOrdinal(placement.Place) Place:</span>
                     <ul class="participant-list">
-                        @foreach (var participant in placement.Participants)
+                        @foreach(var participant in placement.Participants)
                         {
                             <li class="participant-item">
-                                @switch (participant)
+                                @switch(participant)
                                 {
                                     case Player player:
                                         @player.Username
@@ -65,3 +62,26 @@
         </ol>
     }
 </div>
+
+@code {
+    [Parameter] public IEnumerable<Placement> Placements { get; set; }
+
+    private string GetOrdinal(int number)
+    {
+        if(number % 100 >= 11 && number % 100 <= 13)
+        {
+            return number + "th";
+        }
+
+        int num = number % 10;
+        string suffix = num switch
+        {
+            1 => "st",
+            2 => "nd",
+            3 => "rd",
+            _ => "th"
+        };
+
+        return number + suffix;
+    }
+}
