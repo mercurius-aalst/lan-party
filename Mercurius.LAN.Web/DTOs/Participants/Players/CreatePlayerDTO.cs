@@ -1,4 +1,4 @@
-﻿namespace Mercurius.LAN.Web.Models.Participants
+﻿namespace Mercurius.LAN.Web.DTOs.Participants.Players
 {
     public class CreatePlayerDTO
     {

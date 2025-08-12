@@ -4,11 +4,13 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models
 @using Mercurius.LAN.Web.Services
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Web
 @using Mercurius.LAN.Web.Components.Shared
+@using Microsoft.AspNetCore.Authorization
 @inject IGameService GameService
 @inject NavigationManager NavigationManager
-
+@inject IAuthService AuthService
 <PageTitle>Games</PageTitle>
 
 <h1>Games</h1>
@@ -24,6 +26,20 @@
 else
 {
     <div class="card-deck">
+        <AuthorizeView Roles="admin">
+            <Authorized>
+            <div class="card add-game-card text-center" style="max-width: 540px; height: 100%; cursor:pointer;" @onclick="GoToAddGame">
+                <div class="row no-gutters h-100">
+                    <div class="col-md-12 d-flex align-items-center justify-content-center">
+                        <div class="card-body">
+                            <i class="bi bi-plus-lg" style="font-size: 3rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </Authorized>
+        </AuthorizeView>
+
         @foreach (var game in filteredGames)
         {
             <div class="card mb-3" style="max-width: 540px; cursor:pointer;" @onclick="() => GoToGameDetail(game.Id)">
@@ -63,5 +79,10 @@ else
     private void GoToGameDetail(int gameId)
     {
         NavigationManager.NavigateTo($"/games/{gameId}");
+    }
+
+    private void GoToAddGame()
+    {
+        NavigationManager.NavigateTo("/games/add");
     }
 }

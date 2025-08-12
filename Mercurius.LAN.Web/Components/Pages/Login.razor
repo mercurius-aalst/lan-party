@@ -9,6 +9,7 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Forms
+@inject NavigationManager NavigationManager
 @inject IAuthenticationClient AuthenticationClient
 @inject IAuthService AuthService
 @inject IConfiguration Configuration
@@ -78,7 +79,7 @@
                 });
             }
             await AuthService.LoginAsync(loginResponse);
-            HttpContext?.Response.Redirect("/admin", false);
+            NavigationManager.NavigateTo("/admin", true);
         }
         catch(ApiException ex)
         {
