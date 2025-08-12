@@ -1,5 +1,6 @@
 @page "/login"
 @using Mercurius.LAN.Web.APIClients
+@using Mercurius.LAN.Web.Components.Layout
 @using Mercurius.LAN.Web.Services
 @using Mercurius.LAN.Web.Models.Auth
 @using Microsoft.AspNetCore.WebUtilities
@@ -13,7 +14,6 @@
 @inject IAuthenticationClient AuthenticationClient
 @inject IAuthService AuthService
 @inject IConfiguration Configuration
-
 <PageTitle>Login</PageTitle>
 
 <div class="login-container">
