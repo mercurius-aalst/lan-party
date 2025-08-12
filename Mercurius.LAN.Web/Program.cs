@@ -20,8 +20,9 @@ var jsonOptions = new JsonSerializerOptions
     AllowOutOfOrderMetadataProperties = true
 };
 
+builder.Services.AddCustomOptions(builder.Configuration);
 builder.Services.AddAuthenticationServices(builder.Configuration);
-builder.Services.AddHttpClients(jsonOptions);
+builder.Services.AddHttpClients(jsonOptions, builder.Configuration);
 builder.Services.AddCustomServices();
 
 var app = builder.Build();

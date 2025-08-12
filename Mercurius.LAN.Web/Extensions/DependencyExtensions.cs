@@ -55,19 +55,24 @@ public static class DependencyExtensions
                 }
             };
         });
-        services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
+
         return services;
     }
 
-    public static IServiceCollection AddHttpClients(this IServiceCollection services, JsonSerializerOptions jsonOptions)
+    public static IServiceCollection AddHttpClients(this IServiceCollection services, JsonSerializerOptions jsonOptions, IConfiguration configuration)
     {
         var refitSettings = new RefitSettings
         {
             ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
         };
 
+        services.AddTransient<AccessTokenHandler>();
+
+        var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress");
+
         services.AddRefitClient<ILANClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri($"https://localhost:7047/"))
+            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .AddHttpMessageHandler<AccessTokenHandler>()
             .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
             {
                 TimeSpan.FromSeconds(1),
@@ -76,7 +81,8 @@ public static class DependencyExtensions
             }));
 
         services.AddRefitClient<IAuthenticationClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri($"https://localhost:7047/"));
+            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .AddHttpMessageHandler<AccessTokenHandler>();
 
         return services;
     }
@@ -85,6 +91,7 @@ public static class DependencyExtensions
     {
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
         services.AddHttpContextAccessor();
 
         return services;
