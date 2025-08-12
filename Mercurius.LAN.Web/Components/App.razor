@@ -1,4 +1,4 @@
-﻿@rendermode InteractiveAuto
+﻿@using Microsoft.AspNetCore.Components.Authorization
 
 <!DOCTYPE html>
 <html lang="en">
@@ -15,11 +15,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <HeadOutlet />
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
-    <Routes />
+    <CascadingAuthenticationState>
+        <Routes @rendermode="InteractiveAuto" />
+    </CascadingAuthenticationState>
     <script src="_framework/blazor.web.js"></script>
     <script src="/uiInteractions.js"></script>
 </body>

@@ -11,6 +11,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.Middleware;
+using Microsoft.AspNetCore.Components.Server;
 
 namespace Mercurius.LAN.Web
 {
@@ -97,7 +98,7 @@ namespace Mercurius.LAN.Web
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+            builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
             var app = builder.Build();
 

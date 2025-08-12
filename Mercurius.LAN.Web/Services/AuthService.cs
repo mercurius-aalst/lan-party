@@ -3,13 +3,20 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Models.Auth;
+using Microsoft.AspNetCore.Components.Authorization;
 
 namespace Mercurius.LAN.Web.Services
 {
     public class AuthService : IAuthService
     {
-        public AuthService()
+        private readonly AuthenticationStateProvider _authenticationStateProvider;
+
+        public AuthService(AuthenticationStateProvider authenticationStateProvider)
         {
+            _authenticationStateProvider = authenticationStateProvider;
+            _authenticationStateProvider.AuthenticationStateChanged += OnAuthenticationStateChanged;
+            var authStateTask = _authenticationStateProvider.GetAuthenticationStateAsync();
+            CurrentUser = authStateTask.Result.User;
         }
 
         public ClaimsPrincipal CurrentUser { get; private set; } = new ClaimsPrincipal(new ClaimsIdentity());
@@ -36,5 +43,12 @@ namespace Mercurius.LAN.Web.Services
 
         public event Action<ClaimsPrincipal>? UserChanged;
 
+        private void OnAuthenticationStateChanged(Task<AuthenticationState> task)
+        {
+            var authState = task.GetAwaiter().GetResult();
+            CurrentUser = authState.User;
+            // You can now raise your UserChanged event here if needed
+            UserChanged?.Invoke(CurrentUser);
+        }
     }
 }
