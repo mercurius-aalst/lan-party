@@ -45,8 +45,7 @@
 
 @code {
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
-    [Parameter] public ParticipantType ParticipantType { get; set; } // Enum: Team or Player
-
+    [Parameter] public ParticipantType ParticipantType { get; set; }
     private Participant SelectedParticipant { get; set; }
 
     private void ShowParticipantPopup(Participant participant)
