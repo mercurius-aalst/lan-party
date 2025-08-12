@@ -57,6 +57,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         _games = await GameService.GetGamesAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private void GoToGameDetail(int gameId)

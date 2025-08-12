@@ -9,8 +9,7 @@ namespace Mercurius.LAN.Web.Services
         bool IsLoggedIn { get; }
 
         event Action<ClaimsPrincipal>? UserChanged;
-        Task<bool> GetStateFromTokenAsync(string accessToken, string refreshToken);
-        Task Login(AuthTokenResponse tokens);
+        Task LoginAsync(AuthTokenResponse tokens);
         Task LogoutAsync();
     }
 }

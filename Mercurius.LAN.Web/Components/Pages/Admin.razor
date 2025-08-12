@@ -1,7 +1,20 @@
 @page "/admin"
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
+@inject IAuthService AuthService
 
 <PageTitle>Admin</PageTitle>
 
 <h3>This is an admin page</h3>
+
+@code{
+    protected override Task OnInitializedAsync()
+    {
+        if (!AuthService.IsLoggedIn)
+        {
+            // Redirect to login page if not logged in
+            return Task.CompletedTask;
+        }
+        return base.OnInitializedAsync();
+    }
+}

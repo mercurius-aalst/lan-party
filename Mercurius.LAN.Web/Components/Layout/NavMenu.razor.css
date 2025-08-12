@@ -35,4 +35,27 @@
         width: 100%;
     }
 
-/* Responsive menu icon logic removed as requested */
+/* User Info Section Styles */
+.user-info-container {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--primary-color);
+    padding: 10px;
+    text-align: center;
+    border-top: 1px solid var(--card-border-color);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: var(--accent-color);
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.user-icon {
+    font-size: 1.5rem;
+}

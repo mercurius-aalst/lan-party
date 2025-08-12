@@ -10,6 +10,7 @@ using Refit;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Mercurius.LAN.Web.Middleware;
 
 namespace Mercurius.LAN.Web
 {
@@ -54,6 +55,8 @@ namespace Mercurius.LAN.Web
             // Register services
             //Authentication
             builder.Services.AddAuthorization();
+            builder.Services.AddCascadingAuthenticationState();
+
 
             //The cookie authentication is never used, but it is required to prevent a runtime error
             builder.Services.AddAuthentication(options =>
@@ -71,7 +74,7 @@ namespace Mercurius.LAN.Web
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))                    
                 };
 
                 options.Events = new JwtBearerEvents
@@ -80,6 +83,14 @@ namespace Mercurius.LAN.Web
                     {
                         context.Token = context.Request.Cookies["access_token"];
                         return Task.CompletedTask;
+                    },
+                    OnChallenge = context =>
+                    {
+                        if(!context.HttpContext.User.Identity.IsAuthenticated)
+                        {
+                            context.Response.Redirect("/login");
+                        }
+                        return Task.CompletedTask;
                     }
                 };
             });
@@ -87,12 +98,11 @@ namespace Mercurius.LAN.Web
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-            builder.Services.AddCascadingAuthenticationState();
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if(!app.Environment.IsDevelopment())
+            if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error", createScopeForErrors: true);
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
@@ -101,10 +111,12 @@ namespace Mercurius.LAN.Web
 
             app.UseHttpsRedirection();
 
-            app.UseAntiforgery();
+            app.UseMiddleware<TokenRefreshMiddleware>();
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseAntiforgery();
+
 
             app.MapStaticAssets();
             app.MapRazorComponents<App>()

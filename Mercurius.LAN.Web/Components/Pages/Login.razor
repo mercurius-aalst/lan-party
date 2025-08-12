@@ -10,6 +10,8 @@
 @using Microsoft.AspNetCore.Authentication.Cookies
 @using Microsoft.AspNetCore.Components.Forms
 @inject IAuthenticationClient AuthenticationClient
+@inject IAuthService AuthService
+@inject IConfiguration Configuration
 
 <PageTitle>Login</PageTitle>
 
@@ -19,6 +21,11 @@
         <EditForm Model="loginRequest" OnValidSubmit="HandleLogin" FormName="LoginForm">
             <DataAnnotationsValidator />
             <ValidationSummary />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger">@ErrorMessage</div>
+            }
 
             <div class="form-group">
                 <label for="username">Username</label>
@@ -39,7 +46,9 @@
     [CascadingParameter] private HttpContext? HttpContext { get; set; }
 
     [SupplyParameterFromForm]
-    private LoginRequest loginRequest { get; set; } = new ();
+    private LoginRequest loginRequest { get; set; } = new();
+
+    private string ErrorMessage { get; set; } = string.Empty;
 
     private async Task HandleLogin()
     {
@@ -47,14 +56,17 @@
         {
             var loginResponse = await AuthenticationClient.LoginAsync(loginRequest);
 
-            if (HttpContext != null)
+            if(HttpContext != null)
             {
+                var accessTokenExpiry = int.Parse(Configuration["Jwt:AccessTokenExpiryHours"]);
+                var refreshTokenExpiry = int.Parse(Configuration["Jwt:RefreshTokenExpiryHours"]);
+
                 HttpContext.Response.Cookies.Append("access_token", loginResponse.Token, new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddHours(1)
+                    Expires = DateTime.UtcNow.AddHours(accessTokenExpiry)
                 });
 
                 HttpContext.Response.Cookies.Append("refresh_token", loginResponse.RefreshToken, new CookieOptions
@@ -62,15 +74,15 @@
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddHours(1)
+                    Expires = DateTime.UtcNow.AddHours(refreshTokenExpiry)
                 });
             }
-
+            await AuthService.LoginAsync(loginResponse);
             HttpContext?.Response.Redirect("/admin", false);
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
-            Console.WriteLine($"Login failed: {ex.Message}");
+            ErrorMessage = ex.Content;
         }
     }
 }

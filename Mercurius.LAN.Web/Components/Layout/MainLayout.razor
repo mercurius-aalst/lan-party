@@ -32,45 +32,4 @@
 
     private bool sidebarOpen = false;
     void ToggleSidebar() => sidebarOpen = !sidebarOpen;
-    [Inject] private IAuthService AuthService { get; set; }
-    [Inject] private NavigationManager NavigationManager { get; set; }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // A hard refresh or the user just navigated to the application for the first time
-        if (firstRender && !AuthService.IsLoggedIn)
-        {
-            var url = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).ToString();
-            if (url.Contains("/login"))
-            {
-                return;
-            }
-
-            // Retrieve tokens from cookies
-            var accessToken = GetCookie("access_token");
-            var refreshToken = GetCookie("refresh_token");
-
-            var restoredFromState = await AuthService.GetStateFromTokenAsync(accessToken, refreshToken);
-            // The user lost their server-side session, but still has a valid JWT
-            if (restoredFromState)
-            {
-                NavigationManager.Refresh();
-            }
-        }
-    }
-
-    private string GetCookie(string name)
-    {
-        var cookies = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).Query;
-        var cookiePairs = cookies.Split(';');
-        foreach (var cookie in cookiePairs)
-        {
-            var parts = cookie.Split('=');
-            if (parts.Length == 2 && parts[0].Trim() == name)
-            {
-                return parts[1].Trim();
-            }
-        }
-        return string.Empty;
-    }
 }
