@@ -18,6 +18,20 @@
     position: relative;
 }
 
+.card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 1rem;
+    margin: 0;
+}
+
+.card img {
+    max-height: 200px;
+    object-fit: cover;
+}
+
 @media (min-width: 600px) {
     .search-bar-container {
         margin-top: 0;
@@ -25,4 +39,17 @@
     h1 + .search-bar-container {
         margin-left: 0;
     }
+}
+
+.modern-add-game-card .bi-plus-circle {
+    font-size: 3rem;
+    color: var(--accent-color);
+}
+
+.modern-add-game-card h5 {
+    margin-top: 0.5rem;
+}
+
+.modern-add-game-card p {
+    color: #6c757d;
 }

@@ -11,6 +11,7 @@
 @inject IGameService GameService
 @inject NavigationManager NavigationManager
 @inject IAuthService AuthService
+@rendermode InteractiveServer
 <PageTitle>Games</PageTitle>
 
 <h1>Games</h1>
@@ -28,21 +29,19 @@ else
     <div class="card-deck">
         <AuthorizeView Roles="admin">
             <Authorized>
-            <div class="card add-game-card text-center" style="max-width: 540px; height: 100%; cursor:pointer;" @onclick="GoToAddGame">
-                <div class="row no-gutters h-100">
-                    <div class="col-md-12 d-flex align-items-center justify-content-center">
-                        <div class="card-body">
-                            <i class="bi bi-plus-lg" style="font-size: 3rem;"></i>
-                        </div>
+                <div class="card modern-add-game-card text-center" @onclick="OpenAddGameDialog">
+                    <div class="card-body">
+                        <i class="bi bi-plus-circle" style="font-size: 3rem; color: var(--accent-color);"></i>
+                        <h5>Add New Game</h5>
+                        <p>Click to create a new game</p>
                     </div>
                 </div>
-            </div>
             </Authorized>
         </AuthorizeView>
 
         @foreach (var game in filteredGames)
         {
-            <div class="card mb-3" style="max-width: 540px; cursor:pointer;" @onclick="() => GoToGameDetail(game.Id)">
+            <div class="card mb-3" style=" cursor:pointer;" @onclick="() => GoToGameDetail(game.Id)">
                 <div class="row no-gutters">
                     <div class="col-md-4">
                         <img src="@game.PictureUrl" class="card-img" alt="@game.Name">
@@ -60,6 +59,11 @@ else
             </div>
         }
     </div>
+
+    @if (isAddGameDialogOpen)
+    {
+        <AddGameDialog OnClose="CloseAddGameDialog" />
+    }
 }
 
 @code {
@@ -69,6 +73,8 @@ else
         string.IsNullOrWhiteSpace(searchTerm)
             ? _games
             : _games?.Where(g => g.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList() ?? new List<Game>();
+
+    private bool isAddGameDialogOpen = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -81,8 +87,18 @@ else
         NavigationManager.NavigateTo($"/games/{gameId}");
     }
 
-    private void GoToAddGame()
+    private void OpenAddGameDialog()
     {
-        NavigationManager.NavigateTo("/games/add");
+        isAddGameDialogOpen = true;
+    }
+
+    private async void CloseAddGameDialog(GameExtended createdGame)
+    {
+        isAddGameDialogOpen = false;
+        if (createdGame != null)
+        {
+            _games.Add(createdGame);
+            await InvokeAsync(StateHasChanged);
+        }
     }
 }

@@ -1,0 +1,109 @@
+@using Mercurius.LAN.Web.DTOs.Games
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Extensions
+@using Refit
+@inject IGameService GameService
+@inject IJSRuntime JSRuntime
+
+<div>
+    @if (isDialogOpen)
+    {
+        <div class="participants-modal-overlay" @onclick="() => CloseDialog(null)">
+            <div class="participants-modal-dialog" @onclick:stopPropagation>
+                <button class="participants-modal-close" @onclick="() => CloseDialog(null)">&times;</button>
+                <h3>Create New Game</h3>
+                <EditForm Model="newGame" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <InputText id="name" class="form-control" @bind-Value="newGame.Name" />
+                    </div>
+
+                    <div class="form-group-inline">
+                        <div class="form-group">
+                            <label for="bracketType">Bracket Type</label>
+                            <InputSelect id="bracketType" class="form-control" @bind-Value="newGame.BracketType">
+                                @foreach (BracketType type in Enum.GetValues(typeof(BracketType)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="participantType">Participant Type</label>
+                            <InputSelect id="participantType" class="form-control" @bind-Value="newGame.ParticipantType">
+                                @foreach (ParticipantType type in Enum.GetValues(typeof(ParticipantType)))
+                                {
+                                    <option value="@type">@type.ToString()</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <div class="form-group-inline">
+                        <div class="form-group">
+                            <label for="format">Format</label>
+                            <InputSelect id="format" class="form-control" @bind-Value="newGame.Format">
+                                @foreach (GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="finalsFormat">Finals Format</label>
+                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="newGame.FinalsFormat">
+                                @foreach (GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <div class="error-message" style="color: red; margin-top: 1rem;" hidden="@(string.IsNullOrEmpty(errorMessage))">
+                        <p>@errorMessage</p>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </EditForm>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<GameExtended> OnClose { get; set; }
+
+    private CreateGameDTO newGame = new CreateGameDTO();
+    private bool isDialogOpen = true;
+    private string errorMessage = string.Empty;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var createdGame = await GameService.CreateGameAsync(newGame);
+            if (createdGame != null)
+            {
+                await OnClose.InvokeAsync(createdGame);
+            }
+            CloseDialog(null);
+        }
+        catch (ApiException ex)
+        {
+            errorMessage = ex.Content;
+        }
+    }
+
+    private void CloseDialog(GameExtended createdGame)
+    {
+        isDialogOpen = false;
+        OnClose.InvokeAsync(createdGame);
+    }
+}

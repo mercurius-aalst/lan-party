@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.Models.Games;
 
 namespace Mercurius.LAN.Web.Services
@@ -24,5 +25,10 @@ namespace Mercurius.LAN.Web.Services
         }
 
         public Task<Game> RegisterForGameAsync() => throw new NotImplementedException();
+
+        public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
+        {
+            return await _lANClient.CreateGameAsync(newGame);
+        }
     }
 }

@@ -87,16 +87,27 @@
     justify-content: center;
 }
 .participants-modal-dialog {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 32px rgba(76, 175, 80, 0.18);
-    padding: 2rem 2.5rem 1.5rem 2.5rem;
-    min-width: 340px;
-    max-width: 95vw;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem 3rem;
+    min-width: 600px;
+    max-width: 80vw;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    color: #222;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+.participants-modal-dialog h3 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
 }
 .participants-modal-close {
     position: absolute;
@@ -105,6 +116,10 @@
     background: none;
     border: none;
     font-size: 2rem;
-    color: #888;
+    color: var(--accent-color);
     cursor: pointer;
+    transition: color 0.2s;
+}
+.participants-modal-close:hover {
+    color: var(--accent-dark);
 }

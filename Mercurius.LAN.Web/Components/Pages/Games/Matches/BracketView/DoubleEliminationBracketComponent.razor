@@ -76,6 +76,14 @@
         }
     }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("makeDraggable", "double-elimination-bracket-root");
+        }
+    }
+
     private struct LowerBracketMatchData
     {
         public int svgWidth { get; set; }

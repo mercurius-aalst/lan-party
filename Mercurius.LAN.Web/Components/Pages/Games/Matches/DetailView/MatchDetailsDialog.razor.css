@@ -1,24 +1,41 @@
 .modal-overlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.25);
-    z-index: 1000;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
 }
+
 .modal-dialog {
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 32px rgba(76,175,80,0.18);
-    padding: 2rem 2.5rem 1.5rem 2.5rem;
-    min-width: 340px;
-    max-width: 95vw;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem 3rem;
+    min-width: 600px;
+    max-width: 80vw;
     max-height: 90vh;
     overflow-y: auto;
     position: relative;
-    color: #222;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
+
+.modal-dialog h3 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
 .modal-close {
     position: absolute;
     top: 0.5rem;
@@ -26,9 +43,15 @@
     background: none;
     border: none;
     font-size: 2rem;
-    color: #888;
+    color: var(--accent-color);
     cursor: pointer;
+    transition: color 0.2s;
 }
+
+.modal-close:hover {
+    color: var(--accent-dark);
+}
+
 .modal-section {
     margin-bottom: 1.2rem;
 }

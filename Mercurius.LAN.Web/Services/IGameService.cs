@@ -1,4 +1,5 @@
-﻿using Mercurius.LAN.Web.Models.Games;
+﻿using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.Models.Games;
 
 namespace Mercurius.LAN.Web.Services
 {
@@ -7,5 +8,6 @@ namespace Mercurius.LAN.Web.Services
         Task<List<Game>> GetGamesAsync();
         Task<GameExtended?> GetGameByIdAsync(int id);
         Task<Game> RegisterForGameAsync();
+        Task<GameExtended> CreateGameAsync(CreateGameDTO newGame);
     }
 }

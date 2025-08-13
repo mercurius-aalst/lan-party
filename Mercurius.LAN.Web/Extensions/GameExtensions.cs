@@ -10,9 +10,9 @@ public static class GameExtensions
         return status.ToLower() switch
         {
             "scheduled" => "Open",
-            "inprogress" => "Bezig",
-            "completed" => "Afgerond",
-            "canceled" => "Geannuleerd",
+            "inprogress" => "Ongoing",
+            "completed" => "Finished",
+            "canceled" => "Cancelled",
             _ => status
         };
     }
