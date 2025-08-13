@@ -5,15 +5,15 @@ namespace Mercurius.LAN.Web.Extensions;
 
 public static class GameExtensions
 {
-    public static string GetStatusLabel(this string status)
+    public static string GetStatusLabel(this GameStatus status)
     {
-        return status.ToLower() switch
+        return status switch
         {
-            "scheduled" => "Open",
-            "inprogress" => "Ongoing",
-            "completed" => "Finished",
-            "canceled" => "Cancelled",
-            _ => status
+            GameStatus.Scheduled => "Open",
+            GameStatus.InProgress => "Ongoing",
+            GameStatus.Completed => "Finished",
+            GameStatus.Canceled => "Cancelled",
+            _ => status.ToString()
         };
     }
 
@@ -40,14 +40,14 @@ public static class GameExtensions
         };
     }
 
-    public static string GetStatusClass(this string status)
+    public static string GetStatusClass(this GameStatus status)
     {
-        return status?.ToLower() switch
+        return status switch
         {
-            "scheduled" => "status-scheduled",
-            "inprogress" => "status-inprogress",
-            "completed" => "status-completed",
-            "canceled" => "status-canceled",
+            GameStatus.Scheduled => "status-scheduled",
+            GameStatus.InProgress => "status-inprogress",
+            GameStatus.Completed => "status-completed",
+            GameStatus.Canceled => "status-canceled",
             _ => string.Empty
         };
     }

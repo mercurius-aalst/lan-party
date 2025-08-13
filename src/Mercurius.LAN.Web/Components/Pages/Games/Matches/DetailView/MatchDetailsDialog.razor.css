@@ -157,10 +157,8 @@
 .participant-card.winner-card {
     border: 2.5px solid #4caf50;
     background: #e8f5e9;
-    box-shadow: 0 0 0 2px #a5d6a7;
 }
 .participant-card.loser-card {
     border: 2.5px solid #e53935;
     background: #ffebee;
-    box-shadow: 0 0 0 2px #ffcdd2;
 }

@@ -30,5 +30,10 @@ namespace Mercurius.LAN.Web.Services
         {
             return await _lANClient.CreateGameAsync(newGame);
         }
+
+        public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame)
+        {
+            return await _lANClient.UpdateGameAsync(id, updatedGame);
+        }
     }
 }
