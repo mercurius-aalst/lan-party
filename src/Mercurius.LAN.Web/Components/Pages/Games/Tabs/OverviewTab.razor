@@ -14,12 +14,11 @@
     [Parameter] public GameExtended Game { get; set; }
 }
 
-<link rel="stylesheet" href="OverviewTab.razor.css">
-
 <div class="overview-container">
+
+        <h2 class="overview-header">Overview</h2>
     @if(!isEditMode)
     {
-        <h2 class="overview-header">Overview</h2>
         <div class="overview-details">
             <div class="overview-column">
                 <p><b>Name:</b> @Game.Name</p>
