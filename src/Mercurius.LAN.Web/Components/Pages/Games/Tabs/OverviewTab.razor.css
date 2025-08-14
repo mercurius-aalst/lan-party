@@ -71,11 +71,7 @@
     background-color: #0056b3;
 }
 
-.form-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-}
+
 
 .overview-container .btn {
     margin-top: 20px;

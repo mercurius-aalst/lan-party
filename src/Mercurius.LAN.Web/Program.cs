@@ -4,7 +4,6 @@ using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Components;
 using Blazored.Toast;
-using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +13,6 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.AddBlazoredToast();
-builder.Services.AddMudServices();
 
 var jsonOptions = new JsonSerializerOptions
 {

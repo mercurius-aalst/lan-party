@@ -69,7 +69,7 @@ namespace Mercurius.LAN.Web.APIClients
         Task<List<Player>> GetPlayersAsync();
 
 
-        [Get("/lan/teams)")]
+        [Get("/lan/teams")]
         Task<List<Team>> GetTeamsAsync();
         [Get("/lan/teams/{id}")]
         Task<Team> GetTeamByIdAsync(int id);

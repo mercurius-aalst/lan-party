@@ -2,6 +2,8 @@
 @using Mercurius.LAN.Web.Models.Matches
 @using Mercurius.LAN.Web.Models.Participants
 
+@rendermode InteractiveServer
+
 <div class="bracket-match" style="left:@(Position.left)px; top:@(Position.y)px;" @onclick="ShowDetails">
     <MatchParticipantRow Match="Match" ParticipantId="Match.Participant1Id" Participants="Participants" SequenceNumber="1"></MatchParticipantRow>
     <MatchParticipantRow Match="Match" ParticipantId="Match.Participant2Id" Participants="Participants" SequenceNumber="2"></MatchParticipantRow>

@@ -1,0 +1,162 @@
+@page "/admin/teams"
+@attribute [Authorize]
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.DTOs.Participants.Teams
+@using Mercurius.LAN.Web.Services
+@using Blazored.Toast.Services
+@using Mercurius.LAN.Web.Components.Shared
+@using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute
+@using Refit
+@rendermode InteractiveServer
+
+@inject IParticipantService ParticipantService
+@inject IToastService ToastService
+
+<PageTitle>Teams Admin</PageTitle>
+
+<div class="admin-container">
+    <h2>Manage Teams</h2>
+
+    <div class="search-bar-container">
+        <CustomAutocomplete @ref="autoCompleteComponent" TItem="Team" Items="teams" ItemLabel="team => team.Name" OnSelected="OnTeamSelected" Placeholder="Search Teams" />
+    </div>
+
+    @if(selectedTeam == null)
+    {
+        selectedTeam = new Team();
+    }
+
+    <EditForm Model="selectedTeam" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-container">
+            <h3>@(isCreateMode ? "Create Team" : "Update Team")</h3>
+            <div class="form-group">
+                <label for="name">Team Name</label>
+                <InputText id="name" class="form-control" @bind-Value="selectedTeam.Name" />
+            </div>
+
+            <div class="form-group">
+                <label for="captain">Captain</label>
+                @if(!isCreateMode)
+                {
+                    <InputText id="captain" class="form-control" @bind-Value="@selectedCaptain.Username" disabled />
+                }
+                else
+                {
+                    <CustomAutocomplete TItem="Player" Items="players" ItemLabel="player => player.Username" OnSelected="OnCaptainSelected" Placeholder="Select a captain" />
+                }
+            </div>
+
+            <div class="form-actions">
+                <div class="form-actions-section">
+                    <button type="submit" class="btn btn-primary">@(isCreateMode ? "Create Team" : "Update Team")</button>
+                </div>
+                <div class="form-actions-section">
+                    @if(!isCreateMode)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="DeleteTeam">Delete Team</button>
+                    }
+                    <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private List<Team> teams = new();
+    private List<Player> players = new();
+    private Team? selectedTeam;
+    private Player? selectedCaptain;
+    private bool isCreateMode = true;
+
+    private CustomAutocomplete<Team> autoCompleteComponent;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            players = await ParticipantService.GetPlayersAsync();
+            teams = await ParticipantService.GetTeamsAsync();
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+    private void OnTeamSelected(Team team)
+    {
+        selectedTeam = team;
+        selectedCaptain = players.FirstOrDefault(p => p.Id == team.CaptainId);
+        isCreateMode = false;
+    }
+
+    private void OnCaptainSelected(Player player)
+    {
+        if(selectedTeam != null)
+        {
+            selectedCaptain = player;
+            selectedTeam.CaptainId = player.Id;
+        }
+    }
+
+    private void ClearForm()
+    {
+        selectedTeam = new Team();
+        isCreateMode = true;
+        autoCompleteComponent.ClearSearchField();
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            if(isCreateMode)
+            {
+                // Create logic
+                var team = await ParticipantService.CreateTeamAsync(new CreateTeamDTO
+                {
+                    Name = selectedTeam.Name,
+                    CaptainId = selectedTeam.CaptainId
+                });
+                teams.Add(team);
+                ToastService.ShowSuccess("Team created successfully.");
+            }
+            else
+            {
+                // Update logic
+                await ParticipantService.UpdateTeamAsync(selectedTeam.Id, new UpdateTeamDTO
+                {
+                    Name = selectedTeam.Name,
+                    CaptainId = selectedTeam.CaptainId
+                });
+                ToastService.ShowSuccess("Team updated successfully.");
+            }
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+    private async Task DeleteTeam()
+    {
+        if(selectedTeam == null)
+            return;
+        try
+        {
+            await ParticipantService.DeleteTeamAsync(selectedTeam.Id);
+            teams.Remove(selectedTeam);
+            ToastService.ShowSuccess("Team deleted successfully.");
+            ClearForm();
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+}

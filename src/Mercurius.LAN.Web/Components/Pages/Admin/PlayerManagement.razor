@@ -14,43 +14,42 @@
 
 <PageTitle>Players Admin</PageTitle>
 
-    <div class="admin-container">
-        <h2>Manage Players</h2>
+<div class="admin-container">
+    <h2>Manage Players</h2>
 
-        <div class="search-bar-container">
-            <CustomAutocomplete @ref="autoCompleteComponent" TItem="Player" Items="players" ItemLabel="player => player.Username" OnSelected="OnPlayerSelected" Placeholder="Search Players" />
-        </div>
+    <div class="search-bar-container">
+        <CustomAutocomplete @ref="autoCompleteComponent" TItem="Player" Items="players" ItemLabel="player => player.Username" OnSelected="OnPlayerSelected" Placeholder="Search Players" />
+    </div>
 
-        @if (selectedPlayer == null)
-        {
-            selectedPlayer = new Player();
-        }
+    @if(selectedPlayer == null)
+    {
+        selectedPlayer = new Player();
+    }
 
-        <EditForm Model="selectedPlayer" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+    <EditForm Model="selectedPlayer" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-            <div class="form-section">
-                <h3>@(isCreateMode ? "Create Player" : "Update Player")</h3>
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <InputText id="username" class="form-control" @bind-Value="selectedPlayer.Username" />
-                </div>
+        <div class="form-container">
+            <h3>@(isCreateMode ? "Create Player" : "Update Player")</h3>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <InputText id="username" class="form-control" @bind-Value="selectedPlayer.Username" />
+            </div>
 
-                <div class="form-group">
-                    <label for="firstname">First Name</label>
-                    <InputText id="firstname" class="form-control" @bind-Value="selectedPlayer.Firstname" />
-                </div>
+            <div class="form-group">
+                <label for="firstname">First Name</label>
+                <InputText id="firstname" class="form-control" @bind-Value="selectedPlayer.Firstname" />
+            </div>
 
-                <div class="form-group">
-                    <label for="lastname">Last Name</label>
-                    <InputText id="lastname" class="form-control" @bind-Value="selectedPlayer.Lastname" />
-                </div>
+            <div class="form-group">
+                <label for="lastname">Last Name</label>
+                <InputText id="lastname" class="form-control" @bind-Value="selectedPlayer.Lastname" />
+            </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <InputText id="email" class="form-control" @bind-Value="selectedPlayer.Email" disabled="@(!isCreateMode)" />
-                </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" class="form-control" @bind-Value="selectedPlayer.Email" disabled="@(!isCreateMode)" />
             </div>
 
             <div class="form-section">
@@ -71,16 +70,21 @@
                 </div>
             </div>
 
-        <div class="form-actions action-buttons">
-                <button type="submit" class="btn btn-primary">@(isCreateMode ? "Create Player" : "Update Player")</button>
-            @if(!isCreateMode)
-            {
-                <button type="button" class="btn btn-danger" @onclick="DeletePlayer">Delete Player</button>
-            }
-                <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+            <div class="form-actions">
+                <div class="form-actions-section">
+                    <button type="submit" class="btn btn-primary">@(isCreateMode ? "Create Player" : "Update Player")</button>
+                </div>
+                <div class="form-actions-section">
+                    @if(!isCreateMode)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="DeletePlayer">Delete Player</button>
+                    }
+                    <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                </div>
             </div>
-        </EditForm>
-    </div>
+        </div>
+    </EditForm>
+</div>
 
 
 @code {
@@ -96,7 +100,7 @@
         {
             players = await ParticipantService.GetPlayersAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -120,7 +124,7 @@
     {
         try
         {
-            if (isCreateMode)
+            if(isCreateMode)
             {
                 // Create logic
                 var player = await ParticipantService.CreatePlayerAsync(new CreatePlayerDTO
@@ -151,7 +155,7 @@
                 ToastService.ShowSuccess("Player updated successfully.");
             }
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -159,7 +163,7 @@
 
     private Task<IEnumerable<Player>> SearchPlayers(string searchText, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(searchText))
+        if(string.IsNullOrWhiteSpace(searchText))
             return Task.FromResult(players.AsEnumerable());
 
         var filteredPlayers = players.Where(player => player.Username.Contains(searchText, StringComparison.OrdinalIgnoreCase));
@@ -168,7 +172,7 @@
 
     private async Task DeletePlayer()
     {
-        if (selectedPlayer == null)
+        if(selectedPlayer == null)
             return;
         try
         {
@@ -177,7 +181,7 @@
             ToastService.ShowSuccess("Player deleted successfully.");
             ClearForm();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }

@@ -3,6 +3,8 @@
 @using Mercurius.LAN.Web.Models.Participants
 @inject IJSRuntime JS
 
+@rendermode InteractiveServer
+
 <div class="bracket-root" id="bracket-root">
     @if(Matches == null || !Matches.Any())
     {

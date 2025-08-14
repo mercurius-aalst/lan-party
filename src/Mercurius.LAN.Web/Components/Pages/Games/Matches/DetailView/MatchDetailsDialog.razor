@@ -3,6 +3,8 @@
 @using Mercurius.LAN.Web.Extensions;
 @using Mercurius.LAN.Web.Components.Shared;
 
+@rendermode InteractiveServer
+
 <CascadingValue Value="Match">
     <div class="modal-overlay" @onclick="OnClose">
         <div class="modal-dialog" @onclick:stopPropagation>

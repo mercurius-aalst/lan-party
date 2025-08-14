@@ -2,6 +2,7 @@
 @using Mercurius.LAN.Web.Models.Matches
 @using Mercurius.LAN.Web.Models.Participants
 @inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <div class="bracket-root" id="double-elimination-bracket-root">
     @if (Matches == null || !Matches.Any())
