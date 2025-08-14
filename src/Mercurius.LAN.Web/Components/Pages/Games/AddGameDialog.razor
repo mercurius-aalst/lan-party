@@ -4,10 +4,10 @@
 @using Mercurius.LAN.Web.Extensions
 @using Refit
 @inject IGameService GameService
-@inject IJSRuntime JSRuntime
+@inject IToastService ToastService
 
 <div>
-    @if (isDialogOpen)
+    @if(isDialogOpen)
     {
         <div class="participants-modal-overlay" @onclick="() => CloseDialog(null)">
             <div class="participants-modal-dialog" @onclick:stopPropagation>
@@ -26,7 +26,7 @@
                         <div class="form-group">
                             <label for="bracketType">Bracket Type</label>
                             <InputSelect id="bracketType" class="form-control" @bind-Value="newGame.BracketType">
-                                @foreach (BracketType type in Enum.GetValues(typeof(BracketType)))
+                                @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
                                 }
@@ -36,7 +36,7 @@
                         <div class="form-group">
                             <label for="participantType">Participant Type</label>
                             <InputSelect id="participantType" class="form-control" @bind-Value="newGame.ParticipantType">
-                                @foreach (ParticipantType type in Enum.GetValues(typeof(ParticipantType)))
+                                @foreach(ParticipantType type in Enum.GetValues(typeof(ParticipantType)))
                                 {
                                     <option value="@type">@type.ToString()</option>
                                 }
@@ -48,7 +48,7 @@
                         <div class="form-group">
                             <label for="format">Format</label>
                             <InputSelect id="format" class="form-control" @bind-Value="newGame.Format">
-                                @foreach (GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
                                 }
@@ -58,16 +58,12 @@
                         <div class="form-group">
                             <label for="finalsFormat">Finals Format</label>
                             <InputSelect id="finalsFormat" class="form-control" @bind-Value="newGame.FinalsFormat">
-                                @foreach (GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
                                 }
                             </InputSelect>
                         </div>
-                    </div>
-
-                    <div class="error-message" hidden="@(string.IsNullOrEmpty(errorMessage))" style="margin-bottom: 1rem;">
-                        <p>@errorMessage</p>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Create</button>
@@ -82,22 +78,18 @@
 
     private CreateGameDTO newGame = new CreateGameDTO();
     private bool isDialogOpen = true;
-    private string errorMessage = string.Empty;
 
     private async Task HandleSubmit()
     {
         try
         {
             var createdGame = await GameService.CreateGameAsync(newGame);
-            if (createdGame != null)
-            {
-                await OnClose.InvokeAsync(createdGame);
-            }
-            CloseDialog(null);
+            ToastService.ShowSuccess($"{createdGame.Name} succesfully created.");
+            await OnClose.InvokeAsync(createdGame);
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
-            errorMessage = ex.Content;
+            ToastService.ShowError(ex.Content);
         }
     }
 

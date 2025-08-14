@@ -20,7 +20,7 @@ namespace Mercurius.LAN.Web.APIClients
         [Post("/lan/games")]
         Task<GameExtended> CreateGameAsync([Body] CreateGameDTO game);
 
-        [Put("/lan/games/{id}")]
+        [Patch("/lan/games/{id}")]
         Task<GameExtended> UpdateGameAsync(int id, [Body] UpdateGameDTO game);
 
         [Delete("/lan/games/{id}")]
@@ -56,8 +56,8 @@ namespace Mercurius.LAN.Web.APIClients
         [Post("/lan/players")]
         Task<Player> CreatePlayerAsync([Body] CreatePlayerDTO player);
 
-        [Post("/lan/players")]
-        Task<Player> UpdatePlayerAsync([Body] CreatePlayerDTO player);
+        [Patch("/lan/players/{id}")]
+        Task<Player> UpdatePlayerAsync(int id, [Body] UpdatePlayerDTO player);
 
         [Delete("/lan/players/{id}")]
         Task DeletePlayerAsync(int id);

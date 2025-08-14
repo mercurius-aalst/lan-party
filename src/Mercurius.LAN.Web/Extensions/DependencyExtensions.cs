@@ -76,8 +76,8 @@ public static class DependencyExtensions
             .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
             {
                 TimeSpan.FromSeconds(1),
+                TimeSpan.FromSeconds(3),
                 TimeSpan.FromSeconds(5),
-                TimeSpan.FromSeconds(10)
             }));
 
         services.AddRefitClient<IAuthenticationClient>(refitSettings)
@@ -93,6 +93,7 @@ public static class DependencyExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
         services.AddHttpContextAccessor();
+        services.AddScoped<IParticipantService, ParticipantService>();
 
         return services;
     }

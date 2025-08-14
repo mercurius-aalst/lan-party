@@ -4,11 +4,15 @@
 @using Mercurius.LAN.Web.Services
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
 @using Mercurius.LAN.Web.Components.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@using Refit
+@using Blazored.Toast.Services
 @inject NavigationManager Navigation
 @inject IGameService GameService
+@inject IToastService ToastService
 
 <PageTitle>Game Detail</PageTitle>
-@if (game == null)
+@if(game == null)
 {
     <LoadingScreen Message="Loading..." />
 }
@@ -16,7 +20,19 @@ else
 {
     <div class="game-detail">
         <div class="game-header-tabs">
-            <h1>@game.Name</h1>
+            <h1>
+                @game.Name
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <div class="action-buttons">
+                            <button class="btn btn-success" @onclick="StartGame">Start</button>
+                            <button class="btn" style="background-color: var(--accent-dark); color: white;" @onclick="CancelGame">Cancel</button>
+                            <button class="btn btn-secondary" @onclick="ResetGame">Reset</button>
+                            <button class="btn btn-danger" @onclick="DeleteGame">Delete</button>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+            </h1>
             <div class="tabs">
                 <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overview</button>
                 <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(selectedTab == 1)">Matches</button>
@@ -33,19 +49,19 @@ else
             </div>
         </div>
         <div class="tab-content">
-            @if (selectedTab == 0)
+            @if(selectedTab == 0)
             {
                 <OverviewTab Game="@game" />
             }
-            else if (selectedTab == 1)
+            else if(selectedTab == 1)
             {
-                <MatchesTab BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants"/>
+                <MatchesTab BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants" />
             }
-            else if (selectedTab == 2)
+            else if(selectedTab == 2)
             {
                 <ParticipantsTab Participants="@game.Participants" />
             }
-            else if (selectedTab == 3)
+            else if(selectedTab == 3)
             {
                 <PlacementsTab Placements="@game.Placements" />
             }
@@ -70,9 +86,62 @@ else
 
     private void OnTabDropdownChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out int tab))
+        if(int.TryParse(e.Value?.ToString(), out int tab))
         {
             selectedTab = tab;
+        }
+    }
+
+    private async Task StartGame()
+    {
+        try
+        {
+            await GameService.StartGameAsync(GameId);
+            ToastService.ShowSuccess("Game successfully started.");
+        }
+        catch (ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+    private async Task CancelGame()
+    {
+        try
+        {
+            await GameService.CancelGameAsync(GameId);
+            ToastService.ShowSuccess("Game succesfully canceled.");
+        }
+        catch (ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+    private async Task ResetGame()
+    {
+        try
+        {
+            await GameService.ResetGameAsync(GameId);
+            ToastService.ShowSuccess("Game sucessfully reset.");
+        }
+        catch (ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+    private async Task DeleteGame()
+    {
+        try
+        {
+            await GameService.DeleteGameAsync(GameId);
+            ToastService.ShowSuccess($"{game.Name} successfully deleted.");
+            Navigation.NavigateTo("/games");
+        }
+        catch (ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
         }
     }
 }

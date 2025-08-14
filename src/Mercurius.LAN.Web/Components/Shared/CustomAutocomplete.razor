@@ -1,0 +1,117 @@
+@typeparam TItem
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+<div id="dropdown-@Id" class="custom-autocomplete @(isDropdownVisible ? "" : "dropdown-closed")" @ref="autocompleteContainer">
+    <input type="text" class="custom-autocomplete-input" @bind="searchText" @oninput="HandleInput" @onfocus="ShowDropdown" @onkeydown="HandleKeyDown" placeholder="@Placeholder" />
+
+    @if(isDropdownVisible && filteredItems.Any())
+    {
+        <ul class="custom-autocomplete-dropdown" @ref="dropdownElement">
+            @foreach(var item in filteredItems)
+            {
+                <li @onclick="() => SelectItem(item)">@ItemLabel(item)</li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    [Parameter] public List<TItem> Items { get; set; } = new();
+    [Parameter] public Func<TItem, string> ItemLabel { get; set; } = default!;
+    [Parameter] public EventCallback<TItem> OnSelected { get; set; }
+    [Parameter] public string Placeholder { get; set; } = "Search...";
+
+    private string searchText = string.Empty;
+    private List<TItem> filteredItems = new();
+    private bool isDropdownVisible = false;
+
+    private Guid Id = Guid.NewGuid();
+
+    private ElementReference autocompleteContainer;
+    private ElementReference dropdownElement;
+
+    private IJSObjectReference? outsideClickListenerModule;
+    private DotNetObjectReference<CustomAutocomplete<TItem>>? objRef;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(isDropdownVisible && outsideClickListenerModule == null)
+        {
+            // The dropdown is visible, so we register the listener.
+            objRef = DotNetObjectReference.Create(this);
+            outsideClickListenerModule = await JSRuntime.InvokeAsync<IJSObjectReference>("addOutsideClickListener", $"dropdown-{Id}", objRef);
+        }
+    }
+
+    private void ShowDropdown()
+    {
+        if(filteredItems.Any() && !string.IsNullOrEmpty(searchText))
+        {
+            isDropdownVisible = true;
+            StateHasChanged();
+        }
+    }
+    [JSInvokable]
+    public void CloseDropdown()
+    {
+        isDropdownVisible = false;
+        StateHasChanged();
+    }
+
+    protected override void OnParametersSet()
+    {
+        filteredItems = Items;
+    }
+    public void ClearSearchField()
+    {
+        searchText = string.Empty;
+        filteredItems = Items;
+    }
+
+    private void HandleInput(ChangeEventArgs e)
+    {
+        searchText = e.Value?.ToString() ?? string.Empty;
+        if(string.IsNullOrEmpty(searchText))
+            isDropdownVisible = false;
+        else
+        {
+            filteredItems = Items.Where(item => ItemLabel(item).Contains(searchText, StringComparison.OrdinalIgnoreCase)).ToList();
+            isDropdownVisible = filteredItems.Any();
+        }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && filteredItems.Any())
+        {
+            var exactMatch = filteredItems.FirstOrDefault(item => ItemLabel(item).Equals(searchText, StringComparison.OrdinalIgnoreCase));
+            if (exactMatch != null)
+            {
+                SelectItem(exactMatch);
+            }
+        }
+    }
+
+    private async Task SelectItem(TItem item)
+    {
+        searchText = ItemLabel(item);
+        isDropdownVisible = false;
+        await OnSelected.InvokeAsync(item);
+    }
+
+    public void Dispose()
+    {
+        DisposeListener();
+    }
+
+    private async void DisposeListener()
+    {
+        if(outsideClickListenerModule != null)
+        {
+            await outsideClickListenerModule.InvokeVoidAsync("dispose");
+            await outsideClickListenerModule.DisposeAsync();
+            outsideClickListenerModule = null;
+        }
+    }
+}

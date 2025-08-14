@@ -1,4 +1,7 @@
-﻿@inherits LayoutComponentBase
+﻿@using Blazored.Toast.Configuration
+
+
+@inherits LayoutComponentBase
 <button class="menu-toggle @(sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
     <span class="menu-toggle-inner">
         <span class="bar"></span>
@@ -27,6 +30,8 @@
     <span class="dismiss">🗙</span>
 </div>
 
+<BlazoredToasts Position=ToastPosition.BottomRight />
+<MudPopoverProvider />
 
 @code {
 

@@ -10,5 +10,10 @@ namespace Mercurius.LAN.Web.Services
         Task<Game> RegisterForGameAsync();
         Task<GameExtended> CreateGameAsync(CreateGameDTO newGame);
         Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame);
+        Task<GameExtended?> GetGameDetailAsync(int id);
+        Task StartGameAsync(int id);
+        Task CancelGameAsync(int id);
+        Task ResetGameAsync(int id);
+        Task DeleteGameAsync(int id);
     }
 }
