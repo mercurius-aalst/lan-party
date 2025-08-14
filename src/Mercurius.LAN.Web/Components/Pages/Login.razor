@@ -79,7 +79,7 @@
                 });
             }
             await AuthService.LoginAsync(loginResponse);
-            NavigationManager.NavigateTo("/admin", true);
+            NavigationManager.NavigateTo("/", true);
         }
         catch(ApiException ex)
         {

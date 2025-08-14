@@ -1,5 +1,7 @@
 ﻿using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Matches;
 
 namespace Mercurius.LAN.Web.Services
 {
@@ -16,5 +18,7 @@ namespace Mercurius.LAN.Web.Services
         Task DeleteGameAsync(int id);
         Task<GameExtended> RegisterForGameAsync(int id, int participantId);
         Task<GameExtended> UnregisterFromGameAsync(int id, int participantId);
+        Task<Match> UpdateMatchScoresAsync(int matchId, UpdateMatchDTO updateMatchDTO);
+        Task CompleteGameAsync(int id);
     }
 }

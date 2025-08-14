@@ -1,20 +1,40 @@
+@using Mercurius.LAN.Web.DTOs.Matches
 @using Mercurius.LAN.Web.Models.Matches;
 @using Mercurius.LAN.Web.Models.Participants;
 @using Mercurius.LAN.Web.Extensions;
 @using Mercurius.LAN.Web.Components.Shared;
+@using Microsoft.AspNetCore.Components.Authorization
+@using Refit
 
 @rendermode InteractiveServer
+@inject IToastService ToastService
 
 <CascadingValue Value="Match">
-    <div class="modal-overlay" @onclick="OnClose">
-        <div class="modal-dialog" @onclick:stopPropagation>
-            <button class="modal-close" @onclick="OnClose">&times;</button>
+    <div class="match-modal-overlay" @onclick="OnClose">
+        <div class="match-modal-dialog" @onclick:stopPropagation>
+            <button class="match-modal-close" @onclick="OnClose">&times;</button>
             <div class="match-header">
-                <span class="match-header-name">@GetParticipantName(Match.Participant1Id) <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span></span>
+                <span class="match-header-name">
+                    @GetParticipantName(Match.Participant1Id)
+                    <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
+                </span>
                 <span class="match-header-vs">vs</span>
-                <span class="match-header-name">@GetParticipantName(Match.Participant2Id) <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span></span>
+                <span class="match-header-name">
+                    @GetParticipantName(Match.Participant2Id)
+                    <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
+                </span>
             </div>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <div class="score-inputs">
+                        <input id="participant1-score" type="number" class="form-control score-input" @bind="Match.Participant1Score" />
+                        <input id="participant2-score" type="number" class="form-control score-input" @bind="Match.Participant2Score" />
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+
             <div class="match-format">@Match.Format.GetLabel()</div>
+
             <div class="participants-grid">
                 <div class="@(GetCardClass(Match.Participant1Id, Match.Participant2Id))">
                     <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" EmptyLabel="@GetTbdOrBye()" />
@@ -23,6 +43,13 @@
                     <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" EmptyLabel="@GetTbdOrBye()" />
                 </div>
             </div>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <div class="save-button-container">
+                        <button class="btn btn-primary mt-2" @onclick="SaveScoresAsync">Save Scores</button>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
         </div>
     </div>
 </CascadingValue>
@@ -31,6 +58,9 @@
     [Parameter] public Match Match { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+    [Inject] private IGameService GameService { get; set; }
+
+#error fix auto-refresh, currently manually refreshing the page after saving scores is needed
 
     private Participant GetParticipantById(int? participantId)
     {
@@ -81,5 +111,23 @@
             ParticipantType.Team when participant is Team team => team.Name,
             _ => participantId.Value.ToString()
         };
+    }
+
+    private async Task SaveScoresAsync()
+    {
+        try
+        {
+            Match = await GameService.UpdateMatchScoresAsync(Match.Id, new UpdateMatchDTO()
+            {
+                Participant1Score = Match.Participant1Score ?? 0,
+                Participant2Score = Match.Participant2Score ?? 0,
+            });
+            ToastService.ShowSuccess("Score updated successfully");
+            await OnClose.InvokeAsync();
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
     }
 }

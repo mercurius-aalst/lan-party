@@ -1,6 +1,8 @@
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Matches;
 
 namespace Mercurius.LAN.Web.Services
 {
@@ -65,6 +67,16 @@ namespace Mercurius.LAN.Web.Services
         public Task DeleteGameAsync(int id)
         {
             return _lANClient.DeleteGameAsync(id);
+        }
+
+        public Task<Match> UpdateMatchScoresAsync(int matchId, UpdateMatchDTO updateMatchDTO)
+        {
+           return _lANClient.UpdateMatchAsync(matchId, updateMatchDTO);
+        }
+
+        public Task CompleteGameAsync(int id)
+        {
+            return _lANClient.CompleteGameAsync(id);
         }
     }
 }

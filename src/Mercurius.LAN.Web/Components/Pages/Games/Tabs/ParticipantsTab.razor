@@ -20,7 +20,7 @@
         }
         @foreach(var participant in Participants)
         {
-            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=true OnParticipantDeleted="UnregisterParticipantAsync" />
+            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=@(Game.Status == GameStatus.Scheduled) OnParticipantDeleted="UnregisterParticipantAsync" />
         }
     </div>
     @if(SelectedParticipant != null)
