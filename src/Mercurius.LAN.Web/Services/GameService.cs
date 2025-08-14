@@ -16,19 +16,25 @@ namespace Mercurius.LAN.Web.Services
         public Task<List<Game>> GetGamesAsync()
         {
             return _lANClient.GetGamesAsync();
-
         }
 
-        public async Task<GameExtended?> GetGameByIdAsync(int id)
+        public Task<GameExtended?> GetGameByIdAsync(int id)
         {
-            return await _lANClient.GetGameByIdAsync(id);
+            return _lANClient.GetGameByIdAsync(id);
         }
 
-        public Task<Game> RegisterForGameAsync() => throw new NotImplementedException();
-
-        public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
+        public Task<GameExtended> RegisterForGameAsync(int id, int participantId)
         {
-            return await _lANClient.CreateGameAsync(newGame);
+            return _lANClient.RegisterForGameAsync(id, participantId);
+        }
+
+        public Task<GameExtended> UnregisterFromGameAsync(int id, int participantId)
+        {
+            return _lANClient.UnregisterFromGameAsync(id, participantId);
+        }
+        public Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
+        {
+            return _lANClient.CreateGameAsync(newGame);
         }
 
         public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame)
@@ -41,24 +47,24 @@ namespace Mercurius.LAN.Web.Services
             return await _lANClient.GetGameByIdAsync(id);
         }
 
-        public async Task StartGameAsync(int id)
+        public Task StartGameAsync(int id)
         {
-            await _lANClient.StartGameAsync(id);
+            return _lANClient.StartGameAsync(id);
         }
 
-        public async Task CancelGameAsync(int id)
+        public Task CancelGameAsync(int id)
         {
-            await _lANClient.CancelGameAsync(id);
+            return _lANClient.CancelGameAsync(id);
         }
 
-        public async Task ResetGameAsync(int id)
+        public Task ResetGameAsync(int id)
         {
-            await _lANClient.ResetGameAsync(id);
+            return _lANClient.ResetGameAsync(id);
         }
 
-        public async Task DeleteGameAsync(int id)
+        public Task DeleteGameAsync(int id)
         {
-            await _lANClient.DeleteGameAsync(id);
+            return _lANClient.DeleteGameAsync(id);
         }
     }
 }

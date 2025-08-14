@@ -7,7 +7,6 @@ namespace Mercurius.LAN.Web.Services
     {
         Task<List<Game>> GetGamesAsync();
         Task<GameExtended?> GetGameByIdAsync(int id);
-        Task<Game> RegisterForGameAsync();
         Task<GameExtended> CreateGameAsync(CreateGameDTO newGame);
         Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame);
         Task<GameExtended?> GetGameDetailAsync(int id);
@@ -15,5 +14,7 @@ namespace Mercurius.LAN.Web.Services
         Task CancelGameAsync(int id);
         Task ResetGameAsync(int id);
         Task DeleteGameAsync(int id);
+        Task<GameExtended> RegisterForGameAsync(int id, int participantId);
+        Task<GameExtended> UnregisterFromGameAsync(int id, int participantId);
     }
 }

@@ -28,7 +28,7 @@ else
                     <Authorized>
                         <div class="action-buttons">
                             <button class="btn btn-success" @onclick="StartGame">Start</button>
-                            <button class="btn" style="background-color: var(--accent-dark); color: white;" @onclick="CancelGame">Cancel</button>
+                            <button class="btn btn-secondary" @onclick="CancelGame">Cancel</button>
                             <button class="btn btn-secondary" @onclick="ResetGame">Reset</button>
                             <button class="btn btn-danger" @onclick="DeleteGame">Delete</button>
                         </div>
@@ -61,7 +61,7 @@ else
             }
             else if(selectedTab == 2)
             {
-                <ParticipantsTab Participants="@game.Participants" />
+                <ParticipantsTab Game=@game Participants="@game.Participants" ParticipantType="@game.ParticipantType"/>
             }
             else if(selectedTab == 3)
             {

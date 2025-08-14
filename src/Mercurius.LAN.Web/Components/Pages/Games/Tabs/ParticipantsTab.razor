@@ -1,53 +1,63 @@
 @rendermode InteractiveServer
+@using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Components.Shared
+@using Refit
+
+@inject IParticipantService ParticipantService
+@inject IGameService GameService
+@inject IToastService ToastService
 
 <div>
     <h2>Participants</h2>
-    @if (Participants == null || !Participants.Any())
-    {
-        <p>No participants found.</p>
-    }
-    else
-    {
-        <div class="participants-overview-grid">
-            @foreach (var participant in Participants)
-            {
-                <div class="participant-overview-card" @onclick="() => ShowParticipantPopup(participant)">
-                    @if (participant is Player player)
-                    {
-                        <div class="participant-avatar player-avatar">@player.Username.Substring(0,1).ToUpper()</div>
-                        <div class="participant-overview-name">@player.Username</div>
-                    }
-                    else if (participant is Team team)
-                    {
-                        <div class="participant-avatar team-avatar">@team.Name.Substring(0,1).ToUpper()</div>
-                        <div class="participant-overview-name">@team.Name</div>
-                    }
-                    else
-                    {
-                        <div class="participant-overview-name">@participant.Id</div>
-                    }
-                </div>
-            }
-        </div>
-        @if (SelectedParticipant != null)
+    <div class="participants-overview-grid">
+        @if(Game.Status == GameStatus.Scheduled)
         {
-            <div class="participants-modal-overlay" @onclick="ClosePopup">
-                <div class="participants-modal-dialog" @onclick:stopPropagation>
-                    <button class="participants-modal-close" @onclick="ClosePopup">&times;</button>
-                    <ParticipantComponent 
-                        Participant="SelectedParticipant" />
-                </div>
+            <div class="participant-overview-card add-participants-card" @onclick="ShowAddParticipantsPopupAsync">
+                <div class="participant-avatar add-avatar">+</div>
+                <div class="participant-overview-name">Add @(ParticipantType.ToString() + "s")</div>
             </div>
         }
+        @foreach(var participant in Participants)
+        {
+            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=true OnParticipantDeleted="UnregisterParticipantAsync" />
+        }
+    </div>
+    @if(SelectedParticipant != null)
+    {
+        <div class="participants-modal-overlay" @onclick="ClosePopup">
+            <div class="participants-modal-dialog" @onclick:stopPropagation>
+                <button class="participants-modal-close" @onclick="ClosePopup">&times;</button>
+                <ParticipantComponent Participant="SelectedParticipant" />
+            </div>
+        </div>
     }
+
+    @if(IsAddParticipantsPopupVisible)
+    {
+        <div class="participants-modal-overlay" @onclick="CloseAddParticipantsPopup">
+            <div class="participants-modal-dialog" @onclick:stopPropagation>
+                <button class="participants-modal-close" @onclick="CloseAddParticipantsPopup">&times;</button>
+                <h3>Select Participants</h3>
+                <div class="participants-overview-grid centered-grid">
+                    @foreach(var participant in AvailableParticipants)
+                    {
+                        <ParticipantCardComponent Participant="participant" OnParticipantSelected=AddParticipantAsync />
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
 </div>
 
 @code {
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public ParticipantType ParticipantType { get; set; }
+    [Parameter] public Game Game { get; set; }
     private Participant SelectedParticipant { get; set; }
+    private bool IsAddParticipantsPopupVisible;
+    private List<Participant> AvailableParticipants = new();
 
     private void ShowParticipantPopup(Participant participant)
     {
@@ -57,5 +67,67 @@
     private void ClosePopup()
     {
         SelectedParticipant = null;
+    }
+
+    private async Task ShowAddParticipantsPopupAsync()
+    {
+        IEnumerable<Participant> allParticipants = [];
+        switch(ParticipantType)
+        {
+            case ParticipantType.Player:
+                allParticipants = ((await ParticipantService.GetPlayersAsync()) as IEnumerable<Participant>);
+                AvailableParticipants = allParticipants.Where(ap => !Participants.Any(p => p.Id == ap.Id)).ToList();
+                break;
+            case ParticipantType.Team:
+                allParticipants = ((await ParticipantService.GetTeamsAsync()) as IEnumerable<Participant>);
+                AvailableParticipants = allParticipants.Where(ap => !Participants.Any(p => p.Id == ap.Id)).ToList();
+                break;
+        }
+
+        if(AvailableParticipants.Any())
+            IsAddParticipantsPopupVisible = true;
+        else
+            ToastService.ShowInfo($"No available {ParticipantType.ToString()}s to add");
+
+    }
+
+    private async Task AddParticipantAsync(Participant participant)
+    {
+        try
+        {
+            var updatedGame = await GameService.RegisterForGameAsync(Game.Id, participant.Id);
+            Participants = updatedGame.Participants;
+            AvailableParticipants.Remove(participant);
+            var participantName = participant is Player player ? player.Username : (participant as Team)?.Name ?? "Unknown";
+
+            if(!AvailableParticipants.Any())
+                IsAddParticipantsPopupVisible = false;
+            ToastService.ShowSuccess($"{participantName} has been added to the game.");
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
+    }
+
+
+    private void CloseAddParticipantsPopup()
+    {
+        IsAddParticipantsPopupVisible = false;
+        AvailableParticipants.Clear();
+    }
+
+    private async Task UnregisterParticipantAsync(Participant participant)
+    {
+        try
+        {
+            var updatedGame = await GameService.UnregisterFromGameAsync(Game.Id, participant.Id);
+            Participants = updatedGame.Participants;
+            ToastService.ShowSuccess($"{(participant is Player player ? player.Username : (participant as Team)?.Name ?? "Unknown")} has been removed from the game.");
+        }
+        catch (ApiException ex)
+        {
+            ToastService.ShowError(ex.Content);
+        }
     }
 }

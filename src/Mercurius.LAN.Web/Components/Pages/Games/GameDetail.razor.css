@@ -236,7 +236,7 @@
     padding: 1.5rem 0 0 0;
 }
 h1 {
-    color: #217226;
+    color: black;
 }
 @media (max-width: 320px) {
     .game-header-tabs {

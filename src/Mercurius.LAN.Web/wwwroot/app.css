@@ -18,7 +18,6 @@
 html, body {
     font-family: 'Orbitron', sans-serif;
     background-color: var(--primary-color);
-    color: var(--text-color);
 }
 
 h1 {
@@ -147,47 +146,6 @@ main {
         font-size: 0.8rem;
     }
 
-    .custom-autocomplete-input {
-        height: 3rem; /* Increased height for a thicker input field */
-        background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="%23217226" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 0.75rem center/1.2rem 1.2rem;
-        padding-left: 2.5rem;
-        border-radius: 2rem;
-        border: 1px solid #217226;
-        color: #217226;
-        box-shadow: 0 2px 8px rgba(33, 114, 38, 0.07);
-        transition: border-color 0.2s, box-shadow 0.2s;
-    }
-
-    .custom-autocomplete-dropdown {
-        width: 100%; /* Match input width */
-        position: absolute;
-        top: calc(100% - 1px); /* Align with input border */
-        left: 0;
-        background: #fff;
-        border: 1px solid #217226;
-        border-radius: 0 0 2rem 2rem; /* Rounded corners to match input */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        max-height: 200px;
-        overflow-y: auto;
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .custom-autocomplete-dropdown::-webkit-scrollbar {
-        width: 8px;
-    }
-
-    .custom-autocomplete-dropdown::-webkit-scrollbar-thumb {
-        background: #217226; /* Match accent color */
-        border-radius: 4px;
-    }
-
-    .custom-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-        background: #14501a; /* Darker accent on hover */
-    }
-/* Remove default bootstrap styles that might conflict */
 .row.no-gutters {
     margin-right: 0;
     margin-left: 0;
@@ -287,7 +245,7 @@ main {
     background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="%23217226" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 0.75rem center/1.2rem 1.2rem;
     padding-left: 2.5rem;
     border-radius: 2rem;
-    border: 1px solid #217226;
+    border: 1px solid lightgrey;
     color: #217226;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: border-color 0.2s, box-shadow 0.2s;
@@ -295,13 +253,13 @@ main {
 
     .search-bar-input:focus {
         outline: none;
-        border-color: #14501a;
+        border-color: lightgrey;
         box-shadow: 0 2px 12px rgba(33, 114, 38, 0.15);
     }
 
 .search-bar-container {
     max-width: 340px;
-    margin: 1.5rem 0 2rem 0;
+    margin: 1.5rem auto 2rem auto; /* Center horizontally with auto margins */
     position: relative;
 }
 
@@ -347,4 +305,63 @@ main {
     gap: 10px;
     justify-content: flex-end;
     align-items: center;
+}
+
+/* Admin header styling */
+.admin-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent-color);
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.admin-header h2 {
+    margin: 0;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* Styling for Admin subitems */
+.nav-subitems {
+    margin-left: 1.5rem; /* Indent subitems */
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem; /* Add spacing between subitems */
+}
+
+.nav-subitems .nav-link {
+    font-size: 0.9rem; /* Slightly smaller font for subitems */
+    color: var(--text-color);
+}
+
+.nav-link:hover {
+    text-decoration: underline; /* Add underline on hover for better visibility */
+    cursor: pointer;
+}
+.platform-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-right: 0.3em;
+}
+
+.discord-icon {
+    background: url('/img/discord.svg') no-repeat center center/contain;
+}
+
+.steam-icon {
+    background: url('/img/steam.svg') no-repeat center center/contain;
+}
+
+.riot-icon {
+    background: url('/img/riot.svg') no-repeat center center/contain;
 }

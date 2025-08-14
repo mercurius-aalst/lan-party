@@ -1,0 +1,27 @@
+﻿@using Mercurius.LAN.Web.Models.Participants
+<div class="participant-overview-card" @onclick="() => ShowParticipantPopup(Participant)">
+    @if(Participant is Player player)
+    {
+        <div class="participant-avatar player-avatar">@player.Username.Substring(0, 1).ToUpper()</div>
+        <div class="participant-overview-name">@player.Username</div>
+    }
+    else if(Participant is Team team)
+    {
+        <div class="participant-avatar team-avatar">@team.Name.Substring(0, 1).ToUpper()</div>
+        <div class="participant-overview-name">@team.Name</div>
+    }
+    else
+    {
+        <div class="participant-overview-name">@Participant.Id</div>
+    }
+</div>
+
+@code {
+    [Parameter] public Participant Participant { get; set; }
+    [Parameter] public EventCallback<Participant> OnParticipantSelected { get; set; }
+
+    private void ShowParticipantPopup(Participant participant)
+    {
+        OnParticipantSelected.InvokeAsync(participant);
+    }
+}

@@ -15,7 +15,9 @@
 <PageTitle>Teams Admin</PageTitle>
 
 <div class="admin-container">
+    <div class="admin-header">
     <h2>Manage Teams</h2>
+    </div>
 
     <div class="search-bar-container">
         <CustomAutocomplete @ref="autoCompleteComponent" TItem="Team" Items="teams" ItemLabel="team => team.Name" OnSelected="OnTeamSelected" Placeholder="Search Teams" />
@@ -31,7 +33,7 @@
         <ValidationSummary />
 
         <div class="form-container">
-            <h3>@(isCreateMode ? "Create Team" : "Update Team")</h3>
+            <h2>@(isCreateMode ? "Create Team" : "Update Team")</h2>
             <div class="form-group">
                 <label for="name">Team Name</label>
                 <InputText id="name" class="form-control" @bind-Value="selectedTeam.Name" />

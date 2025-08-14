@@ -10,6 +10,8 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IGameService GameService
 @inject IToastService ToastService
+@rendermode InteractiveServer
+
 
 @code {
     [Parameter] public GameExtended Game { get; set; }
@@ -17,7 +19,7 @@
 
 <div class="overview-container">
 
-        <h2 class="overview-header">Overview</h2>
+    <h2 class="overview-header">Overview</h2>
     @if(!isEditMode)
     {
         <div class="overview-details">
@@ -50,45 +52,46 @@
                 <EditForm Context="editformContext" Model="editGame" OnValidSubmit="HandleEditSubmit">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <InputText id="name" class="form-control" @bind-Value="editGame.Name" />
+                        </div>
 
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <InputText id="name" class="form-control" @bind-Value="editGame.Name" />
-                    </div>
+                        <div class="form-group">
+                            <label for="bracketType">Bracket Type</label>
+                            <InputSelect id="bracketType" class="form-control" @bind-Value="editGame.BracketType">
+                                @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="bracketType">Bracket Type</label>
-                        <InputSelect id="bracketType" class="form-control" @bind-Value="editGame.BracketType">
-                            @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
-                            {
-                                <option value="@type">@type.GetLabel()</option>
-                            }
-                        </InputSelect>
-                    </div>
+                        <div class="form-group">
+                            <label for="format">Match Format</label>
+                            <InputSelect id="format" class="form-control" @bind-Value="editGame.Format">
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="format">Match Format</label>
-                        <InputSelect id="format" class="form-control" @bind-Value="editGame.Format">
-                            @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
-                            {
-                                <option value="@type">@type.GetLabel()</option>
-                            }
-                        </InputSelect>
-                    </div>
+                        <div class="form-group">
+                            <label for="finalsFormat">Finals Format</label>
+                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="editGame.FinalsFormat">
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="finalsFormat">Finals Format</label>
-                        <InputSelect id="finalsFormat" class="form-control" @bind-Value="editGame.FinalsFormat">
-                            @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
-                            {
-                                <option value="@type">@type.GetLabel()</option>
-                            }
-                        </InputSelect>
-                    </div>                   
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary" >Save</button>
-                        <button type="button" class="btn btn-danger" @onclick="CancelEdit">Cancel</button>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                        </div>
                     </div>
                 </EditForm>
             </Authorized>
@@ -129,10 +132,9 @@
             isEditMode = false;
             ToastService.ShowSuccess("Edit successful");
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
     }
 }
-@rendermode InteractiveServer
