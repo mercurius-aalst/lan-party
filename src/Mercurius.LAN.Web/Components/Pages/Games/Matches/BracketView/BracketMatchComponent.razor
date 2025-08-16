@@ -9,15 +9,16 @@
     <MatchParticipantRow Match="Match" ParticipantId="Match.Participant2Id" Participants="Participants" SequenceNumber="2"></MatchParticipantRow>
 </div>
 
-@if (showDialog)
+@if(showDialog)
 {
-    <MatchDetailsDialog Match="Match" Participants="Participants" OnClose="CloseDialog" />
+    <MatchDetailsDialog Match="Match" Participants="Participants" OnClose="CloseDialog" OnDataReload="OnDataReload" />
 }
 
 @code {
     [Parameter] public Match Match { get; set; }
     [Parameter] public (int left, int y) Position { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public EventCallback OnDataReload { get; set; }
 
     private bool showDialog = false;
 
@@ -26,8 +27,9 @@
         showDialog = true;
     }
 
-    private void CloseDialog()
+    private async Task CloseDialog()
     {
         showDialog = false;
+        await OnDataReload.InvokeAsync(); // Notify parent to reload data
     }
-}
+}}

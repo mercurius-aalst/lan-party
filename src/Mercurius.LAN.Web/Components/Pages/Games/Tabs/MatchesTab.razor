@@ -11,10 +11,10 @@
     @switch(BracketType)
     {
         case BracketType.DoubleElimination:
-            <DoubleEliminationBracketComponent Matches="@Matches" Participants="@Participants" />
+            <DoubleEliminationBracketComponent OnDataReload="OnDataReload" Matches="@Matches" Participants="@Participants" />
             break;
         case BracketType.SingleElimination:
-            <SingleEliminationBracketComponent Matches="@Matches" Participants="@Participants" />
+            <SingleEliminationBracketComponent OnDataReload="OnDataReload" Matches="@Matches" Participants="@Participants" />
             break;
         default:
             <p>ERROR</p>
@@ -28,5 +28,6 @@
     [Parameter] public IEnumerable<Match> Matches { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public BracketType BracketType { get; set; }
+    [Parameter] public EventCallback OnDataReload { get; set; }
 
 }

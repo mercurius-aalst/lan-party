@@ -58,7 +58,7 @@ else
             }
             else if(selectedTab == 1)
             {
-                <MatchesTab BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants" />
+                <MatchesTab OnDataReload="LoadGameDataAsync" BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants" />
             }
             else if(selectedTab == 2)
             {
@@ -79,16 +79,17 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadDataAsync();
+        await LoadGameDataAsync();
     }
 
     private void SelectTab(int tab)
     {
         selectedTab = tab;
     }
-    private async Task LoadDataAsync()
+    private async Task LoadGameDataAsync()
     {
         game = await GameService.GetGameByIdAsync(GameId);
+        await InvokeAsync(StateHasChanged);
 
     }
     private void OnTabDropdownChanged(ChangeEventArgs e)
@@ -105,8 +106,7 @@ else
         {
             await GameService.CompleteGameAsync(GameId);
             ToastService.ShowSuccess("Game successfully finished.");
-            await LoadDataAsync();
-            await InvokeAsync(StateHasChanged);
+            await LoadGameDataAsync();
         }
         catch (ApiException ex)
         {
@@ -119,8 +119,7 @@ else
         {
             await GameService.StartGameAsync(GameId);
             ToastService.ShowSuccess("Game successfully started.");
-            await LoadDataAsync();
-            await InvokeAsync(StateHasChanged);
+            await LoadGameDataAsync();
         }
         catch (ApiException ex)
         {
@@ -134,8 +133,7 @@ else
         {
             await GameService.CancelGameAsync(GameId);
             ToastService.ShowSuccess("Game succesfully canceled.");
-            await LoadDataAsync();
-            await InvokeAsync(StateHasChanged);
+            await LoadGameDataAsync();
         }
         catch (ApiException ex)
         {
@@ -149,8 +147,7 @@ else
         {
             await GameService.ResetGameAsync(GameId);
             ToastService.ShowSuccess("Game sucessfully reset.");
-            await LoadDataAsync();
-            await InvokeAsync(StateHasChanged);
+            await LoadGameDataAsync();
         }
         catch (ApiException ex)
         {
@@ -171,4 +168,5 @@ else
             ToastService.ShowError(ex.Content);
         }
     }
+
 }

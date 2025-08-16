@@ -15,7 +15,7 @@
         <br />
         <h3>Upper Bracket</h3>
         <br />
-        <SingleEliminationBracketComponent Matches="_uBMatches" Participants="Participants" />
+        <SingleEliminationBracketComponent Matches="_uBMatches" Participants="Participants" OnDataReload="OnDataReload" />
         <br/>
         <br/>
         <h3>Lower Bracket</h3>
@@ -36,7 +36,7 @@
                         {
                             if (matchData.matchPositions.TryGetValue(match.Id, out var pos))
                             {
-                                <BracketMatchComponent Match="match" Participants="Participants" Position="pos"></BracketMatchComponent>
+                                <BracketMatchComponent Match="match" Participants="Participants" Position="pos" OnDataReload="OnDataReload"></BracketMatchComponent>
                             }
                         }
                     }
@@ -61,6 +61,7 @@
 @code {
     [Parameter] public IEnumerable<Match> Matches { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public EventCallback OnDataReload { get; set; }
 
     private IEnumerable<Match> _uBMatches;
     private IEnumerable<Match> _lBMatches;

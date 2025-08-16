@@ -58,9 +58,8 @@
     [Parameter] public Match Match { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnDataReload { get; set; }
     [Inject] private IGameService GameService { get; set; }
-
-#error fix auto-refresh, currently manually refreshing the page after saving scores is needed
 
     private Participant GetParticipantById(int? participantId)
     {
@@ -123,7 +122,8 @@
                 Participant2Score = Match.Participant2Score ?? 0,
             });
             ToastService.ShowSuccess("Score updated successfully");
-            await OnClose.InvokeAsync();
+            await OnDataReload.InvokeAsync(); // Notify parent to reload data
+            await OnClose.InvokeAsync(); // Close the dialog
         }
         catch(ApiException ex)
         {
