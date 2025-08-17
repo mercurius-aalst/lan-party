@@ -14,7 +14,7 @@
             @foreach(var placement in Placements.OrderBy(p => p.Place).Take(3))
             {
                 <div class="podium-step @(placement.Place == 1 ? "gold" : placement.Place == 2 ? "silver" : "bronze")">
-                    <div class="team-name">
+                    <div class="participant-name">
                         @foreach(var participant in placement.Participants)
                         {
                             @switch(participant)
@@ -67,7 +67,7 @@
 
 @code {
     [Parameter] public IEnumerable<Placement> Placements { get; set; }
-#error fix some styling issues with podium and placements list
+#warning fix some styling issues with podium and placements list
     private string GetOrdinal(int number)
     {
         if(number % 100 >= 11 && number % 100 <= 13)
