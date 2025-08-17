@@ -34,28 +34,98 @@
         line-height: 3rem;
         width: 100%;
     }
-
-/* User Info Section Styles */
-.user-info-container {
-    position: fixed;
+.user-section {
+    position: absolute;
     bottom: 0;
     width: 100%;
-    background-color: var(--primary-color);
-    padding: 10px;
-    text-align: center;
-    border-top: 1px solid var(--card-border-color);
-}
-
-.user-info {
+    background-color: var(--accent-color);
+    color: var(--bs-light);
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    color: var(--accent-color);
-    font-size: 1rem;
-    font-weight: bold;
+    cursor: pointer;
 }
 
-.user-icon {
-    font-size: 1.5rem;
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0);
+    z-index: 999;
 }
+
+.user-profile {
+    width: inherit;
+    position: relative;
+    background-color: var(--accent-color);
+    color: var(--bs-light);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--accent-dark);
+    cursor: pointer;
+}
+
+.user-profile:hover {
+    background-color: var(--accent-dark);
+}
+
+.user-profile .user-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+.user-section .dropdown-menu {
+    background-color: var(--accent-color);
+    color: var(--bs-light);
+    border: 1px solid var(--accent-dark);
+    bottom: 100%;
+    right: 0;
+    left: auto;
+    transform: translateY(-5px);
+    top: auto;
+}
+
+.user-section .dropdown-menu button {
+    background: none;
+    border: none;
+    color: var(--bs-light);
+    width: 100%;
+    text-align: left;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.user-section .dropdown-menu button:hover {
+    background-color: var(--accent-dark);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    padding: 10px;
+    display: block; /* Ensure the dropdown is displayed */
+}
+
+    .dropdown-menu button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px 10px;
+        text-align: left;
+        width: 100%;
+    }
+
+        .dropdown-menu button:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-menu button:not([disabled]) {
+            color: white;
+        }

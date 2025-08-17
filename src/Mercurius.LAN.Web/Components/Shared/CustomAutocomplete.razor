@@ -9,7 +9,7 @@
         <ul class="custom-autocomplete-dropdown" @ref="dropdownElement">
             @foreach(var item in filteredItems)
             {
-                <li @onclick="() => SelectItem(item)">@ItemLabel(item)</li>
+                <li @onclick="() => SelectItemAsync(item)">@ItemLabel(item)</li>
             }
         </ul>
     }
@@ -88,12 +88,12 @@
             var exactMatch = filteredItems.FirstOrDefault(item => ItemLabel(item).Equals(searchText, StringComparison.OrdinalIgnoreCase));
             if (exactMatch != null)
             {
-                SelectItem(exactMatch);
+                SelectItemAsync(exactMatch);
             }
         }
     }
 
-    private async Task SelectItem(TItem item)
+    private async Task SelectItemAsync(TItem item)
     {
         searchText = ItemLabel(item);
         isDropdownVisible = false;
