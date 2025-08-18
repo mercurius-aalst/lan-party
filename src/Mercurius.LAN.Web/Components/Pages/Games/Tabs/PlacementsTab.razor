@@ -21,6 +21,7 @@
                             {
                                 case Player player:
                                     @player.Username
+                                    <br/>
                                     break;
                                 case Team team:
                                     @team.Name
@@ -67,7 +68,7 @@
 
 @code {
     [Parameter] public IEnumerable<Placement> Placements { get; set; }
-#warning fix some styling issues with podium and placements list
+
     private string GetOrdinal(int number)
     {
         if(number % 100 >= 11 && number % 100 <= 13)
