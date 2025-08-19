@@ -9,31 +9,31 @@ namespace Mercurius.LAN.Web.Services
 {
     public class GameService : IGameService
     {
-        private readonly ILANClient _lANClient;
+        private readonly ILANClient _lanClient;
 
-        public GameService(ILANClient lANClient)
+        public GameService(ILANClient lanClient)
         {
-            _lANClient = lANClient;
+            _lanClient = lanClient;
         }
 
         public Task<List<Game>> GetGamesAsync()
         {
-            return _lANClient.GetGamesAsync();
+            return _lanClient.GetGamesAsync();
         }
 
         public Task<GameExtended?> GetGameByIdAsync(int id)
         {
-            return _lANClient.GetGameByIdAsync(id);
+            return _lanClient.GetGameByIdAsync(id);
         }
 
         public Task<GameExtended> RegisterForGameAsync(int id, int participantId)
         {
-            return _lANClient.RegisterForGameAsync(id, participantId);
+            return _lanClient.RegisterForGameAsync(id, participantId);
         }
 
         public Task<GameExtended> UnregisterFromGameAsync(int id, int participantId)
         {
-            return _lANClient.UnregisterFromGameAsync(id, participantId);
+            return _lanClient.UnregisterFromGameAsync(id, participantId);
         }
        
 
@@ -54,7 +54,7 @@ namespace Mercurius.LAN.Web.Services
                 formData.Add(streamContent, "Image", newGame.Image.Name);
             }
 
-            return await _lANClient.CreateGameAsync(formData);
+            return await _lanClient.CreateGameAsync(formData);
         }
 
         public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame)
@@ -74,42 +74,42 @@ namespace Mercurius.LAN.Web.Services
                 formData.Add(streamContent, "Image", updatedGame.Image.Name);
             }
 
-            return await _lANClient.UpdateGameAsync(id, formData);
+            return await _lanClient.UpdateGameAsync(id, formData);
         }
 
-        public async Task<GameExtended?> GetGameDetailAsync(int id)
+        public Task<GameExtended?> GetGameDetailAsync(int id)
         {
-            return await _lANClient.GetGameByIdAsync(id);
+            return _lanClient.GetGameByIdAsync(id);
         }
 
         public Task StartGameAsync(int id)
         {
-            return _lANClient.StartGameAsync(id);
+            return _lanClient.StartGameAsync(id);
         }
 
         public Task CancelGameAsync(int id)
         {
-            return _lANClient.CancelGameAsync(id);
+            return _lanClient.CancelGameAsync(id);
         }
 
         public Task ResetGameAsync(int id)
         {
-            return _lANClient.ResetGameAsync(id);
+            return _lanClient.ResetGameAsync(id);
         }
 
         public Task DeleteGameAsync(int id)
         {
-            return _lANClient.DeleteGameAsync(id);
+            return _lanClient.DeleteGameAsync(id);
         }
 
-        public Task<Match> UpdateMatchScoresAsync(int matchId, UpdateMatchDTO updateMatchDTO)
+        public Task<Match> UpdateMatchScoresAsync(int matchId, UpdateMatchDTO updateMatchDto)
         {
-           return _lANClient.UpdateMatchAsync(matchId, updateMatchDTO);
+           return _lanClient.UpdateMatchAsync(matchId, updateMatchDto);
         }
 
         public Task CompleteGameAsync(int id)
         {
-            return _lANClient.CompleteGameAsync(id);
+            return _lanClient.CompleteGameAsync(id);
         }
     }
 }

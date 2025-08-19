@@ -2,15 +2,8 @@
 @attribute [Authorize]
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.DTOs.Participants.Players
-@using Mercurius.LAN.Web.Services
-@using Blazored.Toast.Services
 @using Mercurius.LAN.Web.Components.Shared
-@using AuthorizeAttribute = Microsoft.AspNetCore.Authorization.AuthorizeAttribute
-@using Refit
-@rendermode InteractiveServer
-
-@inject IParticipantService ParticipantService
-@inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 
 <PageTitle>Players Admin</PageTitle>
 
@@ -20,41 +13,41 @@
     </div>
 
     <div class="search-bar-container">
-        <CustomAutocomplete @ref="autoCompleteComponent" TItem="Player" Items="players" ItemLabel="player => player.Username" OnSelected="OnPlayerSelected" Placeholder="Search Players" />
+        <CustomAutocomplete @ref="_autoCompleteComponent" TItem="Player" Items="_players" ItemLabel="player => player.Username" OnSelected="OnPlayerSelected" Placeholder="Search Players" />
     </div>
 
-    @if(selectedPlayer == null)
+    @if(_selectedPlayer == null)
     {
-        selectedPlayer = new Player();
+        _selectedPlayer = new Player();
     }
 
-    <EditForm Model="selectedPlayer" OnValidSubmit="HandleSubmit">
+    <EditForm Model="_selectedPlayer" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
         <div class="form-container">
-            <h2>@(isCreateMode ? "Create Player" : "Update Player")</h2>
+            <h2>@(_isCreateMode ? "Create Player" : "Update Player")</h2>
             <div class="horizontal-layout">
                 <div class="form-section">
                     <h3>Personal information</h3>
                     <div class="form-group">
                         <label for="username">Username</label>
-                        <InputText id="username" class="form-control" @bind-Value="selectedPlayer.Username" />
+                        <InputText id="username" class="form-control" @bind-Value="_selectedPlayer.Username" />
                     </div>
 
                     <div class="form-group">
                         <label for="firstname">First Name</label>
-                        <InputText id="firstname" class="form-control" @bind-Value="selectedPlayer.Firstname" />
+                        <InputText id="firstname" class="form-control" @bind-Value="_selectedPlayer.Firstname" />
                     </div>
 
                     <div class="form-group">
                         <label for="lastname">Last Name</label>
-                        <InputText id="lastname" class="form-control" @bind-Value="selectedPlayer.Lastname" />
+                        <InputText id="lastname" class="form-control" @bind-Value="_selectedPlayer.Lastname" />
                     </div>
 
                     <div class="form-group">
                         <label for="email">Email</label>
-                        <InputText id="email" class="form-control" @bind-Value="selectedPlayer.Email" disabled="@(!isCreateMode)" />
+                        <InputText id="email" class="form-control" @bind-Value="_selectedPlayer.Email" disabled="@(!_isCreateMode)" />
                     </div>
                 </div>
                 <br />
@@ -62,26 +55,26 @@
                     <h3>Platform IDs</h3>
                     <div class="form-group">
                         <label for="discordId">Discord ID <span class="platform-icon discord-icon"></span></label>
-                        <InputText id="discordId" class="form-control" @bind-Value="selectedPlayer.DiscordId" />
+                        <InputText id="discordId" class="form-control" @bind-Value="_selectedPlayer.DiscordId" />
                     </div>
 
                     <div class="form-group">
                         <label for="steamId">Steam ID <span class="platform-icon steam-icon"></span></label>
-                        <InputText id="steamId" class="form-control" @bind-Value="selectedPlayer.SteamId" />
+                        <InputText id="steamId" class="form-control" @bind-Value="_selectedPlayer.SteamId" />
                     </div>
 
                     <div class="form-group">
                         <label for="riotId">Riot ID <span class="platform-icon riot-icon"></span></label>
-                        <InputText id="riotId" class="form-control" @bind-Value="selectedPlayer.RiotId" />
+                        <InputText id="riotId" class="form-control" @bind-Value="_selectedPlayer.RiotId" />
                     </div>
                 </div>
             </div>
             <div class="form-actions">
                 <div class="form-actions-section">
-                    <button type="submit" class="btn btn-primary">@(isCreateMode ? "Create Player" : "Update Player")</button>
+                    <button type="submit" class="btn btn-primary">@(_isCreateMode ? "Create Player" : "Update Player")</button>
                 </div>
                 <div class="form-actions-section">
-                    @if(!isCreateMode)
+                    @if(!_isCreateMode)
                     {
                         <button type="button" class="btn btn-danger" @onclick="DeletePlayer">Delete Player</button>
                     }
@@ -91,105 +84,3 @@
         </div>
     </EditForm>
 </div>
-
-
-@code {
-    private List<Player> players = new();
-    private Player? selectedPlayer;
-    private bool isCreateMode = true;
-
-    private CustomAutocomplete<Player> autoCompleteComponent;
-
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            players = await ParticipantService.GetPlayersAsync();
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-
-    private void OnPlayerSelected(Player player)
-    {
-        selectedPlayer = player;
-        isCreateMode = false;
-    }
-
-    private void ClearForm()
-    {
-        selectedPlayer = new Player();
-        isCreateMode = true;
-        autoCompleteComponent.ClearSearchField();
-        StateHasChanged();
-    }
-
-    private async Task HandleSubmit()
-    {
-        try
-        {
-            if(isCreateMode)
-            {
-                // Create logic
-                var player = await ParticipantService.CreatePlayerAsync(new CreatePlayerDTO
-                {
-                    Username = selectedPlayer.Username,
-                    Firstname = selectedPlayer.Firstname,
-                    Lastname = selectedPlayer.Lastname,
-                    Email = selectedPlayer.Email,
-                    DiscordId = selectedPlayer.DiscordId,
-                    SteamId = selectedPlayer.SteamId,
-                    RiotId = selectedPlayer.RiotId
-                });
-                players.Add(player);
-                ToastService.ShowSuccess("Player created successfully.");
-            }
-            else
-            {
-                // Update logic
-                await ParticipantService.UpdatePlayerAsync(selectedPlayer.Id, new UpdatePlayerDTO
-                {
-                    Username = selectedPlayer.Username,
-                    Firstname = selectedPlayer.Firstname,
-                    Lastname = selectedPlayer.Lastname,
-                    DiscordId = selectedPlayer.DiscordId,
-                    SteamId = selectedPlayer.SteamId,
-                    RiotId = selectedPlayer.RiotId
-                });
-                ToastService.ShowSuccess("Player updated successfully.");
-            }
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-
-    private Task<IEnumerable<Player>> SearchPlayers(string searchText, CancellationToken cancellationToken)
-    {
-        if(string.IsNullOrWhiteSpace(searchText))
-            return Task.FromResult(players.AsEnumerable());
-
-        var filteredPlayers = players.Where(player => player.Username.Contains(searchText, StringComparison.OrdinalIgnoreCase));
-        return Task.FromResult(filteredPlayers.AsEnumerable());
-    }
-
-    private async Task DeletePlayer()
-    {
-        if(selectedPlayer == null)
-            return;
-        try
-        {
-            await ParticipantService.DeletePlayerAsync(selectedPlayer.Id);
-            players.Remove(selectedPlayer);
-            ToastService.ShowSuccess("Player deleted successfully.");
-            ClearForm();
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-}

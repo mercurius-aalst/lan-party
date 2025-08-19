@@ -15,44 +15,44 @@ namespace Mercurius.LAN.Web.Services
             _lanClient = lanClient;
         }
 
-        public async Task<List<Player>> GetPlayersAsync()
+        public Task<List<Player>> GetPlayersAsync()
         {
-            return await _lanClient.GetPlayersAsync();
+            return _lanClient.GetPlayersAsync();
         }
 
-        public async Task<Player> CreatePlayerAsync(CreatePlayerDTO player)
+        public Task<Player> CreatePlayerAsync(CreatePlayerDTO player)
         {
-            return await _lanClient.CreatePlayerAsync(player);
+            return _lanClient.CreatePlayerAsync(player);
         }
 
-        public async Task<Player> UpdatePlayerAsync(int id, UpdatePlayerDTO player)
+        public Task<Player> UpdatePlayerAsync(int id, UpdatePlayerDTO player)
         {
-            return await _lanClient.UpdatePlayerAsync(id, player);
+            return _lanClient.UpdatePlayerAsync(id, player);
         }
 
-        public async Task DeletePlayerAsync(int id)
+        public Task DeletePlayerAsync(int id)
         {
-            await _lanClient.DeletePlayerAsync(id);
+            return _lanClient.DeletePlayerAsync(id);
         }
 
-        public async Task<List<Team>> GetTeamsAsync()
+        public Task<List<Team>> GetTeamsAsync()
         {
-            return await _lanClient.GetTeamsAsync();
+            return _lanClient.GetTeamsAsync();
         }
 
-        public async Task<Team> CreateTeamAsync(CreateTeamDTO team)
+        public Task<Team> CreateTeamAsync(CreateTeamDTO team)
         {
-            return await _lanClient.CreateTeamAsync(team);
+            return _lanClient.CreateTeamAsync(team);
         }
 
-        public async Task<Team> UpdateTeamAsync(int id, UpdateTeamDTO team)
+        public Task<Team> UpdateTeamAsync(int id, UpdateTeamDTO team)
         {
-            return await _lanClient.UpdateTeamAsync(id, team);
+            return _lanClient.UpdateTeamAsync(id, team);
         }
 
-        public async Task DeleteTeamAsync(int id)
+        public Task DeleteTeamAsync(int id)
         {
-            await _lanClient.DeleteTeamAsync(id);
+            return _lanClient.DeleteTeamAsync(id);
         }
     }
 }

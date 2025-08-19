@@ -3,31 +3,28 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Extensions
-@using Refit
-@inject IGameService GameService
-@inject IToastService ToastService
 
 <div>
-    @if(isDialogOpen)
+    @if(_isDialogOpen)
     {
         <div class="participants-modal-overlay" @onclick="() => CloseDialog(null)">
             <div class="participants-modal-dialog" @onclick:stopPropagation>
                 <button class="participants-modal-close" @onclick="() => CloseDialog(null)">&times;</button>
                 <div class="form-container">
                     <h3>Create New Game</h3>
-                    <EditForm Model="newGame" OnValidSubmit="HandleSubmit">
+                    <EditForm Model="_newGame" OnValidSubmit="SubmitGameAsync">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
                         <div class="form-group">
                             <label for="name">Name</label>
-                            <InputText id="name" class="form-control" @bind-Value="newGame.Name" />
+                            <InputText id="name" class="form-control" @bind-Value="_newGame.Name" />
                         </div>
 
                         <div class="form-group-inline">
                             <div class="form-group">
                                 <label for="bracketType">Bracket Type</label>
-                                <InputSelect id="bracketType" class="form-control" @bind-Value="newGame.BracketType">
+                                <InputSelect id="bracketType" class="form-control" @bind-Value="_newGame.BracketType">
                                     @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
                                     {
                                         <option value="@type">@type.GetLabel()</option>
@@ -37,7 +34,7 @@
 
                             <div class="form-group">
                                 <label for="participantType">Participant Type</label>
-                                <InputSelect id="participantType" class="form-control" @bind-Value="newGame.ParticipantType">
+                                <InputSelect id="participantType" class="form-control" @bind-Value="_newGame.ParticipantType">
                                     @foreach(ParticipantType type in Enum.GetValues(typeof(ParticipantType)))
                                     {
                                         <option value="@type">@type.ToString()</option>
@@ -49,7 +46,7 @@
                         <div class="form-group-inline">
                             <div class="form-group">
                                 <label for="format">Format</label>
-                                <InputSelect id="format" class="form-control" @bind-Value="newGame.Format">
+                                <InputSelect id="format" class="form-control" @bind-Value="_newGame.Format">
                                     @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                     {
                                         <option value="@type">@type.GetLabel()</option>
@@ -59,7 +56,7 @@
 
                             <div class="form-group">
                                 <label for="finalsFormat">Finals Format</label>
-                                <InputSelect id="finalsFormat" class="form-control" @bind-Value="newGame.FinalsFormat">
+                                <InputSelect id="finalsFormat" class="form-control" @bind-Value="_newGame.FinalsFormat">
                                     @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                     {
                                         <option value="@type">@type.GetLabel()</option>
@@ -70,11 +67,12 @@
 
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
-                            <InputFile id="gameImage" class="form-control" OnChange="HandleFileUpload" accept="image/*" />
+                            <InputFile id="gameImage" class="form-control" OnChange="UploadFile" accept="image/*" />
                         </div>
 
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Create</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(null)">Cancel</button>
                         </div>
                     </EditForm>
                 </div>
@@ -82,37 +80,3 @@
         </div>
     }
 </div>
-
-@code {
-    [Parameter] public EventCallback<GameExtended> OnClose { get; set; }
-
-    private CreateGameDTO newGame = new CreateGameDTO();
-    private bool isDialogOpen = true;
-    private IBrowserFile? uploadedFile;
-
-    private void HandleFileUpload(InputFileChangeEventArgs e)
-    {
-        uploadedFile = e.File;
-    }
-
-    private async Task HandleSubmit()
-    {
-        try
-        {
-            newGame.Image = uploadedFile;
-            var createdGame = await GameService.CreateGameAsync(newGame);
-            ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
-            await OnClose.InvokeAsync(createdGame);
-        }
-        catch (ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-
-    private void CloseDialog(GameExtended createdGame)
-    {
-        isDialogOpen = false;
-        OnClose.InvokeAsync(createdGame);
-    }
-}

@@ -1,6 +1,6 @@
 ﻿@using Mercurius.LAN.Web.Models.Participants
-<div class="participant-overview-card" @onmouseover="() => ShowDeleteIcon = true" @onmouseout="() => ShowDeleteIcon = false" @onclick="() => ShowParticipantPopup(Participant)">
-    @if(ShowDeleteIcon && AllowDeleteFunction)
+<div class="participant-overview-card" @onmouseover="() => _showDeleteIcon = true" @onmouseout="() => _showDeleteIcon = false" @onclick="() => ShowParticipantPopup(Participant)">
+    @if(_showDeleteIcon && AllowDeleteFunction)
     {
         <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
             <i class="bi bi-trash"></i>
@@ -21,16 +21,3 @@
         <div class="participant-overview-name">@Participant.Id</div>
     }
 </div>
-@code {
-    private bool ShowDeleteIcon { get; set; } = false;
-
-    [Parameter] public Participant Participant { get; set; }
-    [Parameter] public EventCallback<Participant> OnParticipantSelected { get; set; }
-    [Parameter] public EventCallback<Participant> OnParticipantDeleted { get; set; }
-    [Parameter] public bool AllowDeleteFunction { get; set; } = false;
-
-    private void ShowParticipantPopup(Participant participant)
-    {
-        OnParticipantSelected.InvokeAsync(participant);
-    }
-}

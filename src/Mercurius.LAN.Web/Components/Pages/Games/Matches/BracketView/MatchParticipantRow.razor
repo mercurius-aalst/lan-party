@@ -4,32 +4,5 @@
 
 <div class="participant-row @(_isWinner ? "winner" : "")">
     <span class="participant-name">@ParticipantName</span>
-    <span class="participant-score">@GetParticipantScore(Match, SequenceNumber)</span>
+    <span class="participant-score">@CalculateParticipantScore(Match, SequenceNumber)</span>
 </div>
-
-@code {
-    [Parameter] public IEnumerable<Participant> Participants { get; set; }
-    [Parameter] public Match Match { get; set; }
-    [Parameter] public int? ParticipantId { get; set; }
-    [Parameter] public int SequenceNumber { get; set; }
-    [Parameter] public string ParticipantName { get; set; }
-
-    private bool _isWinner = false;
-
-    protected override void OnParametersSet()
-    {
-        _isWinner = (Match.WinnerId is not null && Match.WinnerId == ParticipantId);
-        base.OnParametersSet();
-    }
-
-    private string GetParticipantScore(Match match, int participantNumber)
-    {
-        var participantScore = participantNumber switch
-        {
-            1 => match.Participant1Score ?? 0,
-            2 => match.Participant2Score ?? 0,
-            _ => 0
-        };
-        return $"[{participantScore}]";
-    }
-}

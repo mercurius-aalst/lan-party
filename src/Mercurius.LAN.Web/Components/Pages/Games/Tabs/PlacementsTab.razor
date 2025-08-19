@@ -32,7 +32,7 @@
                             }
                         }
                     </div>
-                    <div class="placement-title">@GetOrdinal(placement.Place)</div>
+                    <div class="placement-title">@GetOrdinalSuffix(placement.Place)</div>
                 </div>
             }
         </div>
@@ -40,7 +40,7 @@
             @foreach(var placement in Placements.OrderBy(p => p.Place).Skip(3))
             {
                 <li class="placement-item">
-                    <span class="placement-title">@GetOrdinal(placement.Place) Place:</span>
+                    <span class="placement-title">@GetOrdinalSuffix(placement.Place) Place:</span>
                     <ul class="participant-list">
                         @foreach(var participant in placement.Participants)
                         {
@@ -65,26 +65,3 @@
         </ol>
     }
 </div>
-
-@code {
-    [Parameter] public IEnumerable<Placement> Placements { get; set; }
-
-    private string GetOrdinal(int number)
-    {
-        if(number % 100 >= 11 && number % 100 <= 13)
-        {
-            return number + "th";
-        }
-
-        int num = number % 10;
-        string suffix = num switch
-        {
-            1 => "st",
-            2 => "nd",
-            3 => "rd",
-            _ => "th"
-        };
-
-        return number + suffix;
-    }
-}

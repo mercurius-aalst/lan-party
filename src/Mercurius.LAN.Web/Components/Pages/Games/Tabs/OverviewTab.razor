@@ -5,22 +5,13 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
 @using Refit
-@inject ILANClient LANClient
-@inject IAuthorizationService AuthorizationService
-@inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IGameService GameService
-@inject IToastService ToastService
 @rendermode InteractiveServer
 
-
-@code {
-    [Parameter] public GameExtended Game { get; set; }
-}
 
 <div class="overview-container">
 
     <h2 class="overview-header">Overview</h2>
-    @if(!isEditMode)
+    @if(!_isEditMode)
     {
         <div class="overview-details">
             <div class="overview-column">
@@ -49,18 +40,18 @@
     {
         <AuthorizeView Roles="admin">
             <Authorized>
-                <EditForm Context="editformContext" Model="editGame" OnValidSubmit="HandleEditSubmit">
+                <EditForm Context="editformContext" Model="_editGame" OnValidSubmit="SubmitEditAsync">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
                     <div class="form-section">
                         <div class="form-group">
                             <label for="name">Name</label>
-                            <InputText id="name" class="form-control" @bind-Value="editGame.Name" />
+                            <InputText id="name" class="form-control" @bind-Value="_editGame.Name" />
                         </div>
 
                         <div class="form-group">
                             <label for="bracketType">Bracket Type</label>
-                            <InputSelect id="bracketType" class="form-control" @bind-Value="editGame.BracketType">
+                            <InputSelect id="bracketType" class="form-control" @bind-Value="_editGame.BracketType">
                                 @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
@@ -70,7 +61,7 @@
 
                         <div class="form-group">
                             <label for="format">Match Format</label>
-                            <InputSelect id="format" class="form-control" @bind-Value="editGame.Format">
+                            <InputSelect id="format" class="form-control" @bind-Value="_editGame.Format">
                                 @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
@@ -80,7 +71,7 @@
 
                         <div class="form-group">
                             <label for="finalsFormat">Finals Format</label>
-                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="editGame.FinalsFormat">
+                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="_editGame.FinalsFormat">
                                 @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
                                 {
                                     <option value="@type">@type.GetLabel()</option>
@@ -90,12 +81,12 @@
 
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
-                            <InputFile id="gameImage" class="form-control" OnChange="HandleFileUpload" accept="image/*" />
+                            <InputFile id="gameImage" class="form-control" OnChange="UploadFile" accept="image/*" />
                         </div>
 
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save</button>
-                            <button type="button" class="btn btn-secondary" @onclick="CancelEdit">Cancel</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEditMode">Cancel</button>
                         </div>
                     </div>
                 </EditForm>
@@ -103,50 +94,3 @@
         </AuthorizeView>
     }
 </div>
-
-@code {
-    private bool isEditMode = false;
-    private UpdateGameDTO editGame;
-    private IBrowserFile? uploadedFile;
-
-    private void EnableEditMode()
-    {
-        isEditMode = true;
-        editGame = new UpdateGameDTO
-        {
-            Name = Game.Name,
-            Format = Enum.Parse<GameFormat>(Game.Format),
-            FinalsFormat = Enum.Parse<GameFormat>(Game.FinalsFormat),
-            BracketType = Game.BracketType
-        };
-    }
-
-    private void CancelEdit()
-    {
-        isEditMode = false;
-    }
-
-    private void HandleFileUpload(InputFileChangeEventArgs e)
-    {
-        uploadedFile = e.File;
-    }
-
-    private async Task HandleEditSubmit()
-    {
-        try
-        {
-            editGame.Image = uploadedFile;
-            var updatedGame = await GameService.UpdateGameAsync(Game.Id, editGame);
-            Game.Name = updatedGame.Name;
-            Game.Format = updatedGame.Format.ToString();
-            Game.FinalsFormat = updatedGame.FinalsFormat.ToString();
-            Game.BracketType = updatedGame.BracketType;
-            isEditMode = false;
-            ToastService.ShowSuccess("Edit successful");
-        }
-        catch (ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-}

@@ -2,7 +2,7 @@
 
 
 @inherits LayoutComponentBase
-<button class="menu-toggle @(sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
+<button class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
     <span class="menu-toggle-inner">
         <span class="bar"></span>
         <span class="bar"></span>
@@ -11,7 +11,7 @@
 </button>
 
 <div class="page">
-    <div class="sidebar @(sidebarOpen ? "open" : null)">
+    <div class="sidebar @(_sidebarOpen ? "open" : null)">
         <NavMenu />
     </div>
 
@@ -31,9 +31,3 @@
 </div>
 
 <BlazoredToasts Position=ToastPosition.BottomRight />
-
-@code {
-
-    private bool sidebarOpen = false;
-    void ToggleSidebar() => sidebarOpen = !sidebarOpen;
-}

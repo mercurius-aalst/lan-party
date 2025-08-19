@@ -7,7 +7,6 @@
 @using Refit
 
 @rendermode InteractiveServer
-@inject IToastService ToastService
 
 <CascadingValue Value="Match">
     <div class="match-modal-overlay" @onclick="OnClose">
@@ -53,60 +52,3 @@
         </div>
     </div>
 </CascadingValue>
-
-@code {
-    [Parameter] public Match Match { get; set; }
-    [Parameter] public IEnumerable<Participant> Participants { get; set; }
-    [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback OnDataReload { get; set; }
-    [Parameter] public string Participant2Name { get; set; }
-    [Parameter] public string Participant1Name { get; set; }
-    [Inject] private IGameService GameService { get; set; }
-
-
-    private Participant GetParticipantById(int? participantId)
-    {
-        if(participantId == null || Participants == null)
-            return null;
-        return Participants.FirstOrDefault(p => p.Id == participantId.Value);
-    }
-
-    private bool IsWinner(int? participantId) => Match.WinnerId != null && participantId == Match.WinnerId;
-
-    private bool IsLoser(int? participantId, int? opponentId)
-    {
-        if(Match.WinnerId == null)
-            return false;
-        if(participantId is null || participantId != Match.WinnerId)
-            return true;
-        return false;
-    }
-
-    private string GetCardClass(int? participantId, int? opponentId)
-    {
-        if(IsWinner(participantId))
-            return "participant-card winner-card";
-        if(IsLoser(participantId, opponentId))
-            return "participant-card loser-card";
-        return "participant-card";
-    }
-
-    private async Task SaveScoresAsync()
-    {
-        try
-        {
-            Match = await GameService.UpdateMatchScoresAsync(Match.Id, new UpdateMatchDTO()
-            {
-                Participant1Score = Match.Participant1Score ?? 0,
-                Participant2Score = Match.Participant2Score ?? 0,
-            });
-            ToastService.ShowSuccess("Score updated successfully");
-            await OnDataReload.InvokeAsync(); // Notify parent to reload data
-            await OnClose.InvokeAsync(); // Close the dialog
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
-    }
-}

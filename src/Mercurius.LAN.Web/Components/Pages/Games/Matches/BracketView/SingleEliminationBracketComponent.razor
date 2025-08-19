@@ -1,8 +1,6 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Matches
 @using Mercurius.LAN.Web.Models.Participants
-@inject IJSRuntime JS
-
 @rendermode InteractiveServer
 
 <div class="bracket-root" id="bracket-root">
@@ -89,45 +87,3 @@
         </div>
     }
 </div>
-
-@code {
-    [Parameter] public IEnumerable<Match> Matches { get; set; }
-    [Parameter] public IEnumerable<Participant> Participants { get; set; }
-    [Parameter] public EventCallback OnDataReload { get; set; }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(firstRender)
-        {
-            await JS.InvokeVoidAsync("makeDraggable", "bracket-root");
-        }
-    }
-
-    private string GetParticipantName(Match? match, int? participantId)
-    {
-        var participantName = "TBD";
-        if(participantId is null)
-            return participantName;
-
-        var participant = Participants?.SingleOrDefault(p => p.Id == participantId.Value);
-        participantName = match.ParticipantType switch
-        {
-            ParticipantType.Player when participant is Player player => player.Username,
-            ParticipantType.Team when participant is Team team => team.Name,
-            _ => participantId.Value.ToString()
-        };
-
-        return participantName;
-    }
-
-    private string GetParticipantScore(Match match, int participantNumber)
-    {
-        var participantScore = participantNumber switch
-        {
-            1 => match.Participant1Score,
-            2 => match.Participant2Score,
-            _ => 0
-        };
-        return $"[{participantScore}]";
-    }
-}

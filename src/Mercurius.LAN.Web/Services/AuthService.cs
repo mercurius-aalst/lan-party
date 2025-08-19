@@ -47,7 +47,6 @@ namespace Mercurius.LAN.Web.Services
         {
             var authState = task.GetAwaiter().GetResult();
             CurrentUser = authState.User;
-            // You can now raise your UserChanged event here if needed
             UserChanged?.Invoke(CurrentUser);
         }
     }

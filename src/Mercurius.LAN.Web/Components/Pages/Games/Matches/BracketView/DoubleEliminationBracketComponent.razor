@@ -1,7 +1,6 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Matches
 @using Mercurius.LAN.Web.Models.Participants
-@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <div class="bracket-root" id="double-elimination-bracket-root">
@@ -25,16 +24,16 @@
             var rounds = _lBMatches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
             var matchData = CalculateLowerBracketLayout(rounds, _uBMatches);
 
-            <div class="bracket-columns" style="min-width: @(matchData.svgWidth)px;">
-                <div class="bracket-absolute-container" style="width: @(matchData.svgWidth)px;">
-                    <svg class="bracket-svg" width="@matchData.svgWidth" height="@matchData.svgHeight">
-                        @((MarkupString)string.Join("", matchData.svgElements))
+            <div class="bracket-columns" style="min-width: @(matchData.SvgWidth)px;">
+                <div class="bracket-absolute-container" style="width: @(matchData.SvgWidth)px;">
+                    <svg class="bracket-svg" width="@matchData.SvgWidth" height="@matchData.SvgHeight">
+                        @((MarkupString)string.Join("", matchData.SvgElements))
                     </svg>
                     @foreach(var round in rounds)
                     {
                         foreach(var match in round.OrderBy(m => m.MatchNumber))
                         {
-                            if(matchData.matchPositions.TryGetValue(match.Id, out var pos))
+                            if(matchData.MatchPositions.TryGetValue(match.Id, out var pos))
                             {
                                 <BracketMatchComponent Match="match" Participants="Participants" Position="pos" OnDataReload="OnDataReload"></BracketMatchComponent>
                             }
@@ -53,141 +52,3 @@
         }
     }
 </div>
-
-@code {
-    [Parameter] public IEnumerable<Match> Matches { get; set; }
-    [Parameter] public IEnumerable<Participant> Participants { get; set; }
-    [Parameter] public EventCallback OnDataReload { get; set; }
-
-    private IEnumerable<Match> _uBMatches;
-    private IEnumerable<Match> _lBMatches;
-    private Match? _gFMatch;
-    private int _lastRound => Matches?.Max(m => m.RoundNumber) ?? 0;
-
-    protected override void OnParametersSet()
-    {
-        if(Matches != null && Matches.Any())
-        {
-            _gFMatch = Matches.SingleOrDefault(m => m.RoundNumber == _lastRound);
-            _uBMatches = Matches.Where(m => !m.IsLowerBracketMatch && m.RoundNumber < _lastRound).ToList();
-            _lBMatches = Matches.Where(m => m.IsLowerBracketMatch && m.RoundNumber < _lastRound).ToList();
-        }
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if(firstRender)
-        {
-            await JS.InvokeVoidAsync("makeDraggable", "double-elimination-bracket-root");
-        }
-    }
-
-    private struct LowerBracketMatchData
-    {
-        public int svgWidth { get; set; }
-        public int svgHeight { get; set; }
-        public int matchHeight { get; set; }
-        public int matchWidth { get; set; }
-        public int columnWidth { get; set; }
-        public Dictionary<int, (int left, int y)> matchPositions { get; set; }
-        public List<string> svgElements { get; set; }
-    }
-
-    private LowerBracketMatchData CalculateLowerBracketLayout(List<IGrouping<int, Match>> rounds, IEnumerable<Match> uBMatches)
-    {
-        var matchData = new LowerBracketMatchData
-        {
-            matchHeight = 60,
-            matchWidth = 220,
-            columnWidth = 260,
-            matchPositions = new Dictionary<int, (int left, int y)>(),
-            svgElements = new List<string>()
-        };
-
-        int verticalGap = 32;
-        int numRounds = rounds.Count;
-        int reservedHeight = matchData.matchHeight + verticalGap;
-
-        var lbMatchesReceivingLosersFromUB = new HashSet<int>(uBMatches.Where(m => m.LoserNextMatchId.HasValue).Select(m => m.LoserNextMatchId.Value));
-
-        for(int r = 0; r < rounds.Count; r++)
-        {
-            var currentRoundMatches = rounds[r].OrderBy(m => m.MatchNumber).ToList();
-            int colX = r * matchData.columnWidth + (matchData.columnWidth - matchData.matchWidth) / 2;
-
-            if(r == 0)
-            {
-                for(int i = 0; i < currentRoundMatches.Count; i++)
-                {
-                    var match = currentRoundMatches[i];
-                    int y = i * reservedHeight;
-                    matchData.matchPositions.Add(match.Id, (colX, y));
-                }
-            }
-            else
-            {
-                var previousRoundMatches = rounds[r - 1].ToList();
-
-                for(int i = 0; i < currentRoundMatches.Count; i++)
-                {
-                    var currentMatch = currentRoundMatches[i];
-
-                    var sourceMatches = previousRoundMatches
-                        .Where(m => m.WinnerNextMatchId == currentMatch.Id)
-                        .ToList();
-
-                    if(sourceMatches.Any())
-                    {
-                        int firstSourceY = matchData.matchPositions[sourceMatches.First().Id].y;
-                        int lastSourceY = matchData.matchPositions[sourceMatches.Last().Id].y;
-
-                        int y = (int)Math.Round((double)(firstSourceY + lastSourceY) / 2);
-                        matchData.matchPositions.Add(currentMatch.Id, (colX, y));
-                    }
-                    else
-                    {
-                        int y = i * reservedHeight;
-                        matchData.matchPositions.Add(currentMatch.Id, (colX, y));
-                    }
-                }
-            }
-        }
-
-        foreach(var match in _lBMatches)
-        {
-            if(matchData.matchPositions.TryGetValue(match.Id, out var sourcePos))
-            {
-                if(match.WinnerNextMatchId.HasValue && matchData.matchPositions.TryGetValue(match.WinnerNextMatchId.Value, out var destPos))
-                {
-                    int x0 = sourcePos.left + matchData.matchWidth;
-                    int y0 = sourcePos.y + (int)Math.Round((double)matchData.matchHeight / 2);
-                    int x1 = destPos.left;
-                    int y1 = destPos.y + (int)Math.Round((double)matchData.matchHeight / 2);
-
-                    int elbowX = x0 + (matchData.columnWidth - matchData.matchWidth) / 2;
-
-                    matchData.svgElements.Add($"<polyline points='{x0},{y0} {elbowX},{y0} {elbowX},{y1} {x1},{y1}' fill='none' stroke='#4caf50' stroke-width='3' />");
-                }
-
-                if(lbMatchesReceivingLosersFromUB.Contains(match.Id))
-                {
-                    int yConnect = sourcePos.y + (int)Math.Round(matchData.matchHeight * 0.25);
-
-                    int x1 = sourcePos.left - 10;
-                    int y1 = sourcePos.y - 10;
-                    int x2 = sourcePos.left - 10;
-                    int y2 = yConnect;
-                    int x3 = sourcePos.left;
-                    int y3 = yConnect;
-
-                    matchData.svgElements.Add($"<polyline points='{x1},{y1} {x2},{y2} {x3},{y3}' fill='none' stroke='#4caf50' stroke-width='3' stroke-dasharray='5,5' />");
-                }
-            }
-        }
-
-        matchData.svgWidth = numRounds * matchData.columnWidth;
-        matchData.svgHeight = matchData.matchPositions.Any() ? matchData.matchPositions.Values.Max(pos => pos.y + matchData.matchHeight) : 0;
-
-        return matchData;
-    }
-}
