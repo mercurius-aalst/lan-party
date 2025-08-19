@@ -27,8 +27,8 @@
             @if (_isDropdownVisible)
             {
                 <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                    <a class="dropdown-item" href="/admin/players">Players</a>
-                    <a class="dropdown-item" href="/admin/teams">Teams</a>
+                     <a class="dropdown-item" href="/admin/players" @onclick="CloseDropdown">Players</a>
+                        <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
                 </div>
             }
         </div>
@@ -46,7 +46,7 @@
             {
                  
                         <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                            <a class="dropdown-item">Change Password</a>
+                            <a class="dropdown-item" @onclick="ChangePasswordAsync">Change Password</a>
                             <a class="dropdown-item" @onclick="Logout">Logout</a>
                         </div>
 

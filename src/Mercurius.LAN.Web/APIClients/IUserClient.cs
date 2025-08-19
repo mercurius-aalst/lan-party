@@ -10,5 +10,8 @@ namespace Mercurius.LAN.Web.APIClients
 
         [Post("/users/{username}/roles")]
         Task AddRoleToUser(string username, [Body] AddUserRoleRequest request);
+
+        [Patch("/users/{username}/password")]
+        Task ChangePasswordAsync(string username, [Body] ChangePasswordRequest request);
     }
 }

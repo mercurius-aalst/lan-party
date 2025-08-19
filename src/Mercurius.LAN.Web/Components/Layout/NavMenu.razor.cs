@@ -14,6 +14,7 @@ public partial class NavMenu
 
     private void Logout()
     {
+        _isUserMenuVisible = false;
         NavigationManager.NavigateTo("/logout", true);
     }
 
@@ -28,5 +29,16 @@ public partial class NavMenu
     private void ToggleDropdown()
     {
         _isDropdownVisible = !_isDropdownVisible;
+    }
+
+    private void ChangePasswordAsync() {
+        _isUserMenuVisible = false;
+        NavigationManager.NavigateTo("/change-password");
+    }
+
+    private void CloseDropdown()
+    {
+        _isDropdownVisible = false;
+        _isUserMenuVisible = false;
     }
 }
