@@ -1,0 +1,15 @@
+@using Mercurius.LAN.Web.Components.Pages.Games.Matches.DetailView
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Participants
+
+@rendermode InteractiveServer
+
+<div class="bracket-match @ExtraCssClasses" style="@(Position.HasValue? $"left:{Position.Value.left}px; top:{Position.Value.y}px;" : string.Empty)" @onclick="DisplayDetails">
+    <MatchParticipantRow Match="@Match" ParticipantName="@Participant1Name" ParticipantId="@Match.Participant1Id" Participants="@Participants" SequenceNumber="1"></MatchParticipantRow>
+    <MatchParticipantRow Match="@Match" ParticipantName="@Participant2Name" ParticipantId="@Match.Participant2Id" Participants="@Participants" SequenceNumber="2"></MatchParticipantRow>
+</div>
+
+@if(_showDialog)
+{
+    <MatchDetailsDialog Match="@Match" Participant1Name="@Participant1Name" Participant2Name="@Participant2Name" Participants="@Participants" OnClose="CloseDetailsDialogAsync" OnDataReload="OnDataReload" />
+}

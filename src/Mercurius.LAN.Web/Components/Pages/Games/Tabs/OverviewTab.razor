@@ -1,0 +1,96 @@
+@using Mercurius.LAN.Web.APIClients
+@using Mercurius.LAN.Web.DTOs.Games
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Games
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Refit
+@rendermode InteractiveServer
+
+
+<div class="overview-container">
+
+    <h2 class="overview-header">Overview</h2>
+    @if(!_isEditMode)
+    {
+        <div class="overview-details">
+            <div class="overview-column">
+                <p><b>Name:</b> @Game.Name</p>
+                <p class="card-text">
+                    <b>Status:</b> <span class="game-status @Game.Status.GetStatusClass()">@Game.Status.GetStatusLabel()</span>
+                </p>
+                <p class="card-text"><b>Bracket type:</b> <small>@Game.BracketType.GetLabel()</small></p>
+                <p><b>Description:</b> @Game.Description</p>
+            </div>
+            <div class="overview-column">
+                <p><b>Match Format:</b> <span>@(Enum.Parse<GameFormat>(Game.Format).GetLabel())</span></p>
+                <p><b>Finals Format:</b> <span>@(Enum.Parse<GameFormat>(Game.FinalsFormat).GetLabel())</span></p>
+            </div>
+        </div>
+        @if(Game.Status == GameStatus.Scheduled)
+        {
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <button class="btn btn-primary" @onclick="EnableEditMode">Edit</button>
+                </Authorized>
+            </AuthorizeView>
+        }
+    }
+    else
+    {
+        <AuthorizeView Roles="admin">
+            <Authorized>
+                <EditForm Context="editformContext" Model="_editGame" OnValidSubmit="SubmitEditAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <InputText id="name" class="form-control" @bind-Value="_editGame.Name" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bracketType">Bracket Type</label>
+                            <InputSelect id="bracketType" class="form-control" @bind-Value="_editGame.BracketType">
+                                @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="format">Match Format</label>
+                            <InputSelect id="format" class="form-control" @bind-Value="_editGame.Format">
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="finalsFormat">Finals Format</label>
+                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="_editGame.FinalsFormat">
+                                @foreach(GameFormat type in Enum.GetValues(typeof(GameFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gameImage">Game Image</label>
+                            <InputFile id="gameImage" class="form-control" OnChange="UploadFile" accept="image/*" />
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEditMode">Cancel</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </Authorized>
+        </AuthorizeView>
+    }
+</div>

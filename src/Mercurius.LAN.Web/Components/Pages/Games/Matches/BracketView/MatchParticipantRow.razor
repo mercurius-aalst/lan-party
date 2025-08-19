@@ -1,0 +1,8 @@
+﻿@rendermode InteractiveServer
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Models.Matches
+
+<div class="participant-row @(_isWinner ? "winner" : "")">
+    <span class="participant-name">@ParticipantName</span>
+    <span class="participant-score">@CalculateParticipantScore(Match, SequenceNumber)</span>
+</div>

@@ -1,0 +1,10 @@
+@* A visually appealing loading screen with a centered animated ring spinner and optional message *@
+<div class="loading-overlay">
+    <div class="loading-spinner-ring">
+        <div class="spinner-ring"></div>
+    </div>
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="loading-message">@Message</div>
+    }
+</div>

@@ -1,0 +1,67 @@
+@rendermode InteractiveServer
+@using Mercurius.LAN.Web.Models
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Models.Matches
+@using Placement = Mercurius.LAN.Web.Models.Matches.Placement
+<div class="placements-container">
+    @if(Placements == null || !Placements.Any())
+    {
+        <p>No results found.</p>
+    }
+    else
+    {
+        <div class="podium">
+            @foreach(var placement in Placements.OrderBy(p => p.Place).Take(3))
+            {
+                <div class="podium-step @(placement.Place == 1 ? "gold" : placement.Place == 2 ? "silver" : "bronze")">
+                    <div class="participant-name">
+                        @foreach(var participant in placement.Participants)
+                        {
+                            @switch(participant)
+                            {
+                                case Player player:
+                                    @player.Username
+                                    <br/>
+                                    break;
+                                case Team team:
+                                    @team.Name
+                                    break;
+                                default:
+                                    @participant.Id
+                                    break;
+                            }
+                        }
+                    </div>
+                    <div class="placement-title">@GetOrdinalSuffix(placement.Place)</div>
+                </div>
+            }
+        </div>
+        <ol class="placements-list">
+            @foreach(var placement in Placements.OrderBy(p => p.Place).Skip(3))
+            {
+                <li class="placement-item">
+                    <span class="placement-title">@GetOrdinalSuffix(placement.Place) Place:</span>
+                    <ul class="participant-list">
+                        @foreach(var participant in placement.Participants)
+                        {
+                            <li class="participant-item">
+                                @switch(participant)
+                                {
+                                    case Player player:
+                                        @player.Username
+                                        break;
+                                    case Team team:
+                                        @team.Name
+                                        break;
+                                    default:
+                                        @participant.Id
+                                        break;
+                                }
+                            </li>
+                        }
+                    </ul>
+                </li>
+            }
+        </ol>
+    }
+</div>

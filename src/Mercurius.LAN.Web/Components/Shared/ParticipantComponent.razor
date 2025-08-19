@@ -1,0 +1,132 @@
+@using Mercurius.LAN.Web.Models.Participants;
+
+@if (Participant is Player player)
+{
+    <div>
+        <div class="participant-header-row">
+            <span class="participant-type">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a7.5 7.5 0 0 1 13 0" /></svg>
+                Player
+            </span>
+            <span class="participant-name">@player.Username</span>
+        </div>
+        <table class="participant-table">
+            <tr><td>Name:</td><td>@player.Firstname @player.Lastname</td></tr>
+            <tr>
+                <td><span class="platform-icon discord-icon"></span>Discord:</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(player.DiscordId))
+                    {
+                        <a href="https://discord.com/users/@player.DiscordId" target="_blank">@player.DiscordId</a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td><span class="platform-icon steam-icon"></span>Steam:</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(player.SteamId))
+                    {
+                        <a href="https://steamcommunity.com/profiles/@player.SteamId" target="_blank">@player.SteamId</a>
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                </td>
+            </tr>
+            <tr>
+                <td><span class="platform-icon riot-icon"></span>Riot:</td>
+                <td>
+                    @if (!string.IsNullOrWhiteSpace(player.RiotId))
+                    {
+                        @player.RiotId
+                    }
+                    else
+                    {
+                        <span></span>
+                    }
+                </td>
+            </tr>
+        </table>
+    </div>
+}
+else if (Participant is Team team)
+{
+    <div>
+        <div class="participant-header-row">
+            <span class="participant-type">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                Team
+            </span>
+            <span class="participant-name">@team.Name</span>
+        </div>
+        @if(team.Players?.FirstOrDefault(p => p.Id == team.CaptainId) is Player captain)
+        {
+            <div class="captain-label">Captain</div>
+            <div class="captain-name">@captain.Username</div>
+            <table class="participant-table">
+                <tr><td>Name:</td><td>@captain.Firstname @captain.Lastname</td></tr>
+                <tr>
+                    <td><span class="platform-icon discord-icon"></span>Discord:</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(captain.DiscordId))
+                        {
+                            <a href="https://discord.com/users/@captain.DiscordId" target="_blank">@captain.DiscordId</a>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="platform-icon steam-icon"></span>Steam:</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(captain.SteamId))
+                        {
+                            <a href="https://steamcommunity.com/profiles/@captain.SteamId" target="_blank">@captain.SteamId</a>
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                    </td>
+                </tr>
+                <tr>
+                    <td><span class="platform-icon riot-icon"></span>Riot:</td>
+                    <td>
+                        @if (!string.IsNullOrWhiteSpace(captain.RiotId))
+                        {
+                            @captain.RiotId
+                        }
+                        else
+                        {
+                            <span></span>
+                        }
+                    </td>
+                </tr>
+            </table>
+        }
+    </div>
+}
+else if (Participant != null)
+{
+    <div>
+        <div class="participant-header-row">
+            <span class="participant-type">Unknown</span>
+            <span class="participant-name">@Participant.Id</span>
+        </div>
+    </div>
+}
+else
+{
+    <div>
+        <div class="participant-header-row">
+            <span class="participant-type">@EmptyLabel</span>
+        </div>
+    </div>
+}

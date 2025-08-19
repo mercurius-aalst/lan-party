@@ -1,0 +1,16 @@
+@typeparam TItem
+@inject IJSRuntime JSRuntime
+
+<div id="dropdown-@_id" class="custom-autocomplete @(_isDropdownVisible ? "" : "dropdown-closed")" @ref="_autocompleteContainer">
+    <input type="text" class="custom-autocomplete-input" @bind="_searchText" @oninput="HandleInput" @onfocus="ShowDropdown" @onkeydown="HandleKeyDown" placeholder="@Placeholder" />
+
+    @if(_isDropdownVisible && _filteredItems.Any())
+    {
+        <ul class="custom-autocomplete-dropdown" @ref="_dropdownElement">
+            @foreach(var item in _filteredItems)
+            {
+                <li @onclick="() => SelectItemAsync(item)">@ItemLabel(item)</li>
+            }
+        </ul>
+    }
+</div>

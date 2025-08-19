@@ -1,0 +1,305 @@
+/* Full-width game header background */
+/* --- Hanging Tabs from the Line --- */
+.game-header-tabs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+}
+.game-header-tabs h1 {
+    width: 100%;
+    border-bottom: 3px solid #217226;
+    margin-bottom: 0;
+    padding-bottom: 0.75rem;
+    font-size: 2rem;
+    background: transparent;
+    z-index: 1;
+    position: relative;
+}
+/* --- Hanging Tabs from the Line --- */
+.game-header-tabs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 2.5rem;
+}
+.game-header-tabs h1 {
+    width: 100%;
+    border-bottom: 3px solid #217226;
+    margin-bottom: 0;
+    padding-bottom: 0.75rem;
+    font-size: 2rem;
+    background: transparent;
+    z-index: 1;
+    position: relative;
+}
+/* Adjust margin-top to align tabs exactly with the border */
+.game-header-tabs .tabs {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    position: relative;
+    margin-top: -0.1rem; /* Less negative to align with border */
+    z-index: 2;
+    background: transparent;
+}
+/* Ensure only bottom corners are rounded for hanging effect */
+/* Lower the tab buttons to sit flush with the border */
+.tab-btn {
+    border-radius: 0 0 2rem 2rem !important;
+    border-top: none;
+    border-bottom: 3px solid #217226;
+    margin-top: 0;
+    margin-bottom: 0;
+    box-shadow: 0 4px 12px rgba(33,114,38,0.07);
+    position: relative;
+    background: #e8f5e9;
+    color: #217226;
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s;
+    min-width: 120px;
+}
+.tab-btn:disabled {
+    background: #217226;
+    color: #fff;
+    border-bottom: 3px solid #217226;
+    z-index: 3;
+}
+.game-header-tabs .tabs::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0.5rem;
+    background: transparent;
+    border-bottom: 3px solid transparent;
+    z-index: 0;
+}
+.tab-content {
+    padding-top: 2.5rem;
+}
+@media (max-width: 600px) {
+    .game-header-tabs {
+        margin-bottom: 1.5rem;
+    }
+    .game-header-tabs h1 {
+        font-size: 1.3rem;
+        padding-bottom: 0.5rem;
+    }
+    .game-header-tabs .tabs {
+        display: none !important;
+    }
+    .tabs-dropdown {
+        display: flex;
+        margin-top: 0.5rem;
+        margin-bottom: 0;
+        align-items: center;
+        justify-content: center;
+        background: #e8f5e9;
+        border-radius: 2rem;
+        box-shadow: 0 2px 8px rgba(33,114,38,0.08);
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #217226;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 2;
+    }
+    .tab-content {
+        padding-top: 1.5rem;
+    }
+}
+.game-detail {
+    margin: 2rem auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 16px rgba(33,114,38,0.10);
+    width: calc(100vw - 320px); /* Account for sidebar width */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.game-detail-content{
+        padding: 0rem 2.5rem 2rem 2.5rem;
+}
+
+@media (max-width: 770px) {
+    .game-detail {
+        max-width: 100vw;
+        padding: 1rem 0.5rem;
+        border-radius: 0;
+        margin: 0;
+        left: 0; /* Reset offset for small screens */
+        width: 100%;
+    }
+}
+.tabs-dropdown {
+    display: none;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+}
+.tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+@media (max-width: 600px) {
+    .game-detail {
+        max-width: 100vw;
+        padding: 1rem 0.5rem;
+        border-radius: 0;
+        margin: 0;
+    }
+    .tabs {
+        display: none;
+    }
+    .tabs-dropdown {
+        display: flex;
+        margin-bottom: 1rem;
+        align-items: center;
+        justify-content: center;
+        background: #e8f5e9;
+        border-radius: 2rem;
+        box-shadow: 0 2px 8px rgba(33,114,38,0.08);
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #217226;
+        width: 100%;
+        box-sizing: border-box;
+        position: relative;
+    }
+    .tabs-dropdown select {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 0.75rem 2.5rem 0.75rem 0.75rem;
+        border-radius: 2rem;
+        border: 1px solid #217226;
+        background: #e8f5e9;
+        color: #217226;
+        font-weight: 700;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        outline: none;
+        box-shadow: none;
+        cursor: pointer;
+        text-align: center;
+        text-align-last: center;
+        margin: 0;
+    }
+    .tabs-dropdown select:focus {
+        border: 1.5px solid #174d1a;
+        box-shadow: 0 0 0 2px #4fd36d33;
+    }
+    .tabs-dropdown::after {
+        content: '\25BC';
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #217226;
+        pointer-events: none;
+        font-size: 1.2rem;
+        background: #e8f5e9;
+        padding-left: 0.5rem;
+    }
+    .tab-content {
+        padding: 1rem 0 0 0;
+    }
+    h1 {
+        font-size: 1.3rem;
+        word-break: break-word;
+        color: #217226;
+    }
+}
+.tab-btn {
+    background: #e8f5e9;
+    color: #217226;
+    border: 1px solid #217226;
+    border-radius: 2rem 2rem 0 0;
+    padding: 0.5rem 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.tab-btn:disabled {
+    background: #217226;
+    color: #fff;
+    cursor: default;
+}
+.tab-content {
+    padding: 1.5rem 0 0 0;
+}
+h1 {
+    color: black;
+}
+@media (max-width: 320px) {
+    .game-header-tabs {
+        margin-bottom: 0.5rem;
+        flex-direction: column;
+        align-items: center;
+    }
+    .game-header-tabs h1 {
+        font-size: 0.9rem;
+        padding-bottom: 0.2rem;
+        text-align: center;
+    }
+    .game-header-tabs .tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.2rem;
+    }
+    .tab-btn {
+        min-width: 70px;
+        font-size: 0.6rem;
+        padding: 0.1rem 0.5rem;
+    }
+    .tabs-dropdown {
+        display: none;
+    }
+}
+
+@media (max-width: 280px) {
+    .game-header-tabs {
+        margin-bottom: 0.3rem;
+        flex-direction: column;
+        align-items: center;
+    }
+    .game-header-tabs h1 {
+        font-size: 0.8rem;
+        padding-bottom: 0.1rem;
+        text-align: center;
+    }
+    .game-header-tabs .tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.1rem;
+    }
+    .tab-btn {
+        min-width: 60px;
+        font-size: 0.5rem;
+        padding: 0.05rem 0.4rem;
+    }
+    .tabs-dropdown {
+        display: none;
+    }
+}
+.game-image {
+    text-align: center;
+}
+
+.game-image-display {
+    width: 100%;
+    height: auto;
+    max-height: 15rem;
+    object-fit:cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

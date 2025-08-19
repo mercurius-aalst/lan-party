@@ -1,0 +1,23 @@
+@using Mercurius.LAN.Web.Components.Pages.Games.Matches
+@using Mercurius.LAN.Web.Components.Pages.Games.Matches.BracketView
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Services
+@rendermode InteractiveServer
+
+<div>
+    <h2>Bracket</h2>
+    @switch(BracketType)
+    {
+        case BracketType.DoubleElimination:
+            <DoubleEliminationBracketComponent OnDataReload="OnDataReload" Matches="@Matches" Participants="@Participants" />
+            break;
+        case BracketType.SingleElimination:
+            <SingleEliminationBracketComponent OnDataReload="OnDataReload" Matches="@Matches" Participants="@Participants" />
+            break;
+        default:
+            <p>ERROR</p>
+            break;
+    }
+</div>

@@ -1,0 +1,54 @@
+@using Mercurius.LAN.Web.DTOs.Matches
+@using Mercurius.LAN.Web.Models.Matches;
+@using Mercurius.LAN.Web.Models.Participants;
+@using Mercurius.LAN.Web.Extensions;
+@using Mercurius.LAN.Web.Components.Shared;
+@using Microsoft.AspNetCore.Components.Authorization
+@using Refit
+
+@rendermode InteractiveServer
+
+<CascadingValue Value="Match">
+    <div class="match-modal-overlay" @onclick="OnClose">
+        <div class="match-modal-dialog" @onclick:stopPropagation>
+            <button class="match-modal-close" @onclick="OnClose">&times;</button>
+            <div class="match-header">
+                <span class="match-header-name">
+                    @Participant1Name
+                    <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
+                </span>
+                <span class="match-header-vs">vs</span>
+                <span class="match-header-name">
+                    @Participant2Name
+                    <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
+                </span>
+            </div>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <div class="score-inputs">
+                        <input id="participant1-score" type="number" class="form-control score-input" @bind="Match.Participant1Score" />
+                        <input id="participant2-score" type="number" class="form-control score-input" @bind="Match.Participant2Score" />
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+
+            <div class="match-format">@Match.Format.GetLabel()</div>
+
+            <div class="participants-grid">
+                <div class="@(GetCardClass(Match.Participant1Id, Match.Participant2Id))">
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
+                </div>
+                <div class="@(GetCardClass(Match.Participant2Id, Match.Participant1Id))">
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
+                </div>
+            </div>
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <div class="save-button-container">
+                        <button class="btn btn-primary mt-2" @onclick="SaveScoresAsync">Save Scores</button>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+</CascadingValue>

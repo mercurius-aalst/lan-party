@@ -1,0 +1,61 @@
+@page "/admin/teams"
+@attribute [Authorize]
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.DTOs.Participants.Teams
+@using Mercurius.LAN.Web.Components.Shared
+@using Microsoft.AspNetCore.Authorization
+
+<PageTitle>Teams Admin</PageTitle>
+
+<div class="admin-container">
+    <div class="admin-header">
+    <h2>Manage Teams</h2>
+    </div>
+
+    <div class="search-bar-container">
+        <CustomAutocomplete @ref="_autoCompleteComponent" TItem="Team" Items="_teams" ItemLabel="team => team.Name" OnSelected="OnTeamSelected" Placeholder="Search Teams" />
+    </div>
+
+    @if(_selectedTeam == null)
+    {
+        _selectedTeam = new Team();
+    }
+
+    <EditForm Model="_selectedTeam" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="form-container">
+            <h2>@(_isCreateMode ? "Create Team" : "Update Team")</h2>
+            <div class="form-group">
+                <label for="name">Team Name</label>
+                <InputText id="name" class="form-control" @bind-Value="_selectedTeam.Name" />
+            </div>
+
+            <div class="form-group">
+                <label for="captain">Captain</label>
+                @if(!_isCreateMode)
+                {
+                    <InputText id="captain" class="form-control" @bind-Value="@_selectedCaptain.Username" disabled />
+                }
+                else
+                {
+                    <CustomAutocomplete TItem="Player" Items="_players" ItemLabel="player => player.Username" OnSelected="OnCaptainSelected" Placeholder="Select a captain" />
+                }
+            </div>
+
+            <div class="form-actions">
+                <div class="form-actions-section">
+                    <button type="submit" class="btn btn-primary">@(_isCreateMode ? "Create Team" : "Update Team")</button>
+                </div>
+                <div class="form-actions-section">
+                    @if(!_isCreateMode)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="DeleteTeam">Delete Team</button>
+                    }
+                    <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>

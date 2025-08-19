@@ -1,0 +1,72 @@
+@page "/games/{GameId:int}"
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Components.Pages.Games.Tabs
+@using Mercurius.LAN.Web.Components.Shared
+@using Microsoft.AspNetCore.Components.Authorization
+
+@rendermode InteractiveServer
+
+<PageTitle>Game Detail</PageTitle>
+@if(_game == null)
+{
+    <LoadingScreen Message="Loading..." />
+}
+else
+{
+    <div class="game-detail">
+        <div class="game-image">
+            <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-image-display" />
+        </div>
+        <div class="game-detail-content">
+            <div class="game-header-tabs">
+                <h1>
+                    @_game.Name
+                    <AuthorizeView Roles="admin">
+                        <Authorized>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" @onclick="StartGameAsync">Start</button>
+                                <button class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
+                                <button class="btn btn-warning" @onclick="FinishGameAsync">Finish</button>
+                                <button class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
+                                <button class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </h1>
+                <div class="tabs">
+                    <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(_selectedTab == 0)">Overview</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(_selectedTab == 1)">Matches</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(_selectedTab == 2)">Participants</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(_selectedTab == 3)">Results</button>
+                </div>
+                <div class="tabs-dropdown">
+                    <select @onchange="OnTabDropdownChanged" value="@_selectedTab">
+                        <option value="0">Overview</option>
+                        <option value="1">Matches</option>
+                        <option value="2">Participants</option>
+                        <option value="3">Results</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-content">
+                @if(_selectedTab == 0)
+                {
+                    <OverviewTab Game="@_game" />
+                }
+                else if(_selectedTab == 1)
+                {
+                    <MatchesTab OnDataReload="LoadGameDataAsync" BracketType="@_game.BracketType" Matches="@_game.Matches" Participants="@_game.Participants" />
+                }
+                else if(_selectedTab == 2)
+                {
+                    <ParticipantsTab Game=@_game Participants="@_game.Participants" ParticipantType="@_game.ParticipantType" />
+                }
+                else if(_selectedTab == 3)
+                {
+                    <PlacementsTab Placements="@_game.Placements" />
+                }
+            </div>
+        </div>
+    </div>
+}

@@ -1,0 +1,180 @@
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-dialog {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 32px rgba(76, 175, 80, 0.18);
+    padding: 2rem 2.5rem 1.5rem 2.5rem;
+    min-width: 340px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    color: #222;
+}
+.participants-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.participants-modal-dialog {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 15px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    padding: 2.5rem 3rem;
+    min-width: 600px;
+    max-width: 80vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+.participants-modal-dialog h3 {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+.participants-modal-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--accent-color);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.participants-modal-close:hover {
+    color: var(--accent-dark);
+}
+
+/* Styling for participants modal */
+.participants-scroll-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    border: 1px solid var(--accent-color);
+    padding: 0.5rem;
+    border-radius: 8px;
+}
+
+    .participants-scroll-list div {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .participants-scroll-list label {
+        margin-left: 0.5rem;
+        color: var(--text-color);
+    }
+.centered-grid{
+    justify-content: center;
+}
+.participants-overview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2em;
+    justify-content: flex-start;
+    margin-top: 1.5em;
+}
+.participant-overview-card {
+    background: #f8f8f8;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
+    padding: 1.2em 1.5em 1.2em 1.5em;
+    width: 14rem;
+    border: 2px solid #e0e0e0;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: border 0.2s, box-shadow 0.2s;
+}
+
+    .participant-overview-card:hover {
+        border: 2.5px solid #4caf50;
+        box-shadow: 0 0 0 2px #a5d6a7;
+    }
+
+.participant-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.7em;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.7em;
+}
+
+.player-avatar {
+    background: #4caf50;
+}
+
+.team-avatar {
+    background: #1976d2;
+}
+
+.participant-overview-name {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #222;
+    text-align: center;
+    margin-bottom: 0.2em;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.delete-icon {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: #ff4d4d;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 1.5rem;
+    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s;
+}
+
+.delete-icon:hover {
+    background: #e60000;
+}

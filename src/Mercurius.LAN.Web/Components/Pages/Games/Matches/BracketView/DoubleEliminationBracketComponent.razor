@@ -1,0 +1,54 @@
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Participants
+@rendermode InteractiveServer
+
+<div class="bracket-root" id="double-elimination-bracket-root">
+    @if(Matches == null || !Matches.Any())
+    {
+        <p>Geen matches gevonden.</p>
+    }
+    else
+    {
+        <br />
+        <br />
+        <h3>Upper Bracket</h3>
+        <br />
+        <SingleEliminationBracketComponent Matches="_uBMatches" Participants="Participants" OnDataReload="OnDataReload" />
+        <br />
+        <br />
+        <h3>Lower Bracket</h3>
+        <br />
+        @if(_lBMatches.Any())
+        {
+            var rounds = _lBMatches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
+            var matchData = CalculateLowerBracketLayout(rounds, _uBMatches);
+
+            <div class="bracket-columns" style="min-width: @(matchData.SvgWidth)px;">
+                <div class="bracket-absolute-container" style="width: @(matchData.SvgWidth)px;">
+                    <svg class="bracket-svg" width="@matchData.SvgWidth" height="@matchData.SvgHeight">
+                        @((MarkupString)string.Join("", matchData.SvgElements))
+                    </svg>
+                    @foreach(var round in rounds)
+                    {
+                        foreach(var match in round.OrderBy(m => m.MatchNumber))
+                        {
+                            if(matchData.MatchPositions.TryGetValue(match.Id, out var pos))
+                            {
+                                <BracketMatchComponent Match="match" Participants="Participants" Position="pos" OnDataReload="OnDataReload"></BracketMatchComponent>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        }
+        <br />
+        <br />
+        <h3>Grand Finals</h3>
+        <br />
+        @if(_gFMatch != null)
+        {
+            <BracketMatchComponent Match="_gFMatch" Participants="Participants" ExtraCssClasses="relative" OnDataReload="OnDataReload"></BracketMatchComponent>
+        }
+    }
+</div>

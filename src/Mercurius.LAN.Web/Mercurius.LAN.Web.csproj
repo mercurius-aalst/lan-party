@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>060acddd-9ac9-4709-869a-d4f13615ee12</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Components\Pages\Admin\Tabs\**" />
+    <Content Remove="Components\Pages\Admin\Tabs\**" />
+    <EmbeddedResource Remove="Components\Pages\Admin\Tabs\**" />
+    <None Remove="Components\Pages\Admin\Tabs\**" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Blazored.Toast" Version="4.2.1" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.17" />
+		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.7" />
+		<PackageReference Include="Refit" Version="8.0.0" />
+		<PackageReference Include="Refit.HttpClientFactory" Version="8.0.0" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.1" />
+
+	</ItemGroup>
+
+</Project>

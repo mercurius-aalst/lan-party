@@ -1,0 +1,78 @@
+.overview-container {
+    font-family: 'Orbitron', sans-serif;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.overview-header {
+    text-align: center;
+    color: #343a40;
+    margin-bottom: 20px;
+}
+
+.overview-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.overview-column {
+    flex: 1;
+    padding: 10px;
+}
+
+.overview-column:first-child {
+    border-right: 1px solid #dee2e6;
+}
+
+.overview-column p {
+    margin: 10px 0;
+    color: #343a40;
+}
+
+.overview-formats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.format-item {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    color: #495057;
+}
+
+.format-item span {
+    display: block;
+    margin-top: 5px;
+    font-weight: normal;
+    color: #6c757d;
+}
+
+.btn-accent {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-accent:hover {
+    background-color: #0056b3;
+}
+
+
+
+.overview-container .btn {
+    margin-top: 20px;
+}

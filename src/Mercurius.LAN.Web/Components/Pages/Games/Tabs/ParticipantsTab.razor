@@ -1,0 +1,47 @@
+@rendermode InteractiveServer
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Participants
+@using Mercurius.LAN.Web.Components.Shared
+
+<div>
+    <h2>Participants</h2>
+    <div class="participants-overview-grid">
+        @if(Game.Status == GameStatus.Scheduled)
+        {
+            <div class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
+                <div class="participant-avatar add-avatar">+</div>
+                <div class="participant-overview-name">Add @(ParticipantType.ToString() + "s")</div>
+            </div>
+        }
+        @foreach(var participant in Participants)
+        {
+            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=@(Game.Status == GameStatus.Scheduled) OnParticipantDeleted="UnregisterParticipantAsync" />
+        }
+    </div>
+    @if(_selectedParticipant != null)
+    {
+        <div class="participants-modal-overlay" @onclick="ClosePopup">
+            <div class="participants-modal-dialog" @onclick:stopPropagation>
+                <button class="participants-modal-close" @onclick="ClosePopup">&times;</button>
+                <ParticipantComponent Participant="_selectedParticipant" />
+            </div>
+        </div>
+    }
+
+    @if(_isAddParticipantsPopupVisible)
+    {
+        <div class="participants-modal-overlay" @onclick="HideAddParticipantsPopup">
+            <div class="participants-modal-dialog" @onclick:stopPropagation>
+                <button class="participants-modal-close" @onclick="HideAddParticipantsPopup">&times;</button>
+                <h3>Select Participants</h3>
+                <div class="participants-overview-grid centered-grid">
+                    @foreach(var participant in _availableParticipants)
+                    {
+                        <ParticipantCardComponent Participant="participant" OnParticipantSelected=AddParticipantAsync />
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+</div>

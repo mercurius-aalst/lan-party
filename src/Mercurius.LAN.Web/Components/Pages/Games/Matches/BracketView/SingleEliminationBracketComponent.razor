@@ -1,0 +1,89 @@
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Participants
+@rendermode InteractiveServer
+
+<div class="bracket-root" id="bracket-root">
+    @if(Matches == null || !Matches.Any())
+    {
+        <p>Geen matches gevonden.</p>
+    }
+    else
+    {
+        var rounds = Matches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
+        int lastRound = rounds.Max(r => r.Key);
+        int semiFinalRound = lastRound - 1;
+
+        int matchHeight = 60;
+        int matchWidth = 220; // match .bracket-match width
+        int verticalGap = 32;
+        int columnWidth = 260; // matchWidth + spacing
+        int numRounds = rounds.Count;
+
+        <div class="bracket-columns" style="min-width: @(numRounds * columnWidth)px;">           
+            <div class="bracket-absolute-container" style="width: @(numRounds* columnWidth)px;">
+                @{
+                    var roundMatches = rounds.ToDictionary(r => r.Key, r => r.OrderBy(m => m.MatchNumber).ToList());
+                    int firstRound = rounds.Min(r => r.Key);
+                    int numFirstRoundMatches = roundMatches[firstRound].Count;
+                    int reservedHeight = matchHeight + verticalGap;
+                    var matchPositions = new Dictionary<(int round, int match), (int left, int y)>();
+                    for(int i = 0; i < numFirstRoundMatches; i++)
+                    {
+                        int colX = 0 * columnWidth + (columnWidth - matchWidth) / 2;
+                        int y = i * reservedHeight;
+                        matchPositions[(firstRound, i)] = (colX, y);
+                    }
+                    for(int r = firstRound + 1; r <= lastRound; r++)
+                    {
+                        var matches = roundMatches[r];
+                        for(int i = 0; i < matches.Count; i++)
+                        {
+                            int colX = (r - firstRound) * columnWidth + (columnWidth - matchWidth) / 2;
+                            int srcIdx1 = i * 2;
+                            int srcIdx2 = i * 2 + 1;
+                            int y1 = matchPositions[(r - 1, srcIdx1)].y;
+                            int y2 = matchPositions[(r - 1, srcIdx2)].y;
+                            int y = (y1 + y2 + matchHeight) / 2 - matchHeight / 2;
+                            matchPositions[(r, i)] = (colX, y);
+                        }
+                    }
+                    int svgWidth = numRounds * columnWidth;
+                    int svgHeight = numFirstRoundMatches * reservedHeight - verticalGap;
+                }
+                <svg class="bracket-svg" width="@svgWidth" height="@svgHeight">
+                    @for(int r = firstRound + 1; r <= lastRound; r++)
+                    {
+                        var matches = roundMatches[r];
+                        for(int i = 0; i < matches.Count; i++)
+                        {
+                            int srcIdx1 = i * 2;
+                            int srcIdx2 = i * 2 + 1;
+                            int x0a = matchPositions[(r - 1, srcIdx1)].left + matchWidth;
+                            int y0a = matchPositions[(r - 1, srcIdx1)].y + matchHeight / 2;
+                            int x0b = matchPositions[(r - 1, srcIdx2)].left + matchWidth;
+                            int y0b = matchPositions[(r - 1, srcIdx2)].y + matchHeight / 2;
+                            int x1 = matchPositions[(r, i)].left;
+                            int y1 = matchPositions[(r, i)].y + matchHeight / 2;
+                            int elbowXa = (x0a + x1) / 2;
+                            int elbowXb = (x0b + x1) / 2;
+                            <polyline points="@x0a,@y0a @elbowXa,@y0a @elbowXa,@y1 @x1,@y1" fill="none" stroke="#4caf50" stroke-width="3" />
+                            <polyline points="@x0b,@y0b @elbowXb,@y0b @elbowXb,@y1 @x1,@y1" fill="none" stroke="#4caf50" stroke-width="3" />
+                        }
+                    }
+                </svg>
+                @foreach(var round in rounds)
+                {
+                    int r = round.Key;
+                    var matches = roundMatches[r];
+                    for(int i = 0; i < matches.Count; i++)
+                    {
+                        var match = matches[i];
+                        var pos = matchPositions[(r, i)];
+                        <BracketMatchComponent OnDataReload="OnDataReload" Match="match" Participants="Participants" Position="pos"></BracketMatchComponent>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
