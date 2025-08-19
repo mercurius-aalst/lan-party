@@ -68,6 +68,11 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="gameImage">Game Image</label>
+                            <InputFile id="gameImage" class="form-control" OnChange="HandleFileUpload" accept="image/*" />
+                        </div>
+
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Create</button>
                         </div>
@@ -83,16 +88,23 @@
 
     private CreateGameDTO newGame = new CreateGameDTO();
     private bool isDialogOpen = true;
+    private IBrowserFile? uploadedFile;
+
+    private void HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        uploadedFile = e.File;
+    }
 
     private async Task HandleSubmit()
     {
         try
         {
+            newGame.Image = uploadedFile;
             var createdGame = await GameService.CreateGameAsync(newGame);
-            ToastService.ShowSuccess($"{createdGame.Name} succesfully created.");
+            ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
             await OnClose.InvokeAsync(createdGame);
         }
-        catch(ApiException ex)
+        catch (ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }

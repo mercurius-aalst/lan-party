@@ -9,6 +9,7 @@
 @using Mercurius.LAN.Web.Components.Shared
 @using Microsoft.AspNetCore.Authorization
 @inject IGameService GameService
+@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 @inject IAuthService AuthService
 @rendermode InteractiveServer
@@ -42,10 +43,11 @@ else
 
         @foreach (var game in filteredGames)
         {
+            var imageUrl=Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
             <div class="card mb-3" style=" cursor:pointer;" @onclick="() => GoToGameDetail(game.Id)">
                 <div class="row no-gutters">
                     <div class="col-md-4">
-                        <img src="@game.PictureUrl" class="card-img" alt="@game.Name">
+                        <img src="@imageUrl" srcset="@imageUrl?w=1200 400w" class="card-img" alt="@game.Name">
                     </div>
                     <div class="col-md-8">
                         <div class="card-body">

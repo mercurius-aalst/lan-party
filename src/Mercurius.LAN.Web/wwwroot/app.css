@@ -28,7 +28,7 @@ h1 {
     text-align: left;
     text-transform: uppercase;
     letter-spacing: 2px;
-    text-shadow: none; /* Removed glow */
+    text-shadow: none;
     border-bottom: 2px solid var(--accent-color);
     padding-bottom: 0.5rem;
     margin-bottom: 2rem;
@@ -130,6 +130,7 @@ main {
     color: var(--accent-color);
     font-size: 1.5rem;
     text-transform: uppercase;
+    border-bottom: 2px solid var(--accent-color);
 }
 
 .card-text {

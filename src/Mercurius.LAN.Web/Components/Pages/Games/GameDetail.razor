@@ -10,6 +10,7 @@
 @inject NavigationManager Navigation
 @inject IGameService GameService
 @inject IToastService ToastService
+@inject IConfiguration Configuration
 
 @rendermode InteractiveServer
 
@@ -21,53 +22,58 @@
 else
 {
     <div class="game-detail">
-        <div class="game-header-tabs">
-            <h1>
-                @game.Name
-                <AuthorizeView Roles="admin">
-                    <Authorized>
-                        <div class="action-buttons">
-                            <button class="btn btn-success" @onclick="StartGame">Start</button>
-                            <button class="btn btn-secondary" @onclick="CancelGame">Cancel</button>
-                            <button class="btn btn-warning" @onclick="FinishGame">Finish</button>
-                            <button class="btn btn-secondary" @onclick="ResetGame">Reset</button>
-                            <button class="btn btn-danger" @onclick="DeleteGame">Delete</button>
-                        </div>
-                    </Authorized>
-                </AuthorizeView>
-            </h1>
-            <div class="tabs">
-                <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overview</button>
-                <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(selectedTab == 1)">Matches</button>
-                <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(selectedTab == 2)">Participants</button>
-                <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(selectedTab == 3)">Results</button>
-            </div>
-            <div class="tabs-dropdown">
-                <select @onchange="OnTabDropdownChanged" value="@selectedTab">
-                    <option value="0">Overview</option>
-                    <option value="1">Matches</option>
-                    <option value="2">Participants</option>
-                    <option value="3">Results</option>
-                </select>
-            </div>
+        <div class="game-image">
+            <img src="@(Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl)" alt="@game.Name" class="game-image-display" />
         </div>
-        <div class="tab-content">
-            @if(selectedTab == 0)
-            {
-                <OverviewTab Game="@game" />
-            }
-            else if(selectedTab == 1)
-            {
-                <MatchesTab OnDataReload="LoadGameDataAsync" BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants" />
-            }
-            else if(selectedTab == 2)
-            {
-                <ParticipantsTab Game=@game Participants="@game.Participants" ParticipantType="@game.ParticipantType"/>
-            }
-            else if(selectedTab == 3)
-            {
-                <PlacementsTab Placements="@game.Placements" />
-            }
+        <div class="game-detail-content">
+            <div class="game-header-tabs">
+                <h1>
+                    @game.Name
+                    <AuthorizeView Roles="admin">
+                        <Authorized>
+                            <div class="action-buttons">
+                                <button class="btn btn-success" @onclick="StartGame">Start</button>
+                                <button class="btn btn-secondary" @onclick="CancelGame">Cancel</button>
+                                <button class="btn btn-warning" @onclick="FinishGame">Finish</button>
+                                <button class="btn btn-secondary" @onclick="ResetGame">Reset</button>
+                                <button class="btn btn-danger" @onclick="DeleteGame">Delete</button>
+                            </div>
+                        </Authorized>
+                    </AuthorizeView>
+                </h1>
+                <div class="tabs">
+                    <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(selectedTab == 0)">Overview</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(selectedTab == 1)">Matches</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(selectedTab == 2)">Participants</button>
+                    <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(selectedTab == 3)">Results</button>
+                </div>
+                <div class="tabs-dropdown">
+                    <select @onchange="OnTabDropdownChanged" value="@selectedTab">
+                        <option value="0">Overview</option>
+                        <option value="1">Matches</option>
+                        <option value="2">Participants</option>
+                        <option value="3">Results</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tab-content">
+                @if(selectedTab == 0)
+                {
+                    <OverviewTab Game="@game" />
+                }
+                else if(selectedTab == 1)
+                {
+                    <MatchesTab OnDataReload="LoadGameDataAsync" BracketType="@game.BracketType" Matches="@game.Matches" Participants="@game.Participants" />
+                }
+                else if(selectedTab == 2)
+                {
+                    <ParticipantsTab Game=@game Participants="@game.Participants" ParticipantType="@game.ParticipantType" />
+                }
+                else if(selectedTab == 3)
+                {
+                    <PlacementsTab Placements="@game.Placements" />
+                }
+            </div>
         </div>
     </div>
 }
@@ -108,7 +114,7 @@ else
             ToastService.ShowSuccess("Game successfully finished.");
             await LoadGameDataAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -121,7 +127,7 @@ else
             ToastService.ShowSuccess("Game successfully started.");
             await LoadGameDataAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -135,7 +141,7 @@ else
             ToastService.ShowSuccess("Game succesfully canceled.");
             await LoadGameDataAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -149,7 +155,7 @@ else
             ToastService.ShowSuccess("Game sucessfully reset.");
             await LoadGameDataAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -163,7 +169,7 @@ else
             ToastService.ShowSuccess($"{game.Name} successfully deleted.");
             Navigation.NavigateTo("/games");
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }

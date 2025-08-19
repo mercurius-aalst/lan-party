@@ -6,6 +6,7 @@ using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Refit;
+using System.Net.Http.Headers;
 
 namespace Mercurius.LAN.Web.APIClients
 {
@@ -18,10 +19,11 @@ namespace Mercurius.LAN.Web.APIClients
         Task<GameExtended?> GetGameByIdAsync(int id);
 
         [Post("/lan/games")]
-        Task<GameExtended> CreateGameAsync([Body] CreateGameDTO game);
+        Task<GameExtended> CreateGameAsync([Body] MultipartFormDataContent content);
+
 
         [Patch("/lan/games/{id}")]
-        Task<GameExtended> UpdateGameAsync(int id, [Body] UpdateGameDTO game);
+        Task<Game> UpdateGameAsync(int id, [Body] MultipartFormDataContent formData);
 
         [Delete("/lan/games/{id}")]
         Task DeleteGameAsync(int id);

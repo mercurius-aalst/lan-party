@@ -4,23 +4,46 @@
 
 @rendermode InteractiveServer
 
-<div class="bracket-match" style="left:@(Position.left)px; top:@(Position.y)px;" @onclick="ShowDetails">
-    <MatchParticipantRow Match="Match" ParticipantId="Match.Participant1Id" Participants="Participants" SequenceNumber="1"></MatchParticipantRow>
-    <MatchParticipantRow Match="Match" ParticipantId="Match.Participant2Id" Participants="Participants" SequenceNumber="2"></MatchParticipantRow>
+<div class="bracket-match @ExtraCssClasses" style="@(Position.HasValue? $"left:{Position.Value.left}px; top:{Position.Value.y}px;" : string.Empty) " @onclick="ShowDetails">
+    <MatchParticipantRow Match="Match" ParticipantName="@_participant1Name" ParticipantId="Match.Participant1Id" Participants="Participants" SequenceNumber="1"></MatchParticipantRow>
+    <MatchParticipantRow Match="Match" ParticipantName="@_participant2Name" ParticipantId="Match.Participant2Id" Participants="Participants" SequenceNumber="2"></MatchParticipantRow>
 </div>
 
 @if(showDialog)
 {
-    <MatchDetailsDialog Match="Match" Participants="Participants" OnClose="CloseDialog" OnDataReload="OnDataReload" />
+    <MatchDetailsDialog Match="Match" Participant1Name="@_participant1Name" Participant2Name="@_participant2Name" Participants="Participants" OnClose="CloseDialog" OnDataReload="OnDataReload" />
 }
 
 @code {
     [Parameter] public Match Match { get; set; }
-    [Parameter] public (int left, int y) Position { get; set; }
+    [Parameter] public (int left, int y)? Position { get; set; }
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public string ExtraCssClasses { get; set; }
 
+    private string _participant1Name => GetParticipantName(Match.Participant1Id, Match.Participant1IsBYE);
+    private string _participant2Name => GetParticipantName(Match.Participant2Id, Match.Participant2IsBYE);
     private bool showDialog = false;
+    private string GetTbdOrBye()
+    {
+        if(Match.RoundNumber == 1 && !Match.IsLowerBracketMatch)
+            return "BYE";
+        return "TBD";
+    }
+
+    private string GetParticipantName(int? participantId, bool isBYE)
+    {
+        if (isBYE) return "BYE";
+        if (participantId is null || Participants == null) return "TBD";
+
+        var participant = Participants.FirstOrDefault(p => p.Id == participantId.Value);
+        return participant switch
+        {
+            Player player => player.Username,
+            Team team => team.Name,
+            _ => "TBD"
+        };
+    }
 
     private void ShowDetails()
     {

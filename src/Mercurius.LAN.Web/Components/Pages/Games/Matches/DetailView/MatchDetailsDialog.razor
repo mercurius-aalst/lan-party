@@ -15,12 +15,12 @@
             <button class="match-modal-close" @onclick="OnClose">&times;</button>
             <div class="match-header">
                 <span class="match-header-name">
-                    @GetParticipantName(Match.Participant1Id)
+                    @Participant1Name
                     <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
                 </span>
                 <span class="match-header-vs">vs</span>
                 <span class="match-header-name">
-                    @GetParticipantName(Match.Participant2Id)
+                    @Participant2Name
                     <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
                 </span>
             </div>
@@ -37,10 +37,10 @@
 
             <div class="participants-grid">
                 <div class="@(GetCardClass(Match.Participant1Id, Match.Participant2Id))">
-                    <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" EmptyLabel="@GetTbdOrBye()" />
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
                 </div>
                 <div class="@(GetCardClass(Match.Participant2Id, Match.Participant1Id))">
-                    <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" EmptyLabel="@GetTbdOrBye()" />
+                    <ParticipantComponent Participant="GetParticipantById(Match.Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
                 </div>
             </div>
             <AuthorizeView Roles="admin">
@@ -59,7 +59,10 @@
     [Parameter] public IEnumerable<Participant> Participants { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public string Participant2Name { get; set; }
+    [Parameter] public string Participant1Name { get; set; }
     [Inject] private IGameService GameService { get; set; }
+
 
     private Participant GetParticipantById(int? participantId)
     {
@@ -86,30 +89,6 @@
         if(IsLoser(participantId, opponentId))
             return "participant-card loser-card";
         return "participant-card";
-    }
-
-    private string GetTbdOrBye()
-    {
-        if(Match.RoundNumber == 1 && !Match.IsLowerBracketMatch)
-            return "BYE";
-        return "TBD";
-    }
-
-    private string GetParticipantName(int? participantId)
-    {
-        if(Participants == null)
-            return "TBD";
-        if(participantId is null)
-            return GetTbdOrBye();
-        var participant = Participants.FirstOrDefault(p => p.Id == participantId.Value);
-        if(participant == null)
-            return GetTbdOrBye();
-        return participant.Type switch
-        {
-            ParticipantType.Player when participant is Player player => player.Username,
-            ParticipantType.Team when participant is Team team => team.Name,
-            _ => participantId.Value.ToString()
-        };
     }
 
     private async Task SaveScoresAsync()

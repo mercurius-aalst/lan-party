@@ -18,6 +18,8 @@ namespace Mercurius.LAN.Web.Models.Matches
         public int GameId { get; set; }
         public int? Participant1Id { get; set; }
         public int? Participant2Id { get; set; }
+        public bool Participant1IsBYE { get; set; }
+        public bool Participant2IsBYE { get; set; }
         public int? WinnerId { get; set; }
         public int? Participant1Score { get; set; }
         public int? Participant2Score { get; set; }

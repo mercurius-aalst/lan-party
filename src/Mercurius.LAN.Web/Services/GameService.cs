@@ -3,6 +3,7 @@ using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
+using System.Net.Http;
 
 namespace Mercurius.LAN.Web.Services
 {
@@ -34,14 +35,46 @@ namespace Mercurius.LAN.Web.Services
         {
             return _lANClient.UnregisterFromGameAsync(id, participantId);
         }
-        public Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
+       
+
+        public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
         {
-            return _lANClient.CreateGameAsync(newGame);
+            var formData = new MultipartFormDataContent
+            {
+                { new StringContent(newGame.Name), "Name" },
+                { new StringContent(newGame.BracketType.ToString()), "BracketType" },
+                { new StringContent(newGame.Format.ToString()), "Format" },
+                { new StringContent(newGame.FinalsFormat.ToString()), "FinalsFormat" }
+            };
+
+            if (newGame.Image != null)
+            {
+                var streamContent = new StreamContent(newGame.Image.OpenReadStream());
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(newGame.Image.ContentType);
+                formData.Add(streamContent, "Image", newGame.Image.Name);
+            }
+
+            return await _lANClient.CreateGameAsync(formData);
         }
 
         public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame)
         {
-            return await _lANClient.UpdateGameAsync(id, updatedGame);
+            var formData = new MultipartFormDataContent
+            {
+                { new StringContent(updatedGame.Name), "Name" },
+                { new StringContent(updatedGame.BracketType.ToString()), "BracketType" },
+                { new StringContent(updatedGame.Format.ToString()), "Format" },
+                { new StringContent(updatedGame.FinalsFormat.ToString()), "FinalsFormat" }
+            };
+
+            if (updatedGame.Image != null)
+            {
+                var streamContent = new StreamContent(updatedGame.Image.OpenReadStream());
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(updatedGame.Image.ContentType);
+                formData.Add(streamContent, "Image", updatedGame.Image.Name);
+            }
+
+            return await _lANClient.UpdateGameAsync(id, formData);
         }
 
         public async Task<GameExtended?> GetGameDetailAsync(int id)

@@ -117,12 +117,15 @@
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 16px rgba(33,114,38,0.10);
-    padding: 2rem 2.5rem;
     width: calc(100vw - 320px); /* Account for sidebar width */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     position: relative;
+}
+
+.game-detail-content{
+        padding: 0rem 2.5rem 2rem 2.5rem;
 }
 
 @media (max-width: 770px) {
@@ -288,4 +291,15 @@ h1 {
     .tabs-dropdown {
         display: none;
     }
+}
+.game-image {
+    text-align: center;
+}
+
+.game-image-display {
+    width: 100%;
+    height: auto;
+    max-height: 15rem;
+    object-fit:cover;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }

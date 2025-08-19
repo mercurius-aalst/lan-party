@@ -29,8 +29,3 @@ function makeDraggable(elementId) {
         element.scrollLeft = scrollLeft - walk;
     });
 }
-
-// JavaScript function to toggle the sidebar visibility on mobile
-function showSidebarToggleOnMobile() {
-    // Add your implementation here if needed
-}
