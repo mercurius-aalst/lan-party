@@ -1,7 +1,8 @@
+using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
+using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
@@ -17,16 +18,30 @@ public partial class GamesOverview
     private IConfiguration Configuration { get; set; } = null!;
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
 
     private List<Game> FilteredGames =>
         string.IsNullOrWhiteSpace(_searchTerm)
             ? _games
             : _games.Where(game => game.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
 
-    protected override async Task OnInitializedAsync()
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _games = await GameService.GetGamesAsync();
-        await InvokeAsync(StateHasChanged);
+        if(firstRender)
+        {
+            try
+            {
+                _games = await GameService.GetGamesAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+            catch(Exception)
+            {
+                ToastService.ShowError("Could not load games.");
+            }
+        }
     }
 
     private void NavigateToGameDetail(int gameId)

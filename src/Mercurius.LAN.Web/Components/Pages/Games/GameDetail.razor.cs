@@ -9,24 +9,28 @@ namespace Mercurius.LAN.Web.Components.Pages.Games;
 
 public partial class GameDetail
 {
-    [Inject] 
+    [Inject]
     private IGameService GameService { get; set; } = null!;
-    [Inject] 
+    [Inject]
     private IToastService ToastService { get; set; } = null!;
     [Inject]
     private NavigationManager Navigation { get; set; } = null!;
-    [Inject] 
+    [Inject]
     private IConfiguration Configuration { get; set; } = null!;
 
-    [Parameter] 
+    [Parameter]
     public int GameId { get; set; }
     private GameExtended? _game;
     private int _selectedTab = 0;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await LoadGameDataAsync();
+        if(firstRender)
+        {
+            await LoadGameDataAsync();
+        }
     }
+
 
     private void SelectTab(int tab)
     {
@@ -35,12 +39,19 @@ public partial class GameDetail
 
     private async Task LoadGameDataAsync()
     {
-        _game = await GameService.GetGameByIdAsync(GameId);
+        try
+        {
+            _game = await GameService.GetGameByIdAsync(GameId);
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError("Could not (re)load game data");
+        }
     }
 
     private void OnTabDropdownChanged(ChangeEventArgs e)
     {
-        if (int.TryParse(e.Value?.ToString(), out int tab))
+        if(int.TryParse(e.Value?.ToString(), out int tab))
         {
             _selectedTab = tab;
         }
@@ -74,7 +85,7 @@ public partial class GameDetail
             ToastService.ShowSuccess($"{_game?.Name} successfully deleted.");
             Navigation.NavigateTo("/games");
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }
@@ -88,7 +99,7 @@ public partial class GameDetail
             ToastService.ShowSuccess(successMessage);
             await LoadGameDataAsync();
         }
-        catch (ApiException ex)
+        catch(ApiException ex)
         {
             ToastService.ShowError(ex.Content);
         }

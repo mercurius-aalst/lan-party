@@ -76,8 +76,6 @@ public static class DependencyExtensions
             .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
             {
                 TimeSpan.FromSeconds(1),
-                TimeSpan.FromSeconds(3),
-                TimeSpan.FromSeconds(5),
             }));
 
         services.AddRefitClient<IAuthenticationClient>(refitSettings)

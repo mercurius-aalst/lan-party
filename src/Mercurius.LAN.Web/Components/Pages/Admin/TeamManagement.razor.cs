@@ -23,16 +23,19 @@ public partial class TeamManagement
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
+
+    protected override async Task OnAfterRenderAsync(bool firstRender){
+        if(firstRender)
         {
-            _players = await ParticipantService.GetPlayersAsync();
-            _teams = await ParticipantService.GetTeamsAsync();
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
+            try
+            {
+                _players = await ParticipantService.GetPlayersAsync();
+                _teams = await ParticipantService.GetTeamsAsync();
+            }
+            catch(Exception)
+            {
+                ToastService.ShowError("Teams could not be loaded.");
+            }
         }
     }
 

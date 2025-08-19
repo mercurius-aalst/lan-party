@@ -21,15 +21,15 @@ public partial class PlayerManagement
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
         {
             _players = await ParticipantService.GetPlayersAsync();
         }
-        catch(ApiException ex)
+        catch(Exception)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError("Players could not be loaded.");
         }
     }
 
