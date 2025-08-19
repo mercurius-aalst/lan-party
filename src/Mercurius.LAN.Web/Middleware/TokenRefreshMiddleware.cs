@@ -1,11 +1,7 @@
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Models.Auth;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
-using Microsoft.Extensions.Configuration;
 using Refit;
-using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Tasks;
 
 namespace Mercurius.LAN.Web.Middleware
 {

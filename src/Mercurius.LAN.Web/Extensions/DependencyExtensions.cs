@@ -82,6 +82,10 @@ public static class DependencyExtensions
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
             .AddHttpMessageHandler<AccessTokenHandler>();
 
+        services.AddRefitClient<IUserClient>(refitSettings)
+            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .AddHttpMessageHandler<AccessTokenHandler>();
+
         return services;
     }
 

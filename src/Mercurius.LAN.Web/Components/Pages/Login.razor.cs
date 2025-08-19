@@ -17,18 +17,27 @@ public partial class Login
     [Inject] private IAuthenticationClient AuthenticationClient { get; set; } = null!;
     [Inject] private IAuthService AuthService { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
-    private LoginRequest _loginRequest = new();
+    [SupplyParameterFromForm] private LoginRequest LoginRequest { get; set; } = new();
 
-    private string _errorMessage  = string.Empty;
+    private string _errorMessage = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if(AuthService.IsLoggedIn)
+        {
+            NavigationManager.NavigateTo("/", true);
+        }
+    }
 
     private async Task HandleLoginAsync()
     {
         try
         {
-            var loginResponse = await AuthenticationClient.LoginAsync(_loginRequest);
+            var loginResponse = await AuthenticationClient.LoginAsync(LoginRequest);
 
-            if (HttpContext != null)
+            if(HttpContext != null)
             {
                 var accessTokenExpiry = int.Parse(Configuration["Jwt:AccessTokenExpiryHours"]);
                 var refreshTokenExpiry = int.Parse(Configuration["Jwt:RefreshTokenExpiryHours"]);
@@ -50,8 +59,9 @@ public partial class Login
                 });
             }
             await AuthService.LoginAsync(loginResponse);
+            NavigationManager.NavigateTo("/", true);
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
             _errorMessage = ex.Message;
         }

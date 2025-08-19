@@ -15,7 +15,7 @@
 <div class="login-container">
     <div class="login-card">
         <h3>Login</h3>
-        <EditForm Model="_loginRequest" OnValidSubmit="HandleLoginAsync" FormName="LoginForm">
+        <EditForm Model="LoginRequest" OnValidSubmit="HandleLoginAsync" FormName="LoginForm">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -26,12 +26,12 @@
 
             <div class="form-group">
                 <label for="username">Username</label>
-                <InputText id="username" class="form-control" @bind-Value="_loginRequest.Username" />
+                <InputText id="username" class="form-control" @bind-Value="LoginRequest.Username" />
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <InputText id="password" type="password" class="form-control" @bind-Value="_loginRequest.Password" />
+                <InputText id="password" type="password" class="form-control" @bind-Value="LoginRequest.Password" />
             </div>
 
             <button type="submit" class="btn btn-primary">Login</button>

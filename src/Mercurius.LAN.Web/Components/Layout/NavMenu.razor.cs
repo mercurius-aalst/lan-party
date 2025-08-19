@@ -10,8 +10,9 @@ public partial class NavMenu
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
     private bool _isUserMenuVisible = false;
+    private bool _isDropdownVisible = false;
 
-    private async Task LogoutAsync()
+    private void Logout()
     {
         NavigationManager.NavigateTo("/logout", true);
     }
@@ -21,5 +22,11 @@ public partial class NavMenu
     private void HandleOutsideClick()
     {
         _isUserMenuVisible = false;
+        _isDropdownVisible = false;
+    }
+
+    private void ToggleDropdown()
+    {
+        _isDropdownVisible = !_isDropdownVisible;
     }
 }

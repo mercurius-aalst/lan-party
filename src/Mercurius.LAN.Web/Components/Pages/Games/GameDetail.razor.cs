@@ -42,6 +42,7 @@ public partial class GameDetail
         try
         {
             _game = await GameService.GetGameByIdAsync(GameId);
+            await InvokeAsync(StateHasChanged);
         }
         catch(ApiException ex)
         {

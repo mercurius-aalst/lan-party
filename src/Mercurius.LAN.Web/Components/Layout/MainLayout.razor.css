@@ -90,7 +90,6 @@ main {
 /* Modern green sidebar gradient */
 .sidebar {
     background: linear-gradient(135deg, #174d1a 0%, #217226 100%);
-    border-right: 1px solid #217226;
     box-shadow: 2px 0 12px 0 rgba(33, 114, 38, 0.08);
 }
 
@@ -126,7 +125,7 @@ main {
     }
 
     .sidebar {
-        width: 250px;
+        width: 200px;
         height: 100vh;
         position: sticky;
         top: 0;
