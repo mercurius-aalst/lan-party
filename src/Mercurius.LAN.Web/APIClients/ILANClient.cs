@@ -5,6 +5,7 @@ using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
+using Mercurius.LAN.Web.Models.Sponsors;
 using Refit;
 using System.Net.Http.Headers;
 
@@ -82,6 +83,17 @@ namespace Mercurius.LAN.Web.APIClients
         [Delete("/lan/teams/{id}")]
         Task DeleteTeamAsync(int id);
 
+        [Get("/lan/sponsors")]
+        Task<IEnumerable<Sponsor>> GetSponsorsAsync();
+
+        [Get("/lan/sponsors/{id}")]
+        Task<Sponsor> GetSponsorByIdAsync(int id);
+
+        [Post("/lan/sponsors")]
+        Task<Sponsor> CreateSponsorAsync([Body] MultipartFormDataContent createSponsorFormData);
+
+        [Patch("/lan/sponsors/{id}")]
+        Task<Sponsor> UpdateSponsorAsync(int id, [Body] MultipartFormDataContent updateSponsorFormData);
 
     }
 }

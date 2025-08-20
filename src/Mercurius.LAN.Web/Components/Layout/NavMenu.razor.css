@@ -112,3 +112,9 @@
     padding-top: 0.1rem;
     border-radius: 0.25rem;
 }
+
+/* Added styles to vertically align the name with the icon */
+.user-section .user-profile {
+    display: flex;
+    align-items: center;
+}

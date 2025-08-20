@@ -1,12 +1,12 @@
-.overview-container {
+.game-overview-container {
     font-family: 'Orbitron', sans-serif;
     padding: 20px;
-    background-color: #f8f9fa;
+    background-color: #f8f9fa !important;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.overview-header {
+.game-overview-header {
     text-align: center;
     color: #343a40;
     margin-bottom: 20px;

@@ -24,8 +24,8 @@ else
     <div class="card-deck">
         <AuthorizeView Roles="admin">
             <Authorized>
-                <div class="card modern-add-game-card text-center" @onclick="ShowAddGameDialog">
-                    <div class="card-body">
+                <div class="card mb-3 modern-add-game-card text-center" @onclick="ShowAddGameDialog">
+                    <div class="card-body d-flex align-items-center justify-content-center">
                         <i class="bi bi-plus-circle" style="font-size: 3rem; color: var(--accent-color);"></i>
                         <h5>Add New Game</h5>
                         <p>Click to create a new game</p>
