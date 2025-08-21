@@ -65,7 +65,6 @@
         position: fixed;
         left: 0;
         top: 0;
-        width: 10rem;
         max-width: 320px;
         height: 100vh;
         z-index: 1002;
@@ -76,6 +75,9 @@
     .sidebar.open {
         transform: translateX(0);
     }
+    main {
+        width: 100%;
+    }
 }
 .page {
     position: relative;
@@ -85,6 +87,8 @@
 
 main {
     flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Modern green sidebar gradient */
@@ -125,12 +129,10 @@ main {
     }
 
     .sidebar {
-        width: 10rem;
-        height: 100vh;
         position: sticky;
         top: 0;
     }
-
+   
     .top-row {
         position: sticky;
         top: 0;

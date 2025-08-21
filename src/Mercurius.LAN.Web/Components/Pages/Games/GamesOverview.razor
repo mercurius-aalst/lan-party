@@ -46,15 +46,15 @@ else
                     </p>
                     <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
                 </div>
-                <div class="card-footer text-muted text-center">
-                    <a href="@game.RegisterUrl" class="card-link">Register</a>
+                <div class="card-footer text-center" @onclick:stopPropagation=true>
+                    <a href="@game.RegisterUrl" class="card-link  @(game.Status != GameStatus.Scheduled ? "disabled" : "")">Register</a>
                 </div>
             </div>
         }
     </div>
-
     @if(_isAddGameDialogOpen)
     {
         <AddGameDialog OnClose="CloseAddGameDialog" />
     }
 }
+<SponsorScroller></SponsorScroller>

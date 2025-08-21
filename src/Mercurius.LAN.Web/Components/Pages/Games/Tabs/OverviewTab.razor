@@ -78,7 +78,10 @@
                                 }
                             </InputSelect>
                         </div>
-
+                        <div class="form-group">
+                            <label for="registrationUrl">Registration url</label>
+                            <InputText id="registrationUrl" class="form-control" @bind-Value="_editGame.RegistrationUrl" />
+                        </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
                             <InputFile id="gameImage" class="form-control" OnChange="UploadFile" accept="image/*" />

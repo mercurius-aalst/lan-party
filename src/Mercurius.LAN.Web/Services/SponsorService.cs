@@ -8,15 +8,20 @@ namespace Mercurius.LAN.Web.Services
     public class SponsorService : ISponsorService
     {
         private readonly ILANClient _lanClient;
+        private readonly IConfiguration _configuration;
 
-        public SponsorService(ILANClient lanClient)
+        public SponsorService(ILANClient lanClient, IConfiguration configuration)
         {
             _lanClient = lanClient;
+            _configuration = configuration;
         }
 
-        public Task<IEnumerable<Sponsor>> GetSponsorsAsync()
+        public async Task<IEnumerable<Sponsor>> GetSponsorsAsync()
         {
-            return _lanClient.GetSponsorsAsync();
+            var sponsors = await _lanClient.GetSponsorsAsync();
+            sponsors.ToList().ForEach(sp => sp.LogoUrl = _configuration["MercuriusAPI:BaseAddress"] + sp.LogoUrl);
+
+            return sponsors;
         }
 
         public Task<Sponsor> GetSponsorByIdAsync(int id)
@@ -33,7 +38,7 @@ namespace Mercurius.LAN.Web.Services
                 {new StringContent(createSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
             };
 
-            if (createSponsorDTO.Logo != null)
+            if(createSponsorDTO.Logo != null)
             {
                 var streamContent = new StreamContent(createSponsorDTO.Logo.OpenReadStream());
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(createSponsorDTO.Logo.ContentType);
@@ -50,7 +55,7 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(updateSponsorDTO.InfoUrl), "InfoUrl" },
                 { new StringContent(updateSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
             };
-            if (updateSponsorDTO.Logo != null)
+            if(updateSponsorDTO.Logo != null)
             {
                 var streamContent = new StreamContent(updateSponsorDTO.Logo.OpenReadStream());
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(updateSponsorDTO.Logo.ContentType);
@@ -64,5 +69,4 @@ namespace Mercurius.LAN.Web.Services
             return _lanClient.DeleteSponsorAsync(id);
         }
     }
-
 }

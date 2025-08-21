@@ -1,11 +1,10 @@
+using Blazored.Toast.Services;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.Models.Games;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
-using Blazored.Toast.Services;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
