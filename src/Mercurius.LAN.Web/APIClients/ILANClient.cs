@@ -95,5 +95,8 @@ namespace Mercurius.LAN.Web.APIClients
         [Patch("/lan/sponsors/{id}")]
         Task<Sponsor> UpdateSponsorAsync(int id, [Body] MultipartFormDataContent updateSponsorFormData);
 
+        [Delete("/lan/sponsors/{id}")]
+        Task DeleteSponsorAsync(int id);
+
     }
 }

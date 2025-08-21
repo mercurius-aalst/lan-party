@@ -9,6 +9,8 @@ namespace Mercurius.LAN.Web.Components.Pages
         private IEnumerable<Sponsor> _sponsors;
         [Inject]
         private ISponsorService SponsorService { get; set; } = null!;
+        [Inject]
+        private IConfiguration Configuration { get; set; } = null!;
 
         protected override async Task OnInitializedAsync()
         {

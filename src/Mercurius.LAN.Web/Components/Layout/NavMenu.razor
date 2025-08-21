@@ -1,5 +1,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Refit
+@rendermode InteractiveServer
+
 @if(_isUserMenuVisible || _isDropdownVisible)
 {
     <div class="overlay" @onclick="HandleOutsideClick">
@@ -37,6 +39,7 @@
                         <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
                             <a class="dropdown-item" href="/admin/players" @onclick="CloseDropdown">Players</a>
                             <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
+                            <a class="dropdown-item" href="/admin/sponsors" @onclick="CloseDropdown">Sponsors</a>
                         </div>
                     }
                 </div>

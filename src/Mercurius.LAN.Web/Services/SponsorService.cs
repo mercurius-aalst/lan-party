@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Sponsors;
 using Mercurius.LAN.Web.Models.Sponsors;
 using System.Net.Http;
 
@@ -15,25 +16,7 @@ namespace Mercurius.LAN.Web.Services
 
         public Task<IEnumerable<Sponsor>> GetSponsorsAsync()
         {
-            // return _lanClient.GetSponsorsAsync();
-            return Task.FromResult(new List<Sponsor>
-            {
-                new Sponsor { Name = "Sponsor A", SponsorTier = 1, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png", InfoUrl = "https://google.com" },
-                new Sponsor { Name = "Sponsor I", SponsorTier = 1, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor K", SponsorTier = 1, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/5/51/Facebook_f_logo_%282019%29.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor B", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/6/6a/JavaScript-logo.png", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor Crgrgefefefefefefefe", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/d/d5/CSS3_logo_and_wordmark.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor D", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/3/3d/Visual_Studio_Code_1.35_icon.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor M", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/4/4f/Csharp_Logo.png", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor N", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/8/87/Google_Chrome_icon_%282011%29.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor O", SponsorTier = 2, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/9/99/Unofficial_JavaScript_logo_2.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor E", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/a/a7/React-icon.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor F", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/d/d9/Node.js_logo.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor G", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/8/8e/Nextjs-logo.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor P", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/4/4e/Spotify_logo_with_text.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor Q", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg", InfoUrl = "https://example.com" },
-                new Sponsor { Name = "Sponsor R", SponsorTier = 3, LogoUrl = "https://upload.wikimedia.org/wikipedia/commons/9/91/GitHub_logo.svg", InfoUrl = "https://example.com" }
-            }.AsEnumerable());
+            return _lanClient.GetSponsorsAsync();
         }
 
         public Task<Sponsor> GetSponsorByIdAsync(int id)
@@ -41,14 +24,45 @@ namespace Mercurius.LAN.Web.Services
             return _lanClient.GetSponsorByIdAsync(id);
         }
 
-        public Task<Sponsor> CreateSponsorAsync(MultipartFormDataContent createSponsorFormData)
+        public Task<Sponsor> CreateSponsorAsync(SponsorManagementDTO createSponsorDTO)
         {
+            var createSponsorFormData = new MultipartFormDataContent
+            {
+                { new StringContent(createSponsorDTO.Name), "Name" },
+                { new StringContent(createSponsorDTO.InfoUrl), "InfoUrl" },
+                {new StringContent(createSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
+            };
+
+            if (createSponsorDTO.Logo != null)
+            {
+                var streamContent = new StreamContent(createSponsorDTO.Logo.OpenReadStream());
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(createSponsorDTO.Logo.ContentType);
+                createSponsorFormData.Add(streamContent, "Logo", createSponsorDTO.Logo.Name);
+            }
             return _lanClient.CreateSponsorAsync(createSponsorFormData);
         }
 
-        public Task<Sponsor> UpdateSponsorAsync(int id, MultipartFormDataContent updateSponsorFormData)
+        public Task<Sponsor> UpdateSponsorAsync(int id, SponsorManagementDTO updateSponsorDTO)
         {
+            var updateSponsorFormData = new MultipartFormDataContent
+            {
+                { new StringContent(updateSponsorDTO.Name), "Name" },
+                { new StringContent(updateSponsorDTO.InfoUrl), "InfoUrl" },
+                { new StringContent(updateSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
+            };
+            if (updateSponsorDTO.Logo != null)
+            {
+                var streamContent = new StreamContent(updateSponsorDTO.Logo.OpenReadStream());
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(updateSponsorDTO.Logo.ContentType);
+                updateSponsorFormData.Add(streamContent, "Logo", updateSponsorDTO.Logo.Name);
+            }
             return _lanClient.UpdateSponsorAsync(id, updateSponsorFormData);
         }
+
+        public Task DeleteSponsorAsync(int id)
+        {
+            return _lanClient.DeleteSponsorAsync(id);
+        }
     }
+
 }

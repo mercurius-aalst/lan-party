@@ -23,8 +23,6 @@
 
 .custom-autocomplete-input:focus {
     outline: none;
-    border-color: #14501a;
-    box-shadow: 0 2px 12px rgba(33, 114, 38, 0.15);
 }
 
 /* Updated Dropdown Styling */

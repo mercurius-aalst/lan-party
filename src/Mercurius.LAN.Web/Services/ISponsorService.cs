@@ -1,3 +1,4 @@
+using Mercurius.LAN.Web.DTOs.Sponsors;
 using Mercurius.LAN.Web.Models.Sponsors;
 using System.Net.Http;
 
@@ -7,7 +8,8 @@ namespace Mercurius.LAN.Web.Services
     {
         Task<IEnumerable<Sponsor>> GetSponsorsAsync();
         Task<Sponsor> GetSponsorByIdAsync(int id);
-        Task<Sponsor> CreateSponsorAsync(MultipartFormDataContent createSponsorFormData);
-        Task<Sponsor> UpdateSponsorAsync(int id, MultipartFormDataContent updateSponsorFormData);
+        Task<Sponsor> CreateSponsorAsync(SponsorManagementDTO createSponsorDTO);
+        Task<Sponsor> UpdateSponsorAsync(int id, SponsorManagementDTO updateSponsorDTO);
+        Task DeleteSponsorAsync(int id);
     }
 }
