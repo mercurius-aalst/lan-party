@@ -1,7 +1,9 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
@@ -20,13 +22,15 @@ public partial class GamesOverview
     private NavigationManager NavigationManager { get; set; } = null!;
     [Inject]
     private IToastService ToastService { get; set; } = null!;
+    [Inject]
+    private ISponsorService SponsorService { get; set; } = null!;
 
     private List<Game> FilteredGames =>
         string.IsNullOrWhiteSpace(_searchTerm)
             ? _games
             : _games.Where(game => game.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
 
-
+    private IEnumerable<Sponsor> _sponsors = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -35,7 +39,9 @@ public partial class GamesOverview
             try
             {
                 _games = await GameService.GetGamesAsync();
+                _sponsors = await SponsorService.GetSponsorsAsync();
                 await InvokeAsync(StateHasChanged);
+
             }
             catch(Exception)
             {

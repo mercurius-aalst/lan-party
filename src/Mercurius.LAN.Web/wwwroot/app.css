@@ -1,7 +1,6 @@
 /* Mobile friendly sidebar menu */
 /* Responsive menu icon logic removed as requested */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
-
 :root {
     --primary-color: #174d1a; /* Dark green background */
     --secondary-color: #e8f5e9; /* Very light green background */
@@ -43,7 +42,7 @@ h1 {
 }
 
 .sidebar {
-    width: 250px;
+    width: 10vw;
     height: 100vh;
     position: fixed;
 }

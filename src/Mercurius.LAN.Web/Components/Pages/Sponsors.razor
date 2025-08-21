@@ -29,29 +29,3 @@
         }
     }
 </div>
-
-@code {
-    private int availableHeight;
-    private int availableWidth;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            availableHeight = await JSRuntime.InvokeAsync<int>("getAvailableHeight", ".overview-header");
-            availableWidth = await JSRuntime.InvokeAsync<int>("getAvailableWidth");
-            StateHasChanged();
-        }
-    }
-}
-
-<script>
-    window.getAvailableHeight = (headerSelector) => {
-        const header = document.querySelector(headerSelector);
-        return window.innerHeight - (header ? header.offsetHeight : 0);
-    };
-
-    window.getAvailableWidth = () => {
-        return window.innerWidth;
-    };
-</script>

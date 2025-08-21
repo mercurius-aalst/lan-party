@@ -32,6 +32,7 @@
     min-width: max-content; /* Ensure the card's minimum width matches the content width */
     border: none;
     box-shadow: none;
+    background: none;
 }
 .card::after {
     content: attr(data-overlay-text); /* Get the text from a data attribute */
@@ -49,8 +50,8 @@
 }
 
 .card:hover img {
-    transform: scale(1.2);
-    filter: blur(4px);
+    transform: scale(1.1);
+    filter: blur(3px);
 }
 
 .card-overlay {

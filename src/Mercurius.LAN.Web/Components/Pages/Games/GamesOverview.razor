@@ -9,13 +9,13 @@
 <PageTitle>Games</PageTitle>
 
 <div class="overview-header">
-<h2>Games</h2>
+    <h2>Games</h2>
 </div>
 <div class="search-bar-container">
     <input type="text" class="form-control search-bar-input" placeholder="Search by game title..." @bind="_searchTerm" @bind:event="oninput" />
 </div>
 
-@if (_games == null)
+@if(_games == null)
 {
     <LoadingScreen Message="Loading..." />
 }
@@ -25,7 +25,7 @@ else
         <AuthorizeView Roles="admin">
             <Authorized>
                 <div class="card mb-3 modern-add-game-card text-center" @onclick="ShowAddGameDialog">
-                    <div class="card-body d-flex align-items-center justify-content-center">
+                    <div class="card-body d-flex flex-column justify-content-center">
                         <i class="bi bi-plus-circle" style="font-size: 3rem; color: var(--accent-color);"></i>
                         <h5>Add New Game</h5>
                         <p>Click to create a new game</p>
@@ -34,29 +34,26 @@ else
             </Authorized>
         </AuthorizeView>
 
-        @foreach (var game in FilteredGames)
+        @foreach(var game in FilteredGames)
         {
-            var imageUrl=Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
-            <div class="card mb-3" style=" cursor:pointer;" @onclick="() => NavigateToGameDetail(game.Id)">
-                <div class="row no-gutters">
-                    <div class="col-md-4">
-                        <img src="@imageUrl" srcset="@imageUrl?w=1200 400w" class="card-img" alt="@game.Name">
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h5 class="card-title">@game.Name</h5>
-                            <p class="card-text">
-                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
-                            </p>
-                            <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
-                        </div>
-                    </div>
+            var imageUrl = Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
+            <div class="card mb-3" style="cursor:pointer;" @onclick="() => NavigateToGameDetail(game.Id)">
+                <img src="@imageUrl" srcset="@imageUrl?w=1200 400w" class="card-img-top" alt="@game.Name">
+                <div class="card-body">
+                    <h5 class="card-title">@game.Name</h5>
+                    <p class="card-text">
+                        <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
+                    </p>
+                    <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <a href="@game.RegisterUrl" class="card-link">Register</a>
                 </div>
             </div>
         }
     </div>
 
-    @if (_isAddGameDialogOpen)
+    @if(_isAddGameDialogOpen)
     {
         <AddGameDialog OnClose="CloseAddGameDialog" />
     }

@@ -94,6 +94,7 @@ public static class DependencyExtensions
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ISponsorService, SponsorService>();
         services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
         services.AddHttpContextAccessor();
         services.AddScoped<IParticipantService, ParticipantService>();
