@@ -9,9 +9,9 @@ namespace Mercurius.LAN.Web.Components.Shared
     {
         [Inject]
         private ISponsorService SponsorService { get; set; } = null!;
-        [Inject]
-        private IConfiguration Configuration { get; set; } = null!;
+
         private List<Sponsor> _sponsors = new();
+        private const int _repeater = 5;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -19,7 +19,9 @@ namespace Mercurius.LAN.Web.Components.Shared
             {
                 try
                 {
-                    _sponsors = (await SponsorService.GetSponsorsAsync()).ToList();
+                    var sponsors = (await SponsorService.GetSponsorsAsync()).ToList();
+                    for(int i = 1; i <= _repeater; i++)
+                        _sponsors.AddRange(sponsors);
                     await InvokeAsync(StateHasChanged);
 
                 }

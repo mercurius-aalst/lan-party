@@ -7,7 +7,7 @@ namespace Mercurius.LAN.Web.DTOs.Sponsors
     {
         public string Name { get; set; }
         public int SponsorTier { get; set; }
-        public IBrowserFile Logo { get; set; }
+        public IBrowserFile? Logo { get; set; }
         public string InfoUrl { get; set; }
         public int Id { get; set; } = -1;
 

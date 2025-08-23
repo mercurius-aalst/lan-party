@@ -8,4 +8,14 @@ public partial class MainLayout
 
     private void ToggleSidebar() => _sidebarOpen = !_sidebarOpen;
  
+    private void HandleOutsideClick()
+    {
+        _sidebarOpen = false;
+    }
+
+    private void OnNavigationSelected()
+    {
+        if(_sidebarOpen)
+            _sidebarOpen = !_sidebarOpen;
+    }
 }

@@ -17,13 +17,13 @@
 
 <div class="nav-scrollable">
     <nav class="flex-column">
-        <NavLink href="/" Match="NavLinkMatch.All">
+        <NavLink href="/" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
             <div class="nav-section nav-item px-3">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </div>
 
         </NavLink>
-        <NavLink href="/sponsors" Match="NavLinkMatch.All">
+        <NavLink href="/sponsors" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
             <div class="nav-section nav-item px-3">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Our Sponsors
             </div>

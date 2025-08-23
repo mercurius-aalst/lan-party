@@ -62,11 +62,16 @@ public partial class SponsorManagement
         if(_selectedSponsor.SponsorTier < 1)
         {
             ToastService.ShowError("Sponsor Tier must be at least 1.");
-        }    
+        }
         try
         {
             if(_isCreateMode)
             {
+                if(_selectedSponsor.Logo is null)
+                {
+                    ToastService.ShowError("A sponsor logo is required.");
+                    return;
+                }
                 var sponsor = await SponsorService.CreateSponsorAsync(new SponsorManagementDTO
                 {
                     Name = _selectedSponsor!.Name,

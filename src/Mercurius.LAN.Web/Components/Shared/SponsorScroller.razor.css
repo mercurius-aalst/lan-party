@@ -9,15 +9,14 @@
     position: relative;
     display: flex;
     overflow: hidden;
-    mask-image: linear-gradient( to right, transparent, #000 15% 85%, transparent );
-    justify-content: center;
+    mask-image: linear-gradient( to right, transparent, #000 15% 85%, transparent );    
+    
 }
 
 .slide {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: slide 10s linear infinite;
+    animation: slide 30s linear infinite;
+
 }
 
     .slide img {
