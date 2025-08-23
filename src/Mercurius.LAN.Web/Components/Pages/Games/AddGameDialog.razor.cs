@@ -31,6 +31,11 @@ public partial class AddGameDialog
     {
         try
         {
+            if(_uploadedFile is null)
+            {
+                ToastService.ShowError("A game banner is required.");
+                return;
+            }
             _newGame.Image = _uploadedFile;
             var createdGame = await GameService.CreateGameAsync(_newGame);
             ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
