@@ -3,7 +3,7 @@ using Mercurius.LAN.Web.Services;
 using Refit;
 using Blazored.Toast.Services;
 
-namespace Mercurius.LAN.Web.Components.Pages;
+namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class ChangePassword
 {

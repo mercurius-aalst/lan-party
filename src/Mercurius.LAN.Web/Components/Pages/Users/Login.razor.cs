@@ -9,7 +9,7 @@ using System;
 using System.Threading.Tasks;
 using Refit;
 
-namespace Mercurius.LAN.Web.Components.Pages;
+namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class Login
 {

@@ -1,3 +1,4 @@
+using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -9,6 +10,8 @@ namespace Mercurius.LAN.Web.Components.Shared
     {
         [Inject]
         private ISponsorService SponsorService { get; set; } = null!;
+        [Inject]
+        private IToastService ToastService { get; set; } = null!;
 
         private List<Sponsor> _sponsors = new();
         private const int _repeater = 5;
@@ -25,9 +28,10 @@ namespace Mercurius.LAN.Web.Components.Shared
                     await InvokeAsync(StateHasChanged);
 
                 }
-                catch(ApiException ex)
+                catch(Exception ex)
                 {
-                    Console.WriteLine($"Error loading sponsors: {ex.Message}");
+                    ToastService.ShowError("Something went wrong during the loading of the sponsors");
+
                 }
             }
         }

@@ -46,7 +46,6 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(newGame.Format.ToString()), "Format" },
                 { new StringContent(newGame.FinalsFormat.ToString()), "FinalsFormat" },
                 { new StringContent(newGame.ParticipantType.ToString()), "ParticipantType" },
-                { new StringContent(newGame.RegistrationUrl.ToString()), "RegistrationUrl" },
             };
 
             if (newGame.Image != null)
