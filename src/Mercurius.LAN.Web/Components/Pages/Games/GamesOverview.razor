@@ -46,8 +46,8 @@ else
                     </p>
                     <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
                 </div>
-                <div class="card-footer text-center" @onclick:stopPropagation=true>
-                    <a href="@game.RegisterUrl" class="card-link  @(game.Status != GameStatus.Scheduled ? "disabled" : "")">Register</a>
+                <div class="card-footer text-center" @onclick:stopPropagation @onclick="() => NavigateToRegister(game.RegisterFormUrl)">
+                    <a class="card-link  @(game.Status != GameStatus.Scheduled ? "disabled" : "")" tabindex="-1">Register</a>
                 </div>
             </div>
         }

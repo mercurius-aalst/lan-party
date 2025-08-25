@@ -1,0 +1,71 @@
+﻿@inherits InputBase<IBrowserFile>
+@using Microsoft.AspNetCore.Components.Forms
+@using System.IO
+
+<InputFile OnChange="HandleFileChange" class="@GetCssClass()" />
+
+@code {
+    [Inject]
+    private IConfiguration Configuration { get; set; }
+
+    private object fileInputKey = new object();
+    private long _maxFileSize;
+    private FieldIdentifier? fieldIdentifier;
+
+    private ValidationMessageStore? messageStore;
+
+    protected override void OnInitialized()
+    {
+        var maxFileSizeInMb = Configuration.GetValue<int>("FileSettings:MaxFileSizeInMB");
+        _maxFileSize = maxFileSizeInMb * 1024 * 1024;
+    }
+
+
+    protected override void OnParametersSet()
+    {
+        if(EditContext is not null)
+        {
+            messageStore = new ValidationMessageStore(EditContext);
+        }
+    }
+
+    protected override bool TryParseValueFromString(string value, out IBrowserFile result, out string validationErrorMessage)
+    {
+        result = default;
+        validationErrorMessage = null;
+        return false;
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    {
+        messageStore?.Clear(FieldIdentifier);
+        try
+        {
+            var stream = e.File.OpenReadStream(maxAllowedSize: _maxFileSize);
+            CurrentValue = e.File;
+        }
+        catch(IOException)
+        {
+            CurrentValue = null;
+            string errorMessage = $"File size exceeds the {_maxFileSize / (1024 * 1024)}MB limit.";
+            messageStore?.Add(FieldIdentifier, errorMessage);
+
+
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+        }
+    }
+
+
+    protected string GetCssClass()
+    {
+        string css = "form-control";
+        bool isValid = EditContext.IsValid(FieldIdentifier);
+        bool isModified = EditContext.IsModified(FieldIdentifier);
+
+        if(!EditContext.IsModified())
+            return css;
+        css += $" {(isModified ? "modified " : "")}{(isValid ? "is-valid" : "is-invalid")}";
+        return css;
+    }
+
+}
