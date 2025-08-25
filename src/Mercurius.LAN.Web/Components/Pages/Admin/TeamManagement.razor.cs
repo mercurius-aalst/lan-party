@@ -24,13 +24,16 @@ public partial class TeamManagement
     private IToastService ToastService { get; set; } = null!;
 
 
-    protected override async Task OnAfterRenderAsync(bool firstRender){
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
         if(firstRender)
         {
             try
             {
                 _players = await ParticipantService.GetPlayersAsync();
                 _teams = await ParticipantService.GetTeamsAsync();
+                await InvokeAsync(StateHasChanged);
+
             }
             catch(Exception)
             {

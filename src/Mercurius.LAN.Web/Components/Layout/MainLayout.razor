@@ -11,14 +11,18 @@
 </button>
 
 <div class="page">
+    @if(_sidebarOpen)
+    {
+        <div class="overlay" @onclick="HandleOutsideClick">
+        </div>
+    }
     <div class="sidebar @(_sidebarOpen ? "open" : null)">
-        <NavMenu />
+        <NavMenu OnNavigationSelected="OnNavigationSelected" />
     </div>
 
-    <main>
-        <article class="content px-4">
+    <main class="content px-4">
+
             @Body
-        </article>
     </main>
 </div>
 

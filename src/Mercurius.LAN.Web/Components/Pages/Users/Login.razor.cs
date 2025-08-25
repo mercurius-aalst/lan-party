@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Threading.Tasks;
+using Refit;
 
-namespace Mercurius.LAN.Web.Components.Pages;
+namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class Login
 {
@@ -61,9 +62,9 @@ public partial class Login
             await AuthService.LoginAsync(loginResponse);
             NavigationManager.NavigateTo("/", true);
         }
-        catch(Exception ex)
+        catch(ApiException ex)
         {
-            _errorMessage = ex.Message;
+            _errorMessage = ex.Content;
         }
     }
 }

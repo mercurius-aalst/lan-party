@@ -41,7 +41,7 @@ else
                     <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(_selectedTab == 3)">Results</button>
                 </div>
                 <div class="tabs-dropdown">
-                    <select @onchange="OnTabDropdownChanged" value="@_selectedTab">
+                    <select id="tab-selector" @onchange="OnTabDropdownChanged" value="@_selectedTab">
                         <option value="0">Overview</option>
                         <option value="1">Matches</option>
                         <option value="2">Participants</option>

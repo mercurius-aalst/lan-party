@@ -12,5 +12,6 @@ namespace Mercurius.LAN.Web.DTOs.Games
         public GameFormat FinalsFormat { get; set; }
         public ParticipantType ParticipantType { get; set; }
         public IBrowserFile? Image { get; set; }
+        public string RegistrationUrl { get; set; }
     }
 }

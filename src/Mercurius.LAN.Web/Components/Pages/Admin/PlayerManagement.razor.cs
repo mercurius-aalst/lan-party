@@ -23,13 +23,18 @@ public partial class PlayerManagement
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if(firstRender)
         {
-            _players = await ParticipantService.GetPlayersAsync();
-        }
-        catch(Exception)
-        {
-            ToastService.ShowError("Players could not be loaded.");
+            try
+            {
+                _players = await ParticipantService.GetPlayersAsync();
+                await InvokeAsync(StateHasChanged);
+
+            }
+            catch(Exception)
+            {
+                ToastService.ShowError("Players could not be loaded.");
+            }
         }
     }
 

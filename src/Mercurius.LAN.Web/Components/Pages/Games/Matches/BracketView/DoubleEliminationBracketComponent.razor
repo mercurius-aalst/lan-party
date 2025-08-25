@@ -3,7 +3,7 @@
 @using Mercurius.LAN.Web.Models.Participants
 @rendermode InteractiveServer
 
-<div class="bracket-root" id="double-elimination-bracket-root">
+
     @if(Matches == null || !Matches.Any())
     {
         <p>Geen matches gevonden.</p>
@@ -23,6 +23,7 @@
         {
             var rounds = _lBMatches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
             var matchData = CalculateLowerBracketLayout(rounds, _uBMatches);
+        <div class="bracket-root" id="double-elimination-bracket-root">
 
             <div class="bracket-columns" style="min-width: @(matchData.SvgWidth)px;">
                 <div class="bracket-absolute-container" style="width: @(matchData.SvgWidth)px;">
@@ -41,6 +42,7 @@
                     }
                 </div>
             </div>
+        </div>
         }
         <br />
         <br />
@@ -51,4 +53,3 @@
             <BracketMatchComponent Match="_gFMatch" Participants="Participants" ExtraCssClasses="relative" OnDataReload="OnDataReload"></BracketMatchComponent>
         }
     }
-</div>

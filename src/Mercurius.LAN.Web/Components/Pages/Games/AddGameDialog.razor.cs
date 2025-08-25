@@ -1,11 +1,10 @@
+using Blazored.Toast.Services;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.Models.Games;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
-using Blazored.Toast.Services;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
@@ -32,6 +31,11 @@ public partial class AddGameDialog
     {
         try
         {
+            if(_uploadedFile is null)
+            {
+                ToastService.ShowError("A game banner is required.");
+                return;
+            }
             _newGame.Image = _uploadedFile;
             var createdGame = await GameService.CreateGameAsync(_newGame);
             ToastService.ShowSuccess($"{createdGame.Name} successfully created.");

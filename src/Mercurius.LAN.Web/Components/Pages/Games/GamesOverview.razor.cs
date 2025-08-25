@@ -1,7 +1,9 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
@@ -27,7 +29,6 @@ public partial class GamesOverview
             : _games.Where(game => game.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
 
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
@@ -36,6 +37,7 @@ public partial class GamesOverview
             {
                 _games = await GameService.GetGamesAsync();
                 await InvokeAsync(StateHasChanged);
+
             }
             catch(Exception)
             {

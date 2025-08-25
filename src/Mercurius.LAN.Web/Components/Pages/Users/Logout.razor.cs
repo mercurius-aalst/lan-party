@@ -4,7 +4,7 @@ using Refit;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Services;
 
-namespace Mercurius.LAN.Web.Components.Pages;
+namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class Logout
 {

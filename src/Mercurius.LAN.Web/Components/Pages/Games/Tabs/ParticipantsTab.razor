@@ -2,10 +2,13 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Components.Shared
+@using Microsoft.AspNetCore.Components.Authorization
 
 <div>
     <h2>Participants</h2>
     <div class="participants-overview-grid">
+        <AuthorizeView Roles="admin">
+            <Authorized>
         @if(Game.Status == GameStatus.Scheduled)
         {
             <div class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
@@ -13,6 +16,8 @@
                 <div class="participant-overview-name">Add @(ParticipantType.ToString() + "s")</div>
             </div>
         }
+            </Authorized>
+        </AuthorizeView>
         @foreach(var participant in Participants)
         {
             <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=@(Game.Status == GameStatus.Scheduled) OnParticipantDeleted="UnregisterParticipantAsync" />

@@ -13,5 +13,6 @@ namespace Mercurius.LAN.Web.Models.Games
         public string FinalsFormat { get; set; }
         public ParticipantType ParticipantType { get; set; }
         public string Description { get; set; }
+        public string RegisterUrl { get; set; }
     }
 }

@@ -11,10 +11,13 @@ public partial class NavMenu
     private NavigationManager NavigationManager { get; set; } = null!;
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
+    [Parameter]
+    public EventCallback OnNavigationSelected { get; set; }
 
     private void Logout()
     {
         _isUserMenuVisible = false;
+        OnNavigationSelected.InvokeAsync();
         NavigationManager.NavigateTo("/logout", true);
     }
 
@@ -33,6 +36,7 @@ public partial class NavMenu
 
     private void ChangePasswordAsync() {
         _isUserMenuVisible = false;
+        OnNavigationSelected.InvokeAsync();
         NavigationManager.NavigateTo("/change-password");
     }
 
