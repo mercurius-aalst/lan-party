@@ -12,9 +12,11 @@ namespace Mercurius.LAN.Web.Components.Pages.Admin;
 
 public partial class SponsorManagement
 {
-    private List<SponsorManagementDTO> _sponsors = new();
-    private SponsorManagementDTO _selectedSponsor;
+    private List<Sponsor> _sponsors = new();
+    private List<SponsorManagementDTO> _displaySponsors = new();
+    private SponsorManagementDTO _selectedSponsor = new();
     private bool _isCreateMode = true;
+    private EditContext? _editContext;
 
     private CustomAutocomplete<SponsorManagementDTO> _autoCompleteComponent = null!;
 
@@ -23,13 +25,26 @@ public partial class SponsorManagement
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
+    protected override void OnInitialized()
+    {
+        ReInitEditContext();
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if(firstRender)
         {
             try
             {
-                _sponsors = (await SponsorService.GetSponsorsAsync()).Select(sp => new SponsorManagementDTO(sp)).ToList();
+                _sponsors = (await SponsorService.GetSponsorsAsync()).ToList();
+                _displaySponsors = _sponsors.Select(s => new SponsorManagementDTO
+                {
+                    Name = s.Name,
+                    InfoUrl = s.InfoUrl,
+                    SponsorTier = s.SponsorTier,
+                    Id = s.Id,
+                    IsCreateMode = _isCreateMode
+                }).ToList();
                 await InvokeAsync(StateHasChanged);
             }
             catch(Exception)
@@ -39,39 +54,48 @@ public partial class SponsorManagement
         }
     }
 
+    private void ReInitEditContext()
+    {
+        _editContext = new(_selectedSponsor);
+        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.OnFieldChanged += (sender, args) =>
+        {
+            _editContext.Validate();
+        };
+    }
     private void OnSponsorSelected(SponsorManagementDTO sponsor)
     {
         _selectedSponsor = sponsor;
         _isCreateMode = false;
+        ReInitEditContext();
+        _selectedSponsor.IsCreateMode = false;
+        StateHasChanged();
     }
 
     private void ClearForm()
     {
         _selectedSponsor = new SponsorManagementDTO();
         _isCreateMode = true;
-        _autoCompleteComponent.ClearSearchField();
+        _selectedSponsor.IsCreateMode = true;
+        _displaySponsors = _sponsors.Select(s => new SponsorManagementDTO
+        {
+            Name = s.Name,
+            InfoUrl = s.InfoUrl,
+            SponsorTier = s.SponsorTier,
+            Id = s.Id,
+            IsCreateMode = _isCreateMode
+        }).ToList();
+        _autoCompleteComponent.ClearSearchField();       
+        ReInitEditContext();
         StateHasChanged();
-    }
-
-    private void UploadFile(InputFileChangeEventArgs e)
-    {
-        _selectedSponsor.Logo = e.File;
     }
     private async Task HandleSubmit()
     {
-        if(_selectedSponsor.SponsorTier < 1)
-        {
-            ToastService.ShowError("Sponsor Tier must be at least 1.");
-        }
+
         try
         {
             if(_isCreateMode)
             {
-                if(_selectedSponsor.Logo is null)
-                {
-                    ToastService.ShowError("A sponsor logo is required.");
-                    return;
-                }
                 var sponsor = await SponsorService.CreateSponsorAsync(new SponsorManagementDTO
                 {
                     Name = _selectedSponsor!.Name,
@@ -79,7 +103,7 @@ public partial class SponsorManagement
                     SponsorTier = _selectedSponsor.SponsorTier,
                     Logo = _selectedSponsor.Logo
                 });
-                _sponsors.Add(new SponsorManagementDTO(sponsor));
+                _sponsors.Add(sponsor);
                 ToastService.ShowSuccess("Sponsor created successfully.");
             }
             else
@@ -96,7 +120,7 @@ public partial class SponsorManagement
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 
@@ -107,13 +131,13 @@ public partial class SponsorManagement
         try
         {
             await SponsorService.DeleteSponsorAsync(_selectedSponsor.Id);
-            _sponsors.Remove(_selectedSponsor);
-            ToastService.ShowSuccess("Player deleted successfully.");
+            _sponsors.Remove(_sponsors.SingleOrDefault(_sponsors => _sponsors.Id == _selectedSponsor.Id)!);
+            ToastService.ShowSuccess("Sponsor deleted successfully.");
             ClearForm();
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 }

@@ -46,6 +46,7 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(newGame.Format.ToString()), "Format" },
                 { new StringContent(newGame.FinalsFormat.ToString()), "FinalsFormat" },
                 { new StringContent(newGame.ParticipantType.ToString()), "ParticipantType" },
+                { new StringContent(newGame.RegisterFormUrl.ToString()), "RegisterFormUrl" },
             };
 
             if (newGame.Image != null)
@@ -66,7 +67,7 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(updatedGame.BracketType.ToString()), "BracketType" },
                 { new StringContent(updatedGame.Format.ToString()), "Format" },
                 { new StringContent(updatedGame.FinalsFormat.ToString()), "FinalsFormat" },
-                { new StringContent(updatedGame.RegistrationUrl.ToString()), "RegistrationUrl" },
+                { new StringContent(updatedGame.RegisterFormUrl.ToString()), "RegisterFormUrl" },
 
             };
 

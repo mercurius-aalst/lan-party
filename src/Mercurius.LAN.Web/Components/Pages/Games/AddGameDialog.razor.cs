@@ -5,6 +5,7 @@ using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
+using System.Reflection;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
@@ -17,34 +18,35 @@ public partial class AddGameDialog
     private IGameService GameService { get; set; } = null!;
     [Inject]
     private IToastService ToastService { get; set; } = null!;
+    [Inject]
+    private IConfiguration Configuration { get; set; } = null!;
 
     private CreateGameDTO _newGame = new();
     private bool _isDialogOpen = true;
-    private IBrowserFile? _uploadedFile;
+    private EditContext? _editContext;
 
-    private void UploadFile(InputFileChangeEventArgs e)
-    {
-        _uploadedFile = e.File;
+
+    protected override void OnInitialized() {
+       
+        _editContext = new(_newGame);
+       _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.OnFieldChanged += (sender, args) => {
+            _editContext.Validate();
+        };
     }
-
-    private async Task SubmitGameAsync()
+    private async Task SubmitGameAsync(EditContext editContext)
     {
-        try
-        {
-            if(_uploadedFile is null)
+            try
             {
-                ToastService.ShowError("A game banner is required.");
-                return;
+                
+                var createdGame = await GameService.CreateGameAsync(_newGame);
+                ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
+                await OnClose.InvokeAsync(createdGame);
             }
-            _newGame.Image = _uploadedFile;
-            var createdGame = await GameService.CreateGameAsync(_newGame);
-            ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
-            await OnClose.InvokeAsync(createdGame);
-        }
-        catch(ApiException ex)
-        {
-            ToastService.ShowError(ex.Content);
-        }
+            catch(ApiException ex)
+            {
+                ToastService.ShowError(ex.Content!);
+            }
     }
 
     private void CloseDialog(GameExtended createdGame)

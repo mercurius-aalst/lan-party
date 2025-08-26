@@ -3,6 +3,7 @@ using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Refit;
 
@@ -63,6 +64,19 @@ public partial class GamesOverview
         {
             _games.Add(createdGame);
             await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void NavigateToRegister(Game game)
+    {
+        if(game.Status != GameStatus.Scheduled)
+        {
+            ToastService.ShowWarning("Registrations are closed, the tournament has already started.");
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(game.RegisterFormUrl))
+        {
+            NavigationManager.NavigateTo(game.RegisterFormUrl, true);
         }
     }
 }

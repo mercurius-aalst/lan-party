@@ -8,15 +8,14 @@ namespace Mercurius.LAN.Web.Components.Pages.Users;
 public partial class ChangePassword
 {
     [Inject] 
-    private IAuthService AuthService { get; set; }
+    private IAuthService AuthService { get; set; } = null!;
     [Inject] 
-    private IUserService UserService { get; set; }
-    [Inject] 
-    private NavigationManager NavigationManager { get; set; }
+    private IUserService UserService { get; set; } = null!;
     [Inject]
-    private IToastService ToastService { get; set; }
+    private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IToastService ToastService { get; set; } = null!;
     private ChangePasswordModel _changePasswordModel = new();
-    private string? _errorMessage;
 
     private async Task HandleChangePasswordAsync()
     {
@@ -28,13 +27,13 @@ public partial class ChangePassword
 
         try
         {
-            await UserService.ChangePasswordAsync(AuthService.CurrentUser.Identity.Name, _changePasswordModel.CurrentPassword, _changePasswordModel.NewPassword);
+            await UserService.ChangePasswordAsync(AuthService.CurrentUser.Identity!.Name!, _changePasswordModel.CurrentPassword, _changePasswordModel.NewPassword);
             ToastService.ShowSuccess("Password changed successfully.");
             NavigationManager.NavigateTo("/", true);
         }
         catch (ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 

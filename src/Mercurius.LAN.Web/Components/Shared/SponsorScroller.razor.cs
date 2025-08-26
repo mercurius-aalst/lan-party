@@ -28,7 +28,7 @@ namespace Mercurius.LAN.Web.Components.Shared
                     await InvokeAsync(StateHasChanged);
 
                 }
-                catch(Exception ex)
+                catch(Exception)
                 {
                     ToastService.ShowError("Something went wrong during the loading of the sponsors");
 

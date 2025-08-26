@@ -12,27 +12,27 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Matches.DetailView;
 public partial class MatchDetailsDialog
 {
     [Parameter]
-    public Match Match { get; set; }
+    public Match Match { get; set; } = null!;
     [Parameter]
-    public IEnumerable<Participant> Participants { get; set; }
+    public IEnumerable<Participant> Participants { get; set; } = null!;
     [Parameter]
     public EventCallback OnClose { get; set; }
     [Parameter]
     public EventCallback OnDataReload { get; set; }
     [Parameter]
-    public string Participant2Name { get; set; }
+    public string Participant2Name { get; set; } = null!;
     [Parameter]
-    public string Participant1Name { get; set; }
+    public string Participant1Name { get; set; } = null!;
     [Inject]
-    private IGameService GameService { get; set; }
+    private IGameService GameService { get; set; } = null!;
     [Inject]
-    private IToastService ToastService { get; set; }
+    private IToastService ToastService { get; set; } = null!;
 
     private Participant GetParticipantById(int? participantId)
     {
         if(participantId == null || Participants == null)
-            return null;
-        return Participants.FirstOrDefault(p => p.Id == participantId.Value);
+            return null!;
+        return Participants.FirstOrDefault(p => p.Id == participantId.Value)!;
     }
 
     private bool IsWinner(int? participantId) => Match.WinnerId != null && participantId == Match.WinnerId;
@@ -70,7 +70,7 @@ public partial class MatchDetailsDialog
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 }

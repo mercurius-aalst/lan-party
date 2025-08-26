@@ -71,14 +71,14 @@ public partial class CustomAutocomplete<TItem> : IDisposable
         }
     }
 
-    private void HandleKeyDown(KeyboardEventArgs e)
+    private async Task HandleKeyDownAsync(KeyboardEventArgs e)
     {
         if (e.Key == "Enter" && _filteredItems.Any())
         {
             var exactMatch = _filteredItems.FirstOrDefault(item => ItemLabel(item).Equals(_searchText, StringComparison.OrdinalIgnoreCase));
             if (exactMatch != null)
             {
-                SelectItemAsync(exactMatch);
+                await SelectItemAsync(exactMatch);
             }
         }
     }

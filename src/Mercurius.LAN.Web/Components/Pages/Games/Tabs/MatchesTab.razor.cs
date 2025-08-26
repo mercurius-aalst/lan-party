@@ -8,8 +8,8 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 
 public partial class MatchesTab
 {
-    [Parameter] public IEnumerable<Match> Matches { get; set; }
-    [Parameter] public IEnumerable<Participant> Participants { get; set; }
+    [Parameter] public IEnumerable<Match> Matches { get; set; } = null!;
+    [Parameter] public IEnumerable<Participant> Participants { get; set; } = null!;
     [Parameter] public BracketType BracketType { get; set; }
     [Parameter] public EventCallback OnDataReload { get; set; }
 }

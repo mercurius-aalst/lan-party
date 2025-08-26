@@ -40,8 +40,8 @@ public partial class Login
 
             if(HttpContext != null)
             {
-                var accessTokenExpiry = int.Parse(Configuration["Jwt:AccessTokenExpiryHours"]);
-                var refreshTokenExpiry = int.Parse(Configuration["Jwt:RefreshTokenExpiryHours"]);
+                var accessTokenExpiry = int.Parse(Configuration["Jwt:AccessTokenExpiryHours"]!);
+                var refreshTokenExpiry = int.Parse(Configuration["Jwt:RefreshTokenExpiryHours"]!);
 
                 HttpContext.Response.Cookies.Append("access_token", loginResponse.Token, new CookieOptions
                 {
@@ -64,7 +64,7 @@ public partial class Login
         }
         catch(ApiException ex)
         {
-            _errorMessage = ex.Content;
+            _errorMessage = ex.Content!;
         }
     }
 }

@@ -1,4 +1,5 @@
 @using Mercurius.LAN.Web.APIClients
+@using Mercurius.LAN.Web.Components.Shared
 @using Mercurius.LAN.Web.DTOs.Games
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Games
@@ -40,13 +41,13 @@
     {
         <AuthorizeView Roles="admin">
             <Authorized>
-                <EditForm Context="editformContext" Model="_editGame" OnValidSubmit="SubmitEditAsync">
+                <EditForm Context="editFormContext" EditContext="_editContext" OnValidSubmit="SubmitEditAsync" class="needs-validation">
                     <DataAnnotationsValidator />
-                    <ValidationSummary />
                     <div class="form-section">
                         <div class="form-group">
                             <label for="name">Name</label>
                             <InputText id="name" class="form-control" @bind-Value="_editGame.Name" />
+                            <ValidationMessage For="@(() => _editGame.Name)" />
                         </div>
 
                         <div class="form-group">
@@ -57,6 +58,8 @@
                                     <option value="@type">@type.GetLabel()</option>
                                 }
                             </InputSelect>
+                            <ValidationMessage For="@(() => _editGame.BracketType)" />
+
                         </div>
 
                         <div class="form-group">
@@ -67,6 +70,8 @@
                                     <option value="@type">@type.GetLabel()</option>
                                 }
                             </InputSelect>
+                            <ValidationMessage For="@(() => _editGame.Format)" />
+
                         </div>
 
                         <div class="form-group">
@@ -77,14 +82,20 @@
                                     <option value="@type">@type.GetLabel()</option>
                                 }
                             </InputSelect>
+                            <ValidationMessage For="@(() => _editGame.FinalsFormat)" />
+
                         </div>
                         <div class="form-group">
-                            <label for="registrationUrl">Registration url</label>
-                            <InputText id="registrationUrl" class="form-control" @bind-Value="_editGame.RegistrationUrl" />
+                            <label for="registrationUrl">Registration form url</label>
+                            <InputText id="registrationUrl" class="form-control" @bind-Value="_editGame.RegisterFormUrl" />
+                            <ValidationMessage For="@(() => _editGame.RegisterFormUrl)" />
+
                         </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
-                            <InputFile id="gameImage" class="form-control" OnChange="UploadFile" accept="image/*" />
+                            <CustomInputFile id="gameImage" @bind-Value="_editGame.Image" />
+                            <ValidationMessage For="@(() => _editGame.Image)" />
+
                         </div>
 
                         <div class="form-actions">
