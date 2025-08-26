@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using System.IO
 
-<InputFile OnChange="HandleFileChange" class="@GetCssClass()" />
+<InputFile OnChange="HandleFileChange" class="@GetCssClass()" accept="image/png, image/jpeg, image/webp" />
 
 @code {
     [Inject]
@@ -35,13 +35,24 @@
         return false;
     }
 
+    private static readonly string[] AllowedContentTypes = new[] { "image/png", "image/jpeg", "image/webp" };
+
     private void HandleFileChange(InputFileChangeEventArgs e)
     {
         messageStore?.Clear(FieldIdentifier);
+        var file = e.File;
+        if (!AllowedContentTypes.Contains(file.ContentType))
+        {
+            CurrentValue = null;
+            string errorMessage = $"File type '{file.ContentType}' is not allowed. Only PNG, JPEG, and WEBP are accepted.";
+            messageStore?.Add(FieldIdentifier, errorMessage);
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+            return;
+        }
         try
         {
-            var stream = e.File.OpenReadStream(maxAllowedSize: _maxFileSize);
-            CurrentValue = e.File;
+            var stream = file.OpenReadStream(maxAllowedSize: _maxFileSize);
+            CurrentValue = file;
         }
         catch(IOException)
         {
