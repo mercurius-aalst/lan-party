@@ -23,8 +23,6 @@ public static class GameExtensions
         {
             BracketType.SingleElimination => "Single Elimination",
             BracketType.DoubleElimination => "Double Elimination",
-            BracketType.RoundRobin => "Round Robin",
-            BracketType.Swiss => "Swiss",
             _ => bracketType.ToString()
         };
     }
