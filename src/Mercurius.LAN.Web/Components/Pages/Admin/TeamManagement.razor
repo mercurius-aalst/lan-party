@@ -1,5 +1,5 @@
 @page "/admin/teams"
-@attribute [Authorize]
+@attribute [Authorize(Roles = "admin")]
 @using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.DTOs.Participants.Teams
 @using Mercurius.LAN.Web.Components.Shared
@@ -17,31 +17,29 @@
         <CustomAutocomplete @ref="_autoCompleteComponent" TItem="Team" Items="_teams" ItemLabel="team => team.Name" OnSelected="OnTeamSelected" Placeholder="Search Teams" />
     </div>
 
-    @if(_selectedTeam == null)
-    {
-        _selectedTeam = new Team();
-    }
-
-    <EditForm Model="_selectedTeam" OnValidSubmit="HandleSubmit">
+    <EditForm EditContext="_editContext" class="needs-validation" OnValidSubmit="HandleSubmit">
         <DataAnnotationsValidator />
-        <ValidationSummary />
 
         <div class="form-container">
             <h2>@(_isCreateMode ? "Create Team" : "Update Team")</h2>
             <div class="form-group">
                 <label for="name">Team Name</label>
                 <InputText id="name" class="form-control" @bind-Value="_selectedTeam.Name" />
+                <ValidationMessage For="@(() => _selectedTeam.Name)" />
+
             </div>
 
             <div class="form-group">
                 <label for="captain">Captain</label>
                 @if(!_isCreateMode)
                 {
-                    <InputText id="captain" class="form-control" @bind-Value="@_selectedCaptain.Username" disabled />
+                    <InputText id="captain" class="form-control" @bind-Value="@_selectedCaptain!.Username" disabled />
+                    
                 }
                 else
                 {
                     <CustomAutocomplete TItem="Player" Items="_players" ItemLabel="player => player.Username" OnSelected="OnCaptainSelected" Placeholder="Select a captain" />
+                    <ValidationMessage For="@(() => _selectedTeam.CaptainId)" />
                 }
             </div>
 

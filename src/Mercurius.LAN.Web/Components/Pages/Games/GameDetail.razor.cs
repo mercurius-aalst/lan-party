@@ -44,7 +44,7 @@ public partial class GameDetail
             _game = await GameService.GetGameByIdAsync(GameId);
             await InvokeAsync(StateHasChanged);
         }
-        catch(ApiException ex)
+        catch(ApiException)
         {
             ToastService.ShowError("Could not (re)load game data");
         }
@@ -88,7 +88,7 @@ public partial class GameDetail
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 
@@ -102,7 +102,7 @@ public partial class GameDetail
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 

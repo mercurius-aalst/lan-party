@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Refit;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Mercurius.LAN.Web.Components.Pages.Admin;
 
@@ -12,9 +13,10 @@ public partial class TeamManagement
 {
     private List<Team> _teams = new();
     private List<Player> _players = new();
-    private Team? _selectedTeam;
+    private Team _selectedTeam = new();
     private Player? _selectedCaptain;
     private bool _isCreateMode = true;
+    private EditContext? _editContext;
 
     private CustomAutocomplete<Team> _autoCompleteComponent = null!;
 
@@ -23,6 +25,10 @@ public partial class TeamManagement
     [Inject]
     private IToastService ToastService { get; set; } = null!;
 
+    protected override void OnInitialized()
+    {
+        ReInitEditContext();
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,9 +48,19 @@ public partial class TeamManagement
         }
     }
 
+    private void ReInitEditContext()
+    {
+        _editContext = new(_selectedTeam!);
+        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.OnFieldChanged += (sender, args) =>
+        {
+            _editContext.Validate();
+        };
+    }
     private void OnTeamSelected(Team team)
     {
         _selectedTeam = team;
+        ReInitEditContext();
         _selectedCaptain = _players.FirstOrDefault(p => p.Id == team.CaptainId);
         _isCreateMode = false;
     }
@@ -63,6 +79,7 @@ public partial class TeamManagement
         _selectedTeam = new Team();
         _isCreateMode = true;
         _autoCompleteComponent.ClearSearchField();
+        ReInitEditContext();
         StateHasChanged();
     }
 
@@ -78,6 +95,9 @@ public partial class TeamManagement
                     CaptainId = _selectedTeam.CaptainId
                 });
                 _teams.Add(team);
+                _isCreateMode = false;
+                ReInitEditContext();
+                await InvokeAsync(StateHasChanged);
                 ToastService.ShowSuccess("Team created successfully.");
             }
             else
@@ -87,12 +107,13 @@ public partial class TeamManagement
                     Name = _selectedTeam.Name,
                     CaptainId = _selectedTeam.CaptainId
                 });
+                ReInitEditContext();
                 ToastService.ShowSuccess("Team updated successfully.");
             }
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 
@@ -109,7 +130,7 @@ public partial class TeamManagement
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 }

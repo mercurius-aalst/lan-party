@@ -31,7 +31,7 @@ public partial class Logout
         }
         catch (ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 }

@@ -83,7 +83,7 @@ public partial class ParticipantsTab
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 
@@ -105,7 +105,7 @@ public partial class ParticipantsTab
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 

@@ -67,11 +67,16 @@ public partial class GamesOverview
         }
     }
 
-    private void NavigateToRegister(string url)
+    private void NavigateToRegister(Game game)
     {
-        if (!string.IsNullOrWhiteSpace(url))
+        if(game.Status != GameStatus.Scheduled)
         {
-            NavigationManager.NavigateTo(url, true);
+            ToastService.ShowWarning("Registrations are closed, the tournament has already started.");
+            return;
+        }
+        if (!string.IsNullOrWhiteSpace(game.RegisterFormUrl))
+        {
+            NavigationManager.NavigateTo(game.RegisterFormUrl, true);
         }
     }
 }

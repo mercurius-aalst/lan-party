@@ -8,9 +8,9 @@
 <div>
     @if(_isDialogOpen)
     {
-        <div class="participants-modal-overlay" @onclick="() => CloseDialog(null)">
+        <div class="participants-modal-overlay" @onclick="() => CloseDialog(null!)">
             <div class="participants-modal-dialog" @onclick:stopPropagation>
-                <button class="participants-modal-close" @onclick="() => CloseDialog(null)">&times;</button>
+                <button class="participants-modal-close" @onclick="() => CloseDialog(null!)">&times;</button>
                 <div class="form-container">
                     <h3>Create New Game</h3>
                     <EditForm EditContext="_editContext" OnValidSubmit="SubmitGameAsync" class="needs-validation">
@@ -81,14 +81,14 @@
                         </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
-                            <CustomInputFile id="gameImage" @bind-Value="_newGame.Image" class="form-control" />
+                            <CustomInputFile id="gameImage" @bind-Value="_newGame.Image" />
                             <ValidationMessage For="@(() => _newGame.Image)" />
 
                         </div>
 
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Create</button>
-                            <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(null)">Cancel</button>
+                            <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(null!)">Cancel</button>
                         </div>
                     </EditForm>
                 </div>

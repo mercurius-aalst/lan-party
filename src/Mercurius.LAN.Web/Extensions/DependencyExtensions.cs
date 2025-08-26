@@ -35,7 +35,7 @@ public static class DependencyExtensions
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["Jwt:Issuer"],
                 ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]))                    
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))                    
             };
 
             options.Events = new JwtBearerEvents
@@ -47,7 +47,7 @@ public static class DependencyExtensions
                 },
                 OnChallenge = context =>
                 {
-                    if(!context.HttpContext.User.Identity.IsAuthenticated)
+                    if(!context.HttpContext.User.Identity!.IsAuthenticated)
                     {
                         context.Response.Redirect("/login");
                     }
@@ -68,7 +68,7 @@ public static class DependencyExtensions
 
         services.AddTransient<AccessTokenHandler>();
 
-        var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress");
+        var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
 
         services.AddRefitClient<ILANClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))

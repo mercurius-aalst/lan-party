@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 
 <div id="dropdown-@_id" class="custom-autocomplete @(_isDropdownVisible ? "" : "dropdown-closed")" @ref="_autocompleteContainer">
-    <input type="text" class="custom-autocomplete-input" @bind="_searchText" @oninput="HandleInput" @onfocus="ShowDropdown" @onkeydown="HandleKeyDown" placeholder="@Placeholder" />
+    <input type="text" class="custom-autocomplete-input" @bind="_searchText" @oninput="HandleInput" @onfocus="ShowDropdown" @onkeydown="HandleKeyDownAsync" placeholder="@Placeholder" />
 
     @if(_isDropdownVisible && _filteredItems.Any())
     {

@@ -66,7 +66,7 @@ public partial class DoubleEliminationBracketComponent
         int numRounds = rounds.Count;
         int reservedHeight = matchData.MatchHeight + verticalGap;
 
-        var lbMatchesReceivingLosersFromUB = new HashSet<int>(uBMatches.Where(m => m.LoserNextMatchId.HasValue).Select(m => m.LoserNextMatchId.Value));
+        var lbMatchesReceivingLosersFromUB = new HashSet<int>(uBMatches.Where(m => m.LoserNextMatchId.HasValue).Select(m => m.LoserNextMatchId!.Value));
 
         for(int r = 0; r < rounds.Count; r++)
         {

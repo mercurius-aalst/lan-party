@@ -8,8 +8,8 @@ namespace Mercurius.LAN.Web.DTOs.Games
     public class CreateGameDTO
     {
         [Required]
-        public string Name { get; set; }
-      
+        public string Name { get; set; } =null!;
+
         [Required]
         public BracketType BracketType { get; set; }
   
@@ -23,9 +23,9 @@ namespace Mercurius.LAN.Web.DTOs.Games
         public ParticipantType ParticipantType { get; set; }
     
         [Required]
-        public IBrowserFile Image { get; set; }
+        public IBrowserFile Image { get; set; } = null!;
 
         [Required]
-        public string RegisterFormUrl { get; set; }
+        public string RegisterFormUrl { get; set; } =null!;
     }
 }

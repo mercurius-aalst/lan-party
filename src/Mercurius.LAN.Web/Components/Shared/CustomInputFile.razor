@@ -6,11 +6,10 @@
 
 @code {
     [Inject]
-    private IConfiguration Configuration { get; set; }
+    private IConfiguration Configuration { get; set; } = null!;
 
     private object fileInputKey = new object();
     private long _maxFileSize;
-    private FieldIdentifier? fieldIdentifier;
 
     private ValidationMessageStore? messageStore;
 
@@ -29,14 +28,14 @@
         }
     }
 
-    protected override bool TryParseValueFromString(string value, out IBrowserFile result, out string validationErrorMessage)
+    protected override bool TryParseValueFromString(string? value, out IBrowserFile result, out string validationErrorMessage)
     {
-        result = default;
-        validationErrorMessage = null;
+        result = default!;
+        validationErrorMessage = null!;
         return false;
     }
 
-    private async Task HandleFileChange(InputFileChangeEventArgs e)
+    private void HandleFileChange(InputFileChangeEventArgs e)
     {
         messageStore?.Clear(FieldIdentifier);
         try

@@ -32,8 +32,8 @@ namespace Mercurius.LAN.Web.Middleware
                     var tokenResponse = await _authClient.RefreshAsync(refreshRequest);
 
                     // Retrieve expiry durations from appsettings
-                    var accessTokenExpiry = int.Parse(_configuration["Jwt:AccessTokenExpiryHours"]);
-                    var refreshTokenExpiry = int.Parse(_configuration["Jwt:RefreshTokenExpiryHours"]);
+                    var accessTokenExpiry = int.Parse(_configuration["Jwt:AccessTokenExpiryHours"]!);
+                    var refreshTokenExpiry = int.Parse(_configuration["Jwt:RefreshTokenExpiryHours"]!);
 
                     // Set the new tokens in cookies
                     context.Response.Cookies.Append("access_token", tokenResponse.Token, new CookieOptions
@@ -55,7 +55,7 @@ namespace Mercurius.LAN.Web.Middleware
                     context.Response.Redirect(context.Request.GetEncodedUrl());
                     return;
                 }
-                catch (ApiException ex)
+                catch (ApiException)
                 {
                     // Clear cookies and redirect to login
                     context.Response.Cookies.Delete("access_token");

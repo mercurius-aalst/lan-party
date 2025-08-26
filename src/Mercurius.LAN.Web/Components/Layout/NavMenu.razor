@@ -53,7 +53,7 @@
         <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
             <div class="user-profile align-middle">
                 <span class="user-icon bi bi-person-circle"></span>
-                <span>@AuthService.CurrentUser.Identity.Name</span>
+                <span>@AuthService.CurrentUser.Identity!.Name</span>
             </div>
             @if(_isUserMenuVisible)
             {

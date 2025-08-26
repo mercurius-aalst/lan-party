@@ -2,7 +2,7 @@
 {
     public class UpdateTeamDTO
     {
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public int CaptainId { get; set; }
     }
 }

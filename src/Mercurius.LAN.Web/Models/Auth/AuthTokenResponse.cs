@@ -2,7 +2,7 @@ namespace Mercurius.LAN.Web.Models.Auth
 {
     public class AuthTokenResponse
     {
-        public string Token { get; set; }
-        public string RefreshToken { get; set; }
+        public string Token { get; set; } = null!;
+        public string RefreshToken { get; set; } = null!;
     }
 }

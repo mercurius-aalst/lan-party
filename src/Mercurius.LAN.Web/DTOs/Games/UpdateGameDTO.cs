@@ -7,8 +7,8 @@ namespace Mercurius.LAN.Web.DTOs.Games
     public class UpdateGameDTO
     {
         [Required]
-        public string Name { get; set; }
-   
+        public string Name { get; set; } = null!;
+
         [Required]
         public GameFormat Format { get; set; }
     
@@ -18,8 +18,8 @@ namespace Mercurius.LAN.Web.DTOs.Games
         [Required]
         public BracketType BracketType { get; set; }
         public IBrowserFile? Image { get; set; }
-      
+
         [Required]
-        public string RegisterFormUrl { get; set; }
+        public string RegisterFormUrl { get; set; } = null!;
     }
 }

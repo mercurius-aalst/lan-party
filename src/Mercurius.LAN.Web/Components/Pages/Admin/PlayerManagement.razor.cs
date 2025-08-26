@@ -5,16 +5,19 @@ using Microsoft.AspNetCore.Components;
 using Refit;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Mercurius.LAN.Web.Components.Pages.Admin;
 
 public partial class PlayerManagement
 {
     private List<Player> _players = new();
-    private Player? _selectedPlayer;
+    private List<UpdateAndCreatePlayerFormDTO> _displayPlayers = new();
+    private UpdateAndCreatePlayerFormDTO _selectedPlayer = new();
     private bool _isCreateMode = true;
+    private EditContext? _editContext;
 
-    private CustomAutocomplete<Player> _autoCompleteComponent = null!;
+    private CustomAutocomplete<UpdateAndCreatePlayerFormDTO> _autoCompleteComponent = null!;
 
     [Inject]
     private IParticipantService ParticipantService { get; set; } = null!;
@@ -28,6 +31,7 @@ public partial class PlayerManagement
             try
             {
                 _players = await ParticipantService.GetPlayersAsync();
+                _displayPlayers = _players.Select(pl => new UpdateAndCreatePlayerFormDTO(pl)).ToList();
                 await InvokeAsync(StateHasChanged);
 
             }
@@ -38,22 +42,37 @@ public partial class PlayerManagement
         }
     }
 
-    private void OnPlayerSelected(Player player)
+    protected override void OnInitialized() => ReInitEditContext();
+    private void ReInitEditContext()
+    {
+        _editContext = new(_selectedPlayer);
+        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.OnFieldChanged += (sender, args) =>
+        {
+            _editContext.Validate();
+        };
+    }
+
+    private void OnPlayerSelected(UpdateAndCreatePlayerFormDTO player)
     {
         _selectedPlayer = player;
         _isCreateMode = false;
+        ReInitEditContext();
     }
 
     private void ClearForm()
     {
-        _selectedPlayer = new Player();
+        _selectedPlayer = new UpdateAndCreatePlayerFormDTO();
         _isCreateMode = true;
+        _displayPlayers = _players.Select(pl => new UpdateAndCreatePlayerFormDTO(pl)).ToList();        
         _autoCompleteComponent.ClearSearchField();
+        ReInitEditContext();
         StateHasChanged();
     }
 
     private async Task HandleSubmit()
     {
+
         try
         {
             if(_isCreateMode)
@@ -73,7 +92,7 @@ public partial class PlayerManagement
             }
             else
             {
-                await ParticipantService.UpdatePlayerAsync(_selectedPlayer!.Id, new UpdatePlayerDTO
+                await ParticipantService.UpdatePlayerAsync((int)_selectedPlayer.Id!, new UpdatePlayerDTO
                 {
                     Username = _selectedPlayer.Username,
                     Firstname = _selectedPlayer.Firstname,
@@ -87,7 +106,7 @@ public partial class PlayerManagement
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 
@@ -97,14 +116,14 @@ public partial class PlayerManagement
             return;
         try
         {
-            await ParticipantService.DeletePlayerAsync(_selectedPlayer.Id);
-            _players.Remove(_selectedPlayer);
+            await ParticipantService.DeletePlayerAsync((int)_selectedPlayer.Id!);
+            _players.Remove(_players.Single(pl => pl.Id == _selectedPlayer.Id));
             ToastService.ShowSuccess("Player deleted successfully.");
             ClearForm();
         }
         catch(ApiException ex)
         {
-            ToastService.ShowError(ex.Content);
+            ToastService.ShowError(ex.Content!);
         }
     }
 }
