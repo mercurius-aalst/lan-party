@@ -1,0 +1,86 @@
+@page "/admin/users"
+@attribute [Authorize(Roles = "admin")]
+@using Mercurius.LAN.Web.APIClients
+@using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.DTOs.Users
+@using Mercurius.LAN.Web.Models.Auth
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+<PageTitle>Users Admin</PageTitle>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h2>Manage Users</h2>
+    </div>
+
+    <div class="search-bar-container">
+        <CustomAutocomplete @ref="_autoCompleteComponent" TItem="UserDTO" Items="_displayUsers" ItemLabel="user => user.Username" OnSelected="OnUserSelected" Placeholder="Search Users" />
+    </div>
+
+    <EditForm EditContext="_editContext" class="needs-validation" OnValidSubmit="HandleSubmit">
+        @if(_isCreateMode)
+        {
+            <DataAnnotationsValidator />
+        }
+        <div class="form-container">
+            <h2>@(_isCreateMode ? "Create User" : "Edit User")</h2>
+            <div class="horizontal-layout">
+                <div class="form-section">
+                    <h3>User information</h3>
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <InputText id="username" class="form-control" @bind-Value="_registerModel.Username" disabled="@(!_isCreateMode)" />
+                            <ValidationMessage For="@(() => _registerModel.Username)" />
+                    </div>
+                    @if(_isCreateMode)
+                    {
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <InputText id="password" class="form-control" @bind-Value="_registerModel.Password" type="password" disabled="@(!_isCreateMode)" />
+                            <ValidationMessage For="@(() => _registerModel.Password)" />
+                        </div>
+                    }
+                </div>
+                <br />
+                @if(!_isCreateMode)
+                {
+                    <div class="form-section">
+                        <h3>User Roles</h3>
+                        <div class="form-group">
+                            <div class="roles-bubble-container">
+                                @foreach(var role in _selectedUser.Roles)
+                                {
+                                    <span class="role-bubble">
+                                        @role
+                                        <button type="button" class="remove-role-btn" title="Remove" @onclick="() => RemoveRole(role)">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <InputText id="newRole" class="form-control" @bind-Value="_newRole" />
+                            <button type="button" class="btn btn-primary add-role-btn" @onclick="AddRole">Add Role</button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="form-actions">
+                    <div class="form-actions-section">
+                    @if(_isCreateMode)
+                    {
+                        <button type="submit" class="btn btn-primary">Create User</button>
+                    }
+                    </div>
+                <div class="form-actions-section">
+                    @if(!_isCreateMode)
+                    {
+                        <button type="button" class="btn btn-danger" @onclick="DeleteUser">Delete User</button>
+                    }
+                    <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                </div>
+            </div>
+        </div>
+    </EditForm>
+</div>

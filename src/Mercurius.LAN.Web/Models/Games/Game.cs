@@ -6,6 +6,7 @@ namespace Mercurius.LAN.Web.Models.Games
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
+        public string AcademicSeason { get; set; } = null!;
         public string ImageUrl { get; set; } = null!;
         public GameStatus Status { get; set; }
         public BracketType BracketType { get; set; }
