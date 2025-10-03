@@ -20,41 +20,17 @@ public static class DependencyExtensions
         services.AddAuthorization();
         services.AddCascadingAuthenticationState();
 
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
+        services.AddAuthentication("Cookies")
+            .AddCookie(options =>
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["Jwt:Issuer"],
-                ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))                    
-            };
-
-            options.Events = new JwtBearerEvents
-            {
-                OnMessageReceived = context =>
+                options.Cookie.Name = "access_token";
+                options.LoginPath = "/login";
+                options.Events.OnRedirectToLogin = context =>
                 {
-                    context.Token = context.Request.Cookies["access_token"];
+                    context.Response.Redirect("/login");
                     return Task.CompletedTask;
-                },
-                OnChallenge = context =>
-                {
-                    if(!context.HttpContext.User.Identity!.IsAuthenticated)
-                    {
-                        context.Response.Redirect("/login");
-                    }
-                    return Task.CompletedTask;
-                }
-            };
-        });
+                };
+            });
 
         return services;
     }
