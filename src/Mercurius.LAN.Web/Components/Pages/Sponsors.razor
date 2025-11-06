@@ -20,7 +20,7 @@
                 {
 
                     var calculatedHeight = 400 / sponsor.SponsorTier; 
-                    var srcSet = $"{sponsor.LogoUrl}?h={calculatedHeight} {calculatedHeight}h";
+                    var srcSet = $"{sponsor.LogoUrl}?h={calculatedHeight} {calculatedHeight}h 100w";
                     <a class="card mb-3" href="@sponsor.InfoUrl" style="cursor:pointer; height: @(calculatedHeight)px; width: fit-content;" data-overlay-text="@sponsor.Name">
                         <img src="@sponsor.LogoUrl" srcset="@srcSet" class="card-img" alt="@sponsor.Name" style="height: 100%; width: auto; max-width: 100%;">
                         <div class="card-overlay"><span>@sponsor.Name</span></div>

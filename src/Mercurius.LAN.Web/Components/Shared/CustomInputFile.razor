@@ -1,6 +1,7 @@
 ﻿@inherits InputBase<IBrowserFile>
 @using Microsoft.AspNetCore.Components.Forms
 @using System.IO
+@implements IDisposable
 
 <InputFile OnChange="HandleFileChange" class="@GetCssClass()" accept="image/png, image/jpeg, image/webp" />
 
@@ -8,17 +9,19 @@
     [Inject]
     private IConfiguration Configuration { get; set; } = null!;
 
-    private object fileInputKey = new object();
+    private ValidationMessageStore? messageStore;
     private long _maxFileSize;
 
-    private ValidationMessageStore? messageStore;
+    // Properties voor de metadata van het tijdelijk opgeslagen bestand
+    public string? TempFilePath { get; private set; }
+    public string? FileContentType { get; private set; }
+    public string? FileName { get; private set; }
 
     protected override void OnInitialized()
     {
         var maxFileSizeInMb = Configuration.GetValue<int>("FileSettings:MaxFileSizeInMB");
         _maxFileSize = maxFileSizeInMb * 1024 * 1024;
     }
-
 
     protected override void OnParametersSet()
     {
@@ -28,6 +31,7 @@
         }
     }
 
+    // Dit blijft false omdat de waarde niet van een string wordt geparst
     protected override bool TryParseValueFromString(string? value, out IBrowserFile result, out string validationErrorMessage)
     {
         result = default!;
@@ -37,45 +41,89 @@
 
     private static readonly string[] AllowedContentTypes = new[] { "image/png", "image/jpeg", "image/webp" };
 
-    private void HandleFileChange(InputFileChangeEventArgs e)
+    private void ClearTemporaryFile()
+    {
+        if(!string.IsNullOrEmpty(TempFilePath) && File.Exists(TempFilePath))
+        {
+            try
+            {
+                File.Delete(TempFilePath);
+            }
+            catch(IOException)
+            {
+            }
+        }
+        TempFilePath = null;
+        FileContentType = null;
+        FileName = null;
+    }
+
+    public void Dispose()
+    {
+        ClearTemporaryFile();
+    }
+
+    private async Task HandleFileChange(InputFileChangeEventArgs e)
     {
         messageStore?.Clear(FieldIdentifier);
         var file = e.File;
-        if (!AllowedContentTypes.Contains(file.ContentType))
+
+        ClearTemporaryFile();
+        CurrentValue = null;
+
+        if(!AllowedContentTypes.Contains(file.ContentType))
         {
-            CurrentValue = null;
             string errorMessage = $"File type '{file.ContentType}' is not allowed. Only PNG, JPEG, and WEBP are accepted.";
             messageStore?.Add(FieldIdentifier, errorMessage);
             EditContext?.NotifyFieldChanged(FieldIdentifier);
             return;
         }
+
+        if(file.Size > _maxFileSize)
+        {
+            string errorMessage = $"File size exceeds the {_maxFileSize / (1024 * 1024)}MB limit.";
+            messageStore?.Add(FieldIdentifier, errorMessage);
+            EditContext?.NotifyFieldChanged(FieldIdentifier);
+            return;
+        }
+
         try
         {
-            var stream = file.OpenReadStream(maxAllowedSize: _maxFileSize);
+            using var stream = file.OpenReadStream(_maxFileSize);
+            TempFilePath = Path.GetTempFileName();
+
+            using(var fs = File.Create(TempFilePath))
+            {
+                await stream.CopyToAsync(fs);
+            }
+
+            FileContentType = file.ContentType;
+            FileName = file.Name;
+
             CurrentValue = file;
         }
         catch(IOException)
         {
-            CurrentValue = null;
+            ClearTemporaryFile();
             string errorMessage = $"File size exceeds the {_maxFileSize / (1024 * 1024)}MB limit.";
             messageStore?.Add(FieldIdentifier, errorMessage);
-
-
+        }
+        finally
+        {
             EditContext?.NotifyFieldChanged(FieldIdentifier);
         }
     }
 
-
     protected string GetCssClass()
     {
         string css = "form-control";
+        if(EditContext is null || !EditContext.IsModified(FieldIdentifier))
+            return css;
+
         bool isValid = EditContext.IsValid(FieldIdentifier);
         bool isModified = EditContext.IsModified(FieldIdentifier);
 
-        if(!EditContext.IsModified())
-            return css;
         css += $" {(isModified ? "modified " : "")}{(isValid ? "is-valid" : "is-invalid")}";
         return css;
     }
-
 }

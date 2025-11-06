@@ -17,6 +17,7 @@ public partial class SponsorManagement
     private SponsorManagementDTO _selectedSponsor = new();
     private bool _isCreateMode = true;
     private EditContext? _editContext;
+    private CustomInputFile? _imageInputRef;
 
     private CustomAutocomplete<SponsorManagementDTO> _autoCompleteComponent = null!;
 
@@ -91,7 +92,9 @@ public partial class SponsorManagement
     }
     private async Task HandleSubmit()
     {
-
+        string? tempFilePath = _imageInputRef?.TempFilePath;
+        string? contentType = _imageInputRef?.FileContentType;
+        string? fileName = _imageInputRef?.FileName;
         try
         {
             if(_isCreateMode)
@@ -101,8 +104,9 @@ public partial class SponsorManagement
                     Name = _selectedSponsor!.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
-                    Logo = _selectedSponsor.Logo
-                });
+                }, tempFilePath,
+            contentType,
+            fileName);
                 _sponsors.Add(sponsor);
                 ToastService.ShowSuccess("Sponsor created successfully.");
             }
@@ -113,8 +117,9 @@ public partial class SponsorManagement
                     Name = _selectedSponsor.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
-                    Logo = _selectedSponsor.Logo
-                });
+                }, tempFilePath,
+            contentType,
+            fileName);
                 ToastService.ShowSuccess("Sponsor updated successfully.");
             }
         }

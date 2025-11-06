@@ -1,4 +1,5 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Services;
@@ -24,6 +25,7 @@ public partial class AddGameDialog
     private CreateGameDTO _newGame = new();
     private bool _isDialogOpen = true;
     private EditContext? _editContext;
+    private CustomInputFile? _imageInputRef;
 
 
     protected override void OnInitialized() {
@@ -36,10 +38,13 @@ public partial class AddGameDialog
     }
     private async Task SubmitGameAsync(EditContext editContext)
     {
-            try
+        string? tempFilePath = _imageInputRef?.TempFilePath;
+        string? contentType = _imageInputRef?.FileContentType;
+        string? fileName = _imageInputRef?.FileName;
+        try
             {
                 
-                var createdGame = await GameService.CreateGameAsync(_newGame);
+                var createdGame = await GameService.CreateGameAsync(_newGame, tempFilePath,contentType,fileName);
                 ToastService.ShowSuccess($"{createdGame.Name} successfully created.");
                 await OnClose.InvokeAsync(createdGame);
             }
