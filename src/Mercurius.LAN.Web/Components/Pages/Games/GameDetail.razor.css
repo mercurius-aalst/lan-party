@@ -285,7 +285,7 @@ h1 {
     width: 100%;
     height: auto;
     max-height: 15rem;
-    object-fit:cover;
+    object-fit:fill;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
