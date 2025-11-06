@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Components.Shared;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 
@@ -22,6 +23,7 @@ public partial class OverviewTab
     private bool _isEditMode = false;
     private UpdateGameDTO _editGame = new();
     private EditContext? _editContext;
+    private CustomInputFile? _imageInputRef;
 
     private void EnableEditMode()
     {
@@ -47,9 +49,12 @@ public partial class OverviewTab
 
     private async Task SubmitEditAsync()
     {
+        string? tempFilePath = _imageInputRef?.TempFilePath;
+        string? contentType = _imageInputRef?.FileContentType;
+        string? fileName = _imageInputRef?.FileName;
         try
         {
-            var updatedGame = await GameService.UpdateGameAsync(Game.Id, _editGame);
+            var updatedGame = await GameService.UpdateGameAsync(Game.Id, _editGame, tempFilePath, contentType, fileName);
             Game.Name = updatedGame.Name;
             Game.Format = updatedGame.Format.ToString();
             Game.FinalsFormat = updatedGame.FinalsFormat.ToString();

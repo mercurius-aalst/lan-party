@@ -3,7 +3,6 @@ using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
-using System.Net.Http;
 
 namespace Mercurius.LAN.Web.Services
 {
@@ -37,7 +36,7 @@ namespace Mercurius.LAN.Web.Services
         }
        
 
-        public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame)
+        public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame, string? tempFilePath, string? contentType, string? fileName)
         {
             var formData = new MultipartFormDataContent
             {
@@ -49,17 +48,42 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(newGame.RegisterFormUrl.ToString()), "RegisterFormUrl" },
             };
 
-            if (newGame.Image != null)
+            bool tempFileNeedsCleanup = false;
+
+            if(!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath))
             {
-                var streamContent = new StreamContent(newGame.Image.OpenReadStream());
-                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(newGame.Image.ContentType);
-                formData.Add(streamContent, "Image", newGame.Image.Name);
+                var fileStream = File.OpenRead(tempFilePath);
+
+                var streamContent = new StreamContent(fileStream);
+
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType!);
+
+                formData.Add(streamContent, "Image", fileName!);
+
+                tempFileNeedsCleanup = true;
             }
 
-            return await _lanClient.CreateGameAsync(formData);
+            try
+            {
+                return await _lanClient.CreateGameAsync(formData);
+            }
+            finally
+            {
+                if(tempFileNeedsCleanup)
+                {
+                    try
+                    {
+                        File.Delete(tempFilePath!);
+                    }
+                    catch(Exception)
+                    {
+
+                    }
+                }
+            }
         }
 
-        public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame)
+        public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame, string? tempFilePath,string? contentType, string? fileName)
         {
             var formData = new MultipartFormDataContent
             {
@@ -71,14 +95,38 @@ namespace Mercurius.LAN.Web.Services
 
             };
 
-            if (updatedGame.Image != null)
+            bool tempFileNeedsCleanup = false;
+
+            if(!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath))
             {
-                var streamContent = new StreamContent(updatedGame.Image.OpenReadStream());
-                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(updatedGame.Image.ContentType);
-                formData.Add(streamContent, "Image", updatedGame.Image.Name);
+                var fileStream = File.OpenRead(tempFilePath);
+
+                var streamContent = new StreamContent(fileStream);
+
+                streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType!);
+
+                formData.Add(streamContent, "Image", fileName!);
+
+                tempFileNeedsCleanup = true;
             }
 
-            return await _lanClient.UpdateGameAsync(id, formData);
+            try
+            {
+                return await _lanClient.UpdateGameAsync(id, formData);
+            }
+            finally
+            {
+                if(tempFileNeedsCleanup)
+                {
+                    try
+                    {
+                        File.Delete(tempFilePath!);
+                    }
+                    catch(Exception)
+                    {
+                    }
+                }
+            }
         }
 
         public Task<GameExtended?> GetGameDetailAsync(int id)

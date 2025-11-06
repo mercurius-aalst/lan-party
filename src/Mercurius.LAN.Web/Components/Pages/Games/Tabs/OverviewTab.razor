@@ -92,7 +92,7 @@
                         </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
-                            <CustomInputFile id="gameImage" @bind-Value="_editGame.Image" />
+                            <CustomInputFile @ref="_imageInputRef" id="gameImage" @bind-Value="_editGame.Image" />
                             <ValidationMessage For="@(() => _editGame.Image)" />
 
                         </div>
