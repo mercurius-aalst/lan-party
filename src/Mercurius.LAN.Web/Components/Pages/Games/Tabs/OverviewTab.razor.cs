@@ -31,7 +31,8 @@ public partial class OverviewTab
             Name = Game.Name,
             Format = Enum.Parse<GameFormat>(Game.Format),
             FinalsFormat = Enum.Parse<GameFormat>(Game.FinalsFormat),
-            BracketType = Game.BracketType
+            BracketType = Game.BracketType,
+            RegisterFormUrl = Game.RegisterFormUrl
         };
         _editContext = new(_editGame);
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
