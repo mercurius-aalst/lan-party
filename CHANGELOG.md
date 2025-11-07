@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.2.0...frontend-v0.3.0) (2025-11-07)
+
+
+### Features
+
+* Discord link ([#13](https://github.com/mercurius-aalst/lan-party/issues/13)) ([7692d62](https://github.com/mercurius-aalst/lan-party/commit/7692d6288122d308ff1d537250fad5decf14bd74))
+
 ## [0.2.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.1.0...frontend-v0.2.0) (2025-11-03)
 
 
