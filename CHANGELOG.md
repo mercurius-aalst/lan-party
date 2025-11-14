@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.0...frontend-v0.3.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* change image to azure linux ([#15](https://github.com/mercurius-aalst/lan-party/issues/15)) ([5587eb7](https://github.com/mercurius-aalst/lan-party/commit/5587eb75e54d69e12812ac3a1f916a9d25694a7e))
+
 ## [0.3.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.2.0...frontend-v0.3.0) (2025-11-07)
 
 
