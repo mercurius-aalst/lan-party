@@ -51,3 +51,32 @@
     color: #444;
 }
 
+.copy-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 0.45em;
+    vertical-align: middle;
+    cursor: pointer;
+    opacity: 0.85;
+}
+.copy-icon svg { width: 14px; height: 14px; fill: none; stroke: var(--accent-color); stroke-width: 1.6; }
+.copy-icon:hover { opacity: 1; }
+.copy-icon.copied { transform: scale(0.98); opacity: 0.95; }
+
+/* Toast from uiInteractions.js */
+.js-copy-toast {
+    background: var(--accent-color);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.16);
+    font-size: 0.95em;
+    opacity: 0;
+    transition: opacity 160ms ease, transform 160ms ease;
+    z-index: 9999;
+}
+.js-copy-toast.show { opacity: 1; transform: translateY(-4px); }
+

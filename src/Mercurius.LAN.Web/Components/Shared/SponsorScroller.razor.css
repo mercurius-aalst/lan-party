@@ -15,7 +15,7 @@
 
 .slide {
     display: flex;
-    animation: slide 30s linear infinite;
+    animation: slide 50s linear infinite;
 
 }
 

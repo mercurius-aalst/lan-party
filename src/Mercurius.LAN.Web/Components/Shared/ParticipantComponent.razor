@@ -18,6 +18,9 @@
                     @if (!string.IsNullOrWhiteSpace(player.DiscordId))
                     {
                         <a href="https://discord.com/users/@player.DiscordId" target="_blank">@player.DiscordId</a>
+                        <span class="copy-icon" data-copy="@player.DiscordId" onclick="copyToClipboardFromElement(this)" title="Copy Discord ID" role="button" tabindex="0">
+                            <i class="bi bi-clipboard"></i>
+                        </span>
                     }
                     else
                     {
@@ -30,7 +33,10 @@
                 <td>
                     @if (!string.IsNullOrWhiteSpace(player.SteamId))
                     {
-                        <a href="https://steamcommunity.com/profiles/@player.SteamId" target="_blank">@player.SteamId</a>
+                        <a href="https://steamcommunity.com/id/@player.SteamId" target="_blank">@player.SteamId</a>
+                        <span class="copy-icon" data-copy="@player.SteamId" onclick="copyToClipboardFromElement(this)" title="Copy Steam ID" role="button" tabindex="0">
+                            <i class="bi bi-clipboard"></i>
+                        </span>
                     }
                     else
                     {
@@ -44,6 +50,9 @@
                     @if (!string.IsNullOrWhiteSpace(player.RiotId))
                     {
                         @player.RiotId
+                        <span class="copy-icon" data-copy="@player.RiotId" onclick="copyToClipboardFromElement(this)" title="Copy Riot ID" role="button" tabindex="0">
+                            <i class="bi bi-clipboard"></i>
+                        </span>
                     }
                     else
                     {
@@ -67,7 +76,7 @@ else if (Participant is Team team)
         @if(team.Players?.FirstOrDefault(p => p.Id == team.CaptainId) is Player captain)
         {
             <div class="captain-label">Captain</div>
-            <div class="captain-name">@captain.Username</div>
+            <div class="captain-name">@captain.Username </div>
             <table class="participant-table">
                 <tr><td>Name:</td><td>@captain.Firstname @captain.Lastname</td></tr>
                 <tr>
@@ -76,6 +85,9 @@ else if (Participant is Team team)
                         @if (!string.IsNullOrWhiteSpace(captain.DiscordId))
                         {
                             <a href="https://discord.com/users/@captain.DiscordId" target="_blank">@captain.DiscordId</a>
+                            <span class="copy-icon" data-copy="@captain.DiscordId" onclick="copyToClipboardFromElement(this)" title="Copy Discord ID" role="button" tabindex="0">
+                                <i class="bi bi-clipboard"></i>
+                            </span>
                         }
                         else
                         {
@@ -88,7 +100,10 @@ else if (Participant is Team team)
                     <td>
                         @if (!string.IsNullOrWhiteSpace(captain.SteamId))
                         {
-                            <a href="https://steamcommunity.com/profiles/@captain.SteamId" target="_blank">@captain.SteamId</a>
+                            <a href="https://steamcommunity.com/id/@captain.SteamId" target="_blank">@captain.SteamId</a>
+                            <span class="copy-icon" data-copy="@captain.SteamId" onclick="copyToClipboardFromElement(this)" title="Copy Steam ID" role="button" tabindex="0">
+                                <i class="bi bi-clipboard"></i>
+                            </span>
                         }
                         else
                         {
@@ -102,6 +117,9 @@ else if (Participant is Team team)
                         @if (!string.IsNullOrWhiteSpace(captain.RiotId))
                         {
                             @captain.RiotId
+                            <span class="copy-icon" data-copy="@captain.RiotId" onclick="copyToClipboardFromElement(this)" title="Copy Riot ID" role="button" tabindex="0">
+                                <i class="bi bi-clipboard"></i>
+                            </span>
                         }
                         else
                         {
@@ -118,7 +136,7 @@ else if (Participant != null)
     <div>
         <div class="participant-header-row">
             <span class="participant-type">Unknown</span>
-            <span class="participant-name">@Participant.Id</span>
+            <span class="participant-name">@Participant.Id          </span>
         </div>
     </div>
 }

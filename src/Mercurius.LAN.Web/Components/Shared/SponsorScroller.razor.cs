@@ -14,7 +14,7 @@ namespace Mercurius.LAN.Web.Components.Shared
         private IToastService ToastService { get; set; } = null!;
 
         private List<Sponsor> _sponsors = new();
-        private const int _repeater = 5;
+        private const int _repeater = 4;
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
