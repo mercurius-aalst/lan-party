@@ -8,11 +8,7 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a7.5 7.5 0 0 1 13 0" /></svg>
                 Player
             </span>
-            <span class="participant-name">@player.Username
-                <span class="copy-icon" data-copy="@player.Username" onclick="copyToClipboardFromElement(this)" title="Copy username" role="button" tabindex="0">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
-                </span>
-            </span>
+            <span class="participant-name">@player.Username</span>
         </div>
         <table class="participant-table">
             <tr><td>Name:</td><td>@player.Firstname @player.Lastname</td></tr>
@@ -23,7 +19,7 @@
                     {
                         <a href="https://discord.com/users/@player.DiscordId" target="_blank">@player.DiscordId</a>
                         <span class="copy-icon" data-copy="@player.DiscordId" onclick="copyToClipboardFromElement(this)" title="Copy Discord ID" role="button" tabindex="0">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                            <i class="bi bi-clipboard"></i>
                         </span>
                     }
                     else
@@ -39,7 +35,7 @@
                     {
                         <a href="https://steamcommunity.com/id/@player.SteamId" target="_blank">@player.SteamId</a>
                         <span class="copy-icon" data-copy="@player.SteamId" onclick="copyToClipboardFromElement(this)" title="Copy Steam ID" role="button" tabindex="0">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                            <i class="bi bi-clipboard"></i>
                         </span>
                     }
                     else
@@ -55,7 +51,7 @@
                     {
                         @player.RiotId
                         <span class="copy-icon" data-copy="@player.RiotId" onclick="copyToClipboardFromElement(this)" title="Copy Riot ID" role="button" tabindex="0">
-                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                            <i class="bi bi-clipboard"></i>
                         </span>
                     }
                     else
@@ -80,11 +76,7 @@ else if (Participant is Team team)
         @if(team.Players?.FirstOrDefault(p => p.Id == team.CaptainId) is Player captain)
         {
             <div class="captain-label">Captain</div>
-            <div class="captain-name">@captain.Username
-                    <span class="copy-icon" data-copy="@captain.Username" onclick="copyToClipboardFromElement(this)" title="Copy username" role="button" tabindex="0">
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
-                    </span>
-            </div>
+            <div class="captain-name">@captain.Username </div>
             <table class="participant-table">
                 <tr><td>Name:</td><td>@captain.Firstname @captain.Lastname</td></tr>
                 <tr>
@@ -94,7 +86,7 @@ else if (Participant is Team team)
                         {
                             <a href="https://discord.com/users/@captain.DiscordId" target="_blank">@captain.DiscordId</a>
                             <span class="copy-icon" data-copy="@captain.DiscordId" onclick="copyToClipboardFromElement(this)" title="Copy Discord ID" role="button" tabindex="0">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                                <i class="bi bi-clipboard"></i>
                             </span>
                         }
                         else
@@ -110,7 +102,7 @@ else if (Participant is Team team)
                         {
                             <a href="https://steamcommunity.com/id/@captain.SteamId" target="_blank">@captain.SteamId</a>
                             <span class="copy-icon" data-copy="@captain.SteamId" onclick="copyToClipboardFromElement(this)" title="Copy Steam ID" role="button" tabindex="0">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                                <i class="bi bi-clipboard"></i>
                             </span>
                         }
                         else
@@ -126,7 +118,7 @@ else if (Participant is Team team)
                         {
                             @captain.RiotId
                             <span class="copy-icon" data-copy="@captain.RiotId" onclick="copyToClipboardFromElement(this)" title="Copy Riot ID" role="button" tabindex="0">
-                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><rect x="9" y="2" width="6" height="4" rx="1" /><path d="M16 4h-1.5l-1-1h-5l-1 1H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" /></svg>
+                                <i class="bi bi-clipboard"></i>
                             </span>
                         }
                         else
@@ -144,11 +136,7 @@ else if (Participant != null)
     <div>
         <div class="participant-header-row">
             <span class="participant-type">Unknown</span>
-            <span class="participant-name">@Participant.Id
-                <span class="copy-icon" data-copy="@Participant.Id" onclick="copyToClipboardFromElement(this)" title="Copy id" role="button" tabindex="0">
-                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14" stroke-linecap="round" stroke-linejoin="round"></path><rect x="8" y="5" width="13" height="13" rx="2" stroke-linecap="round" stroke-linejoin="round"></rect></svg>
-                </span>
-            </span>
+            <span class="participant-name">@Participant.Id          </span>
         </div>
     </div>
 }
