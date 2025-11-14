@@ -51,7 +51,7 @@
                     </div>
                     <div class="form-group">
                         <label for="sponsorLogo">Logo</label>
-                        <CustomInputFile id="sponsorLogo" @bind-Value="_selectedSponsor.Logo" />
+                        <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" @bind-Value="_selectedSponsor.Logo" />
                         <ValidationMessage For="@(() => _selectedSponsor.Logo)" />
 
                     </div>

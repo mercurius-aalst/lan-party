@@ -19,13 +19,18 @@
     <nav class="flex-column">
         <NavLink href="/" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
             <div class="nav-section nav-item px-3">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                 Home
             </div>
 
         </NavLink>
         <NavLink href="/sponsors" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
             <div class="nav-section nav-item px-3">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Our Sponsors
+                Our Sponsors
+            </div>
+        </NavLink>
+        <NavLink href="https://discord.gg/dsmahrAtTG" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
+            <div class="nav-section nav-item px-3">
+                 Discord
             </div>
         </NavLink>
         <AuthorizeView Roles="admin">

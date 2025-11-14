@@ -38,7 +38,7 @@ else
         {
             var imageUrl = Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
             <div class="card mb-3" style="cursor:pointer;" @onclick="() => NavigateToGameDetail(game.Id)">
-                <img src="@imageUrl" srcset="@imageUrl?w=1200 400w" class="card-img-top" alt="@game.Name">
+                <img src="@imageUrl" srcset="@imageUrl?w=1800 600w" class="card-img-top" alt="@game.Name">
                 <div class="card-body">
                     <h5 class="card-title">@game.Name</h5>
                     <p class="card-text">
