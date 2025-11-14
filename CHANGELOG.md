@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.1...frontend-v0.3.2) (2025-11-14)
+
+
+### Bug Fixes
+
+* just triggering change ([#19](https://github.com/mercurius-aalst/lan-party/issues/19)) ([80e7da1](https://github.com/mercurius-aalst/lan-party/commit/80e7da10f4856956ae576336ccd87645cdeb379b))
+
 ## [0.3.1](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.0...frontend-v0.3.1) (2025-11-14)
 
 
