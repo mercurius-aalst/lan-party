@@ -27,14 +27,14 @@
     overflow: hidden;
     background: var(--card-bg-color);
     border-radius: 8px;
-    box-shadow: 0 0 5px rgba(33, 114, 38, 0.2); /* Reduced glow */
+    box-shadow: 0 0 5px rgba(33, 114, 38, 1); /* Reduced glow */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: none;
 }
 
     .card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 0 10px rgba(33, 114, 38, 0.4); /* Reduced glow */
+        box-shadow: 0 0 10px rgba(33, 114, 38, 1.2); /* Reduced glow */
     }
 
 .card-img-top {
