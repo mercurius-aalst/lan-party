@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.2...frontend-v0.3.3) (2025-11-18)
+
+
+### Bug Fixes
+
+* improve sponsor scroller image visibility ([#21](https://github.com/mercurius-aalst/lan-party/issues/21)) ([a1e05c2](https://github.com/mercurius-aalst/lan-party/commit/a1e05c275809dc1a922801922d0d812e2b3457a6))
+
 ## [0.3.2](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.1...frontend-v0.3.2) (2025-11-14)
 
 
