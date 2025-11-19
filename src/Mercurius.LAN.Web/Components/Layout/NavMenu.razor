@@ -33,6 +33,11 @@
                  Discord
             </div>
         </NavLink>
+        <NavLink href="/privacy-policy" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
+            <div class="nav-section nav-item px-3">
+                Privacy Policy
+            </div>
+        </NavLink>
         <AuthorizeView Roles="admin">
             <Authorized>
                 <div class="nav-section nav-item px-3 dropdown dropdown-toggle" @onclick:stopPropagation="true" @onclick="ToggleDropdown">
@@ -54,8 +59,12 @@
     </nav>
 
 </div>
+<div class="nav-section nav-item user-section px-1">
+    Copyright © 2025 Mercurius Aalst
+</div>
 <AuthorizeView>
     <Authorized>
+
         <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
             <div class="user-profile align-middle">
                 <span class="user-icon bi bi-person-circle"></span>
