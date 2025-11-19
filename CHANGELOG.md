@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.3...frontend-v0.4.0) (2025-11-19)
+
+
+### Features
+
+* Privacy policy ([#23](https://github.com/mercurius-aalst/lan-party/issues/23)) ([059f907](https://github.com/mercurius-aalst/lan-party/commit/059f90775ae4b2976af7bb7023e2e969627bfe20))
+
 ## [0.3.3](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.2...frontend-v0.3.3) (2025-11-18)
 
 
