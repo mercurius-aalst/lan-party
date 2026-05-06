@@ -1,7 +1,6 @@
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using System.Net.Http.Headers;
 
 namespace Mercurius.LAN.Web.Middleware
 {
@@ -14,16 +13,22 @@ namespace Mercurius.LAN.Web.Middleware
             _httpContextAccessor = httpContextAccessor;
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var accessToken = _httpContextAccessor.HttpContext?.Request.Cookies["access_token"];
-
-            if (!string.IsNullOrEmpty(accessToken))
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
             {
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                return await base.SendAsync(request, cancellationToken);
             }
 
-            return base.SendAsync(request, cancellationToken);
+            var accessToken = await httpContext.GetTokenAsync("access_token");
+
+            if (!string.IsNullOrWhiteSpace(accessToken))
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            }
+
+            return await base.SendAsync(request, cancellationToken);
         }
     }
 }

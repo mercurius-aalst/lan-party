@@ -1,0 +1,17 @@
+@page "/complete-profile"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Mercurius.LAN.Web.DTOs.Users
+<PageTitle>Complete Profile</PageTitle>
+<EditForm Model="_model" OnValidSubmit="SaveAsync">
+<DataAnnotationsValidator />
+<ValidationSummary />
+<InputText @bind-Value="_model.Username" placeholder="Username" class="form-control mb-2"/>
+<InputText @bind-Value="_model.Firstname" placeholder="First name" class="form-control mb-2"/>
+<InputText @bind-Value="_model.Lastname" placeholder="Last name" class="form-control mb-2"/>
+<InputText @bind-Value="_model.Email" placeholder="Email" class="form-control mb-2"/>
+<InputText @bind-Value="_model.DiscordId" placeholder="Discord" class="form-control mb-2"/>
+<InputText @bind-Value="_model.SteamId" placeholder="Steam" class="form-control mb-2"/>
+<InputText @bind-Value="_model.RiotId" placeholder="Riot" class="form-control mb-2"/>
+<button type="submit" class="btn btn-primary">Save profile</button>
+</EditForm>

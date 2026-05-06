@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.Extensions;
@@ -39,11 +41,28 @@ if(!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseMiddleware<TokenRefreshMiddleware>();
-
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
+app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl) =>
+{
+    var props = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+    {
+        RedirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl
+    };
+    await httpContext.ChallengeAsync("Auth0", props);
+});
+
+app.MapGet("/account/logout", async (HttpContext httpContext) =>
+{
+    var props = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
+    {
+        RedirectUri = "/"
+    };
+    await httpContext.SignOutAsync("Auth0", props);
+    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+});
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

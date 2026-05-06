@@ -1,15 +1,12 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.IdentityModel.Tokens;
+using Auth0.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Polly;
 using Refit;
-using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Services;
-using Microsoft.AspNetCore.Components.Server;
 
 namespace Mercurius.LAN.Web.Extensions;
 
@@ -20,40 +17,23 @@ public static class DependencyExtensions
         services.AddAuthorization();
         services.AddCascadingAuthenticationState();
 
-        services.AddAuthentication(options =>
+        services.AddAuth0WebAppAuthentication(options =>
         {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        })
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
+            options.Domain = configuration["Auth0:Domain"]!;
+            options.ClientId = configuration["Auth0:ClientId"]!;
+            options.ClientSecret = configuration["Auth0:ClientSecret"]!;
+            options.Scope = configuration["Auth0:Scope"] ?? "openid profile email";
+            var audience = configuration["Auth0:Audience"];
+            if (!string.IsNullOrWhiteSpace(audience))
             {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = configuration["Jwt:Issuer"],
-                ValidAudience = configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!))                    
-            };
+                options.LoginParameters ??= new Dictionary<string, string>();
+                options.LoginParameters["audience"] = audience;
+            }
+        });
 
-            options.Events = new JwtBearerEvents
-            {
-                OnMessageReceived = context =>
-                {
-                    context.Token = context.Request.Cookies["access_token"];
-                    return Task.CompletedTask;
-                },
-                OnChallenge = context =>
-                {
-                    if(!context.HttpContext.User.Identity!.IsAuthenticated)
-                    {
-                        context.Response.Redirect("/login");
-                    }
-                    return Task.CompletedTask;
-                }
-            };
+        services.Configure<OpenIdConnectOptions>(Auth0Constants.AuthenticationScheme, options =>
+        {
+            options.SaveTokens = true;
         });
 
         return services;
@@ -78,10 +58,6 @@ public static class DependencyExtensions
                 TimeSpan.FromSeconds(1),
             }));
 
-        services.AddRefitClient<IAuthenticationClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
-            .AddHttpMessageHandler<AccessTokenHandler>();
-
         services.AddRefitClient<IUserClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
             .AddHttpMessageHandler<AccessTokenHandler>();
@@ -95,7 +71,6 @@ public static class DependencyExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ISponsorService, SponsorService>();
-        services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
         services.AddHttpContextAccessor();
         services.AddScoped<IParticipantService, ParticipantService>();
 

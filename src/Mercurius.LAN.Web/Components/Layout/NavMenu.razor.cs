@@ -18,7 +18,7 @@ public partial class NavMenu
     {
         _isUserMenuVisible = false;
         OnNavigationSelected.InvokeAsync();
-        NavigationManager.NavigateTo("/logout", true);
+        NavigationManager.NavigateTo("/account/logout", true);
     }
 
     private void ToggleUserMenu() => _isUserMenuVisible = !_isUserMenuVisible;
@@ -32,12 +32,6 @@ public partial class NavMenu
     private void ToggleDropdown()
     {
         _isDropdownVisible = !_isDropdownVisible;
-    }
-
-    private void ChangePasswordAsync() {
-        _isUserMenuVisible = false;
-        OnNavigationSelected.InvokeAsync();
-        NavigationManager.NavigateTo("/change-password");
     }
 
     private void CloseDropdown()

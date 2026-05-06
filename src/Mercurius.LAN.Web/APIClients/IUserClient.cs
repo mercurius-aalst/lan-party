@@ -6,6 +6,11 @@ namespace Mercurius.LAN.Web.APIClients
 {
     public interface IUserClient
     {
+        [Get("/api/v1/lan/users/me")]
+        Task<CurrentUserProfileResponse> GetCurrentUserProfileAsync();
+
+        [Post("/api/v1/lan/users/me/complete-profile")]
+        Task<UserProfileDTO> CompleteCurrentUserProfileAsync([Body] CompleteUserProfileRequest request);
         [Get("/users")]
         Task<IEnumerable<UserDTO>> GetAllUsersAsync();
 
