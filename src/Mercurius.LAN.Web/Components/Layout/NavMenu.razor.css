@@ -8,12 +8,12 @@
 .logo-text {
     font-size: 1.5rem;
     font-weight: 700;
-    color: white;
+    color: var(--color-dark-navy);
     text-transform: uppercase;
 }
 
 .logo-image {
-    width: 8rem;
+    width: 9rem;
     align-content: center;
     display: block;
     margin: 0 auto;
@@ -33,7 +33,7 @@
     }
 
     .nav-item ::deep .nav-link {
-        color: #d7d7d7;
+        color: var(--color-dark-navy);
         background: none;
         border: none;
         border-radius: 4px;
@@ -47,7 +47,7 @@
 .nav-section {
     width: inherit;
     position: relative;
-    color: #d7d7d7;
+    color: var(--color-dark-navy);
     padding: 1rem;
     display: flex;
     align-items: center;
@@ -60,7 +60,7 @@
 }
 
 .nav-section:hover:not(:has(.dropdown-menu-custom:hover)) {
-    background-color: var(--accent-dark);
+    background-color: var(--color-soft-white);
 }
 
 .overlay {
@@ -89,8 +89,9 @@
 .dropdown-menu-custom {
     position: absolute;
     top: 100%;
-    background-color: var(--accent-color);
-    color: #d7d7d7;
+    background-color: var(--color-white);
+    border: 1px solid var(--color-border);
+    color: var(--color-dark-navy);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     z-index: 1050;
     text-align: left;
@@ -105,8 +106,8 @@
 }
 
 .dropdown-item:hover {
-    background-color: var(--accent-dark);
-    color: white;
+    background-color: var(--color-soft-white);
+    color: var(--color-dark-navy);
 }
 .dropdown-item {
     padding-left: 1rem;
@@ -118,4 +119,31 @@
 .user-section .user-profile {
     display: flex;
     align-items: center;
+}
+
+.nav-item ::deep a.active .nav-section {
+    color: var(--color-dark-navy);
+    box-shadow: inset 0 -3px 0 var(--color-primary-green);
+}
+
+.nav-section:hover {
+    color: var(--color-deep-green);
+}
+
+.dropdown-item:hover {
+    background-color: var(--color-soft-white);
+    color: var(--color-dark-navy);
+}
+
+.footer-brand {
+    background: var(--color-dark-navy);
+    color: var(--color-white);
+    border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.footer-brand a { color: var(--color-primary-green); }
+
+.btn-primary:focus-visible, .card-link:focus-visible, .nav-section:focus-visible {
+    outline: 3px solid rgba(34, 197, 94, 0.45);
+    outline-offset: 2px;
 }

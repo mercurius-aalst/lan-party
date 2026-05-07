@@ -8,8 +8,20 @@
 @rendermode InteractiveServer
 <PageTitle>Games</PageTitle>
 
+<section class="hero brand-card mb-4">
+    <div class="hero-inner">
+        <img src="/img/clubschild.svg" alt="Mercurius LAN logo" class="hero-logo" />
+        <div>
+            <div class="brand-section-number">01</div>
+            <h1 class="brand-heading">Mercurius LAN</h1>
+            <p class="hero-copy">A student gaming community powered by tournaments, BYOC competition, connection, and high-energy play.</p>
+            <a href="/sponsors" class="btn btn-primary">Join the LAN Energy</a>
+        </div>
+    </div>
+    <div class="brand-accent-line mt-3"></div>
+</section>
 <div class="overview-header">
-    <h2>Games</h2>
+    <h2 class="brand-heading">Games</h2>
 </div>
 <div class="search-bar-container">
     <input type="text" class="form-control search-bar-input" placeholder="Search by game title..." @bind="_searchTerm" @bind:event="oninput" />
