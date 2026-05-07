@@ -1,5 +1,3 @@
-@using Microsoft.AspNetCore.Components.Authorization
-@using Refit
 @rendermode InteractiveServer
 
 @if(_isUserMenuVisible || _isDropdownVisible)
@@ -39,7 +37,7 @@
             </div>
         </NavLink>
         <AuthorizeView Roles="admin">
-            <Authorized>
+            <Authorized Context="adminAuthState">
                 <div class="nav-section nav-item px-3 dropdown dropdown-toggle" @onclick:stopPropagation="true" @onclick="ToggleDropdown">
                     <div class="user-profile">
                         <span>Admin</span>
@@ -47,7 +45,7 @@
                     @if(_isDropdownVisible)
                     {
                         <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                                                        <a class="dropdown-item" href="/admin/players" @onclick="CloseDropdown">Players</a>
+                            <a class="dropdown-item" href="/admin/players" @onclick="CloseDropdown">Players</a>
                             <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
                             <a class="dropdown-item" href="/admin/sponsors" @onclick="CloseDropdown">Sponsors</a>
                         </div>
@@ -58,22 +56,19 @@
     </nav>
 
 </div>
-<div class="nav-section nav-item user-section px-1">
-                    <a class="dropdown-item" href="/complete-profile" @onclick="CloseDropdown">Complete Profile</a>
-</div>
 <AuthorizeView>
-    <Authorized>
+    <Authorized Context="authState">
 
         <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
             <div class="user-profile align-middle">
                 <span class="user-icon bi bi-person-circle"></span>
-                <span>@AuthService.CurrentUser.Identity!.Name</span>
+                <span>@GetDisplayName(authState.User)</span>
             </div>
             @if(_isUserMenuVisible)
             {
 
                 <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                    <a class="dropdown-item" @onclick="ChangePasswordAsync">Change Password</a>
+                    <a class="dropdown-item" href="/complete-profile" @onclick="CloseDropdown">Complete Profile</a>
                     <a class="dropdown-item" @onclick="Logout">Logout</a>
                 </div>
 
@@ -81,4 +76,9 @@
         </div>
 
     </Authorized>
+    <NotAuthorized>
+        <div class="nav-section nav-item user-section px-3">
+            <button type="button" class="dropdown-item" @onclick="BeginLogin">Login</button>
+        </div>
+    </NotAuthorized>
 </AuthorizeView>

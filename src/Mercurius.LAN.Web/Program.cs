@@ -1,18 +1,18 @@
+using Auth0.AspNetCore.Authentication;
+using Blazored.Toast;
+using Mercurius.LAN.Web.Components;
+using Mercurius.LAN.Web.Extensions;
+using Mercurius.LAN.Web.Middleware;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Mercurius.LAN.Web.Extensions;
-using Mercurius.LAN.Web.Middleware;
-using Mercurius.LAN.Web.Components;
-using Blazored.Toast;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveServerComponents();
 
 builder.Services.AddBlazoredToast();
 
@@ -45,28 +45,46 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl) =>
+app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
 {
-    var props = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
-    {
-        RedirectUri = string.IsNullOrWhiteSpace(returnUrl) ? "/" : returnUrl
-    };
-    await httpContext.ChallengeAsync("Auth0", props);
-});
+    var redirectUri = GetSafeLocalReturnUrl(returnUrl);
+    var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+            .WithRedirectUri(redirectUri)
+            .Build();
+
+    await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+}).AllowAnonymous();
 
 app.MapGet("/account/logout", async (HttpContext httpContext) =>
 {
-    var props = new Microsoft.AspNetCore.Authentication.AuthenticationProperties
-    {
-        RedirectUri = "/"
-    };
-    await httpContext.SignOutAsync("Auth0", props);
+    var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+            .WithRedirectUri("/")
+            .Build();
+
+    await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
     await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-});
+}).RequireAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode()
-    .AddInteractiveWebAssemblyRenderMode();
+    .AddInteractiveServerRenderMode();
 
 app.Run();
+
+static string GetSafeLocalReturnUrl(string? returnUrl)
+{
+    if(string.IsNullOrWhiteSpace(returnUrl))
+        return "/";
+
+    if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
+        return "/";
+
+    if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
+       returnUrl.StartsWith("//", StringComparison.Ordinal) ||
+       returnUrl.StartsWith("/\\", StringComparison.Ordinal))
+    {
+        return "/";
+    }
+
+    return returnUrl;
+}

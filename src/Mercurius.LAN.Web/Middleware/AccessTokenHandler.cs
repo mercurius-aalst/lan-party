@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 using System.Net.Http.Headers;
 
 namespace Mercurius.LAN.Web.Middleware
@@ -28,7 +29,13 @@ namespace Mercurius.LAN.Web.Middleware
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
             }
 
-            return await base.SendAsync(request, cancellationToken);
+            var response = await base.SendAsync(request, cancellationToken);
+            if(response.StatusCode == HttpStatusCode.Unauthorized && httpContext.User.Identity?.IsAuthenticated == true)
+            {
+                throw new UnauthorizedAccessException("The Mercurius API rejected the Auth0 access token.");
+            }
+
+            return response;
         }
     }
 }

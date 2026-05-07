@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Mercurius.LAN.Web.DTOs.Users
 <PageTitle>Complete Profile</PageTitle>
-<EditForm Model="_model" OnValidSubmit="SaveAsync">
+<EditForm Model="_model" OnValidSubmit="SaveAsync" FormName="complete-profile">
 <DataAnnotationsValidator />
 <ValidationSummary />
 <InputText @bind-Value="_model.Username" placeholder="Username" class="form-control mb-2"/>

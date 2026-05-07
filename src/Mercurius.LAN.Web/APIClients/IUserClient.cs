@@ -1,31 +1,23 @@
-﻿using Mercurius.LAN.Web.DTOs.Users;
-using Mercurius.LAN.Web.Models.Auth;
+using Mercurius.LAN.Web.DTOs.Users;
 using Refit;
 
 namespace Mercurius.LAN.Web.APIClients
 {
     public interface IUserClient
     {
-        [Get("/api/v1/lan/users/me")]
+        [Get("/lan/users/me")]
         Task<CurrentUserProfileResponse> GetCurrentUserProfileAsync();
 
-        [Post("/api/v1/lan/users/me/complete-profile")]
+        [Post("/lan/users/me/complete-profile")]
         Task<UserProfileDTO> CompleteCurrentUserProfileAsync([Body] CompleteUserProfileRequest request);
-        [Get("/users")]
+
+        [Get("/lan/users")]
         Task<IEnumerable<UserDTO>> GetAllUsersAsync();
 
-        [Get("/users/{id}")]
+        [Get("/lan/users/{id}")]
         Task<UserDTO> GetUserByIdAsync(int id);
-        [Delete("/users/{username}")]
+
+        [Delete("/lan/users/{username}")]
         Task DeleteUserAsync(string username);
-
-        [Post("/users/{username}/roles")]
-        Task AddRoleToUserAsync(string username, [Body] AddUserRoleRequest request);
-        [Delete("/users/{username}/roles/{role}")]
-        Task DeleteRoleFromUserAsync(string username, string role);
-
-        [Patch("/users/{username}/password")]
-        Task ChangePasswordAsync(string username, [Body] ChangePasswordRequest request);
-
     }
 }
