@@ -1,27 +1,22 @@
-// Moved @code block from GameDetail.razor
+using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Refit;
-using Blazored.Toast.Services;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
 public partial class GameDetail
 {
-    [Inject]
-    private IGameService GameService { get; set; } = null!;
-    [Inject]
-    private IToastService ToastService { get; set; } = null!;
-    [Inject]
-    private NavigationManager Navigation { get; set; } = null!;
-    [Inject]
-    private IConfiguration Configuration { get; set; } = null!;
+    [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private IToastService ToastService { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private IConfiguration Configuration { get; set; } = null!;
 
-    [Parameter]
-    public int GameId { get; set; }
+    [Parameter] public Guid GameId { get; set; }
+
     private GameExtended? _game;
-    private int _selectedTab = 0;
+    private int _selectedTab;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -30,7 +25,6 @@ public partial class GameDetail
             await LoadGameDataAsync();
         }
     }
-
 
     private void SelectTab(int tab)
     {
@@ -50,6 +44,12 @@ public partial class GameDetail
         }
     }
 
+    private Task HandleGameUpdated(GameExtended updatedGame)
+    {
+        _game = updatedGame;
+        return InvokeAsync(StateHasChanged);
+    }
+
     private void OnTabDropdownChanged(ChangeEventArgs e)
     {
         if(int.TryParse(e.Value?.ToString(), out int tab))
@@ -58,25 +58,17 @@ public partial class GameDetail
         }
     }
 
-    private async Task FinishGameAsync()
-    {
-        await ExecuteGameActionAsync(() => GameService.CompleteGameAsync(GameId), "Game successfully finished.");
-    }
+    private Task FinishGameAsync() =>
+        ExecuteGameActionAsync(() => GameService.CompleteGameAsync(GameId), "Game successfully finished.");
 
-    private async Task StartGameAsync()
-    {
-        await ExecuteGameActionAsync(() => GameService.StartGameAsync(GameId), "Game successfully started.");
-    }
+    private Task StartGameAsync() =>
+        ExecuteGameActionAsync(() => GameService.StartGameAsync(GameId), "Game successfully started.");
 
-    private async Task CancelGameAsync()
-    {
-        await ExecuteGameActionAsync(() => GameService.CancelGameAsync(GameId), "Game successfully canceled.");
-    }
+    private Task CancelGameAsync() =>
+        ExecuteGameActionAsync(() => GameService.CancelGameAsync(GameId), "Game successfully canceled.");
 
-    private async Task ResetGameAsync()
-    {
-        await ExecuteGameActionAsync(() => GameService.ResetGameAsync(GameId), "Game successfully reset.");
-    }
+    private Task ResetGameAsync() =>
+        ExecuteGameActionAsync(() => GameService.ResetGameAsync(GameId), "Game successfully reset.");
 
     private async Task DeleteGameAsync()
     {
@@ -106,8 +98,10 @@ public partial class GameDetail
         }
     }
 
-    private string GetImageUrl(string imageUrl)
+    private string GetImageUrl(string? imageUrl)
     {
-        return Configuration["MercuriusAPI:BaseAddress"] + imageUrl;
+        return string.IsNullOrWhiteSpace(imageUrl)
+            ? string.Empty
+            : Configuration["MercuriusAPI:BaseAddress"] + imageUrl;
     }
 }

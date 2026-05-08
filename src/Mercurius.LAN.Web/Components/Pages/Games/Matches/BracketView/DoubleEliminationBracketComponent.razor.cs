@@ -1,5 +1,5 @@
+using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
-using Mercurius.LAN.Web.Models.Participants;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
@@ -7,28 +7,42 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Matches.BracketView;
 
 public partial class DoubleEliminationBracketComponent
 {
-    [Parameter]
-    public IEnumerable<Match> Matches { get; set; } = Enumerable.Empty<Match>();
-    [Parameter]
-    public IEnumerable<Participant> Participants { get; set; } = Enumerable.Empty<Participant>();
-    [Parameter]
-    public EventCallback OnDataReload { get; set; }
+    [Parameter] public GameExtended Game { get; set; } = null!;
+    [Parameter] public EventCallback OnDataReload { get; set; }
 
-    [Inject]
-    private IJSRuntime JS { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private IEnumerable<Match> _uBMatches = Enumerable.Empty<Match>();
     private IEnumerable<Match> _lBMatches = Enumerable.Empty<Match>();
     private Match? _gFMatch;
-    private int LastRound => Matches?.Max(m => m.RoundNumber) ?? 0;
+    private GameExtended _upperBracketGame = new();
+    private int LastRound => Game.Matches?.Max(m => m.RoundNumber) ?? 0;
 
     protected override void OnParametersSet()
     {
-        if(Matches.Any())
+        if(Game.Matches.Any())
         {
-            _gFMatch = Matches.SingleOrDefault(m => m.RoundNumber == LastRound);
-            _uBMatches = Matches.Where(m => !m.IsLowerBracketMatch && m.RoundNumber < LastRound).ToList();
-            _lBMatches = Matches.Where(m => m.IsLowerBracketMatch && m.RoundNumber < LastRound).ToList();
+            _gFMatch = Game.Matches.SingleOrDefault(m => m.RoundNumber == LastRound);
+            _uBMatches = Game.Matches.Where(m => !m.IsLowerBracketMatch && m.RoundNumber < LastRound).ToList();
+            _lBMatches = Game.Matches.Where(m => m.IsLowerBracketMatch && m.RoundNumber < LastRound).ToList();
+            _upperBracketGame = new GameExtended
+            {
+                Id = Game.Id,
+                Name = Game.Name,
+                StartTime = Game.StartTime,
+                EndTime = Game.EndTime,
+                ImageUrl = Game.ImageUrl,
+                Status = Game.Status,
+                BracketType = Game.BracketType,
+                Format = Game.Format,
+                FinalsFormat = Game.FinalsFormat,
+                ParticipationMode = Game.ParticipationMode,
+                RegisterFormUrl = Game.RegisterFormUrl,
+                Matches = _uBMatches.ToList(),
+                Users = Game.Users.ToList(),
+                Teams = Game.Teams.ToList(),
+                Placements = Game.Placements.ToList()
+            };
         }
     }
 
@@ -47,7 +61,7 @@ public partial class DoubleEliminationBracketComponent
         public int MatchHeight { get; set; }
         public int MatchWidth { get; set; }
         public int ColumnWidth { get; set; }
-        public Dictionary<int, (int left, int y)> MatchPositions { get; set; }
+        public Dictionary<Guid, (int left, int y)> MatchPositions { get; set; }
         public List<string> SvgElements { get; set; }
     }
 
@@ -58,7 +72,7 @@ public partial class DoubleEliminationBracketComponent
             MatchHeight = 60,
             MatchWidth = 220,
             ColumnWidth = 260,
-            MatchPositions = new Dictionary<int, (int left, int y)>(),
+            MatchPositions = new Dictionary<Guid, (int left, int y)>(),
             SvgElements = new List<string>()
         };
 
@@ -66,7 +80,7 @@ public partial class DoubleEliminationBracketComponent
         int numRounds = rounds.Count;
         int reservedHeight = matchData.MatchHeight + verticalGap;
 
-        var lbMatchesReceivingLosersFromUB = new HashSet<int>(uBMatches.Where(m => m.LoserNextMatchId.HasValue).Select(m => m.LoserNextMatchId!.Value));
+        var lbMatchesReceivingLosersFromUB = new HashSet<Guid>(uBMatches.Where(m => m.LoserNextMatchId.HasValue).Select(m => m.LoserNextMatchId!.Value));
 
         for(int r = 0; r < rounds.Count; r++)
         {
@@ -98,7 +112,6 @@ public partial class DoubleEliminationBracketComponent
                     {
                         int firstSourceY = matchData.MatchPositions[sourceMatches.First().Id].y;
                         int lastSourceY = matchData.MatchPositions[sourceMatches.Last().Id].y;
-
                         int y = (int)Math.Round((double)(firstSourceY + lastSourceY) / 2);
                         matchData.MatchPositions.Add(currentMatch.Id, (colX, y));
                     }
@@ -121,23 +134,19 @@ public partial class DoubleEliminationBracketComponent
                     int y0 = sourcePos.y + (int)Math.Round((double)matchData.MatchHeight / 2);
                     int x1 = destPos.left;
                     int y1 = destPos.y + (int)Math.Round((double)matchData.MatchHeight / 2);
-
                     int elbowX = x0 + (matchData.ColumnWidth - matchData.MatchWidth) / 2;
-
                     matchData.SvgElements.Add($"<polyline points='{x0},{y0} {elbowX},{y0} {elbowX},{y1} {x1},{y1}' fill='none' stroke='#4caf50' stroke-width='3' />");
                 }
 
                 if(lbMatchesReceivingLosersFromUB.Contains(match.Id))
                 {
                     int yConnect = sourcePos.y + (int)Math.Round(matchData.MatchHeight * 0.25);
-
                     int x1 = sourcePos.left - 10;
                     int y1 = sourcePos.y - 10;
                     int x2 = sourcePos.left - 10;
                     int y2 = yConnect;
                     int x3 = sourcePos.left;
                     int y3 = yConnect;
-
                     matchData.SvgElements.Add($"<polyline points='{x1},{y1} {x2},{y2} {x3},{y3}' fill='none' stroke='#4caf50' stroke-width='3' stroke-dasharray='5,5' />");
                 }
             }

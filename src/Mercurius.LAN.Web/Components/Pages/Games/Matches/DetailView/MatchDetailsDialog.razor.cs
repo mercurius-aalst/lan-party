@@ -1,56 +1,50 @@
-// Moved @code block from MatchDetailsDialog.razor
+using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Refit;
-using Blazored.Toast.Services;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games.Matches.DetailView;
 
 public partial class MatchDetailsDialog
 {
-    [Parameter]
-    public Match Match { get; set; } = null!;
-    [Parameter]
-    public IEnumerable<Participant> Participants { get; set; } = null!;
-    [Parameter]
-    public EventCallback OnClose { get; set; }
-    [Parameter]
-    public EventCallback OnDataReload { get; set; }
-    [Parameter]
-    public string Participant2Name { get; set; } = null!;
-    [Parameter]
-    public string Participant1Name { get; set; } = null!;
-    [Inject]
-    private IGameService GameService { get; set; } = null!;
-    [Inject]
-    private IToastService ToastService { get; set; } = null!;
+    [Parameter] public Match Match { get; set; } = null!;
+    [Parameter] public GameExtended Game { get; set; } = null!;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public string Participant2Name { get; set; } = null!;
+    [Parameter] public string Participant1Name { get; set; } = null!;
 
-    private Participant GetParticipantById(int? participantId)
+    [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private IToastService ToastService { get; set; } = null!;
+
+    private Guid? Participant1Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant1Id : Match.UserParticipant1Id;
+    private Guid? Participant2Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant2Id : Match.UserParticipant2Id;
+    private Guid? WinnerId => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamWinnerId : Match.UserWinnerId;
+
+    private ParticipantViewModel? GetParticipantById(Guid? participantId)
     {
-        if(participantId == null || Participants == null)
-            return null!;
-        return Participants.FirstOrDefault(p => p.Id == participantId.Value)!;
+        if(participantId is null)
+            return null;
+
+        return Match.ParticipationMode switch
+        {
+            ParticipationMode.Individual => Game.Users.Where(user => user.Id == participantId.Value).Select(ParticipantViewModel.FromUser).FirstOrDefault(),
+            ParticipationMode.Team => Game.Teams.Where(team => team.Id == participantId.Value).Select(ParticipantViewModel.FromTeam).FirstOrDefault(),
+            _ => null
+        };
     }
 
-    private bool IsWinner(int? participantId) => Match.WinnerId != null && participantId == Match.WinnerId;
+    private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;
 
-    private bool IsLoser(int? participantId, int? opponentId)
-    {
-        if(Match.WinnerId == null)
-            return false;
-        if(participantId is null || participantId != Match.WinnerId)
-            return true;
-        return false;
-    }
-
-    private string GetCardClass(int? participantId, int? opponentId)
+    private string GetCardClass(Guid? participantId)
     {
         if(IsWinner(participantId))
             return "participant-card winner-card";
-        if(IsLoser(participantId, opponentId))
+        if(WinnerId != null && participantId != null)
             return "participant-card loser-card";
         return "participant-card";
     }
@@ -59,14 +53,14 @@ public partial class MatchDetailsDialog
     {
         try
         {
-            Match = await GameService.UpdateMatchScoresAsync(Match.Id, new UpdateMatchDTO()
+            Match = await GameService.UpdateMatchScoresAsync(Match.Id, new UpdateMatchDTO
             {
                 Participant1Score = Match.Participant1Score ?? 0,
                 Participant2Score = Match.Participant2Score ?? 0,
             });
             ToastService.ShowSuccess("Score updated successfully");
-            await OnDataReload.InvokeAsync(); // Notify parent to reload data
-            await OnClose.InvokeAsync(); // Close the dialog
+            await OnDataReload.InvokeAsync();
+            await OnClose.InvokeAsync();
         }
         catch(ApiException ex)
         {

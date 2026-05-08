@@ -1,0 +1,77 @@
+@using System.Net
+@using Microsoft.AspNetCore.Components.Authorization
+@using Refit
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IUserClient UserClient
+
+@code {
+    [Parameter]
+    public RouteData RouteData { get; set; } = default!;
+
+    private string? _lastCheckedUri;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(_lastCheckedUri == NavigationManager.Uri)
+            return;
+
+        _lastCheckedUri = NavigationManager.Uri;
+
+        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if(authenticationState.User.Identity?.IsAuthenticated != true)
+            return;
+
+        if(IsCompleteProfilePage() || IsAccountRoute())
+            return;
+
+        try
+        {
+            var currentUserProfile = await UserClient.GetCurrentUserProfileAsync();
+            if(!currentUserProfile.IsComplete)
+            {
+                var returnUrl = GetCurrentRelativeUrl();
+                NavigationManager.NavigateTo($"/complete-profile?returnUrl={Uri.EscapeDataString(returnUrl)}");
+            }
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var returnUrl = GetCurrentRelativeUrl();
+            NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
+        {
+            NavigationManager.NavigateTo("/account/logout", forceLoad: true);
+        }
+        catch(UnauthorizedAccessException)
+        {
+            var returnUrl = GetCurrentRelativeUrl();
+            NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+        }
+    }
+
+    private bool IsCompleteProfilePage()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var path = relativePath.Split('?', '#')[0].Trim('/');
+
+        return string.Equals(path, "complete-profile", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsAccountRoute()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var path = relativePath.Split('?', '#')[0].Trim('/');
+
+        return path.StartsWith("account/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string GetCurrentRelativeUrl()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+
+        return string.IsNullOrWhiteSpace(relativePath)
+            ? "/"
+            : $"/{relativePath}";
+    }
+}

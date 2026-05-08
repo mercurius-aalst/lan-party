@@ -1,29 +1,29 @@
-using Mercurius.LAN.Web.Models.Participants;
+using Blazored.Toast.Services;
+using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.Users;
+using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
-using Refit;
-using Blazored.Toast.Services;
-using Mercurius.LAN.Web.Components.Shared;
 using Microsoft.AspNetCore.Components.Forms;
+using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Admin;
 
 public partial class TeamManagement
 {
     private List<Team> _teams = new();
-    private List<Player> _players = new();
+    private List<UserDTO> _users = new();
     private Team _selectedTeam = new();
-    private Player? _selectedCaptain;
+    private UserDTO? _selectedCaptain;
     private bool _isCreateMode = true;
     private EditContext? _editContext;
-
     private CustomAutocomplete<Team> _autoCompleteComponent = null!;
 
-    [Inject]
-    private IParticipantService ParticipantService { get; set; } = null!;
-    [Inject]
-    private IToastService ToastService { get; set; } = null!;
+    [Inject] private ITeamService TeamService { get; set; } = null!;
+    [Inject] private IUserClient UserClient { get; set; } = null!;
+    [Inject] private IToastService ToastService { get; set; } = null!;
 
     protected override void OnInitialized()
     {
@@ -36,10 +36,9 @@ public partial class TeamManagement
         {
             try
             {
-                _players = await ParticipantService.GetPlayersAsync();
-                _teams = await ParticipantService.GetTeamsAsync();
+                _users = (await UserClient.GetAllUsersAsync()).ToList();
+                _teams = await TeamService.GetTeamsAsync();
                 await InvokeAsync(StateHasChanged);
-
             }
             catch(Exception)
             {
@@ -50,33 +49,36 @@ public partial class TeamManagement
 
     private void ReInitEditContext()
     {
-        _editContext = new(_selectedTeam!);
+        _editContext = new(_selectedTeam);
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
-        _editContext.OnFieldChanged += (sender, args) =>
-        {
-            _editContext.Validate();
-        };
-    }
-    private void OnTeamSelected(Team team)
-    {
-        _selectedTeam = team;
-        ReInitEditContext();
-        _selectedCaptain = _players.FirstOrDefault(p => p.Id == team.CaptainId);
-        _isCreateMode = false;
+        _editContext.OnFieldChanged += (sender, args) => _editContext.Validate();
     }
 
-    private void OnCaptainSelected(Player player)
+    private void OnTeamSelected(Team team)
     {
-        if(_selectedTeam != null)
+        _selectedTeam = new Team
         {
-            _selectedCaptain = player;
-            _selectedTeam.CaptainId = player.Id;
-        }
+            Id = team.Id,
+            Name = team.Name,
+            CaptainUserId = team.CaptainUserId,
+            Members = team.Members.ToList(),
+            TeamInvites = team.TeamInvites.ToList()
+        };
+        _selectedCaptain = _users.FirstOrDefault(user => user.Id == team.CaptainUserId);
+        _isCreateMode = false;
+        ReInitEditContext();
+    }
+
+    private void OnCaptainSelected(UserDTO user)
+    {
+        _selectedCaptain = user;
+        _selectedTeam.CaptainUserId = user.Id;
     }
 
     private void ClearForm()
     {
         _selectedTeam = new Team();
+        _selectedCaptain = null;
         _isCreateMode = true;
         _autoCompleteComponent.ClearSearchField();
         ReInitEditContext();
@@ -89,12 +91,14 @@ public partial class TeamManagement
         {
             if(_isCreateMode)
             {
-                var team = await ParticipantService.CreateTeamAsync(new CreateTeamDTO
+                var team = await TeamService.CreateTeamAsync(new CreateTeamDTO
                 {
-                    Name = _selectedTeam!.Name,
-                    CaptainId = _selectedTeam.CaptainId
+                    Name = _selectedTeam.Name,
+                    CaptainUserId = _selectedTeam.CaptainUserId
                 });
                 _teams.Add(team);
+                _selectedTeam = team;
+                _selectedCaptain = _users.FirstOrDefault(user => user.Id == team.CaptainUserId);
                 _isCreateMode = false;
                 ReInitEditContext();
                 await InvokeAsync(StateHasChanged);
@@ -102,11 +106,20 @@ public partial class TeamManagement
             }
             else
             {
-                await ParticipantService.UpdateTeamAsync(_selectedTeam!.Id, new UpdateTeamDTO
+                var updatedTeam = await TeamService.UpdateTeamAsync(_selectedTeam.Id, new UpdateTeamDTO
                 {
                     Name = _selectedTeam.Name,
-                    CaptainId = _selectedTeam.CaptainId
+                    CaptainUserId = _selectedTeam.CaptainUserId
                 });
+
+                var existingIndex = _teams.FindIndex(team => team.Id == updatedTeam.Id);
+                if(existingIndex >= 0)
+                {
+                    _teams[existingIndex] = updatedTeam;
+                }
+
+                _selectedTeam = updatedTeam;
+                _selectedCaptain = _users.FirstOrDefault(user => user.Id == updatedTeam.CaptainUserId);
                 ReInitEditContext();
                 ToastService.ShowSuccess("Team updated successfully.");
             }
@@ -119,12 +132,10 @@ public partial class TeamManagement
 
     private async Task DeleteTeam()
     {
-        if(_selectedTeam == null)
-            return;
         try
         {
-            await ParticipantService.DeleteTeamAsync(_selectedTeam.Id);
-            _teams.Remove(_selectedTeam);
+            await TeamService.DeleteTeamAsync(_selectedTeam.Id);
+            _teams.RemoveAll(team => team.Id == _selectedTeam.Id);
             ToastService.ShowSuccess("Team deleted successfully.");
             ClearForm();
         }
@@ -132,5 +143,10 @@ public partial class TeamManagement
         {
             ToastService.ShowError(ex.Content!);
         }
+    }
+
+    private static string GetUserLabel(UserDTO user)
+    {
+        return user.Username ?? user.DisplayName;
     }
 }

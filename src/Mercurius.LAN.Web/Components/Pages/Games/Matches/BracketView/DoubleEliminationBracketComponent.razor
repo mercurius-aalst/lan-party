@@ -1,30 +1,25 @@
-@using Mercurius.LAN.Web.Models.Games
-@using Mercurius.LAN.Web.Models.Matches
-@using Mercurius.LAN.Web.Models.Participants
 @rendermode InteractiveServer
 
-
-    @if(Matches == null || !Matches.Any())
+@if(Game.Matches == null || !Game.Matches.Any())
+{
+    <p>Geen matches gevonden.</p>
+}
+else
+{
+    <br />
+    <br />
+    <h3>Upper Bracket</h3>
+    <br />
+    <SingleEliminationBracketComponent Game="@_upperBracketGame" OnDataReload="OnDataReload" />
+    <br />
+    <br />
+    <h3>Lower Bracket</h3>
+    <br />
+    @if(_lBMatches.Any())
     {
-        <p>Geen matches gevonden.</p>
-    }
-    else
-    {
-        <br />
-        <br />
-        <h3>Upper Bracket</h3>
-        <br />
-        <SingleEliminationBracketComponent Matches="_uBMatches" Participants="Participants" OnDataReload="OnDataReload" />
-        <br />
-        <br />
-        <h3>Lower Bracket</h3>
-        <br />
-        @if(_lBMatches.Any())
-        {
-            var rounds = _lBMatches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
-            var matchData = CalculateLowerBracketLayout(rounds, _uBMatches);
+        var rounds = _lBMatches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
+        var matchData = CalculateLowerBracketLayout(rounds, _uBMatches);
         <div class="bracket-root" id="double-elimination-bracket-root">
-
             <div class="bracket-columns" style="min-width: @(matchData.SvgWidth)px;">
                 <div class="bracket-absolute-container" style="width: @(matchData.SvgWidth)px;">
                     <svg class="bracket-svg" width="@matchData.SvgWidth" height="@matchData.SvgHeight">
@@ -36,20 +31,20 @@
                         {
                             if(matchData.MatchPositions.TryGetValue(match.Id, out var pos))
                             {
-                                <BracketMatchComponent Match="match" Participants="Participants" Position="pos" OnDataReload="OnDataReload"></BracketMatchComponent>
+                                <BracketMatchComponent Match="match" Game="Game" Position="pos" OnDataReload="OnDataReload"></BracketMatchComponent>
                             }
                         }
                     }
                 </div>
             </div>
         </div>
-        }
-        <br />
-        <br />
-        <h3>Grand Finals</h3>
-        <br />
-        @if(_gFMatch != null)
-        {
-            <BracketMatchComponent Match="_gFMatch" Participants="Participants" ExtraCssClasses="relative" OnDataReload="OnDataReload"></BracketMatchComponent>
-        }
     }
+    <br />
+    <br />
+    <h3>Grand Finals</h3>
+    <br />
+    @if(_gFMatch != null)
+    {
+        <BracketMatchComponent Match="_gFMatch" Game="Game" ExtraCssClasses="relative" OnDataReload="OnDataReload"></BracketMatchComponent>
+    }
+}

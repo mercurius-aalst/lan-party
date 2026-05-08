@@ -1,7 +1,6 @@
 @rendermode InteractiveServer
-@using Mercurius.LAN.Web.Models.Games
-@using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.Models.Games
 @using Microsoft.AspNetCore.Components.Authorization
 
 <div>
@@ -9,18 +8,18 @@
     <div class="participants-overview-grid">
         <AuthorizeView Roles="admin">
             <Authorized>
-        @if(Game.Status == GameStatus.Scheduled)
-        {
-            <div class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
-                <div class="participant-avatar add-avatar">+</div>
-                <div class="participant-overview-name">Add @(ParticipantType.ToString() + "s")</div>
-            </div>
-        }
+                @if(Game.Status == GameStatus.Scheduled)
+                {
+                    <div class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
+                        <div class="participant-avatar add-avatar">+</div>
+                        <div class="participant-overview-name">Add @GetParticipantLabel()</div>
+                    </div>
+                }
             </Authorized>
         </AuthorizeView>
-        @foreach(var participant in Participants)
+        @foreach(var participant in _participants)
         {
-            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction=@(Game.Status == GameStatus.Scheduled) OnParticipantDeleted="UnregisterParticipantAsync" />
+            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction="@(Game.Status == GameStatus.Scheduled)" OnParticipantDeleted="UnregisterParticipantAsync" />
         }
     </div>
     @if(_selectedParticipant != null)
@@ -42,11 +41,10 @@
                 <div class="participants-overview-grid centered-grid">
                     @foreach(var participant in _availableParticipants)
                     {
-                        <ParticipantCardComponent Participant="participant" OnParticipantSelected=AddParticipantAsync />
+                        <ParticipantCardComponent Participant="participant" OnParticipantSelected="AddParticipantAsync" />
                     }
                 </div>
             </div>
         </div>
     }
-
 </div>

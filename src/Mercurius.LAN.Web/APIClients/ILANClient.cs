@@ -1,13 +1,11 @@
-﻿using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
-using Mercurius.LAN.Web.DTOs.Participants.Players;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Refit;
-using System.Net.Http.Headers;
 
 namespace Mercurius.LAN.Web.APIClients
 {
@@ -17,71 +15,61 @@ namespace Mercurius.LAN.Web.APIClients
         Task<List<Game>> GetGamesAsync();
 
         [Get("/lan/games/{id}")]
-        Task<GameExtended?> GetGameByIdAsync(int id);
+        Task<GameExtended?> GetGameByIdAsync(Guid id);
 
         [Post("/lan/games")]
         Task<GameExtended> CreateGameAsync([Body] MultipartFormDataContent content);
 
-
         [Patch("/lan/games/{id}")]
-        Task<Game> UpdateGameAsync(int id, [Body] MultipartFormDataContent formData);
+        Task<Game> UpdateGameAsync(Guid id, [Body] MultipartFormDataContent formData);
 
         [Delete("/lan/games/{id}")]
-        Task DeleteGameAsync(int id);
+        Task DeleteGameAsync(Guid id);
 
-        [Post("/lan/games/{id}/participants/{participantId}")]
-        Task<GameExtended> RegisterForGameAsync(int id, int participantId);
+        [Post("/lan/games/{id}/users")]
+        Task<GameExtended> RegisterUserForGameAsync(Guid id, [Body] RegisterGameUserDTO registration);
 
-        [Delete("/lan/games/{id}/participants/{participantId}")]
-        Task<GameExtended> UnregisterFromGameAsync(int id, int participantId);
+        [Delete("/lan/games/{id}/users/{userId}")]
+        Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId);
+
+        [Post("/lan/games/{id}/teams")]
+        Task<GameExtended> RegisterTeamForGameAsync(Guid id, [Body] RegisterGameTeamDTO registration);
+
+        [Delete("/lan/games/{id}/teams/{teamId}")]
+        Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId);
 
         [Post("/lan/games/{id}/start")]
-        Task StartGameAsync(int id);
+        Task StartGameAsync(Guid id);
 
         [Post("/lan/games/{id}/complete")]
-        Task<IEnumerable<Placement>> CompleteGameAsync(int id);
+        Task<IEnumerable<Placement>> CompleteGameAsync(Guid id);
 
         [Post("/lan/games/{id}/cancel")]
-        Task CancelGameAsync(int id);
+        Task CancelGameAsync(Guid id);
 
         [Post("/lan/games/{id}/reset")]
-        Task ResetGameAsync(int id);
-
-
+        Task ResetGameAsync(Guid id);
 
         [Get("/lan/matches/{id}")]
-        Task<Match> GetMatchByIdAsync(int id);
+        Task<Match> GetMatchByIdAsync(Guid id);
 
         [Put("/lan/matches/{id}")]
-        Task<Match> UpdateMatchAsync(int id, [Body] UpdateMatchDTO match);
-
-
-        [Post("/lan/players")]
-        Task<Player> CreatePlayerAsync([Body] CreatePlayerDTO player);
-
-        [Patch("/lan/players/{id}")]
-        Task<Player> UpdatePlayerAsync(int id, [Body] UpdatePlayerDTO player);
-
-        [Delete("/lan/players/{id}")]
-        Task DeletePlayerAsync(int id);
-
-        [Get("/lan/players/{id}")]
-        Task<Player> GetPlayerByIdAsync(int id);
-
-        [Get("/lan/players")]
-        Task<List<Player>> GetPlayersAsync();
-
+        Task<Match> UpdateMatchAsync(Guid id, [Body] UpdateMatchDTO match);
 
         [Get("/lan/teams")]
         Task<List<Team>> GetTeamsAsync();
+
         [Get("/lan/teams/{id}")]
-        Task<Team> GetTeamByIdAsync(int id);
+        Task<Team> GetTeamByIdAsync(Guid id);
+
         [Post("/lan/teams")]
         Task<Team> CreateTeamAsync([Body] CreateTeamDTO team);
+
         [Put("/lan/teams/{id}")]
-        Task<Team> UpdateTeamAsync(int id, [Body] UpdateTeamDTO team);
+        Task<Team> UpdateTeamAsync(Guid id, [Body] UpdateTeamDTO team);
+
         [Delete("/lan/teams/{id}")]
-        Task DeleteTeamAsync(int id);
+        Task DeleteTeamAsync(Guid id);
 
         [Get("/lan/sponsors")]
         Task<IEnumerable<Sponsor>> GetSponsorsAsync();
@@ -97,6 +85,5 @@ namespace Mercurius.LAN.Web.APIClients
 
         [Delete("/lan/sponsors/{id}")]
         Task DeleteSponsorAsync(int id);
-
     }
 }

@@ -2,7 +2,6 @@
 @using Mercurius.LAN.Web.Components.Shared
 @using Mercurius.LAN.Web.DTOs.Games
 @using Mercurius.LAN.Web.Models.Games
-@using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Extensions
 
 <div>
@@ -32,19 +31,17 @@
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newGame.BracketType)" />
-
                             </div>
 
                             <div class="form-group">
-                                <label for="participantType">Participant Type</label>
-                                <InputSelect id="participantType" class="form-control" @bind-Value="_newGame.ParticipantType">
-                                    @foreach(ParticipantType type in Enum.GetValues(typeof(ParticipantType)))
+                                <label for="participationMode">Participation Mode</label>
+                                <InputSelect id="participationMode" class="form-control" @bind-Value="_newGame.ParticipationMode">
+                                    @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
                                     {
-                                        <option value="@type">@type.ToString()</option>
+                                        <option value="@type">@type</option>
                                     }
                                 </InputSelect>
-                                <ValidationMessage For="@(() => _newGame.ParticipantType)" />
-
+                                <ValidationMessage For="@(() => _newGame.ParticipationMode)" />
                             </div>
                         </div>
 
@@ -58,7 +55,6 @@
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newGame.Format)" />
-
                             </div>
 
                             <div class="form-group">
@@ -70,20 +66,17 @@
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newGame.FinalsFormat)" />
-
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="registrationUrl">Registration form url</label>
                             <InputText id="registrationUrl" class="form-control" @bind-Value="_newGame.RegisterFormUrl" />
                             <ValidationMessage For="@(() => _newGame.RegisterFormUrl)" />
-
                         </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
                             <CustomInputFile @ref="_imageInputRef" id="gameImage" @bind-Value="_newGame.Image" />
                             <ValidationMessage For="@(() => _newGame.Image)" />
-
                         </div>
 
                         <div class="form-actions">

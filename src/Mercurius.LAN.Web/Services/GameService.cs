@@ -15,26 +15,21 @@ namespace Mercurius.LAN.Web.Services
             _lanClient = lanClient;
         }
 
-        public Task<List<Game>> GetGamesAsync()
-        {
-            return _lanClient.GetGamesAsync();
-        }
+        public Task<List<Game>> GetGamesAsync() => _lanClient.GetGamesAsync();
 
-        public Task<GameExtended?> GetGameByIdAsync(int id)
-        {
-            return _lanClient.GetGameByIdAsync(id);
-        }
+        public Task<GameExtended?> GetGameByIdAsync(Guid id) => _lanClient.GetGameByIdAsync(id);
 
-        public Task<GameExtended> RegisterForGameAsync(int id, int participantId)
-        {
-            return _lanClient.RegisterForGameAsync(id, participantId);
-        }
+        public Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId) =>
+            _lanClient.RegisterUserForGameAsync(id, new RegisterGameUserDTO { UserId = userId });
 
-        public Task<GameExtended> UnregisterFromGameAsync(int id, int participantId)
-        {
-            return _lanClient.UnregisterFromGameAsync(id, participantId);
-        }
-       
+        public Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId) =>
+            _lanClient.UnregisterUserFromGameAsync(id, userId);
+
+        public Task<GameExtended> RegisterTeamForGameAsync(Guid id, Guid teamId) =>
+            _lanClient.RegisterTeamForGameAsync(id, new RegisterGameTeamDTO { TeamId = teamId });
+
+        public Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId) =>
+            _lanClient.UnregisterTeamFromGameAsync(id, teamId);
 
         public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame, string? tempFilePath, string? contentType, string? fileName)
         {
@@ -44,8 +39,8 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(newGame.BracketType.ToString()), "BracketType" },
                 { new StringContent(newGame.Format.ToString()), "Format" },
                 { new StringContent(newGame.FinalsFormat.ToString()), "FinalsFormat" },
-                { new StringContent(newGame.ParticipantType.ToString()), "ParticipantType" },
-                { new StringContent(newGame.RegisterFormUrl.ToString()), "RegisterFormUrl" },
+                { new StringContent(newGame.ParticipationMode.ToString()), "ParticipationMode" },
+                { new StringContent(newGame.RegisterFormUrl), "RegisterFormUrl" },
             };
 
             bool tempFileNeedsCleanup = false;
@@ -53,13 +48,9 @@ namespace Mercurius.LAN.Web.Services
             if(!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath))
             {
                 var fileStream = File.OpenRead(tempFilePath);
-
                 var streamContent = new StreamContent(fileStream);
-
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType!);
-
                 formData.Add(streamContent, "Image", fileName!);
-
                 tempFileNeedsCleanup = true;
             }
 
@@ -77,13 +68,12 @@ namespace Mercurius.LAN.Web.Services
                     }
                     catch(Exception)
                     {
-
                     }
                 }
             }
         }
 
-        public async Task<Game> UpdateGameAsync(int id, UpdateGameDTO updatedGame, string? tempFilePath,string? contentType, string? fileName)
+        public async Task<Game> UpdateGameAsync(Guid id, UpdateGameDTO updatedGame, string? tempFilePath, string? contentType, string? fileName)
         {
             var formData = new MultipartFormDataContent
             {
@@ -91,8 +81,8 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(updatedGame.BracketType.ToString()), "BracketType" },
                 { new StringContent(updatedGame.Format.ToString()), "Format" },
                 { new StringContent(updatedGame.FinalsFormat.ToString()), "FinalsFormat" },
-                { new StringContent(updatedGame.RegisterFormUrl.ToString()), "RegisterFormUrl" },
-
+                { new StringContent(updatedGame.ParticipationMode.ToString()), "ParticipationMode" },
+                { new StringContent(updatedGame.RegisterFormUrl), "RegisterFormUrl" },
             };
 
             bool tempFileNeedsCleanup = false;
@@ -100,13 +90,9 @@ namespace Mercurius.LAN.Web.Services
             if(!string.IsNullOrEmpty(tempFilePath) && File.Exists(tempFilePath))
             {
                 var fileStream = File.OpenRead(tempFilePath);
-
                 var streamContent = new StreamContent(fileStream);
-
                 streamContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(contentType!);
-
                 formData.Add(streamContent, "Image", fileName!);
-
                 tempFileNeedsCleanup = true;
             }
 
@@ -129,39 +115,12 @@ namespace Mercurius.LAN.Web.Services
             }
         }
 
-        public Task<GameExtended?> GetGameDetailAsync(int id)
-        {
-            return _lanClient.GetGameByIdAsync(id);
-        }
-
-        public Task StartGameAsync(int id)
-        {
-            return _lanClient.StartGameAsync(id);
-        }
-
-        public Task CancelGameAsync(int id)
-        {
-            return _lanClient.CancelGameAsync(id);
-        }
-
-        public Task ResetGameAsync(int id)
-        {
-            return _lanClient.ResetGameAsync(id);
-        }
-
-        public Task DeleteGameAsync(int id)
-        {
-            return _lanClient.DeleteGameAsync(id);
-        }
-
-        public Task<Match> UpdateMatchScoresAsync(int matchId, UpdateMatchDTO updateMatchDto)
-        {
-           return _lanClient.UpdateMatchAsync(matchId, updateMatchDto);
-        }
-
-        public Task CompleteGameAsync(int id)
-        {
-            return _lanClient.CompleteGameAsync(id);
-        }
+        public Task<GameExtended?> GetGameDetailAsync(Guid id) => _lanClient.GetGameByIdAsync(id);
+        public Task StartGameAsync(Guid id) => _lanClient.StartGameAsync(id);
+        public Task CancelGameAsync(Guid id) => _lanClient.CancelGameAsync(id);
+        public Task ResetGameAsync(Guid id) => _lanClient.ResetGameAsync(id);
+        public Task DeleteGameAsync(Guid id) => _lanClient.DeleteGameAsync(id);
+        public Task<Match> UpdateMatchScoresAsync(Guid matchId, UpdateMatchDTO updateMatchDto) => _lanClient.UpdateMatchAsync(matchId, updateMatchDto);
+        public Task CompleteGameAsync(Guid id) => _lanClient.CompleteGameAsync(id);
     }
 }
