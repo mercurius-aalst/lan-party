@@ -22,7 +22,7 @@ public sealed class Auth0Options
     public string Scope { get; init; } = "openid profile email";
 
     [Required]
-    public string RoleClaimType { get; init; } = "https://mercurius-aalst.be/roles";
+    public string RoleClaimType { get; init; } = "roles";
 
     public bool UseRefreshTokens { get; init; }
 }

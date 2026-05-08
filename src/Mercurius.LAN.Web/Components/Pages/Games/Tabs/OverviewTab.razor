@@ -1,16 +1,11 @@
-@using Mercurius.LAN.Web.APIClients
 @using Mercurius.LAN.Web.Components.Shared
 @using Mercurius.LAN.Web.DTOs.Games
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Games
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.Authorization
-@using Refit
 @rendermode InteractiveServer
 
-
 <div class="game-overview-container">
-
     <h2 class="game-overview-header">Overview</h2>
     @if(!_isEditMode)
     {
@@ -23,8 +18,9 @@
                 <p class="card-text"><b>Bracket type:</b> <small>@Game.BracketType.GetLabel()</small></p>
             </div>
             <div class="overview-column">
-                <p><b>Match Format:</b> <span>@(Enum.Parse<GameFormat>(Game.Format).GetLabel())</span></p>
-                <p><b>Finals Format:</b> <span>@(Enum.Parse<GameFormat>(Game.FinalsFormat).GetLabel())</span></p>
+                <p><b>Participation Mode:</b> <span>@Game.ParticipationMode</span></p>
+                <p><b>Match Format:</b> <span>@Game.Format.GetLabel()</span></p>
+                <p><b>Finals Format:</b> <span>@Game.FinalsFormat.GetLabel()</span></p>
             </div>
         </div>
         @if(Game.Status == GameStatus.Scheduled)
@@ -39,8 +35,8 @@
     else
     {
         <AuthorizeView Roles="admin">
-            <Authorized>
-                <EditForm Context="editFormContext" EditContext="_editContext" OnValidSubmit="SubmitEditAsync" class="needs-validation">
+            <Authorized Context="adminContext">
+                <EditForm EditContext="_editContext" OnValidSubmit="SubmitEditAsync" class="needs-validation">
                     <DataAnnotationsValidator />
                     <div class="form-section">
                         <div class="form-group">
@@ -58,7 +54,17 @@
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editGame.BracketType)" />
+                        </div>
 
+                        <div class="form-group">
+                            <label for="participationMode">Participation Mode</label>
+                            <InputSelect id="participationMode" class="form-control" @bind-Value="_editGame.ParticipationMode">
+                                @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
+                                {
+                                    <option value="@type">@type</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _editGame.ParticipationMode)" />
                         </div>
 
                         <div class="form-group">
@@ -70,7 +76,6 @@
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editGame.Format)" />
-
                         </div>
 
                         <div class="form-group">
@@ -82,19 +87,16 @@
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editGame.FinalsFormat)" />
-
                         </div>
                         <div class="form-group">
                             <label for="registrationUrl">Registration form url</label>
                             <InputText id="registrationUrl" class="form-control" @bind-Value="_editGame.RegisterFormUrl" />
                             <ValidationMessage For="@(() => _editGame.RegisterFormUrl)" />
-
                         </div>
                         <div class="form-group">
                             <label for="gameImage">Game Image</label>
                             <CustomInputFile @ref="_imageInputRef" id="gameImage" @bind-Value="_editGame.Image" />
                             <ValidationMessage For="@(() => _editGame.Image)" />
-
                         </div>
 
                         <div class="form-actions">

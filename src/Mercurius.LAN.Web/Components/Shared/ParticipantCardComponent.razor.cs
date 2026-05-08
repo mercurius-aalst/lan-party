@@ -1,18 +1,17 @@
-using Mercurius.LAN.Web.Models.Participants;
 using Microsoft.AspNetCore.Components;
 
 namespace Mercurius.LAN.Web.Components.Shared;
 
 public partial class ParticipantCardComponent
 {
-    private bool _showDeleteIcon = false;
+    private bool _showDeleteIcon;
 
-    [Parameter] public Participant Participant { get; set; } = null!;
-    [Parameter] public EventCallback<Participant> OnParticipantSelected { get; set; }
-    [Parameter] public EventCallback<Participant> OnParticipantDeleted { get; set; }
-    [Parameter] public bool AllowDeleteFunction { get; set; } = false;
+    [Parameter] public ParticipantViewModel Participant { get; set; } = null!;
+    [Parameter] public EventCallback<ParticipantViewModel> OnParticipantSelected { get; set; }
+    [Parameter] public EventCallback<ParticipantViewModel> OnParticipantDeleted { get; set; }
+    [Parameter] public bool AllowDeleteFunction { get; set; }
 
-    private void ShowParticipantPopup(Participant participant)
+    private void ShowParticipantPopup(ParticipantViewModel participant)
     {
         OnParticipantSelected.InvokeAsync(participant);
     }

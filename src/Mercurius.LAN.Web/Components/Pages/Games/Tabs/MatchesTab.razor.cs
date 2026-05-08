@@ -1,6 +1,3 @@
-// Moved @code block from MatchesTab.razor
-using Mercurius.LAN.Web.Models.Matches;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Games;
 using Microsoft.AspNetCore.Components;
 
@@ -8,8 +5,6 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 
 public partial class MatchesTab
 {
-    [Parameter] public IEnumerable<Match> Matches { get; set; } = null!;
-    [Parameter] public IEnumerable<Participant> Participants { get; set; } = null!;
-    [Parameter] public BracketType BracketType { get; set; }
+    [Parameter] public GameExtended Game { get; set; } = null!;
     [Parameter] public EventCallback OnDataReload { get; set; }
 }

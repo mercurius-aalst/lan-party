@@ -68,10 +68,23 @@ public static class DependencyExtensions
         services.AddTransient<AccessTokenHandler>();
 
         var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
-        baseAddress = baseAddress + "/v1";
+        baseAddress += "/v1";
+
+        services.AddHttpClient("MercuriusApiAntiforgery", client =>
+        {
+            client.BaseAddress = new Uri(baseAddress);
+        })
+        .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
+        {
+            UseCookies = false
+        });
 
         services.AddRefitClient<ILANClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
+            {
+                UseCookies = false
+            })
             .AddHttpMessageHandler<AccessTokenHandler>()
             .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
             {
@@ -80,6 +93,10 @@ public static class DependencyExtensions
 
         services.AddRefitClient<IUserClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
+            {
+                UseCookies = false
+            })
             .AddHttpMessageHandler<AccessTokenHandler>();
 
         return services;
@@ -88,9 +105,9 @@ public static class DependencyExtensions
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
         services.AddScoped<IGameService, GameService>();
+        services.AddScoped<ITeamService, TeamService>();
         services.AddScoped<ISponsorService, SponsorService>();
         services.AddHttpContextAccessor();
-        services.AddScoped<IParticipantService, ParticipantService>();
 
         return services;
     }

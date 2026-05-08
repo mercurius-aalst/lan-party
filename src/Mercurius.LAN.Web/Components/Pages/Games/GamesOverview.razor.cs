@@ -1,11 +1,7 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Models.Games;
-using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
-using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
@@ -13,22 +9,17 @@ public partial class GamesOverview
 {
     private List<Game> _games = new();
     private string _searchTerm = string.Empty;
-    private bool _isAddGameDialogOpen = false;
+    private bool _isAddGameDialogOpen;
 
-    [Inject]
-    private IGameService GameService { get; set; } = null!;
-    [Inject]
-    private IConfiguration Configuration { get; set; } = null!;
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject]
-    private IToastService ToastService { get; set; } = null!;
+    [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private IConfiguration Configuration { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IToastService ToastService { get; set; } = null!;
 
     private List<Game> FilteredGames =>
         string.IsNullOrWhiteSpace(_searchTerm)
             ? _games
             : _games.Where(game => game.Name.Contains(_searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -38,7 +29,6 @@ public partial class GamesOverview
             {
                 _games = await GameService.GetGamesAsync();
                 await InvokeAsync(StateHasChanged);
-
             }
             catch(Exception)
             {
@@ -47,7 +37,7 @@ public partial class GamesOverview
         }
     }
 
-    private void NavigateToGameDetail(int gameId)
+    private void NavigateToGameDetail(Guid gameId)
     {
         NavigationManager.NavigateTo($"/games/{gameId}");
     }
@@ -74,7 +64,8 @@ public partial class GamesOverview
             ToastService.ShowWarning("Registrations are closed, the tournament has already started.");
             return;
         }
-        if (!string.IsNullOrWhiteSpace(game.RegisterFormUrl))
+
+        if(!string.IsNullOrWhiteSpace(game.RegisterFormUrl))
         {
             NavigationManager.NavigateTo(game.RegisterFormUrl, true);
         }

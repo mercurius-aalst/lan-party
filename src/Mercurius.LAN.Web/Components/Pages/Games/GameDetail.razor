@@ -1,4 +1,4 @@
-@page "/games/{GameId:int}"
+@page "/games/{GameId:guid}"
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
@@ -56,15 +56,15 @@ else
                 }
                 else if(_selectedTab == 1)
                 {
-                    <MatchesTab OnDataReload="LoadGameDataAsync" BracketType="@_game.BracketType" Matches="@_game.Matches" Participants="@_game.Participants" />
+                    <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
                 }
                 else if(_selectedTab == 2)
                 {
-                    <ParticipantsTab Game=@_game Participants="@_game.Participants" ParticipantType="@_game.ParticipantType" />
+                    <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
                 }
                 else if(_selectedTab == 3)
                 {
-                    <PlacementsTab Placements="@_game.Placements" />
+                    <PlacementsTab Placements="@_game.Placements" ParticipationMode="@_game.ParticipationMode" />
                 }
             </div>
         </div>

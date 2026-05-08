@@ -22,13 +22,13 @@
         if(authenticationState.User.Identity?.IsAuthenticated != true)
             return;
 
-        if(IsCompleteProfilePage())
+        if(IsCompleteProfilePage() || IsAccountRoute())
             return;
 
         try
         {
             var currentUserProfile = await UserClient.GetCurrentUserProfileAsync();
-            if(!currentUserProfile.HasProfile)
+            if(!currentUserProfile.IsComplete)
             {
                 var returnUrl = GetCurrentRelativeUrl();
                 NavigationManager.NavigateTo($"/complete-profile?returnUrl={Uri.EscapeDataString(returnUrl)}");
@@ -38,6 +38,10 @@
         {
             var returnUrl = GetCurrentRelativeUrl();
             NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
+        {
+            NavigationManager.NavigateTo("/account/logout", forceLoad: true);
         }
         catch(UnauthorizedAccessException)
         {
@@ -52,6 +56,14 @@
         var path = relativePath.Split('?', '#')[0].Trim('/');
 
         return string.Equals(path, "complete-profile", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsAccountRoute()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var path = relativePath.Split('?', '#')[0].Trim('/');
+
+        return path.StartsWith("account/", StringComparison.OrdinalIgnoreCase);
     }
 
     private string GetCurrentRelativeUrl()

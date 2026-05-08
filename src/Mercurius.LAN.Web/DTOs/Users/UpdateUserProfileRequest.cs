@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Mercurius.LAN.Web.DTOs.Users;
 
-public class CompleteUserProfileRequest
+public class UpdateUserProfileRequest
 {
     [Required]
     [RegularExpression("^[a-zA-Z0-9]{3,32}$", ErrorMessage = "Username must be 3-32 alphanumeric characters.")]

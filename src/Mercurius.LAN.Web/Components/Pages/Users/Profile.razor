@@ -1,12 +1,12 @@
-@page "/complete-profile"
+@page "/profile"
 @rendermode InteractiveServer
 @attribute [Authorize]
 @using Microsoft.AspNetCore.Authorization
 @using Mercurius.LAN.Web.DTOs.Users
 
-<PageTitle>Complete Profile</PageTitle>
+<PageTitle>Profile</PageTitle>
 
-<h1>Complete Profile</h1>
+<h1>Profile</h1>
 
 @if(_editContext is null)
 {
@@ -15,15 +15,13 @@
 else
 {
     <div class="form-container">
-        @if(!string.IsNullOrWhiteSpace(_email))
-        {
-            <div class="mb-3">
-                <label class="form-label">Email</label>
-                <input class="form-control" value="@_email" disabled />
-            </div>
-        }
+        <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input class="form-control" value="@_emailDisplay" disabled />
+            <div class="@_emailStatusClass">@_emailStatusText</div>
+        </div>
 
-        <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" FormName="complete-profile">
+        <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" FormName="profile">
             <DataAnnotationsValidator />
             <ValidationSummary />
 
@@ -71,5 +69,25 @@ else
                 <button type="submit" class="btn btn-primary" disabled="@_isSaving">Save profile</button>
             </div>
         </EditForm>
+    </div>
+
+    <div class="form-container mt-4">
+        <div class="form-actions-section">
+            @if(!_emailVerified)
+            {
+                <button type="button" class="btn btn-outline-primary" @onclick="ResendVerificationEmailAsync" disabled="@_isSendingVerification">Resend verification email</button>
+            }
+            <button type="button" class="btn btn-outline-secondary" @onclick="SendPasswordResetEmailAsync" disabled="@_isSendingPasswordReset">Reset password</button>
+        </div>
+    </div>
+
+    <div class="form-container mt-4">
+        <div class="form-group">
+            <label for="deleteConfirm">Delete confirmation</label>
+            <InputText id="deleteConfirm" @bind-Value="_deleteConfirmation" placeholder="DELETE" class="form-control" />
+        </div>
+        <div class="form-actions-section">
+            <button type="button" class="btn btn-danger" @onclick="DeleteAccountAsync" disabled="@(!_canDelete || _isDeleting)">Delete account</button>
+        </div>
     </div>
 }

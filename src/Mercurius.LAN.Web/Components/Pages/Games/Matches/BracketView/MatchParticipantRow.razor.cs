@@ -1,27 +1,22 @@
+using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
-using Mercurius.LAN.Web.Models.Participants;
 using Microsoft.AspNetCore.Components;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games.Matches.BracketView;
 
 public partial class MatchParticipantRow
 {
-    [Parameter]
-    public IEnumerable<Participant> Participants { get; set; } = Enumerable.Empty<Participant>();
-    [Parameter]
-    public Match Match { get; set; } = null!;
-    [Parameter]
-    public int? ParticipantId { get; set; }
-    [Parameter]
-    public int SequenceNumber { get; set; }
-    [Parameter]
-    public string ParticipantName { get; set; } = string.Empty;
+    [Parameter] public Match Match { get; set; } = null!;
+    [Parameter] public Guid? ParticipantId { get; set; }
+    [Parameter] public int SequenceNumber { get; set; }
+    [Parameter] public string ParticipantName { get; set; } = string.Empty;
 
-    private bool _isWinner = false;
+    private bool _isWinner;
 
     protected override void OnParametersSet()
     {
-        _isWinner = (Match.WinnerId is not null && Match.WinnerId == ParticipantId);
+        var winnerId = Match.ParticipationMode == ParticipationMode.Team ? Match.TeamWinnerId : Match.UserWinnerId;
+        _isWinner = winnerId is not null && winnerId == ParticipantId;
         base.OnParametersSet();
     }
 

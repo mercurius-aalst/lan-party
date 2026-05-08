@@ -1,33 +1,46 @@
+using Blazored.Toast.Services;
+using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.Components.Shared;
+using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Refit;
-using Blazored.Toast.Services;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 
 public partial class ParticipantsTab
 {
-    [Parameter]
-    public IEnumerable<Participant> Participants { get; set; } = Enumerable.Empty<Participant>();
-    [Parameter]
-    public ParticipantType ParticipantType { get; set; }
-    [Parameter]
-    public Game Game { get; set; } = null!;
+    [Parameter] public GameExtended Game { get; set; } = null!;
+    [Parameter] public EventCallback<GameExtended> OnGameUpdated { get; set; }
 
-    [Inject]
-    private IParticipantService ParticipantService { get; set; } = null!;
-    [Inject]
-    private IGameService GameService { get; set; } = null!;
-    [Inject]
-    private IToastService ToastService { get; set; } = null!;
+    [Inject] private IUserClient UserClient { get; set; } = null!;
+    [Inject] private ITeamService TeamService { get; set; } = null!;
+    [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private IToastService ToastService { get; set; } = null!;
 
-    private Participant? _selectedParticipant;
+    private ParticipantViewModel? _selectedParticipant;
     private bool _isAddParticipantsPopupVisible;
-    private List<Participant> _availableParticipants = new();
+    private List<ParticipantViewModel> _availableParticipants = new();
+    private List<ParticipantViewModel> _participants = new();
 
-    private void DisplayParticipantPopup(Participant participant)
+    protected override void OnParametersSet()
+    {
+        _participants = BuildParticipants(Game).ToList();
+    }
+
+    private static IEnumerable<ParticipantViewModel> BuildParticipants(GameExtended game)
+    {
+        return game.ParticipationMode switch
+        {
+            ParticipationMode.Individual => game.Users.Select(ParticipantViewModel.FromUser),
+            ParticipationMode.Team => game.Teams.Select(ParticipantViewModel.FromTeam),
+            _ => Enumerable.Empty<ParticipantViewModel>()
+        };
+    }
+
+    private void DisplayParticipantPopup(ParticipantViewModel participant)
     {
         _selectedParticipant = participant;
     }
@@ -39,19 +52,15 @@ public partial class ParticipantsTab
 
     private async Task DisplayAddParticipantsPopupAsync()
     {
-        IEnumerable<Participant> allParticipants = Enumerable.Empty<Participant>();
-        switch(ParticipantType)
+        IEnumerable<ParticipantViewModel> allParticipants = Game.ParticipationMode switch
         {
-            case ParticipantType.Player:
-                allParticipants = await ParticipantService.GetPlayersAsync();
-                break;
-            case ParticipantType.Team:
-                allParticipants = await ParticipantService.GetTeamsAsync();
-                break;
-        }
+            ParticipationMode.Individual => (await UserClient.GetAllUsersAsync()).Select(ParticipantViewModel.FromUser),
+            ParticipationMode.Team => (await TeamService.GetTeamsAsync()).Select(ParticipantViewModel.FromTeam),
+            _ => Enumerable.Empty<ParticipantViewModel>()
+        };
 
         _availableParticipants = allParticipants
-            .Where(ap => !Participants.Any(p => p.Id == ap.Id))
+            .Where(candidate => _participants.All(existing => existing.Id != candidate.Id))
             .ToList();
 
         if(_availableParticipants.Any())
@@ -60,26 +69,30 @@ public partial class ParticipantsTab
         }
         else
         {
-            ToastService.ShowInfo($"No available {ParticipantType}s to add");
+            ToastService.ShowInfo($"No available {GetParticipantLabel()} to add");
         }
     }
 
-    private async Task AddParticipantAsync(Participant participant)
+    private async Task AddParticipantAsync(ParticipantViewModel participant)
     {
         try
         {
-            var updatedGame = await GameService.RegisterForGameAsync(Game.Id, participant.Id);
-            Participants = updatedGame.Participants;
-            _availableParticipants.Remove(participant);
+            var updatedGame = Game.ParticipationMode switch
+            {
+                ParticipationMode.Individual => await GameService.RegisterUserForGameAsync(Game.Id, participant.Id),
+                ParticipationMode.Team => await GameService.RegisterTeamForGameAsync(Game.Id, participant.Id),
+                _ => Game
+            };
 
-            var participantName = participant is Player player ? player.Username : (participant as Team)?.Name ?? "Unknown";
+            await ApplyUpdatedGameAsync(updatedGame);
+            _availableParticipants.RemoveAll(item => item.Id == participant.Id);
 
             if(!_availableParticipants.Any())
             {
                 _isAddParticipantsPopupVisible = false;
             }
 
-            ToastService.ShowSuccess($"{participantName} has been added to the game.");
+            ToastService.ShowSuccess($"{participant.DisplayName} has been added to the game.");
         }
         catch(ApiException ex)
         {
@@ -93,15 +106,19 @@ public partial class ParticipantsTab
         _availableParticipants.Clear();
     }
 
-    private async Task RemoveParticipantAsync(Participant participant)
+    private async Task RemoveParticipantAsync(ParticipantViewModel participant)
     {
         try
         {
-            var updatedGame = await GameService.UnregisterFromGameAsync(Game.Id, participant.Id);
-            Participants = updatedGame.Participants;
+            var updatedGame = Game.ParticipationMode switch
+            {
+                ParticipationMode.Individual => await GameService.UnregisterUserFromGameAsync(Game.Id, participant.Id),
+                ParticipationMode.Team => await GameService.UnregisterTeamFromGameAsync(Game.Id, participant.Id),
+                _ => Game
+            };
 
-            var participantName = participant is Player player ? player.Username : (participant as Team)?.Name ?? "Unknown";
-            ToastService.ShowSuccess($"{participantName} has been removed from the game.");
+            await ApplyUpdatedGameAsync(updatedGame);
+            ToastService.ShowSuccess($"{participant.DisplayName} has been removed from the game.");
         }
         catch(ApiException ex)
         {
@@ -109,18 +126,30 @@ public partial class ParticipantsTab
         }
     }
 
-    private void ShowParticipantPopup(Participant participant)
+    private void ShowParticipantPopup(ParticipantViewModel participant)
     {
         DisplayParticipantPopup(participant);
     }
 
-    private async Task UnregisterParticipantAsync(Participant participant)
+    private Task UnregisterParticipantAsync(ParticipantViewModel participant)
     {
-        await RemoveParticipantAsync(participant);
+        return RemoveParticipantAsync(participant);
     }
 
     private void ClosePopup()
     {
         HidePopup();
+    }
+
+    private string GetParticipantLabel()
+    {
+        return Game.ParticipationMode == ParticipationMode.Team ? "teams" : "users";
+    }
+
+    private async Task ApplyUpdatedGameAsync(GameExtended updatedGame)
+    {
+        Game = updatedGame;
+        _participants = BuildParticipants(updatedGame).ToList();
+        await OnGameUpdated.InvokeAsync(updatedGame);
     }
 }

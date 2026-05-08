@@ -1,27 +1,23 @@
-@using Mercurius.LAN.Web.Models.Games
 @using Mercurius.LAN.Web.Models.Matches
-@using Mercurius.LAN.Web.Models.Participants
 @rendermode InteractiveServer
 
 <div class="bracket-root" id="bracket-root">
-    @if(Matches == null || !Matches.Any())
+    @if(Game.Matches == null || !Game.Matches.Any())
     {
         <p>Geen matches gevonden.</p>
     }
     else
     {
-        var rounds = Matches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
+        var rounds = Game.Matches.GroupBy(m => m.RoundNumber).OrderBy(g => g.Key).ToList();
         int lastRound = rounds.Max(r => r.Key);
-        int semiFinalRound = lastRound - 1;
-
         int matchHeight = 60;
-        int matchWidth = 220; // match .bracket-match width
+        int matchWidth = 220;
         int verticalGap = 32;
-        int columnWidth = 260; // matchWidth + spacing
+        int columnWidth = 260;
         int numRounds = rounds.Count;
 
-        <div class="bracket-columns" style="min-width: @(numRounds * columnWidth)px;">           
-            <div class="bracket-absolute-container" style="width: @(numRounds* columnWidth)px;">
+        <div class="bracket-columns" style="min-width: @(numRounds * columnWidth)px;">
+            <div class="bracket-absolute-container" style="width: @(numRounds * columnWidth)px;">
                 @{
                     var roundMatches = rounds.ToDictionary(r => r.Key, r => r.OrderBy(m => m.MatchNumber).ToList());
                     int firstRound = rounds.Min(r => r.Key);
@@ -30,7 +26,7 @@
                     var matchPositions = new Dictionary<(int round, int match), (int left, int y)>();
                     for(int i = 0; i < numFirstRoundMatches; i++)
                     {
-                        int colX = 0 * columnWidth + (columnWidth - matchWidth) / 2;
+                        int colX = (columnWidth - matchWidth) / 2;
                         int y = i * reservedHeight;
                         matchPositions[(firstRound, i)] = (colX, y);
                     }
@@ -80,7 +76,7 @@
                     {
                         var match = matches[i];
                         var pos = matchPositions[(r, i)];
-                        <BracketMatchComponent OnDataReload="OnDataReload" Match="match" Participants="Participants" Position="pos"></BracketMatchComponent>
+                        <BracketMatchComponent OnDataReload="OnDataReload" Match="match" Game="Game" Position="pos"></BracketMatchComponent>
                     }
                 }
             </div>
