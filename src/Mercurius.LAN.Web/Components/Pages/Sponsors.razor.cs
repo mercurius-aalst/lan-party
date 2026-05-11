@@ -8,6 +8,8 @@ namespace Mercurius.LAN.Web.Components.Pages
     public partial class Sponsors : ComponentBase
     {
         private IEnumerable<Sponsor> _sponsors = [];
+        private bool _isLoading = true;
+
         [Inject]
         private ISponsorService SponsorService { get; set; } = null!;
         [Inject]
@@ -24,13 +26,31 @@ namespace Mercurius.LAN.Web.Components.Pages
             try
             {
                 _sponsors = await SponsorService.GetSponsorsAsync();
-                await InvokeAsync(StateHasChanged);
             }
             catch(Exception)
             {
                 ToastService.ShowError("Failed to load sponsors.");
-
             }
+            finally
+            {
+                _isLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+
+        private static string GetTierLabel(int tier)
+        {
+            return $"Tier {tier}";
+        }
+
+        private static string GetTierClass(int tier)
+        {
+            return tier switch
+            {
+                1 => "tier-primary",
+                2 => "tier-secondary",
+                _ => "tier-standard"
+            };
         }
     }
 }

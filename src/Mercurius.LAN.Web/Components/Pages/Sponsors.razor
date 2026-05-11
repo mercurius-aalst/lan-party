@@ -1,32 +1,69 @@
-﻿@inject IJSRuntime JSRuntime
-
 @page "/sponsors"
+@using Mercurius.LAN.Web.Components.Shared
 @rendermode InteractiveServer
-<div class="overview-header">
-    <h2>Our Sponsors</h2>
-</div>
 
-<div class="card-deck">
-    @if (_sponsors == null || !_sponsors.Any())
+<PageTitle>Sponsors</PageTitle>
+
+@if(_isLoading)
+{
+    <LoadingScreen Message="Loading sponsors..." />
+}
+else
+{
+    <section class="sponsors-hero brand-section">
+        <div class="sponsors-hero-copy">
+            <span class="section-eyebrow">Community partners</span>
+            <h1>Sponsors</h1>
+            <p>Mercurius LAN depends on partners who help make the event possible. Browse the current sponsor line-up and visit their pages for more information.</p>
+        </div>
+
+        <div class="brand-panel-dark sponsors-hero-panel">
+            <div>
+                <span class="sponsors-stat-value">@_sponsors.Count()</span>
+                <span class="sponsors-stat-label">Sponsors</span>
+            </div>
+            <div>
+                <span class="sponsors-stat-value">@_sponsors.Select(sponsor => sponsor.SponsorTier).Distinct().Count()</span>
+                <span class="sponsors-stat-label">Partner tiers</span>
+            </div>
+        </div>
+    </section>
+
+    @if(!_sponsors.Any())
     {
-        <p>No sponsors available.</p>
+        <div class="brand-card sponsors-empty-state">
+            <h2>No sponsors available.</h2>
+            <p>Once sponsor data is available, it will appear here grouped by tier.</p>
+        </div>
     }
     else
     {
-        @foreach (var tierGroup in _sponsors.GroupBy(s => s.SponsorTier).OrderBy(g => g.Key))
+        @foreach(var tierGroup in _sponsors.GroupBy(sponsor => sponsor.SponsorTier).OrderBy(group => group.Key))
         {
-            <div class="card-row">
-                @foreach (var sponsor in tierGroup)
-                {
+            <section class="brand-section sponsors-tier-section">
+                <div class="sponsors-tier-header">
+                    <div>
+                        <span class="section-eyebrow">Partner tier</span>
+                        <h2>@GetTierLabel(tierGroup.Key)</h2>
+                    </div>
+                    <p>@tierGroup.Count() partner@(tierGroup.Count() == 1 ? string.Empty : "s") in this tier.</p>
+                </div>
 
-                    var calculatedHeight = 400 / sponsor.SponsorTier; 
-                    var srcSet = $"{sponsor.LogoUrl}?h={calculatedHeight} {calculatedHeight}h 100w";
-                    <a class="card mb-3" href="@sponsor.InfoUrl" style="cursor:pointer; height: @(calculatedHeight)px; width: fit-content;" data-overlay-text="@sponsor.Name">
-                        <img src="@sponsor.LogoUrl" srcset="@srcSet" class="card-img" alt="@sponsor.Name" style="height: 100%; width: auto; max-width: 100%;">
-                        <div class="card-overlay"><span>@sponsor.Name</span></div>
-                    </a>
-                }
-            </div>
+                <div class="sponsors-grid">
+                    @foreach(var sponsor in tierGroup.OrderBy(sponsor => sponsor.Name))
+                    {
+                        <a class="brand-card sponsor-card @GetTierClass(sponsor.SponsorTier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Open sponsor info for @sponsor.Name">
+                            <div class="sponsor-card-logo">
+                                <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
+                            </div>
+                            <div class="sponsor-card-body">
+                                <h3>@sponsor.Name</h3>
+                                <span>Visit sponsor</span>
+                            </div>
+                        </a>
+                    }
+                </div>
+            </section>
         }
     }
-</div>
+}
