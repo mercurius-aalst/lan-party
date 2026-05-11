@@ -10,6 +10,9 @@
 *.userosscache
 *.sln.docstates
 *.env
+src/Mercurius.LAN.Web/appsettings.Local.json
+src/Mercurius.LAN.Web/MockData.Local/
+src/Mercurius.LAN.Web/wwwroot/mock-data-local/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

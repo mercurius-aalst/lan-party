@@ -1,5 +1,6 @@
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Sponsors;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Sponsors;
 using System.Net.Http;
 
@@ -19,7 +20,7 @@ namespace Mercurius.LAN.Web.Services
         public async Task<IEnumerable<Sponsor>> GetSponsorsAsync()
         {
             var sponsors = await _lanClient.GetSponsorsAsync();
-            sponsors.ToList().ForEach(sp => sp.LogoUrl = _configuration["MercuriusAPI:BaseAddress"] + sp.LogoUrl);
+            sponsors.ToList().ForEach(sp => sp.LogoUrl = AssetUrlResolver.Resolve(_configuration, sp.LogoUrl));
 
             return sponsors;
         }

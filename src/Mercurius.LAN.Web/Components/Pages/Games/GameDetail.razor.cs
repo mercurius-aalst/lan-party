@@ -1,4 +1,5 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -100,8 +101,6 @@ public partial class GameDetail
 
     private string GetImageUrl(string? imageUrl)
     {
-        return string.IsNullOrWhiteSpace(imageUrl)
-            ? string.Empty
-            : Configuration["MercuriusAPI:BaseAddress"] + imageUrl;
+        return AssetUrlResolver.Resolve(Configuration, imageUrl);
     }
 }

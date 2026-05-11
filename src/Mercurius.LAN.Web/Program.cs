@@ -3,12 +3,15 @@ using Blazored.Toast;
 using Mercurius.LAN.Web.Components;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Middleware;
+using Mercurius.LAN.Web.Mock;
+using Mercurius.LAN.Web.Options;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -28,9 +31,10 @@ var jsonOptions = new JsonSerializerOptions
 builder.Services.AddCustomOptions(builder.Configuration);
 builder.Services.AddAuthenticationServices(builder.Configuration);
 builder.Services.AddHttpClients(jsonOptions, builder.Configuration);
-builder.Services.AddCustomServices();
+builder.Services.AddCustomServices(builder.Configuration);
 
 var app = builder.Build();
+var mockModeEnabled = DependencyExtensions.IsMockBackendEnabled(app.Configuration);
 
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment())
@@ -45,25 +49,50 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
-app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
+if(mockModeEnabled)
 {
-    var redirectUri = GetSafeLocalReturnUrl(returnUrl);
-    var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
-            .WithRedirectUri(redirectUri)
-            .Build();
+    app.MapGet("/account/login", async (HttpContext httpContext, MockBackendStore store, string? returnUrl = null, string? persona = null) =>
+    {
+        var mockOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<MockBackendOptions>>().Value;
+        var resolvedPersona = DependencyExtensions.NormalizeMockPersona(persona, mockOptions.Persona);
+        var principal = DependencyExtensions.BuildMockPrincipal(resolvedPersona, store);
 
-    await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-}).AllowAnonymous();
+        await httpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { RedirectUri = GetSafeLocalReturnUrl(returnUrl) });
 
-app.MapGet("/account/logout", async (HttpContext httpContext) =>
+        return Results.LocalRedirect(GetSafeLocalReturnUrl(returnUrl));
+    }).AllowAnonymous();
+
+    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    {
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return Results.LocalRedirect("/");
+    }).AllowAnonymous();
+}
+else
 {
-    var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-            .WithRedirectUri("/")
-            .Build();
+    app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
+    {
+        var redirectUri = GetSafeLocalReturnUrl(returnUrl);
+        var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+                .WithRedirectUri(redirectUri)
+                .Build();
 
-    await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-    await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-}).RequireAuthorization();
+        await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+    }).AllowAnonymous();
+
+    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    {
+        var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
+                .WithRedirectUri("/")
+                .Build();
+
+        await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    }).RequireAuthorization();
+}
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

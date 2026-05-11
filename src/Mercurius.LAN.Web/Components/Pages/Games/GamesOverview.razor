@@ -36,7 +36,7 @@ else
 
         @foreach(var game in FilteredGames)
         {
-            var imageUrl = Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
+            var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
             <div class="card mb-3" style="cursor:pointer;" @onclick="() => NavigateToGameDetail(game.Id)">
                 <img src="@imageUrl" srcset="@imageUrl?w=1800 600w" class="card-img-top" alt="@game.Name">
                 <div class="card-body">
