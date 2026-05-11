@@ -18,6 +18,7 @@ public partial class TeamManagement
     private Team _selectedTeam = new();
     private UserDTO? _selectedCaptain;
     private bool _isCreateMode = true;
+    private bool _isLoading = true;
     private EditContext? _editContext;
     private CustomAutocomplete<Team> _autoCompleteComponent = null!;
 
@@ -38,11 +39,15 @@ public partial class TeamManagement
             {
                 _users = (await UserClient.GetAllUsersAsync()).ToList();
                 _teams = await TeamService.GetTeamsAsync();
-                await InvokeAsync(StateHasChanged);
             }
             catch(Exception)
             {
                 ToastService.ShowError("Teams could not be loaded.");
+            }
+            finally
+            {
+                _isLoading = false;
+                await InvokeAsync(StateHasChanged);
             }
         }
     }

@@ -1,74 +1,93 @@
 @page "/admin/sponsors"
 @attribute [Authorize(Roles = "admin")]
-@using Mercurius.LAN.Web.DTOs.Sponsors
-@using Mercurius.LAN.Web.Models.Participants
 @using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.DTOs.Sponsors
 @using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
 
 <PageTitle>Sponsors Admin</PageTitle>
 
-<div class="admin-container">
-    <div class="admin-header">
-        <h2>Manage Sponsors</h2>
-    </div>
+@if(_isLoading)
+{
+    <LoadingScreen Message="Loading sponsors..." />
+}
+else
+{
+    <section class="sponsor-admin-page">
+        <header class="sponsor-admin-header brand-section">
+            <span class="section-eyebrow">Admin</span>
+            <h1>Manage Sponsors</h1>
+            <p>Update sponsor metadata, tier placement, and logo assets used across the public site.</p>
+        </header>
 
-    <div class="search-bar-container">
-        <CustomAutocomplete @ref="_autoCompleteComponent" TItem="SponsorManagementDTO" Items="_displaySponsors" ItemLabel="sponsor => sponsor.Name" OnSelected="OnSponsorSelected" Placeholder="Search Sponsors" />
-    </div>
-
-    @if(_selectedSponsor== null)
-    {
-        _selectedSponsor= new SponsorManagementDTO();
-    }
-
-    <EditForm EditContext="_editContext" class="needs-validation" OnValidSubmit="HandleSubmit">
-        <DataAnnotationsValidator />
-
-        <div class="form-container">
-            <h2>@(_isCreateMode ? "Create Sponsor" : "Update Sponsor")</h2>
-            <div class="horizontal-layout">
-                <div class="form-section">
-                    <h3>Sponsor information</h3>
-                    <div class="form-group">
-                        <label for="name">Name</label>
-                        <InputText id="username" class="form-control" @bind-Value="_selectedSponsor.Name" />
-                        <ValidationMessage For="@(() => _selectedSponsor.Name)" />
+        <div class="sponsor-admin-layout">
+            <section class="brand-card sponsor-admin-form-card">
+                <div class="sponsor-admin-card-header">
+                    <div>
+                        <span class="section-eyebrow">Search sponsors</span>
+                        <h2>Find an existing sponsor</h2>
                     </div>
-
-                    <div class="form-group">
-                        <label for="infoUrl">Info url</label>
-                        <InputText id="infoUrl" class="form-control" @bind-Value="_selectedSponsor.InfoUrl" />
-                        <ValidationMessage For="@(() => _selectedSponsor.InfoUrl)" />
-
-                    </div>
-
-                    <div class="form-group">
-                        <label for="sponsorTier">Sponsor tier (1 = most important)</label>
-                        <InputNumber id="sponsorTier" class="form-control" @bind-Value="_selectedSponsor.SponsorTier" />
-                        <ValidationMessage For="@(() => _selectedSponsor.SponsorTier)" />
-
-                    </div>
-                    <div class="form-group">
-                        <label for="sponsorLogo">Logo</label>
-                        <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" @bind-Value="_selectedSponsor.Logo" />
-                        <ValidationMessage For="@(() => _selectedSponsor.Logo)" />
-
-                    </div>
-                </div>              
-            </div>
-            <div class="form-actions">
-                <div class="form-actions-section">
-                    <button type="submit" class="btn btn-primary">@(_isCreateMode ? "Create Sponsor" : "Update Sponsor")</button>
                 </div>
-                <div class="form-actions-section">
-                    @if(!_isCreateMode)
-                    {
-                        <button type="button" class="btn btn-danger" @onclick="DeleteSponsor">Delete Sponsor</button>
-                    }
-                    <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+
+                <div class="search-bar-container sponsor-admin-search-container">
+                    <CustomAutocomplete @ref="_autoCompleteComponent" TItem="SponsorManagementDTO" Items="_displaySponsors" ItemLabel="sponsor => sponsor.Name" OnSelected="OnSponsorSelected" Placeholder="Search sponsors" />
                 </div>
-            </div>
+
+                <EditForm EditContext="_editContext" OnValidSubmit="HandleSubmit">
+                    <DataAnnotationsValidator />
+
+                    <div class="sponsor-admin-form-grid">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <InputText id="name" class="form-control" @bind-Value="_selectedSponsor.Name" />
+                            <ValidationMessage For="@(() => _selectedSponsor.Name)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="infoUrl">Info url</label>
+                            <InputText id="infoUrl" class="form-control" @bind-Value="_selectedSponsor.InfoUrl" />
+                            <ValidationMessage For="@(() => _selectedSponsor.InfoUrl)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sponsorTier">Sponsor tier (1 = most important)</label>
+                            <InputNumber id="sponsorTier" class="form-control" @bind-Value="_selectedSponsor.SponsorTier" />
+                            <ValidationMessage For="@(() => _selectedSponsor.SponsorTier)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sponsorLogo">Logo</label>
+                            <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" @bind-Value="_selectedSponsor.Logo" />
+                            <ValidationMessage For="@(() => _selectedSponsor.Logo)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <div class="form-actions-section">
+                            <button type="submit" class="btn btn-primary">@(_isCreateMode ? "Create Sponsor" : "Update Sponsor")</button>
+                        </div>
+                        <div class="form-actions-section">
+                            @if(!_isCreateMode)
+                            {
+                                <button type="button" class="btn btn-danger" @onclick="DeleteSponsor">Delete Sponsor</button>
+                            }
+                            <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </section>
+
+            <aside class="sponsor-admin-sidebar">
+                <section class="brand-card sponsor-admin-side-card">
+                    <span class="section-eyebrow">Summary</span>
+                    <h2>Current data</h2>
+                    <ul class="sponsor-admin-points">
+                        <li>@_sponsors.Count sponsor@(_sponsors.Count == 1 ? string.Empty : "s") loaded</li>
+                        <li>@(_isCreateMode ? "Create mode is active." : "Editing selected sponsor.")</li>
+                        <li>Tier ordering is shown publicly on the Sponsors page.</li>
+                    </ul>
+                </section>
+            </aside>
         </div>
-    </EditForm>
-</div>
+    </section>
+}
