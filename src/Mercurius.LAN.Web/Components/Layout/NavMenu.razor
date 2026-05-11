@@ -2,45 +2,28 @@
 
 @if(_isUserMenuVisible || _isDropdownVisible)
 {
-    <div class="overlay" @onclick="HandleOutsideClick">
-    </div>
+    <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label="Close menus"></button>
 }
-<div class="top-row px-3 navbar navbar-dark">
-    <div class="container-fluid ps-0">
-        <a class="navbar-brand" href="">
-            <img src="/img/lanlogo.png" alt="Mercurius Aalst" class="logo-image" />
-        </a>
-    </div>
-</div>
 
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <NavLink href="/" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Home
-            </div>
+<div class="brand-nav-shell">
+    <nav class="brand-nav-links" aria-label="Primary">
+        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="active" @onclick="HandleNavigationClicked">
+            Home
         </NavLink>
-        <NavLink href="/sponsors" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Our Sponsors
-            </div>
+        <NavLink href="/games" class="brand-nav-link" ActiveClass="active" @onclick="HandleNavigationClicked">
+            Games
         </NavLink>
-        <NavLink href="https://discord.gg/dsmahrAtTG" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Discord
-            </div>
-        </NavLink>
-        <NavLink href="/privacy-policy" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Privacy Policy
-            </div>
-        </NavLink>
+        <a href="/#schedule" class="brand-nav-link" @onclick="HandleNavigationClicked">Schedule</a>
+        <a href="/#tickets" class="brand-nav-link" @onclick="HandleNavigationClicked">Tickets</a>
+        <a href="/#faq" class="brand-nav-link" @onclick="HandleNavigationClicked">FAQ</a>
+        <a href="/#contact" class="brand-nav-link" @onclick="HandleNavigationClicked">Contact</a>
+    </nav>
+
+    <div class="brand-nav-actions">
         <AuthorizeView Roles="admin">
-            <Authorized Context="adminAuthState">
-                <div class="nav-section nav-item px-3 dropdown dropdown-toggle" @onclick:stopPropagation="true" @onclick="ToggleDropdown">
-                    <div class="user-profile">
-                        <span>Admin</span>
-                    </div>
+            <Authorized>
+                <div class="nav-menu-group" @onclick:stopPropagation="true">
+                    <button type="button" class="brand-utility-button" @onclick="ToggleDropdown">Admin</button>
                     @if(_isDropdownVisible)
                     {
                         <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
@@ -51,28 +34,36 @@
                 </div>
             </Authorized>
         </AuthorizeView>
-    </nav>
 
-</div>
-<AuthorizeView>
-    <Authorized Context="authState">
-        <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
-            <div class="user-profile align-middle">
-                <span class="user-icon bi bi-person-circle"></span>
-                <span>@GetDisplayName(authState.User)</span>
-            </div>
-            @if(_isUserMenuVisible)
-            {
-                <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                    <a class="dropdown-item" href="/profile" @onclick="CloseDropdown">Profile</a>
-                    <a class="dropdown-item" @onclick="Logout">Logout</a>
+        <AuthorizeView>
+            <Authorized Context="authState">
+                <div class="nav-menu-group" @onclick:stopPropagation="true">
+                    <button type="button" class="brand-utility-button user-button" @onclick="ToggleUserMenu">
+                        <span class="user-icon bi bi-person-circle"></span>
+                        <span>@GetDisplayName(authState.User)</span>
+                    </button>
+                    @if(_isUserMenuVisible)
+                    {
+                        <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
+                            <a class="dropdown-item" href="/profile" @onclick="CloseDropdown">Profile</a>
+                            <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
+                        </div>
+                    }
                 </div>
-            }
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <div class="nav-section nav-item user-section px-3">
-            <button type="button" class="dropdown-item" @onclick="BeginLogin">Login</button>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+            </Authorized>
+            <NotAuthorized>
+                <div class="brand-auth-actions">
+                    <button type="button" class="brand-utility-button" @onclick="BeginLogin">Login</button>
+                    @if(IsMockBackendEnabled)
+                    {
+                        <a href="@MockAdminLoginHref" class="brand-dev-link" @onclick="HandleNavigationClicked">Mock Admin</a>
+                    }
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <a href="/#tickets" class="button-primary brand-ticket-cta" @onclick="HandleNavigationClicked">
+            Get Tickets
+        </a>
+    </div>
+</div>

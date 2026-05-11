@@ -1,32 +1,72 @@
-﻿@using Blazored.Toast.Configuration
-
+@using Blazored.Toast.Configuration
 
 @inherits LayoutComponentBase
-<button class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
-    <span class="menu-toggle-inner">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-    </span>
-</button>
 
-<div class="page">
+<div class="layout-shell">
+    <header class="brand-header">
+        <div class="brand-header-inner brand-container">
+            <a class="brand-logo-link" href="/" aria-label="Mercurius LAN home">
+                <img src="/img/lanlogo.png" alt="Mercurius LAN" class="brand-logo-image" />
+            </a>
+
+            <button class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle navigation">
+                <span class="menu-toggle-inner">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </span>
+            </button>
+
+            <div class="brand-nav-panel @(_sidebarOpen ? "open" : null)">
+                <NavMenu OnNavigationSelected="OnNavigationSelected" />
+            </div>
+        </div>
+    </header>
+
     @if(_sidebarOpen)
     {
-        <div class="overlay" @onclick="HandleOutsideClick">
-        </div>
+        <button type="button" class="brand-nav-backdrop" @onclick="HandleOutsideClick" aria-label="Close navigation"></button>
     }
-    <div class="sidebar @(_sidebarOpen ? "open" : null)">
-        <NavMenu OnNavigationSelected="OnNavigationSelected" />
-    </div>
 
-    <main class="content px-4">
-
+    <main class="brand-main">
+        <div class="brand-main-content brand-container">
             @Body
+        </div>
     </main>
-</div>
 
-<script src="/uiInteractions.js"></script>
+    <footer class="footer">
+        <div class="brand-container footer-grid">
+            <section class="footer-brand">
+                <div class="footer-logo-panel">
+                    <img src="/img/lanlogo.png" alt="Mercurius LAN" class="footer-logo-image" />
+                </div>
+                <p>Mercurius LAN brings students together for tournaments, BYOC setups, and a full weekend of competitive play.</p>
+            </section>
+
+            <nav class="footer-column" aria-label="Quick links">
+                <h3>Quick Links</h3>
+                <a href="/">Home</a>
+                <a href="/games">Games</a>
+                <a href="/sponsors">Sponsors</a>
+                <a href="/privacy-policy">Privacy Policy</a>
+            </nav>
+
+            <section class="footer-column">
+                <h3>Event Info</h3>
+                <p>Student community. Compete. Connect.</p>
+                <p>Offline mock mode is available for local UI validation.</p>
+            </section>
+
+            <section class="footer-column">
+                <h3>Explore</h3>
+                <a href="/#schedule">Schedule</a>
+                <a href="/#tickets">Tickets</a>
+                <a href="/#faq">FAQ</a>
+                <a href="/#contact">Contact</a>
+            </section>
+        </div>
+    </footer>
+</div>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

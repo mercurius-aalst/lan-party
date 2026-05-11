@@ -7,11 +7,15 @@ public partial class NavMenu
 {
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject]
+    private IConfiguration Configuration { get; set; } = null!;
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
+    private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/teams")}";
+    private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
 
     private async Task BeginLogin()
     {
@@ -44,6 +48,12 @@ public partial class NavMenu
     {
         _isDropdownVisible = false;
         _isUserMenuVisible = false;
+    }
+
+    private async Task HandleNavigationClicked()
+    {
+        CloseDropdown();
+        await OnNavigationSelected.InvokeAsync();
     }
 
     private string GetCurrentRelativeUrl()
