@@ -1,0 +1,37 @@
+.status-page {
+    display: flex;
+    justify-content: center;
+}
+
+.status-page-card {
+    width: min(100%, 48rem);
+    display: grid;
+    gap: 1rem;
+    padding: 1.75rem;
+}
+
+.status-page-card p,
+.status-page-body p {
+    margin: 0;
+}
+
+.status-page-body {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-soft-white);
+}
+
+.status-page-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+    .status-page-card {
+        padding: 1rem;
+    }
+}

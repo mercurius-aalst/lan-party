@@ -1,0 +1,42 @@
+@rendermode InteractiveServer
+
+<section class="status-page brand-section">
+    <div class="brand-card status-page-card">
+        <span class="section-eyebrow">@Eyebrow</span>
+        <h1>@Title</h1>
+        <p>@Message</p>
+
+        @if(ChildContent != null)
+        {
+            <div class="status-page-body">
+                @ChildContent
+            </div>
+        }
+
+        @if(!string.IsNullOrWhiteSpace(PrimaryHref) || !string.IsNullOrWhiteSpace(SecondaryHref))
+        {
+            <div class="status-page-actions">
+                @if(!string.IsNullOrWhiteSpace(PrimaryHref) && !string.IsNullOrWhiteSpace(PrimaryLabel))
+                {
+                    <a href="@PrimaryHref" class="button-primary">@PrimaryLabel</a>
+                }
+
+                @if(!string.IsNullOrWhiteSpace(SecondaryHref) && !string.IsNullOrWhiteSpace(SecondaryLabel))
+                {
+                    <a href="@SecondaryHref" class="button-secondary">@SecondaryLabel</a>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public string Eyebrow { get; set; } = "Status";
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Message { get; set; } = string.Empty;
+    [Parameter] public string? PrimaryHref { get; set; }
+    [Parameter] public string? PrimaryLabel { get; set; }
+    [Parameter] public string? SecondaryHref { get; set; }
+    [Parameter] public string? SecondaryLabel { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
