@@ -12,6 +12,7 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 public partial class OverviewTab
 {
     [Parameter] public GameExtended Game { get; set; } = null!;
+    [Parameter] public EventCallback<GameExtended> OnGameUpdated { get; set; }
 
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -58,8 +59,10 @@ public partial class OverviewTab
             Game.BracketType = updatedGame.BracketType;
             Game.ParticipationMode = updatedGame.ParticipationMode;
             Game.RegisterFormUrl = updatedGame.RegisterFormUrl;
+            Game.ImageUrl = updatedGame.ImageUrl;
             _isEditMode = false;
             ToastService.ShowSuccess("Edit successful");
+            await OnGameUpdated.InvokeAsync(Game);
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException ex)

@@ -3,17 +3,24 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div>
-    <h2>Participants</h2>
+<div class="participants-tab-shell">
+    <div class="participants-tab-header">
+        <div>
+            <span class="section-eyebrow">Participants</span>
+            <h2>Registered @GetParticipantsHeading()</h2>
+            <p>@_participants.Count currently registered for this tournament.</p>
+        </div>
+    </div>
+
     <div class="participants-overview-grid">
         <AuthorizeView Roles="admin">
             <Authorized>
                 @if(Game.Status == GameStatus.Scheduled)
                 {
-                    <div class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
+                    <button type="button" class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
                         <div class="participant-avatar add-avatar">+</div>
                         <div class="participant-overview-name">Add @GetParticipantLabel()</div>
-                    </div>
+                    </button>
                 }
             </Authorized>
         </AuthorizeView>

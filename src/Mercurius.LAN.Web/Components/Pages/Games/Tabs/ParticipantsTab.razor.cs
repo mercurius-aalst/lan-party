@@ -146,6 +146,11 @@ public partial class ParticipantsTab
         return Game.ParticipationMode == ParticipationMode.Team ? "teams" : "users";
     }
 
+    private string GetParticipantsHeading()
+    {
+        return Game.ParticipationMode == ParticipationMode.Team ? "teams" : "players";
+    }
+
     private async Task ApplyUpdatedGameAsync(GameExtended updatedGame)
     {
         Game = updatedGame;

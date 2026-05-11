@@ -10,63 +10,240 @@
 <PageTitle>Game Detail</PageTitle>
 @if(_game == null)
 {
-    <LoadingScreen Message="Loading..." />
+    <LoadingScreen Message="Loading tournament..." />
 }
 else
 {
-    <div class="game-detail">
-        <div class="game-image">
-            <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-image-display" />
-        </div>
-        <div class="game-detail-content">
-            <div class="game-header-tabs">
-                <h1>
-                    @_game.Name
+    <div class="game-detail-page">
+        <nav class="game-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <a href="/games">Games</a>
+            <span>/</span>
+            <span aria-current="page">@_game.Name</span>
+        </nav>
+
+        <section class="brand-section">
+            <div class="brand-card game-detail-hero">
+                <div class="game-detail-hero-media">
+                    <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-detail-image" />
+                </div>
+
+                <div class="game-detail-hero-copy">
+                    <span class="section-eyebrow">Tournament spotlight</span>
+                    <h1>@_game.Name</h1>
+                    <p>@GameSummary</p>
+
+                    <div class="game-detail-badges">
+                        <span class="badge">@_game.ParticipationMode.GetLabel()</span>
+                        <span class="badge">@_game.BracketType.GetLabel()</span>
+                        <span class="badge">@_game.Format.GetLabel()</span>
+                        <span class="game-status @_game.Status.GetStatusClass()">@_game.Status.GetStatusLabel()</span>
+                    </div>
+
+                    <div class="game-detail-hero-actions">
+                        <button type="button" class="button-primary" disabled="@(!CanRegister(_game))" @onclick="NavigateToRegister">
+                            @(CanRegister(_game) ? "Register Now" : "Registration Closed")
+                        </button>
+                        <button type="button" class="button-secondary" @onclick="() => SelectTab(1)">View Bracket</button>
+                    </div>
+
                     <AuthorizeView Roles="admin">
                         <Authorized>
-                            <div class="action-buttons">
-                                <button class="btn btn-success" @onclick="StartGameAsync">Start</button>
-                                <button class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
-                                <button class="btn btn-warning" @onclick="FinishGameAsync">Finish</button>
-                                <button class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
-                                <button class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
+                            <div class="game-admin-actions">
+                                <button type="button" class="btn btn-primary" @onclick="StartGameAsync">Start</button>
+                                <button type="button" class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
+                                <button type="button" class="btn btn-secondary" @onclick="FinishGameAsync">Finish</button>
+                                <button type="button" class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
+                                <button type="button" class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
                             </div>
                         </Authorized>
                     </AuthorizeView>
-                </h1>
-                <div class="tabs">
-                    <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(_selectedTab == 0)">Overview</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(_selectedTab == 1)">Matches</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(_selectedTab == 2)">Participants</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(_selectedTab == 3)">Results</button>
-                </div>
-                <div class="tabs-dropdown">
-                    <select id="tab-selector" @onchange="OnTabDropdownChanged" value="@_selectedTab">
-                        <option value="0">Overview</option>
-                        <option value="1">Matches</option>
-                        <option value="2">Participants</option>
-                        <option value="3">Results</option>
-                    </select>
                 </div>
             </div>
-            <div class="tab-content">
-                @if(_selectedTab == 0)
-                {
-                    <OverviewTab Game="@_game" />
-                }
-                else if(_selectedTab == 1)
-                {
-                    <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
-                }
-                else if(_selectedTab == 2)
-                {
-                    <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
-                }
-                else if(_selectedTab == 3)
-                {
-                    <PlacementsTab Placements="@_game.Placements" ParticipationMode="@_game.ParticipationMode" />
-                }
+
+            <div class="brand-panel-dark game-detail-stat-strip">
+                <div>
+                    <span class="game-detail-stat-value">@ParticipantCount</span>
+                    <span class="game-detail-stat-label">Registered @ParticipantLabel</span>
+                </div>
+                <div>
+                    <span class="game-detail-stat-value">@MatchCount</span>
+                    <span class="game-detail-stat-label">Matches loaded</span>
+                </div>
+                <div>
+                    <span class="game-detail-stat-value">@RoundCount</span>
+                    <span class="game-detail-stat-label">Rounds</span>
+                </div>
+                <div>
+                    <span class="game-detail-stat-value">@CompletedMatchCount</span>
+                    <span class="game-detail-stat-label">Matches decided</span>
+                </div>
             </div>
+        </section>
+
+        <div class="game-detail-layout">
+            <div class="game-detail-main">
+                <section class="brand-card game-preview-card">
+                    <div class="game-section-header">
+                        <div>
+                            <span class="section-eyebrow">Bracket preview</span>
+                            <h2>Upcoming matches</h2>
+                            <p>The current match list is generated from the loaded tournament data.</p>
+                        </div>
+                        <button type="button" class="button-secondary" @onclick="() => SelectTab(1)">Open Matches</button>
+                    </div>
+
+                    <div class="game-match-preview-list">
+                        @if(!UpcomingMatches.Any())
+                        {
+                            <p class="game-empty-copy">Matches will appear here once the bracket has been generated.</p>
+                        }
+                        else
+                        {
+                            @foreach(var match in UpcomingMatches)
+                            {
+                                <article class="game-match-preview-item">
+                                    <div>
+                                        <h3>@GetMatchTitle(match)</h3>
+                                        <p>@GetMatchSchedule(match)</p>
+                                    </div>
+                                    <div class="game-match-preview-meta">
+                                        <span>Round @match.RoundNumber</span>
+                                        <span>@match.Format.GetLabel()</span>
+                                    </div>
+                                </article>
+                            }
+                        }
+                    </div>
+                </section>
+
+                <section class="brand-card game-preview-card">
+                    <div class="game-section-header">
+                        <div>
+                            <span class="section-eyebrow">Participants</span>
+                            <h2>Registered @ParticipantLabel</h2>
+                            <p>@ParticipantCount currently linked to this tournament.</p>
+                        </div>
+                        <button type="button" class="button-secondary" @onclick="() => SelectTab(2)">Open Participants</button>
+                    </div>
+
+                    <div class="game-participant-preview-grid">
+                        @if(!ParticipantPreviewNames.Any())
+                        {
+                            <p class="game-empty-copy">No @ParticipantLabel are registered yet.</p>
+                        }
+                        else
+                        {
+                            @foreach(var participant in ParticipantPreviewNames)
+                            {
+                                <article class="game-participant-preview-card">
+                                    <span class="game-participant-preview-badge">@ParticipantLabelAbbreviation</span>
+                                    <h3>@participant</h3>
+                                </article>
+                            }
+                        }
+                    </div>
+                </section>
+
+                <section class="brand-card game-tab-shell">
+                    <div class="game-section-header">
+                        <div>
+                            <span class="section-eyebrow">Details</span>
+                            <h2>Tournament information</h2>
+                        </div>
+                    </div>
+
+                    <div class="game-tabs" role="tablist" aria-label="Tournament detail sections">
+                        <button type="button" class="game-tab-button @GetTabClass(0)" aria-pressed="@(_selectedTab == 0)" @onclick="() => SelectTab(0)">Overview</button>
+                        <button type="button" class="game-tab-button @GetTabClass(1)" aria-pressed="@(_selectedTab == 1)" @onclick="() => SelectTab(1)">Matches</button>
+                        <button type="button" class="game-tab-button @GetTabClass(2)" aria-pressed="@(_selectedTab == 2)" @onclick="() => SelectTab(2)">Participants</button>
+                        <button type="button" class="game-tab-button @GetTabClass(3)" aria-pressed="@(_selectedTab == 3)" @onclick="() => SelectTab(3)">Results</button>
+                    </div>
+
+                    <div class="game-tabs-dropdown">
+                        <label class="visually-hidden" for="tab-selector">Select tournament section</label>
+                        <select id="tab-selector" class="game-tab-select" @onchange="OnTabDropdownChanged" value="@_selectedTab">
+                            <option value="0">Overview</option>
+                            <option value="1">Matches</option>
+                            <option value="2">Participants</option>
+                            <option value="3">Results</option>
+                        </select>
+                    </div>
+
+                    <div class="tab-content">
+                        @if(_selectedTab == 0)
+                        {
+                            <OverviewTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
+                        }
+                        else if(_selectedTab == 1)
+                        {
+                            <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
+                        }
+                        else if(_selectedTab == 2)
+                        {
+                            <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
+                        }
+                        else if(_selectedTab == 3)
+                        {
+                            <PlacementsTab Placements="@_game.Placements" ParticipationMode="@_game.ParticipationMode" />
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <aside class="game-detail-sidebar">
+                <section class="brand-card game-sidebar-card">
+                    <span class="section-eyebrow">Format</span>
+                    <h2>Tournament details</h2>
+                    <dl class="game-sidebar-list">
+                        <div>
+                            <dt>Status</dt>
+                            <dd>@_game.Status.GetStatusLabel()</dd>
+                        </div>
+                        <div>
+                            <dt>Bracket</dt>
+                            <dd>@_game.BracketType.GetLabel()</dd>
+                        </div>
+                        <div>
+                            <dt>Format</dt>
+                            <dd>@_game.Format.GetLabel()</dd>
+                        </div>
+                        <div>
+                            <dt>Finals</dt>
+                            <dd>@_game.FinalsFormat.GetLabel()</dd>
+                        </div>
+                        <div>
+                            <dt>Starts</dt>
+                            <dd>@FormatDateTime(_game.StartTime)</dd>
+                        </div>
+                        <div>
+                            <dt>Ends</dt>
+                            <dd>@FormatDateTime(_game.EndTime)</dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <section class="brand-card game-sidebar-card">
+                    <span class="section-eyebrow">Registration</span>
+                    <h2>Entry status</h2>
+                    <p>@RegistrationSummary</p>
+                    @if(CanRegister(_game))
+                    {
+                        <button type="button" class="button-primary game-sidebar-action" @onclick="NavigateToRegister">Register for this tournament</button>
+                    }
+                </section>
+
+                <section class="brand-card game-sidebar-card">
+                    <span class="section-eyebrow">At a glance</span>
+                    <h2>Quick facts</h2>
+                    <ul class="game-sidebar-points">
+                        <li>@ParticipantCount @ParticipantLabel registered</li>
+                        <li>@MatchCount matches available in the current bracket data</li>
+                        <li>@PlacementCount placement result@(PlacementCount == 1 ? string.Empty : "s") recorded</li>
+                    </ul>
+                </section>
+            </aside>
         </div>
     </div>
 }
