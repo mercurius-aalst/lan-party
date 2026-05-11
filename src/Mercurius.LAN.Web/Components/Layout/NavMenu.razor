@@ -1,78 +1,12 @@
 @rendermode InteractiveServer
 
-@if(_isUserMenuVisible || _isDropdownVisible)
-{
-    <div class="overlay" @onclick="HandleOutsideClick">
+<nav class="top-nav brand-container" aria-label="Primary">
+    <a class="navbar-brand" href="/"><img src="/img/lanlogo.png" alt="Mercurius LAN logo" class="logo-image" /></a>
+    <div class="links">
+        <NavLink href="/" Match="NavLinkMatch.All">Home</NavLink>
+        <NavLink href="/games">Games</NavLink>
+        <NavLink href="/sponsors">Sponsors</NavLink>
+        <NavLink href="/privacy-policy">FAQ</NavLink>
     </div>
-}
-<div class="top-row px-3 navbar navbar-dark">
-    <div class="container-fluid ps-0">
-        <a class="navbar-brand" href="">
-            <img src="/img/lanlogo.png" alt="Mercurius Aalst" class="logo-image" />
-        </a>
-    </div>
-</div>
-
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <NavLink href="/" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Home
-            </div>
-        </NavLink>
-        <NavLink href="/sponsors" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Our Sponsors
-            </div>
-        </NavLink>
-        <NavLink href="https://discord.gg/dsmahrAtTG" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Discord
-            </div>
-        </NavLink>
-        <NavLink href="/privacy-policy" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Privacy Policy
-            </div>
-        </NavLink>
-        <AuthorizeView Roles="admin">
-            <Authorized Context="adminAuthState">
-                <div class="nav-section nav-item px-3 dropdown dropdown-toggle" @onclick:stopPropagation="true" @onclick="ToggleDropdown">
-                    <div class="user-profile">
-                        <span>Admin</span>
-                    </div>
-                    @if(_isDropdownVisible)
-                    {
-                        <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
-                            <a class="dropdown-item" href="/admin/sponsors" @onclick="CloseDropdown">Sponsors</a>
-                        </div>
-                    }
-                </div>
-            </Authorized>
-        </AuthorizeView>
-    </nav>
-
-</div>
-<AuthorizeView>
-    <Authorized Context="authState">
-        <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
-            <div class="user-profile align-middle">
-                <span class="user-icon bi bi-person-circle"></span>
-                <span>@GetDisplayName(authState.User)</span>
-            </div>
-            @if(_isUserMenuVisible)
-            {
-                <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                    <a class="dropdown-item" href="/profile" @onclick="CloseDropdown">Profile</a>
-                    <a class="dropdown-item" @onclick="Logout">Logout</a>
-                </div>
-            }
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <div class="nav-section nav-item user-section px-3">
-            <button type="button" class="dropdown-item" @onclick="BeginLogin">Login</button>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+    <a class="button-primary" href="/games">Get Tickets</a>
+</nav>

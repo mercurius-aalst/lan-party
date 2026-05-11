@@ -1,37 +1,21 @@
-﻿@using Blazored.Toast.Configuration
-
-
 @inherits LayoutComponentBase
-<button class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle menu">
-    <span class="menu-toggle-inner">
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-    </span>
-</button>
 
-<div class="page">
-    @if(_sidebarOpen)
-    {
-        <div class="overlay" @onclick="HandleOutsideClick">
+<header class="site-header">
+    <NavMenu />
+</header>
+
+<main class="site-main brand-container">
+    @Body
+</main>
+
+<footer class="site-footer">
+    <div class="brand-container footer-grid">
+        <div>
+            <img src="/img/lanlogo.png" alt="Mercurius LAN logo" class="footer-logo" />
+            <p>Mercurius LAN is a student-run LAN-party bringing gamers together for competition, connection, and unforgettable experiences.</p>
         </div>
-    }
-    <div class="sidebar @(_sidebarOpen ? "open" : null)">
-        <NavMenu OnNavigationSelected="OnNavigationSelected" />
+        <div><h3>Quick Links</h3><a href="/">Home</a><a href="/games">Games</a><a href="/privacy-policy">Privacy</a></div>
+        <div><h3>Event Info</h3><p>June 13–15</p><p>BYOC Event</p><p>High-speed internet</p></div>
+        <div><h3>Stay Updated</h3><input class="newsletter" placeholder="Your email address" /><button class="button-primary">Subscribe</button></div>
     </div>
-
-    <main class="content px-4">
-
-            @Body
-    </main>
-</div>
-
-<script src="/uiInteractions.js"></script>
-
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
-
-<BlazoredToasts Position=ToastPosition.BottomRight />
+</footer>

@@ -4,69 +4,22 @@
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
 @using Mercurius.LAN.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Authorization
-
 @rendermode InteractiveServer
 
 <PageTitle>Game Detail</PageTitle>
-@if(_game == null)
-{
-    <LoadingScreen Message="Loading..." />
-}
-else
-{
-    <div class="game-detail">
-        <div class="game-image">
-            <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-image-display" />
-        </div>
-        <div class="game-detail-content">
-            <div class="game-header-tabs">
-                <h1>
-                    @_game.Name
-                    <AuthorizeView Roles="admin">
-                        <Authorized>
-                            <div class="action-buttons">
-                                <button class="btn btn-success" @onclick="StartGameAsync">Start</button>
-                                <button class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
-                                <button class="btn btn-warning" @onclick="FinishGameAsync">Finish</button>
-                                <button class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
-                                <button class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
-                            </div>
-                        </Authorized>
-                    </AuthorizeView>
-                </h1>
-                <div class="tabs">
-                    <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(_selectedTab == 0)">Overview</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(_selectedTab == 1)">Matches</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(_selectedTab == 2)">Participants</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(_selectedTab == 3)">Results</button>
-                </div>
-                <div class="tabs-dropdown">
-                    <select id="tab-selector" @onchange="OnTabDropdownChanged" value="@_selectedTab">
-                        <option value="0">Overview</option>
-                        <option value="1">Matches</option>
-                        <option value="2">Participants</option>
-                        <option value="3">Results</option>
-                    </select>
-                </div>
-            </div>
-            <div class="tab-content">
-                @if(_selectedTab == 0)
-                {
-                    <OverviewTab Game="@_game" />
-                }
-                else if(_selectedTab == 1)
-                {
-                    <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
-                }
-                else if(_selectedTab == 2)
-                {
-                    <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
-                }
-                else if(_selectedTab == 3)
-                {
-                    <PlacementsTab Placements="@_game.Placements" ParticipationMode="@_game.ParticipationMode" />
-                }
-            </div>
-        </div>
-    </div>
+@if(_game == null){ <LoadingScreen Message="Loading..." /> }
+else {
+<nav class="crumbs"><a href="/">Home</a> / <a href="/games">Games</a> / <span>@_game.Name</span></nav>
+<section class="hero">
+  <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="banner" />
+  <div>
+    <p class="section-eyebrow">Compete. Coordinate. Conquer.</p>
+    <h1>@_game.Name Tournament</h1>
+    <p>The ultimate test of teamwork, strategy, and precision.</p>
+    <div class="badges"><span class="badge-brand">@_game.BracketType.GetLabel()</span><span class="badge-brand">@_game.ParticipationMode</span><span class="badge-brand">@_game.Status.GetStatusLabel()</span></div>
+    <div class="actions"><a class="button-primary" href="#">Register Team</a><a class="button-secondary" href="#">Rulebook</a></div>
+  </div>
+</section>
+<section class="dark-brand-block statbar"><div><label>Prize Pool</label><strong>$1,000</strong></div><div><label>Check-in</label><strong>13 JUN, 12:00</strong></div><div><label>Bracket</label><strong>@_game.BracketType.GetLabel()</strong></div><div><label>Map Pool</label><strong>Best of 3</strong></div></section>
+<section class="content-grid"><div class="brand-card panel"><OverviewTab Game="@_game" /></div><aside class="side"><div class="brand-card panel"><h3>Format</h3><p>@_game.BracketType.GetLabel()</p></div><div class="brand-card panel"><h3>Entry Requirements</h3><p>Valid student ID. Respect tournament rules.</p></div></aside></section>
 }

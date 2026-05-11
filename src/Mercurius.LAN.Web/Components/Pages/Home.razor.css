@@ -1,0 +1,9 @@
+.home-hero { display:grid; grid-template-columns: 1.1fr .9fr; gap:2rem; align-items:center; padding:1rem 0 2rem; }
+.home-hero h1 { font-size: clamp(2.5rem, 8vw, 6rem); line-height: 1; margin:.4rem 0 1rem; }
+.home-hero p { color: var(--color-muted-text); max-width: 60ch; }
+.cta-row { display:flex; gap:.8rem; margin:1rem 0 1.25rem; }
+.hero-logo { width: 100%; border-radius: 20px; background: #0b1120; padding: 1rem; }
+.stats { display:grid; grid-template-columns: repeat(3,1fr); padding:1rem; gap:.8rem; }
+.stats strong { display:block; color: var(--color-primary-green); }
+.stats span { color: var(--color-white); font-size:.9rem; }
+@media (max-width: 900px){ .home-hero{ grid-template-columns:1fr; } }
