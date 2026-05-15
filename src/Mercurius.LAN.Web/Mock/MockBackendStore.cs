@@ -93,6 +93,41 @@ internal sealed class MockBackendStore
         }
     }
 
+    public GameExtended ReplaceGameSponsors(Guid id, ReplaceGameSponsorsDTO dto)
+    {
+        lock(_syncRoot)
+        {
+            var game = GetRequiredGame(id);
+            var placements = dto.SponsorPlacements ?? [];
+
+            game.SponsorPlacements = placements
+                .Select((placement, index) =>
+                {
+                    var sponsor = _document.Sponsors.Single(existing => existing.Id == placement.SponsorId);
+                    return new GameSponsorPlacement
+                    {
+                        Id = index + 1,
+                        SponsorId = sponsor.Id,
+                        SponsorName = sponsor.Name,
+                        SponsorTier = sponsor.SponsorTier,
+                        SponsorLogoUrl = sponsor.LogoUrl,
+                        SponsorInfoUrl = sponsor.InfoUrl,
+                        SponsorDescription = sponsor.Description,
+                        Context = placement.Context,
+                        Headline = placement.Headline,
+                        SupportLine = placement.SupportLine,
+                        DisplayOrder = placement.DisplayOrder
+                    };
+                })
+                .OrderBy(placement => placement.Context)
+                .ThenBy(placement => placement.DisplayOrder)
+                .ThenBy(placement => placement.SponsorName)
+                .ToList();
+
+            return Clone(game)!;
+        }
+    }
+
     public GameExtended RegisterUser(Guid gameId, Guid userId)
     {
         lock(_syncRoot)
@@ -317,6 +352,7 @@ internal sealed class MockBackendStore
                 Name = dto.Name,
                 SponsorTier = dto.SponsorTier,
                 InfoUrl = dto.InfoUrl,
+                Description = dto.Description,
                 LogoUrl = "/mock-data-local/sponsors/mock-sponsor.svg"
             };
 
@@ -333,6 +369,7 @@ internal sealed class MockBackendStore
             sponsor.Name = dto.Name;
             sponsor.SponsorTier = dto.SponsorTier;
             sponsor.InfoUrl = dto.InfoUrl;
+            sponsor.Description = dto.Description;
 
             if(dto.Logo != null)
                 sponsor.LogoUrl = "/mock-data-local/sponsors/mock-sponsor.svg";
@@ -346,6 +383,13 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             _document.Sponsors.RemoveAll(sponsor => sponsor.Id == id);
+
+            foreach(var game in _document.Games)
+            {
+                game.SponsorPlacements = game.SponsorPlacements
+                    .Where(placement => placement.SponsorId != id)
+                    .ToList();
+            }
         }
     }
 

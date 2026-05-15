@@ -16,6 +16,7 @@ namespace Mercurius.LAN.Web.Services
         Task CancelGameAsync(Guid id);
         Task ResetGameAsync(Guid id);
         Task DeleteGameAsync(Guid id);
+        Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors);
         Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId);
         Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId);
         Task<GameExtended> RegisterTeamForGameAsync(Guid id, Guid teamId);

@@ -4,8 +4,9 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = null!;
-        public int SponsorTier { get; set; }
+        public SponsorTier SponsorTier { get; set; }
         public string LogoUrl { get; set; } = null!;
         public string InfoUrl { get; set; } = null!;
+        public string? Description { get; set; }
     }
 }

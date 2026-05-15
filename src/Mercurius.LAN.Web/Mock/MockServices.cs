@@ -58,6 +58,9 @@ internal sealed class MockGameService : IGameService
         return Task.CompletedTask;
     }
 
+    public Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors) =>
+        Task.FromResult(_store.ReplaceGameSponsors(id, sponsors));
+
     public Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId) => Task.FromResult(_store.RegisterUser(id, userId));
 
     public Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId) => Task.FromResult(_store.UnregisterUser(id, userId));

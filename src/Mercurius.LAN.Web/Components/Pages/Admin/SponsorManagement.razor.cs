@@ -1,7 +1,6 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Sponsors;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -95,6 +94,7 @@ public partial class SponsorManagement
                     Name = _selectedSponsor!.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
+                    Description = _selectedSponsor.Description
                 }, tempFilePath,
             contentType,
             fileName);
@@ -109,6 +109,7 @@ public partial class SponsorManagement
                     Name = _selectedSponsor.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
+                    Description = _selectedSponsor.Description
                 }, tempFilePath,
             contentType,
             fileName);
@@ -118,6 +119,7 @@ public partial class SponsorManagement
                     existingSponsor.Name = _selectedSponsor.Name;
                     existingSponsor.InfoUrl = _selectedSponsor.InfoUrl;
                     existingSponsor.SponsorTier = _selectedSponsor.SponsorTier;
+                    existingSponsor.Description = _selectedSponsor.Description;
                 }
                 SyncDisplaySponsors();
                 ToastService.ShowSuccess("Sponsor updated successfully.");
@@ -154,6 +156,7 @@ public partial class SponsorManagement
             Name = sponsor.Name,
             InfoUrl = sponsor.InfoUrl,
             SponsorTier = sponsor.SponsorTier,
+            Description = sponsor.Description,
             Id = sponsor.Id,
             IsCreateMode = _isCreateMode
         }).ToList();

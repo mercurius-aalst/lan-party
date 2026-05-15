@@ -10,8 +10,7 @@ namespace Mercurius.LAN.Web.DTOs.Sponsors
         public string Name { get; set; } = null!;
 
         [Required]
-        [Range(1, 5)]
-        public int SponsorTier { get; set; }
+        public SponsorTier SponsorTier { get; set; }
 
 
         [RequiredIfCreateMode(ErrorMessageResourceName = nameof(Logo))]
@@ -22,6 +21,8 @@ namespace Mercurius.LAN.Web.DTOs.Sponsors
         [Required]
         public string InfoUrl { get; set; } = null!;
 
+        public string? Description { get; set; }
+
         public int Id { get; set; } = -1;
 
         public SponsorManagementDTO(Sponsor sponsor)
@@ -29,6 +30,7 @@ namespace Mercurius.LAN.Web.DTOs.Sponsors
             Name = sponsor.Name;
             SponsorTier = sponsor.SponsorTier;
             InfoUrl = sponsor.InfoUrl;
+            Description = sponsor.Description;
             Id = sponsor.Id;
         }
         public SponsorManagementDTO()

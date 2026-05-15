@@ -23,6 +23,9 @@ namespace Mercurius.LAN.Web.APIClients
         [Patch("/lan/games/{id}")]
         Task<Game> UpdateGameAsync(Guid id, [Body] MultipartFormDataContent formData);
 
+        [Put("/lan/games/{id}/sponsors")]
+        Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, [Body] ReplaceGameSponsorsDTO sponsors);
+
         [Delete("/lan/games/{id}")]
         Task DeleteGameAsync(Guid id);
 

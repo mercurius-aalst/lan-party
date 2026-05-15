@@ -120,6 +120,7 @@ namespace Mercurius.LAN.Web.Services
         public Task CancelGameAsync(Guid id) => _lanClient.CancelGameAsync(id);
         public Task ResetGameAsync(Guid id) => _lanClient.ResetGameAsync(id);
         public Task DeleteGameAsync(Guid id) => _lanClient.DeleteGameAsync(id);
+        public Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors) => _lanClient.ReplaceGameSponsorsAsync(id, sponsors);
         public Task<Match> UpdateMatchScoresAsync(Guid matchId, UpdateMatchDTO updateMatchDto) => _lanClient.UpdateMatchAsync(matchId, updateMatchDto);
         public Task CompleteGameAsync(Guid id) => _lanClient.CompleteGameAsync(id);
     }
