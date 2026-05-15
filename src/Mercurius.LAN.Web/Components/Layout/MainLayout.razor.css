@@ -29,7 +29,7 @@
 }
 
 .brand-logo-image {
-    width: min(16rem, 48vw);
+    width: min(15rem, 42vw);
     height: auto;
     display: block;
 }
@@ -95,8 +95,10 @@
 }
 
 .footer-logo-image {
-    width: min(15rem, 100%);
+    width: 14rem;
+    max-width: 100%;
     height: auto;
+    display: block;
 }
 
 .menu-toggle {

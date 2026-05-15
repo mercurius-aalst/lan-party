@@ -7,15 +7,16 @@
 
 <div class="brand-nav-shell">
     <nav class="brand-nav-links" aria-label="Primary">
-        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="active" @onclick="HandleNavigationClicked">
+        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Home
         </NavLink>
-        <NavLink href="/games" class="brand-nav-link" ActiveClass="active" @onclick="HandleNavigationClicked">
+        <NavLink href="games" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Games
-        </NavLink>
-        <a href="/#schedule" class="brand-nav-link" @onclick="HandleNavigationClicked">Schedule</a>
+        </NavLink>        
+        <NavLink href="sponsors" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+        Sponsors
+    </NavLink>
         <a href="/#tickets" class="brand-nav-link" @onclick="HandleNavigationClicked">Tickets</a>
-        <a href="/#faq" class="brand-nav-link" @onclick="HandleNavigationClicked">FAQ</a>
         <a href="/#contact" class="brand-nav-link" @onclick="HandleNavigationClicked">Contact</a>
     </nav>
 

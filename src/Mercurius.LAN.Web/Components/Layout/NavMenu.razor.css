@@ -21,6 +21,10 @@
     font-weight: 600;
 }
 
+.brand-nav-link.brand-nav-link--active {
+    color: var(--color-deep-green);
+}
+
 .brand-nav-link::after {
     content: "";
     position: absolute;
@@ -34,7 +38,7 @@
 }
 
 .brand-nav-link:hover::after,
-.brand-nav-link.active::after {
+.brand-nav-link.brand-nav-link--active::after {
     background: var(--color-primary-green);
 }
 

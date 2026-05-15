@@ -11,8 +11,10 @@ public partial class NavMenu
     private IConfiguration Configuration { get; set; } = null!;
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
+
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
+
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
     private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/teams")}";
     private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
