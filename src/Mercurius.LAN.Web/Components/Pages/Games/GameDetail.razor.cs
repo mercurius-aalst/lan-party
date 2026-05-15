@@ -1,9 +1,11 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
+using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Refit;
@@ -16,11 +18,17 @@ public partial class GameDetail
     [Inject] private IToastService ToastService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
+    [Inject] private ISponsorService SponsorService { get; set; } = null!;
 
     [Parameter] public Guid GameId { get; set; }
 
+    private static readonly IReadOnlyList<SponsorContext> SponsorContextOrder =
+        [SponsorContext.TournamentPartner, SponsorContext.PrizePartner, SponsorContext.InfrastructurePartner, SponsorContext.CateringPartner];
+
     private GameExtended? _game;
     private int _selectedTab;
+    private List<Sponsor> _availableSponsors = [];
+    private List<GameSponsorPlacementInputDTO> _editablePlacements = [];
 
     private int ParticipantCount => _game == null ? 0 : GetParticipants(_game).Count();
     private int MatchCount => _game?.Matches.Count() ?? 0;
@@ -42,6 +50,8 @@ public partial class GameDetail
             .ThenBy(match => match.MatchNumber)
             .Take(4)
             .ToList() ?? [];
+
+    private IReadOnlyList<GameSponsorPlacement> TournamentPartners => GetSponsorPlacements(SponsorContext.TournamentPartner);
 
     private string GameSummary
     {
@@ -85,10 +95,26 @@ public partial class GameDetail
     {
         try
         {
-            _game = await GameService.GetGameByIdAsync(GameId);
+            var gameTask = GameService.GetGameByIdAsync(GameId);
+            var sponsorsTask = _availableSponsors.Count == 0
+                ? SponsorService.GetSponsorsAsync()
+                : Task.FromResult<IEnumerable<Sponsor>>(_availableSponsors);
+
+            await Task.WhenAll(gameTask, sponsorsTask);
+
+            _game = gameTask.Result;
+            _availableSponsors = sponsorsTask.Result
+                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
+                .ThenBy(sponsor => sponsor.Name)
+                .ToList();
+            SyncEditablePlacements();
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException)
+        {
+            ToastService.ShowError("Could not (re)load game data");
+        }
+        catch(Exception)
         {
             ToastService.ShowError("Could not (re)load game data");
         }
@@ -97,6 +123,7 @@ public partial class GameDetail
     private Task HandleGameUpdated(GameExtended updatedGame)
     {
         _game = updatedGame;
+        SyncEditablePlacements();
         return InvokeAsync(StateHasChanged);
     }
 
@@ -149,6 +176,11 @@ public partial class GameDetail
     }
 
     private string GetImageUrl(string? imageUrl)
+    {
+        return AssetUrlResolver.Resolve(Configuration, imageUrl);
+    }
+
+    private string GetSponsorLogoUrl(string? imageUrl)
     {
         return AssetUrlResolver.Resolve(Configuration, imageUrl);
     }
@@ -240,5 +272,84 @@ public partial class GameDetail
     {
         return game.Status == GameStatus.Scheduled &&
             !string.IsNullOrWhiteSpace(game.RegisterFormUrl);
+    }
+
+    private IReadOnlyList<GameSponsorPlacement> GetSponsorPlacements(SponsorContext sponsorContext)
+    {
+        return _game?.SponsorPlacements
+            .Where(placement => placement.Context == sponsorContext)
+            .OrderBy(placement => placement.DisplayOrder)
+            .ThenBy(placement => placement.SponsorName)
+            .ToList() ?? [];
+    }
+
+    private bool HasSponsorsInContext(SponsorContext sponsorContext)
+    {
+        return GetSponsorPlacements(sponsorContext).Any();
+    }
+
+    private void AddSponsorPlacementRow()
+    {
+        _editablePlacements.Add(new GameSponsorPlacementInputDTO
+        {
+            Context = SponsorContext.TournamentPartner,
+            DisplayOrder = _editablePlacements.Count + 1
+        });
+    }
+
+    private void RemoveSponsorPlacementRow(int index)
+    {
+        if(index < 0 || index >= _editablePlacements.Count)
+            return;
+
+        _editablePlacements.RemoveAt(index);
+    }
+
+    private async Task SaveSponsorPlacementsAsync()
+    {
+        if(_game == null)
+            return;
+
+        if(_editablePlacements.Any(placement => placement.SponsorId <= 0))
+        {
+            ToastService.ShowError("Each sponsor placement must have a sponsor selected.");
+            return;
+        }
+
+        try
+        {
+            var updatedGame = await GameService.ReplaceGameSponsorsAsync(_game.Id, new ReplaceGameSponsorsDTO
+            {
+                SponsorPlacements = _editablePlacements
+                    .OrderBy(placement => placement.Context.GetDisplayOrder())
+                    .ThenBy(placement => placement.DisplayOrder)
+                    .ToList()
+            });
+
+            _game = updatedGame;
+            SyncEditablePlacements();
+            ToastService.ShowSuccess("Sponsor placements updated.");
+            await InvokeAsync(StateHasChanged);
+        }
+        catch(ApiException ex)
+        {
+            ToastService.ShowError(ex.Content!);
+        }
+    }
+
+    private void SyncEditablePlacements()
+    {
+        _editablePlacements = _game?.SponsorPlacements
+            .OrderBy(placement => placement.Context.GetDisplayOrder())
+            .ThenBy(placement => placement.DisplayOrder)
+            .Select(placement => new GameSponsorPlacementInputDTO
+            {
+                SponsorId = placement.SponsorId,
+                Context = placement.Context,
+                Headline = placement.Headline,
+                SupportLine = placement.SupportLine,
+                DisplayOrder = placement.DisplayOrder
+            })
+            .ToList() ?? [];
     }
 }

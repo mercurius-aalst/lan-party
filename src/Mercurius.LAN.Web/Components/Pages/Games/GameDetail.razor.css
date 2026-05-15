@@ -92,6 +92,51 @@
     text-transform: uppercase;
 }
 
+.game-hero-sponsor-strip,
+.game-hero-sponsor-logos,
+.game-sponsor-grid,
+.game-sponsor-admin-list {
+    display: grid;
+    gap: 0.9rem;
+}
+
+.game-hero-sponsor-strip {
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(34, 197, 94, 0.18);
+    border-radius: 18px;
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.game-hero-sponsor-label {
+    color: var(--color-deep-green);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.game-hero-sponsor-logos {
+    grid-template-columns: repeat(auto-fit, minmax(8rem, max-content));
+    align-items: center;
+}
+
+.game-hero-sponsor-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 4.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 16px;
+    background: var(--sponsor-logo-bg);
+    text-decoration: none;
+}
+
+.game-hero-sponsor-logo img {
+    max-width: 100%;
+    max-height: 3rem;
+    object-fit: contain;
+}
+
 .game-detail-layout {
     display: grid;
     grid-template-columns: minmax(0, 1.65fr) minmax(20rem, 0.85fr);
@@ -262,6 +307,98 @@
     color: var(--color-muted-text);
 }
 
+.game-sponsor-card {
+    gap: 1rem;
+}
+
+.game-sponsor-grid {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
+
+.game-sponsor-tile {
+    display: grid;
+    gap: 0.9rem;
+    padding: 1rem;
+    border: 1px solid var(--sponsor-card-border);
+    border-radius: 18px;
+    background: var(--sponsor-card-bg);
+    color: inherit;
+    text-decoration: none;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.game-sponsor-tile:hover {
+    transform: translateY(-2px);
+    border-color: rgba(34, 197, 94, 0.32);
+    box-shadow: var(--sponsor-card-shadow);
+}
+
+.game-sponsor-tile__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 6rem;
+    padding: 0.9rem;
+    border-radius: 16px;
+    background: var(--sponsor-logo-bg);
+}
+
+.game-sponsor-tile__logo img {
+    max-width: 100%;
+    max-height: 4rem;
+    object-fit: contain;
+}
+
+.game-sponsor-tile__copy {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.game-sponsor-tile__copy h3,
+.game-sponsor-tile__copy p {
+    margin: 0;
+}
+
+.game-sponsor-tile__copy p {
+    color: var(--color-muted-text);
+}
+
+.game-sponsor-tile__headline {
+    color: var(--color-dark-navy) !important;
+    font-weight: 700;
+}
+
+.game-sponsor-tile__link {
+    color: var(--color-deep-green);
+    font-weight: 700;
+}
+
+.game-sponsor-admin-card {
+    gap: 1rem;
+}
+
+.game-sponsor-admin-list {
+    gap: 1rem;
+}
+
+.game-sponsor-admin-row {
+    display: grid;
+    gap: 0.9rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    background: var(--color-soft-white);
+}
+
+.game-sponsor-admin-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.game-sponsor-admin-remove {
+    justify-self: flex-start;
+}
+
 @media (max-width: 1100px) {
     .game-detail-layout,
     .game-detail-hero {
@@ -296,6 +433,11 @@
 
     .game-tabs-dropdown {
         display: block;
+    }
+
+    .game-hero-sponsor-logos,
+    .game-sponsor-grid {
+        grid-template-columns: 1fr;
     }
 }
 

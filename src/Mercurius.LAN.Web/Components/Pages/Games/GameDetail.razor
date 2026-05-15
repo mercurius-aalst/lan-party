@@ -1,6 +1,7 @@
 @page "/games/{GameId:guid}"
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Sponsors
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
 @using Mercurius.LAN.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Authorization
@@ -33,6 +34,21 @@ else
                     <span class="section-eyebrow">Tournament spotlight</span>
                     <h1>@_game.Name</h1>
                     <p>@GameSummary</p>
+
+                    @if(TournamentPartners.Any())
+                    {
+                        <div class="game-hero-sponsor-strip">
+                            <span class="game-hero-sponsor-label">Presented by</span>
+                            <div class="game-hero-sponsor-logos">
+                                @foreach(var placement in TournamentPartners)
+                                {
+                                    <a href="@placement.SponsorInfoUrl" target="_blank" rel="noopener noreferrer" class="game-hero-sponsor-logo" aria-label="Visit @placement.SponsorName">
+                                        <img src="@GetSponsorLogoUrl(placement.SponsorLogoUrl)" alt="@placement.SponsorName logo" />
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
 
                     <div class="game-detail-badges">
                         <span class="badge">@_game.ParticipationMode.GetLabel()</span>
@@ -224,6 +240,40 @@ else
                     </dl>
                 </section>
 
+                @foreach(var sponsorContext in SponsorContextOrder.Where(HasSponsorsInContext))
+                {
+                    <section class="brand-card game-sidebar-card game-sponsor-card">
+                        <span class="section-eyebrow">@sponsorContext.GetSectionEyebrow()</span>
+                        <h2>@sponsorContext.GetLabel()</h2>
+                        <div class="game-sponsor-grid">
+                            @foreach(var placement in GetSponsorPlacements(sponsorContext))
+                            {
+                                <a class="game-sponsor-tile" href="@placement.SponsorInfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @placement.SponsorName">
+                                    <div class="game-sponsor-tile__logo">
+                                        <img src="@GetSponsorLogoUrl(placement.SponsorLogoUrl)" alt="@placement.SponsorName logo" />
+                                    </div>
+                                    <div class="game-sponsor-tile__copy">
+                                        <h3>@placement.SponsorName</h3>
+                                        @if(!string.IsNullOrWhiteSpace(placement.Headline))
+                                        {
+                                            <p class="game-sponsor-tile__headline">@placement.Headline</p>
+                                        }
+                                        @if(!string.IsNullOrWhiteSpace(placement.SupportLine))
+                                        {
+                                            <p>@placement.SupportLine</p>
+                                        }
+                                        else if(!string.IsNullOrWhiteSpace(placement.SponsorDescription))
+                                        {
+                                            <p>@placement.SponsorDescription</p>
+                                        }
+                                        <span class="game-sponsor-tile__link">Visit website</span>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
                 <section class="brand-card game-sidebar-card">
                     <span class="section-eyebrow">Registration</span>
                     <h2>Entry status</h2>
@@ -243,6 +293,78 @@ else
                         <li>@PlacementCount placement result@(PlacementCount == 1 ? string.Empty : "s") recorded</li>
                     </ul>
                 </section>
+
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <section class="brand-card game-sidebar-card game-sponsor-admin-card">
+                            <div class="game-section-header">
+                                <div>
+                                    <span class="section-eyebrow">Admin</span>
+                                    <h2>Sponsor placements</h2>
+                                    <p>Assign sponsors to this tournament and save the full placement set in one request.</p>
+                                </div>
+                                <button type="button" class="button-secondary" @onclick="AddSponsorPlacementRow">Add placement</button>
+                            </div>
+
+                            @if(!_availableSponsors.Any())
+                            {
+                                <p class="game-empty-copy">Create sponsors first before assigning them to a tournament.</p>
+                            }
+                            else
+                            {
+                                <div class="game-sponsor-admin-list">
+                                    @for(var index = 0; index < _editablePlacements.Count; index++)
+                                    {
+                                        var rowIndex = index;
+                                        <article class="game-sponsor-admin-row">
+                                            <div class="form-group">
+                                                <label for="@($"sponsor-{rowIndex}")">Sponsor</label>
+                                                <InputSelect id="@($"sponsor-{rowIndex}")" class="form-control" @bind-Value="_editablePlacements[rowIndex].SponsorId">
+                                                    <option value="0">Select sponsor</option>
+                                                    @foreach(var sponsor in _availableSponsors)
+                                                    {
+                                                        <option value="@sponsor.Id">@sponsor.Name</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="@($"context-{rowIndex}")">Context</label>
+                                                <InputSelect id="@($"context-{rowIndex}")" class="form-control" @bind-Value="_editablePlacements[rowIndex].Context">
+                                                    @foreach(var sponsorContext in SponsorContextOrder)
+                                                    {
+                                                        <option value="@sponsorContext">@sponsorContext.GetLabel()</option>
+                                                    }
+                                                </InputSelect>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="@($"headline-{rowIndex}")">Headline</label>
+                                                <InputText id="@($"headline-{rowIndex}")" class="form-control" @bind-Value="_editablePlacements[rowIndex].Headline" />
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="@($"support-{rowIndex}")">Support line</label>
+                                                <InputText id="@($"support-{rowIndex}")" class="form-control" @bind-Value="_editablePlacements[rowIndex].SupportLine" />
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="@($"order-{rowIndex}")">Display order</label>
+                                                <InputNumber id="@($"order-{rowIndex}")" class="form-control" @bind-Value="_editablePlacements[rowIndex].DisplayOrder" />
+                                            </div>
+
+                                            <button type="button" class="btn btn-outline-danger game-sponsor-admin-remove" @onclick="() => RemoveSponsorPlacementRow(rowIndex)">Remove</button>
+                                        </article>
+                                    }
+                                </div>
+
+                                <div class="game-sponsor-admin-actions">
+                                    <button type="button" class="button-primary" @onclick="SaveSponsorPlacementsAsync">Save sponsor placements</button>
+                                </div>
+                            }
+                        </section>
+                    </Authorized>
+                </AuthorizeView>
             </aside>
         </div>
     </div>
