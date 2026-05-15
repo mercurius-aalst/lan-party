@@ -1,5 +1,6 @@
 @page "/sponsors"
-@using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Sponsors
 @rendermode InteractiveServer
 
 <PageTitle>Sponsors</PageTitle>
@@ -12,19 +13,28 @@ else
 {
     <section class="sponsors-hero brand-section">
         <div class="sponsors-hero-copy">
-            <span class="section-eyebrow">Community partners</span>
+            <span class="brand-section-number">05</span>
+            <span class="section-eyebrow">Sponsors & Partners</span>
             <h1>Sponsors</h1>
-            <p>Mercurius LAN depends on partners who help make the event possible. Browse the current sponsor line-up and visit their pages for more information.</p>
+            <p>Mercurius LAN works with partners who help power tournaments, infrastructure, prizes, and the on-site experience. Explore the current line-up or get in touch to join it.</p>
+            <div class="sponsors-hero-actions">
+                <a href="/#contact" class="button-primary">Become a Sponsor</a>
+            </div>
         </div>
 
-        <div class="brand-panel-dark sponsors-hero-panel">
-            <div>
-                <span class="sponsors-stat-value">@_sponsors.Count()</span>
-                <span class="sponsors-stat-label">Sponsors</span>
+        <div class="brand-card sponsors-hero-visual">
+            <div class="sponsors-hero-logo-wrap">
+                <img src="/img/lan_logo_dark.svg" alt="Mercurius LAN logo" class="sponsors-hero-logo" />
             </div>
-            <div>
-                <span class="sponsors-stat-value">@_sponsors.Select(sponsor => sponsor.SponsorTier).Distinct().Count()</span>
-                <span class="sponsors-stat-label">Partner tiers</span>
+            <div class="sponsors-hero-meta">
+                <div>
+                    <span class="sponsors-stat-value">@_sponsors.Count</span>
+                    <span class="sponsors-stat-label">Active partners</span>
+                </div>
+                <div>
+                    <span class="sponsors-stat-value">@TierCount</span>
+                    <span class="sponsors-stat-label">Visible tiers</span>
+                </div>
             </div>
         </div>
     </section>
@@ -34,31 +44,41 @@ else
         <div class="brand-card sponsors-empty-state">
             <h2>No sponsors available.</h2>
             <p>Once sponsor data is available, it will appear here grouped by tier.</p>
+            <a href="/#contact" class="button-primary">Become a Sponsor</a>
         </div>
     }
     else
     {
-        @foreach(var tierGroup in _sponsors.GroupBy(sponsor => sponsor.SponsorTier).OrderBy(group => group.Key))
+        @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
         {
             <section class="brand-section sponsors-tier-section">
                 <div class="sponsors-tier-header">
                     <div>
                         <span class="section-eyebrow">Partner tier</span>
-                        <h2>@GetTierLabel(tierGroup.Key)</h2>
+                        <h2>@tier.GetLabel()</h2>
                     </div>
-                    <p>@tierGroup.Count() partner@(tierGroup.Count() == 1 ? string.Empty : "s") in this tier.</p>
+                    <p>@GetTierSummary(tier)</p>
                 </div>
 
-                <div class="sponsors-grid">
-                    @foreach(var sponsor in tierGroup.OrderBy(sponsor => sponsor.Name))
+                <div class="@GetTierGridClass(tier)">
+                    @foreach(var sponsor in GetSponsorsByTier(tier))
                     {
-                        <a class="brand-card sponsor-card @GetTierClass(sponsor.SponsorTier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Open sponsor info for @sponsor.Name">
-                            <div class="sponsor-card-logo">
+                        <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
+                            <div class="sponsor-card-logo sponsor-card-logo--@tier.ToString().ToLowerInvariant()">
                                 <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
                             </div>
                             <div class="sponsor-card-body">
+                                <span class="sponsor-tier-label">@tier.GetShortLabel()</span>
                                 <h3>@sponsor.Name</h3>
-                                <span>Visit sponsor</span>
+                                @if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Presenting)
+                                {
+                                    <p>@sponsor.Description</p>
+                                }
+                                else if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Gold)
+                                {
+                                    <p>@sponsor.Description</p>
+                                }
+                                <span class="sponsor-card-link">Visit website</span>
                             </div>
                         </a>
                     }

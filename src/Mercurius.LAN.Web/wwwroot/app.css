@@ -13,6 +13,12 @@
     --color-danger: #dc2626;
     --shadow-brand: 0 10px 30px rgba(15, 23, 42, 0.08);
     --shadow-brand-hover: 0 14px 34px rgba(15, 23, 42, 0.1);
+    --sponsor-card-bg: #ffffff;
+    --sponsor-section-bg: #f3f4f6;
+    --sponsor-card-border: #dde3ea;
+    --sponsor-card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    --sponsor-card-shadow-hover: 0 16px 40px rgba(15, 23, 42, 0.12);
+    --sponsor-logo-bg: #ffffff;
     --radius-card: 20px;
     --radius-button: 12px;
     --site-max-width: 1200px;

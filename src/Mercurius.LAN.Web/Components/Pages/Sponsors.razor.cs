@@ -1,4 +1,5 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -7,8 +8,9 @@ namespace Mercurius.LAN.Web.Components.Pages
 {
     public partial class Sponsors : ComponentBase
     {
-        private IEnumerable<Sponsor> _sponsors = [];
+        private List<Sponsor> _sponsors = [];
         private bool _isLoading = true;
+        private static readonly IReadOnlyList<SponsorTier> TierOrder = [SponsorTier.Presenting, SponsorTier.Gold, SponsorTier.Silver, SponsorTier.Bronze];
 
         [Inject]
         private ISponsorService SponsorService { get; set; } = null!;
@@ -25,7 +27,10 @@ namespace Mercurius.LAN.Web.Components.Pages
         {
             try
             {
-                _sponsors = await SponsorService.GetSponsorsAsync();
+                _sponsors = (await SponsorService.GetSponsorsAsync())
+                    .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
+                    .ThenBy(sponsor => sponsor.Name)
+                    .ToList();
             }
             catch(Exception)
             {
@@ -38,18 +43,45 @@ namespace Mercurius.LAN.Web.Components.Pages
             }
         }
 
-        private static string GetTierLabel(int tier)
+        private int TierCount => TierOrder.Count(HasSponsorsInTier);
+
+        private IEnumerable<Sponsor> GetSponsorsByTier(SponsorTier tier)
         {
-            return $"Tier {tier}";
+            return _sponsors
+                .Where(sponsor => sponsor.SponsorTier == tier)
+                .OrderBy(sponsor => sponsor.Name);
         }
 
-        private static string GetTierClass(int tier)
+        private bool HasSponsorsInTier(SponsorTier tier)
+        {
+            return _sponsors.Any(sponsor => sponsor.SponsorTier == tier);
+        }
+
+        private string GetTierSummary(SponsorTier tier)
+        {
+            var count = GetSponsorsByTier(tier).Count();
+            return $"{count} partner{(count == 1 ? string.Empty : "s")} in this tier.";
+        }
+
+        private static string GetTierGridClass(SponsorTier tier)
         {
             return tier switch
             {
-                1 => "tier-primary",
-                2 => "tier-secondary",
-                _ => "tier-standard"
+                SponsorTier.Presenting => "sponsor-grid sponsor-grid--presenting",
+                SponsorTier.Gold => "sponsor-grid sponsor-grid--gold",
+                SponsorTier.Silver => "sponsor-grid sponsor-grid--silver",
+                _ => "sponsor-grid sponsor-grid--bronze"
+            };
+        }
+
+        private static string GetSponsorCardClass(SponsorTier tier)
+        {
+            return tier switch
+            {
+                SponsorTier.Presenting => "brand-card sponsor-card sponsor-card--feature",
+                SponsorTier.Gold => "brand-card sponsor-card sponsor-card--gold",
+                SponsorTier.Silver => "brand-card sponsor-card sponsor-card--silver",
+                _ => "brand-card sponsor-card sponsor-card--bronze"
             };
         }
     }

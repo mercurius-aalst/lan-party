@@ -1,28 +1,62 @@
 .sponsors-hero {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(18rem, 0.85fr);
+    grid-template-columns: minmax(0, 1.05fr) minmax(18rem, 0.95fr);
     gap: 1.5rem;
     align-items: stretch;
 }
 
+.sponsors-hero-copy,
+.sponsors-hero-visual,
+.sponsor-card,
+.sponsor-card-body {
+    display: grid;
+    gap: 1rem;
+}
+
 .sponsors-hero-copy {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 0.9rem;
+    align-content: center;
 }
 
 .sponsors-hero-copy p,
 .sponsors-tier-header p,
-.sponsors-empty-state p {
+.sponsors-empty-state p,
+.sponsor-card-body p {
     margin: 0;
 }
 
-.sponsors-hero-panel {
+.sponsors-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.sponsors-hero-visual {
+    padding: 1.5rem;
+    background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), transparent 42%),
+        linear-gradient(180deg, var(--color-white), var(--color-soft-white));
+}
+
+.sponsors-hero-logo-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 16rem;
+    padding: 1.5rem;
+    border-radius: 22px;
+    background: var(--sponsor-logo-bg);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.sponsors-hero-logo {
+    width: min(100%, 20rem);
+    height: auto;
+}
+
+.sponsors-hero-meta {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    padding: 1.5rem;
 }
 
 .sponsors-stat-value {
@@ -36,7 +70,7 @@
 }
 
 .sponsors-stat-label {
-    color: rgba(255, 255, 255, 0.76);
+    color: var(--color-muted-text);
     font-size: 0.82rem;
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -44,7 +78,14 @@
 }
 
 .sponsors-empty-state {
+    display: grid;
+    gap: 1rem;
     padding: 1.5rem;
+}
+
+.sponsors-tier-section {
+    display: grid;
+    gap: 1.25rem;
 }
 
 .sponsors-tier-header {
@@ -52,55 +93,97 @@
     align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.25rem;
 }
 
 .sponsors-tier-header h2 {
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.25rem;
 }
 
-.sponsors-grid {
+.sponsor-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+
+.sponsor-grid--presenting {
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1.25rem;
+}
+
+.sponsor-grid--gold {
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
     gap: 1rem;
+}
+
+.sponsor-grid--silver {
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1rem;
+}
+
+.sponsor-grid--bronze {
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.9rem;
 }
 
 .sponsor-card {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 1rem;
-    min-height: 15rem;
+    min-height: 100%;
     padding: 1.25rem;
+    border-radius: 22px;
+    border: 1px solid var(--sponsor-card-border);
+    background: var(--sponsor-card-bg);
+    box-shadow: var(--sponsor-card-shadow);
+    color: inherit;
     text-decoration: none;
-    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
 }
 
 .sponsor-card:hover {
     transform: translateY(-2px);
-    border-color: rgba(34, 197, 94, 0.45);
-    box-shadow: var(--shadow-brand-hover);
+    border-color: rgba(34, 197, 94, 0.32);
+    box-shadow: var(--sponsor-card-shadow-hover);
+}
+
+.sponsor-card--feature {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
 }
 
 .sponsor-card-logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 9rem;
+    min-height: 8rem;
     padding: 1rem;
     border-radius: 18px;
-    background: var(--color-soft-white);
+    background: var(--sponsor-logo-bg);
 }
 
 .sponsor-card-logo img {
     max-width: 100%;
-    max-height: 7rem;
+    max-height: 6rem;
     object-fit: contain;
 }
 
-.sponsor-card-body {
-    display: grid;
-    gap: 0.35rem;
+.sponsor-card-logo--presenting {
+    min-height: 10rem;
+}
+
+.sponsor-card-logo--gold {
+    min-height: 8.5rem;
+}
+
+.sponsor-card-logo--silver,
+.sponsor-card-logo--bronze {
+    min-height: 7rem;
+}
+
+.sponsor-tier-label {
+    color: var(--color-deep-green);
+    font-family: "Saira", system-ui, sans-serif;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
 .sponsor-card-body h3 {
@@ -108,20 +191,20 @@
     color: var(--color-dark-navy);
 }
 
-.sponsor-card-body span {
+.sponsor-card-body p {
+    color: var(--color-muted-text);
+}
+
+.sponsor-card-link {
     color: var(--color-deep-green);
     font-weight: 700;
 }
 
-.tier-primary .sponsor-card-logo {
-    min-height: 11rem;
+.sponsor-card--bronze .sponsor-card-link {
+    font-size: 0.92rem;
 }
 
-.tier-secondary .sponsor-card-logo {
-    min-height: 10rem;
-}
-
-@media (max-width: 900px) {
+@media (max-width: 940px) {
     .sponsors-hero {
         grid-template-columns: 1fr;
     }
@@ -132,8 +215,12 @@
     }
 }
 
-@media (max-width: 560px) {
-    .sponsors-hero-panel {
+@media (max-width: 700px) {
+    .sponsor-card--feature {
+        grid-template-columns: 1fr;
+    }
+
+    .sponsors-hero-meta {
         grid-template-columns: 1fr;
     }
 }
