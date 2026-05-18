@@ -41,7 +41,43 @@ else
         </div>
     </section>
 
-    <section class="home-features">
+    @if(_sponsors.Any())
+    {
+        <section class="brand-section home-sponsors">
+            <div class="home-sponsors-panel brand-panel-dark">
+                <div class="home-sponsors-header">                  
+                    <span class="section-eyebrow">Our partners</span>
+                    <a href="/sponsors" class="button-secondary home-sponsors-cta">View All Partners</a>
+                </div>
+
+                <div class="home-sponsors-slider">
+                    <div class="home-sponsors-viewport" aria-label="Sponsor logos">
+                        <div class="home-sponsors-track">
+                            <div class="home-sponsors-loop">
+                                @foreach(var sponsor in _sponsors)
+                                {
+                                    <a class="home-sponsors-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
+                                        <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
+                                    </a>
+                                }
+                            </div>
+
+                            <div class="home-sponsors-loop" aria-hidden="true">
+                                @foreach(var sponsor in _sponsors)
+                                {
+                                    <a class="home-sponsors-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" tabindex="-1">
+                                        <img src="@sponsor.LogoUrl" alt="" />
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="brand-section home-features">
         <article class="brand-card feature-card">
             <span class="brand-section-number">01</span>
             <h2>Tournaments</h2>
@@ -85,50 +121,6 @@ else
             }
         </div>
     </section>
-
-    @if(_sponsors.Any())
-    {
-        <section class="brand-section home-sponsors">
-            <div class="home-sponsors__inner">
-                <div class="home-sponsors__intro">
-                    <span class="brand-section-number">04</span>
-                    <span class="section-eyebrow">Our partners</span>
-                    <h2>Support Behind The Weekend</h2>
-                    <p>The Mercurius LAN experience is backed by partners who keep the network online, the prize pool strong, and the venue running smoothly.</p>
-                    <a href="/sponsors" class="button-secondary">View All Partners</a>
-                </div>
-
-                <div class="home-sponsors__marquee brand-panel-dark">
-                    <div class="home-sponsors__marquee-header">
-                        <span class="section-eyebrow">Trusted by our partners</span>
-                        <p>Continuous logo showcase for the teams and brands supporting the event.</p>
-                    </div>
-
-                    <div class="home-sponsors__viewport" aria-label="Sponsor logos">
-                        <div class="home-sponsors__track">
-                            <div class="home-sponsors__set">
-                                @foreach(var sponsor in _sponsors)
-                                {
-                                    <a class="home-sponsor-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                    </a>
-                                }
-                            </div>
-
-                            <div class="home-sponsors__set" aria-hidden="true">
-                                @foreach(var sponsor in _sponsors)
-                                {
-                                    <a class="home-sponsor-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" tabindex="-1">
-                                        <img src="@sponsor.LogoUrl" alt="" />
-                                    </a>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    }
 
     <section id="schedule" class="brand-section">
         <div class="brand-card schedule-strip">

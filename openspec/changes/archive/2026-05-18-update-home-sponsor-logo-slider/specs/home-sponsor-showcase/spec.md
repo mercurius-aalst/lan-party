@@ -1,8 +1,5 @@
-# home-sponsor-showcase Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change replace-home-sponsor-cards-with-logo-slider. Update Purpose after archive.
-## Requirements
 ### Requirement: Homepage sponsor showcase uses an animated logo slider
 
 The home page SHALL present sponsors in a unified animated logo slider instead of tiered sponsor card groups.
@@ -45,4 +42,3 @@ The sponsor showcase SHALL use layout, sizing, and edge treatments that make the
 
 - **WHEN** users want more sponsor information than the homepage slider provides
 - **THEN** the home page provides a link to the full sponsors page
-
