@@ -5,31 +5,31 @@
     <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label="Close menus"></button>
 }
 
-<div class="brand-nav-shell">
-    <nav class="brand-nav-links" aria-label="Primary">
-        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+<div class="brand-nav-shell flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <nav class="brand-nav-links flex flex-col items-stretch gap-3 md:flex-1 md:flex-row md:items-center md:justify-center md:gap-5" aria-label="Primary">
+        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Home
         </NavLink>
-        <NavLink href="games" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+        <NavLink href="games" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Games
         </NavLink>        
-        <NavLink href="sponsors" Match="NavLinkMatch.All" class="brand-nav-link" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
-        Sponsors
-    </NavLink>
-        <a href="/#tickets" class="brand-nav-link" @onclick="HandleNavigationClicked">Tickets</a>
-        <a href="/#contact" class="brand-nav-link" @onclick="HandleNavigationClicked">Contact</a>
+        <NavLink href="sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+            Sponsors
+        </NavLink>
+        <a href="/#tickets" class="brand-nav-link text-center md:text-left" @onclick="HandleNavigationClicked">Tickets</a>
+        <a href="/#contact" class="brand-nav-link text-center md:text-left" @onclick="HandleNavigationClicked">Contact</a>
     </nav>
 
-    <div class="brand-nav-actions">
+    <div class="brand-nav-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end">
         <AuthorizeView Roles="admin">
             <Authorized>
                 <div class="nav-menu-group" @onclick:stopPropagation="true">
-                    <button type="button" class="brand-utility-button" @onclick="ToggleDropdown">Admin</button>
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="ToggleDropdown">Admin</button>
                     @if(_isDropdownVisible)
                     {
-                        <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
-                            <a class="dropdown-item" href="/admin/sponsors" @onclick="CloseDropdown">Sponsors</a>
+                        <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
+                            <a class="dropdown-item" href="/admin/teams" @onclick="HandleNavigationClicked">Teams</a>
+                            <a class="dropdown-item" href="/admin/sponsors" @onclick="HandleNavigationClicked">Sponsors</a>
                         </div>
                     }
                 </div>
@@ -39,31 +39,31 @@
         <AuthorizeView>
             <Authorized Context="authState">
                 <div class="nav-menu-group" @onclick:stopPropagation="true">
-                    <button type="button" class="brand-utility-button user-button" @onclick="ToggleUserMenu">
+                    <button type="button" class="brand-utility-button user-button w-full justify-center md:w-auto" @onclick="ToggleUserMenu">
                         <span class="user-icon bi bi-person-circle"></span>
                         <span>@GetDisplayName(authState.User)</span>
                     </button>
                     @if(_isUserMenuVisible)
                     {
-                        <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/profile" @onclick="CloseDropdown">Profile</a>
+                        <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
+                            <a class="dropdown-item" href="/profile" @onclick="HandleNavigationClicked">Profile</a>
                             <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
                         </div>
                     }
                 </div>
             </Authorized>
             <NotAuthorized>
-                <div class="brand-auth-actions">
-                    <button type="button" class="brand-utility-button" @onclick="BeginLogin">Login</button>
+                <div class="brand-auth-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center">
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">Login</button>
                     @if(IsMockBackendEnabled)
                     {
-                        <a href="@MockAdminLoginHref" class="brand-dev-link" @onclick="HandleNavigationClicked">Mock Admin</a>
+                        <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">Mock Admin</a>
                     }
                 </div>
             </NotAuthorized>
         </AuthorizeView>
 
-        <a href="/#tickets" class="button-primary brand-ticket-cta" @onclick="HandleNavigationClicked">
+        <a href="/#tickets" class="button-primary brand-ticket-cta w-full justify-center md:w-auto" @onclick="HandleNavigationClicked">
             Get Tickets
         </a>
     </div>

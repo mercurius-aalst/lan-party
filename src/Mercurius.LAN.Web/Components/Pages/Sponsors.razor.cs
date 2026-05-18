@@ -43,8 +43,6 @@ namespace Mercurius.LAN.Web.Components.Pages
             }
         }
 
-        private int TierCount => TierOrder.Count(HasSponsorsInTier);
-
         private IEnumerable<Sponsor> GetSponsorsByTier(SponsorTier tier)
         {
             return _sponsors

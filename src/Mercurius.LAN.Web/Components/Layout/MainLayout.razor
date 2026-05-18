@@ -2,10 +2,10 @@
 
 @inherits LayoutComponentBase
 
-<div class="layout-shell">
-    <header class="brand-header">
-        <div class="brand-header-inner brand-container">
-            <a class="brand-logo-link" href="/" aria-label="Mercurius LAN home">
+<div class="layout-shell flex min-h-screen flex-col">
+    <header class="brand-header sticky top-0 z-[1100]">
+        <div class="brand-header-inner brand-container flex min-h-[5.5rem] items-center justify-between gap-4">
+            <a class="brand-logo-link inline-flex shrink-0 items-center" href="/" aria-label="Mercurius LAN home">
                 <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="brand-logo-image" />
             </a>
 
@@ -17,7 +17,7 @@
                 </span>
             </button>
 
-            <div class="brand-nav-panel @(_sidebarOpen ? "open" : null)">
+            <div class="brand-nav-panel flex flex-1 items-center justify-end @(_sidebarOpen ? "open" : null)">
                 <NavMenu OnNavigationSelected="OnNavigationSelected" />
             </div>
         </div>
@@ -28,14 +28,14 @@
         <button type="button" class="brand-nav-backdrop" @onclick="HandleOutsideClick" aria-label="Close navigation"></button>
     }
 
-    <main class="brand-main">
+    <main class="brand-main flex-1 @(IsHomePage ? "brand-main--home" : null)">
         <div class="brand-main-content brand-container">
             @Body
         </div>
     </main>
 
     <footer class="footer">
-        <div class="brand-container footer-grid">
+        <div class="brand-container footer-grid grid gap-7 lg:grid-cols-2 xl:[grid-template-columns:1.25fr_repeat(3,minmax(0,1fr))]">
             <section class="footer-brand">
                 <div class="footer-logo-panel">
                     <img src="/img/lan_logo_wide_light.svg" alt="Mercurius LAN" class="footer-logo-image" />

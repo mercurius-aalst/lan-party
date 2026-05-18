@@ -11,31 +11,15 @@
 }
 else
 {
-    <section class="sponsors-hero brand-section">
-        <div class="sponsors-hero-copy">
-            <span class="brand-section-number">05</span>
+    <section class="brand-section sponsors-intro">
+        <div class="sponsors-intro-copy">
             <span class="section-eyebrow">Sponsors & Partners</span>
             <h1>Sponsors</h1>
-            <p>Mercurius LAN works with partners who help power tournaments, infrastructure, prizes, and the on-site experience. Explore the current line-up or get in touch to join it.</p>
-            <div class="sponsors-hero-actions">
-                <a href="/#contact" class="button-primary">Become a Sponsor</a>
-            </div>
+            <p>Meet the partners behind Mercurius LAN and browse the brands helping shape the weekend experience.</p>
         </div>
-
-        <div class="brand-card sponsors-hero-visual">
-            <div class="sponsors-hero-logo-wrap">
-                <img src="/img/lan_logo_dark.svg" alt="Mercurius LAN logo" class="sponsors-hero-logo" />
-            </div>
-            <div class="sponsors-hero-meta">
-                <div>
-                    <span class="sponsors-stat-value">@_sponsors.Count</span>
-                    <span class="sponsors-stat-label">Active partners</span>
-                </div>
-                <div>
-                    <span class="sponsors-stat-value">@TierCount</span>
-                    <span class="sponsors-stat-label">Visible tiers</span>
-                </div>
-            </div>
+        <div class="sponsors-intro-actions">
+            <a href="#current-partners" class="button-primary">Browse Partners</a>
+            <a href="/#contact" class="button-secondary">Become a Sponsor</a>
         </div>
     </section>
 
@@ -49,41 +33,43 @@ else
     }
     else
     {
-        @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
-        {
-            <section class="brand-section sponsors-tier-section">
-                <div class="sponsors-tier-header">
-                    <div>
-                        <span class="section-eyebrow">Partner tier</span>
-                        <h2>@tier.GetLabel()</h2>
+        <div id="current-partners" class="sponsors-tier-list">
+            @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
+            {
+                <section class="brand-section sponsors-tier-section">
+                    <div class="sponsors-tier-header">
+                        <div>
+                            <span class="section-eyebrow">Partner tier</span>
+                            <h2>@tier.GetLabel()</h2>
+                        </div>
+                        <p>@GetTierSummary(tier)</p>
                     </div>
-                    <p>@GetTierSummary(tier)</p>
-                </div>
 
-                <div class="@GetTierGridClass(tier)">
-                    @foreach(var sponsor in GetSponsorsByTier(tier))
-                    {
-                        <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                            <div class="sponsor-card-logo sponsor-card-logo--@tier.ToString().ToLowerInvariant()">
-                                <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                            </div>
-                            <div class="sponsor-card-body">
-                                <span class="sponsor-tier-label">@tier.GetShortLabel()</span>
-                                <h3>@sponsor.Name</h3>
-                                @if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Presenting)
-                                {
-                                    <p>@sponsor.Description</p>
-                                }
-                                else if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Gold)
-                                {
-                                    <p>@sponsor.Description</p>
-                                }
-                                <span class="sponsor-card-link">Visit website</span>
-                            </div>
-                        </a>
-                    }
-                </div>
-            </section>
-        }
+                    <div class="@GetTierGridClass(tier)">
+                        @foreach(var sponsor in GetSponsorsByTier(tier))
+                        {
+                            <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
+                                <div class="sponsor-card-logo sponsor-card-logo--@tier.ToString().ToLowerInvariant()">
+                                    <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
+                                </div>
+                                <div class="sponsor-card-body">
+                                    <span class="sponsor-tier-label">@tier.GetShortLabel()</span>
+                                    <h3>@sponsor.Name</h3>
+                                    @if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Presenting)
+                                    {
+                                        <p>@sponsor.Description</p>
+                                    }
+                                    else if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Gold)
+                                    {
+                                        <p>@sponsor.Description</p>
+                                    }
+                                    <span class="sponsor-card-link">Visit website</span>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+        </div>
     }
 }

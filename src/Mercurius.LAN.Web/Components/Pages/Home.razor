@@ -11,161 +11,194 @@
 }
 else
 {
-    <section class="home-hero brand-section">
-        <div class="home-hero-copy">
-            <span class="section-eyebrow">Student community. Compete. Connect.</span>
-            <h1>Mercurius LAN</h1>
-            <p>Three days of gaming, tournaments, BYOC setups, and unforgettable memories. Bring your setup, challenge your friends, and connect with students who live for the game.</p>
-            <div class="home-hero-actions">
-                <a href="#tickets" class="button-primary">Join the LAN</a>
-                <a href="/games" class="button-secondary">View Games</a>
-            </div>
-            <div class="home-stat-strip brand-panel-dark">
-                <div>
-                    <span class="stat-value">@_games.Count</span>
-                    <span class="stat-label">Tournaments</span>
-                </div>
-                <div>
-                    <span class="stat-value">@EventDays</span>
-                    <span class="stat-label">Days</span>
-                </div>
-                <div>
-                    <span class="stat-value">BYOC</span>
-                    <span class="stat-label">Ready</span>
-                </div>
-            </div>
-        </div>
+    <section class="home-hero">
+        @{
+            string? primaryHeroImage = HeroGames.Count > 0 ? AssetUrlResolver.Resolve(Configuration, HeroGames[0].ImageUrl) : null;
+            string? secondaryHeroImage = HeroGames.Count > 1 ? AssetUrlResolver.Resolve(Configuration, HeroGames[1].ImageUrl) : null;
+            string? tertiaryHeroImage = HeroGames.Count > 2 ? AssetUrlResolver.Resolve(Configuration, HeroGames[2].ImageUrl) : null;
+        }
 
-        <div class="home-hero-logo brand-panel-dark">
-            <img src="/img/lan_logo_light.svg" alt="Mercurius LAN logo" />
+        <div class="home-hero-shell">
+            <div class="home-hero-media" aria-hidden="true">
+                @if(primaryHeroImage is not null)
+                {
+                    <img src="@primaryHeroImage" alt="" class="home-hero-media-image home-hero-media-image--primary" />
+                }
+
+                @if(secondaryHeroImage is not null)
+                {
+                    <img src="@secondaryHeroImage" alt="" class="home-hero-media-image home-hero-media-image--secondary" />
+                }
+
+                @if(tertiaryHeroImage is not null)
+                {
+                    <img src="@tertiaryHeroImage" alt="" class="home-hero-media-image home-hero-media-image--tertiary" />
+                }
+
+                <div class="home-hero-media-glow home-hero-media-glow--green"></div>
+                <div class="home-hero-media-glow home-hero-media-glow--violet"></div>
+                <div class="home-hero-media-grid"></div>
+            </div>
+
+            <div class="home-hero-content">
+                <div class="home-hero-chip-row">
+                    <span class="home-hero-chip home-hero-chip--blue">@EventWindow</span>
+                </div>
+
+                <img src="/img/lan_logo_wide_light.svg" alt="Mercurius LAN" class="home-hero-wordmark" />
+
+                <h1 class="home-hero-title">The student LAN weekend with real atmosphere.</h1>
+                <p class="home-hero-lead">Competitive brackets, BYOC nights, and a crowd that shows up ready to play.</p>
+
+                <div class="home-hero-actions">
+                    <a href="#tickets" class="button-primary">Get Your Tickets</a>
+                    <a href="/games" class="button-secondary">Learn More</a>
+                </div>
+
+                <div class="home-hero-stat-row">
+                    <div class="home-hero-stat-card">
+                        <span class="home-hero-stat-value">@_games.Count</span>
+                        <span class="home-hero-stat-label">Tournaments</span>
+                    </div>
+                    <div class="home-hero-stat-card">
+                        <span class="home-hero-stat-value">@EventDays</span>
+                        <span class="home-hero-stat-label">Days</span>
+                    </div>
+                    <div class="home-hero-stat-card">
+                        <span class="home-hero-stat-value">@SponsorCount</span>
+                        <span class="home-hero-stat-label">Partners</span>
+                    </div>
+                </div>
+
+                <a href="#home-content" class="home-hero-scroll-link" aria-label="Scroll to the rest of the home page">
+                    <span class="home-hero-scroll-label">Explore the event</span>
+                    <span class="home-hero-scroll-indicator" aria-hidden="true"></span>
+                </a>
+            </div>           
         </div>
     </section>
 
-    @if(_sponsors.Any())
-    {
-        <section class="brand-section home-sponsors">
-            <div class="home-sponsors-panel brand-panel-dark">
-                <div class="home-sponsors-header">                  
-                    <span class="section-eyebrow">Our partners</span>
-                    <a href="/sponsors" class="button-secondary home-sponsors-cta">View All Partners</a>
-                </div>
+    <div id="home-content" class="home-flow">
+        @if(_sponsors.Any())
+        {
+            <section class="brand-section home-sponsors">
+                <div class="home-sponsors-panel brand-panel-dark">
+                    <div class="home-sponsors-header">                  
+                        <span class="section-eyebrow">Our partners</span>
+                        <a href="/sponsors" class="button-secondary home-sponsors-cta">View All Partners</a>
+                    </div>
 
                 <div class="home-sponsors-slider">
                     <div class="home-sponsors-viewport" aria-label="Sponsor logos">
                         <div class="home-sponsors-track">
-                            <div class="home-sponsors-loop">
-                                @foreach(var sponsor in _sponsors)
-                                {
-                                    <a class="home-sponsors-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                    </a>
-                                }
-                            </div>
+                            @for(var loopIndex = 0; loopIndex < 4; loopIndex++)
+                            {
+                                var isPrimaryLoop = loopIndex == 0;
 
-                            <div class="home-sponsors-loop" aria-hidden="true">
-                                @foreach(var sponsor in _sponsors)
-                                {
-                                    <a class="home-sponsors-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" tabindex="-1">
-                                        <img src="@sponsor.LogoUrl" alt="" />
-                                    </a>
-                                }
-                            </div>
+                                <div class="home-sponsors-loop" aria-hidden="@(!isPrimaryLoop)">
+                                    @foreach(var sponsor in _sponsors)
+                                    {
+                                        <a class="home-sponsors-logo"
+                                           href="@sponsor.InfoUrl"
+                                           target="_blank"
+                                           rel="noopener noreferrer"
+                                           aria-label="@(isPrimaryLoop ? $"Visit {sponsor.Name}" : null)"
+                                           tabindex="@(isPrimaryLoop ? null : "-1")">
+                                            <img src="@sponsor.LogoUrl" alt="@(isPrimaryLoop ? $"{sponsor.Name} logo" : string.Empty)" />
+                                        </a>
+                                    }
+                                </div>
+                            }
                         </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+        }
+
+        <section class="brand-section home-features">
+            <article class="brand-card feature-card">
+                <span class="brand-section-number">01</span>
+                <h2>Tournaments</h2>
+                <p>Compete across multiple games, climb the bracket, and chase the weekend highlight.</p>
+            </article>
+            <article class="brand-card feature-card">
+                <span class="brand-section-number">02</span>
+                <h2>BYOC Setup</h2>
+                <p>Bring your own gear and settle in for long sessions with friends, rivals, and new teammates.</p>
+            </article>
+            <article class="brand-card feature-card">
+                <span class="brand-section-number">03</span>
+                <h2>Community</h2>
+                <p>Meet students who care about good games, good setups, and a strong event atmosphere.</p>
+            </article>
+        </section>
+
+        <section class="brand-section">
+            <div class="home-section-header">
+                <div>
+                    <span class="section-eyebrow">Compete in your favorite games</span>
+                    <h2>Featured Games</h2>
+                </div>
+                <a href="/games" class="button-secondary">View All Games</a>
+            </div>
+
+            <div class="home-game-grid">
+                @foreach(var game in FeaturedGames)
+                {
+                    var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
+                    <article class="brand-card home-game-card" @onclick="() => NavigateToGame(game.Id)">
+                        <img src="@imageUrl" alt="@game.Name" class="home-game-image" />
+                        <div class="home-game-body">
+                            <div class="home-game-meta">
+                                <h3>@game.Name</h3>
+                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
+                            </div>
+                            <p>@game.BracketType.GetLabel() · @game.Format.GetLabel()</p>
+                        </div>
+                    </article>
+                }
+            </div>
+        </section>
+
+        <section id="schedule" class="brand-section">
+            <div class="brand-card schedule-strip">
+                <div>
+                    <span class="section-eyebrow">Mark your calendar</span>
+                    <h2>@EventWindow</h2>
+                    <p>Current window derived from the tournaments loaded in the app.</p>
+                </div>
+                <div class="schedule-points">
+                    <div>
+                        <h3>Play</h3>
+                        <p>Non-stop gaming sessions across the weekend.</p>
+                    </div>
+                    <div>
+                        <h3>Compete</h3>
+                        <p>Bracket-driven matches with data-backed registrations.</p>
+                    </div>
+                    <div>
+                        <h3>Connect</h3>
+                        <p>Find teammates, rivals, and new communities.</p>
                     </div>
                 </div>
             </div>
         </section>
-    }
 
-    <section class="brand-section home-features">
-        <article class="brand-card feature-card">
-            <span class="brand-section-number">01</span>
-            <h2>Tournaments</h2>
-            <p>Compete across multiple games, climb the bracket, and chase the weekend highlight.</p>
-        </article>
-        <article class="brand-card feature-card">
-            <span class="brand-section-number">02</span>
-            <h2>BYOC Setup</h2>
-            <p>Bring your own gear and settle in for long sessions with friends, rivals, and new teammates.</p>
-        </article>
-        <article class="brand-card feature-card">
-            <span class="brand-section-number">03</span>
-            <h2>Community</h2>
-            <p>Meet students who care about good games, good setups, and a strong event atmosphere.</p>
-        </article>
-    </section>
+        <section id="tickets" class="brand-section home-callout-grid">
+            <article class="brand-card home-callout">
+                <span class="section-eyebrow">Tickets</span>
+                <h2>Join the LAN</h2>
+                <p>Use the tournament list to explore the current competitions and registration links available in the platform.</p>
+                <a href="/games" class="button-primary">Browse Tournaments</a>
+            </article>
 
-    <section class="brand-section">
-        <div class="home-section-header">
-            <div>
-                <span class="section-eyebrow">Compete in your favorite games</span>
-                <h2>Featured Games</h2>
-            </div>
-            <a href="/games" class="button-secondary">View All Games</a>
-        </div>
-
-        <div class="home-game-grid">
-            @foreach(var game in FeaturedGames)
-            {
-                var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
-                <article class="brand-card home-game-card" @onclick="() => NavigateToGame(game.Id)">
-                    <img src="@imageUrl" alt="@game.Name" class="home-game-image" />
-                    <div class="home-game-body">
-                        <div class="home-game-meta">
-                            <h3>@game.Name</h3>
-                            <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
-                        </div>
-                        <p>@game.BracketType.GetLabel() · @game.Format.GetLabel()</p>
-                    </div>
-                </article>
-            }
-        </div>
-    </section>
-
-    <section id="schedule" class="brand-section">
-        <div class="brand-card schedule-strip">
-            <div>
-                <span class="section-eyebrow">Mark your calendar</span>
-                <h2>@EventWindow</h2>
-                <p>Current window derived from the tournaments loaded in the app.</p>
-            </div>
-            <div class="schedule-points">
-                <div>
-                    <h3>Play</h3>
-                    <p>Non-stop gaming sessions across the weekend.</p>
-                </div>
-                <div>
-                    <h3>Compete</h3>
-                    <p>Bracket-driven matches with data-backed registrations.</p>
-                </div>
-                <div>
-                    <h3>Connect</h3>
-                    <p>Find teammates, rivals, and new communities.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="tickets" class="brand-section home-callout-grid">
-        <article class="brand-card home-callout">
-            <span class="section-eyebrow">Tickets</span>
-            <h2>Join the LAN</h2>
-            <p>Use the tournament list to explore the current competitions and registration links available in the platform.</p>
-            <a href="/games" class="button-primary">Browse Tournaments</a>
-        </article>
-
-        <article id="faq" class="brand-card home-callout">
-            <span class="section-eyebrow">FAQ</span>
-            <h2>What matters most?</h2>
-            <p>Bring your setup, keep your profile current, and register for tournaments that are still open.</p>
-            <a href="/privacy-policy" class="button-secondary">Read Policy</a>
-        </article>
-
-        <article id="contact" class="brand-card home-callout">
-            <span class="section-eyebrow">Contact</span>
-            <h2>Need more info?</h2>
-            <p>For sponsor information, current tournaments, or legal details, use the routes already available in the app.</p>
-            <a href="/sponsors" class="button-secondary">View Sponsors</a>
-        </article>
-    </section>
+            <article id="contact" class="brand-card home-callout">
+                <span class="section-eyebrow">Contact</span>
+                <h2>Need more info?</h2>
+                <p>For sponsor information, current tournaments, or legal details, use the routes already available in the app.</p>
+                <a href="/sponsors" class="button-secondary">View Sponsors</a>
+            </article>
+        </section>
+    </div>
 }

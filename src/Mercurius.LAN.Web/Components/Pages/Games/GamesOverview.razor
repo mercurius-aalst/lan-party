@@ -12,44 +12,25 @@
 }
 else
 {
-    <section class="games-hero brand-section">
-        <div class="games-hero-copy">
-            <span class="section-eyebrow">Compete. Connect. Create memories.</span>
+    <section class="brand-section games-intro grid gap-4">
+        <div class="games-intro-copy grid gap-4">
+            <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
             <h1>Games &amp; Tournaments</h1>
-            <p>Browse the current Mercurius LAN tournaments, compare formats, and jump into the competitions that still have room for registrations.</p>
-            <div class="games-hero-actions">
-                <a href="/#tickets" class="button-primary">Get Tickets</a>
-                <a href="/#schedule" class="button-secondary">Event Schedule</a>
-            </div>
+            <p>Use the filters below to compare formats, open registrations, and brackets without wading through a dashboard-style landing block.</p>
         </div>
-
-        <div class="brand-panel-dark games-hero-panel">
-            <span class="section-eyebrow games-hero-panel-label">Current event snapshot</span>
-            <div class="games-hero-stats">
-                <div>
-                    <span class="games-stat-value">@_games.Count</span>
-                    <span class="games-stat-label">Tournaments</span>
-                </div>
-                <div>
-                    <span class="games-stat-value">@OpenRegistrationCount</span>
-                    <span class="games-stat-label">Open registration</span>
-                </div>
-                <div>
-                    <span class="games-stat-value">@TeamTournamentCount</span>
-                    <span class="games-stat-label">Team events</span>
-                </div>
-            </div>
-            <p class="games-hero-panel-copy">@EventWindow</p>
+        <div class="games-intro-actions flex flex-wrap gap-4">
+            <a href="#games-grid" class="button-primary">Browse Tournaments</a>
+            <a href="#games-process" class="button-secondary">How It Works</a>
         </div>
     </section>
 
-    <section class="brand-card games-toolbar">
-        <div class="games-toolbar-search">
+    <section class="brand-card games-toolbar grid gap-4 xl:[grid-template-columns:minmax(0,1fr)_16rem]">
+        <div class="games-toolbar-search flex flex-col gap-3">
             <label for="games-search">Search tournaments</label>
             <input id="games-search" type="text" class="games-search-input" placeholder="Search by game title..." @bind="_searchTerm" @bind:event="oninput" />
         </div>
 
-        <div class="games-toolbar-sort">
+        <div class="games-toolbar-sort flex flex-col gap-3">
             <label for="games-sort">Sort by</label>
             <select id="games-sort" class="games-sort-select" @bind="_sortOption">
                 <option value="@GameSortOption.StartTime">Start time</option>
@@ -59,10 +40,10 @@ else
         </div>
     </section>
 
-    <section class="games-filter-section">
-        <div class="games-filter-group">
+    <section class="games-filter-section mt-6 grid gap-5">
+        <div class="games-filter-group flex flex-col gap-3">
             <span class="section-eyebrow">Status</span>
-            <div class="games-filter-chip-row">
+            <div class="games-filter-chip-row flex flex-wrap gap-3">
                 @foreach(var filter in StatusFilters)
                 {
                     <button type="button" class="games-filter-chip @(filter.Value == _statusFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _statusFilter)" @onclick="() => SetStatusFilter(filter.Value)">
@@ -72,9 +53,9 @@ else
             </div>
         </div>
 
-        <div class="games-filter-group">
+        <div class="games-filter-group flex flex-col gap-3">
             <span class="section-eyebrow">Mode</span>
-            <div class="games-filter-chip-row">
+            <div class="games-filter-chip-row flex flex-wrap gap-3">
                 @foreach(var filter in ParticipationFilters)
                 {
                     <button type="button" class="games-filter-chip @(filter.Value == _participationFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _participationFilter)" @onclick="() => SetParticipationFilter(filter.Value)">
@@ -85,8 +66,8 @@ else
         </div>
     </section>
 
-    <section class="brand-section">
-        <div class="games-results-header">
+    <section id="games-grid" class="brand-section">
+        <div class="games-results-header flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
                 <span class="section-eyebrow">Tournament grid</span>
                 <h2>@ResultsHeading</h2>
@@ -104,7 +85,7 @@ else
         }
         else
         {
-            <div class="games-grid">
+            <div class="games-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
                 <AuthorizeView Roles="admin">
                     <Authorized>
                         <button type="button" class="brand-card games-add-card" @onclick="ShowAddGameDialog">
@@ -150,7 +131,7 @@ else
                             </dl>
                         </div>
 
-                        <div class="games-card-actions">
+                        <div class="games-card-actions grid gap-3">
                             <button type="button" class="button-secondary" @onclick="() => NavigateToGameDetail(game.Id)">View Details</button>
                             <button type="button" class="button-primary" disabled="@(!CanRegister(game))" @onclick="() => NavigateToRegister(game)">
                                 @(CanRegister(game) ? "Register" : "Registration Closed")
@@ -167,15 +148,15 @@ else
         }
     </section>
 
-    <section class="brand-section">
-        <div class="games-results-header">
+    <section id="games-process" class="brand-section">
+        <div class="games-results-header flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
                 <span class="section-eyebrow">How tournaments work</span>
                 <h2>From registration to finals</h2>
             </div>
         </div>
 
-        <div class="games-process-grid">
+        <div class="games-process-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             <article class="brand-card games-process-card">
                 <span class="brand-section-number">01</span>
                 <h3>Pick your tournament</h3>
@@ -197,13 +178,13 @@ else
     </section>
 
     <section class="brand-section">
-        <div class="brand-card games-callout">
+        <div class="brand-card games-callout flex flex-col gap-6 p-6 xl:flex-row xl:items-center xl:justify-between">
             <div>
                 <span class="section-eyebrow">Need more context?</span>
                 <h2>Plan your LAN weekend</h2>
                 <p>Use the Home page for schedule anchors and the Sponsors page for partner information while the tournament list stays focused on gameplay.</p>
             </div>
-            <div class="games-callout-actions">
+            <div class="games-callout-actions flex flex-wrap gap-4">
                 <a href="/#schedule" class="button-secondary">View Schedule</a>
                 <a href="/sponsors" class="button-primary">Meet Sponsors</a>
             </div>

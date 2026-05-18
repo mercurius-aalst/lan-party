@@ -12,15 +12,15 @@
 }
 else
 {
-    <section class="profile-page">
-        <header class="profile-header brand-section">
+    <section class="profile-page grid gap-6 py-6 pb-12">
+        <header class="profile-header brand-section grid gap-3">
             <span class="section-eyebrow">Account</span>
             <h1>Profile</h1>
             <p>Keep your tournament profile accurate so registrations, brackets, and contact details stay in sync.</p>
         </header>
 
-        <div class="profile-layout">
-            <section class="brand-card profile-main-card">
+        <div class="profile-layout grid gap-6 lg:[grid-template-columns:minmax(0,1.4fr)_minmax(18rem,0.8fr)] lg:items-start">
+            <section class="brand-card profile-main-card p-4 sm:p-6">
                 <div class="profile-card-header">
                     <div>
                         <span class="section-eyebrow">Profile details</span>
@@ -28,7 +28,7 @@ else
                     </div>
                 </div>
 
-                <div class="profile-email-row">
+                <div class="profile-email-row mb-5 grid gap-2">
                     <label class="form-label">Email</label>
                     <input class="form-control" value="@_emailDisplay" disabled />
                     <div class="@_emailStatusClass profile-status-text">@_emailStatusText</div>
@@ -38,8 +38,8 @@ else
                     <DataAnnotationsValidator />
                     <ValidationSummary />
 
-                    <div class="profile-form-grid">
-                        <div class="form-group">
+                    <div class="profile-form-grid grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                        <div class="form-group lg:col-span-2">
                             <label for="username">Username</label>
                             <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" />
                             <ValidationMessage For="@(() => _model.Username)" />
@@ -86,12 +86,12 @@ else
                 </EditForm>
             </section>
 
-            <aside class="profile-sidebar">
-                <section class="brand-card profile-side-card">
+            <aside class="profile-sidebar grid gap-6">
+                <section class="brand-card profile-side-card p-4 sm:p-6">
                     <span class="section-eyebrow">Account tools</span>
                     <h2>Security and verification</h2>
                     <p>Use these actions to verify your email or trigger a password reset without changing profile data.</p>
-                    <div class="profile-side-actions">
+                    <div class="profile-side-actions mt-4 grid gap-3">
                         @if(!_emailVerified)
                         {
                             <button type="button" class="btn btn-outline-primary" @onclick="ResendVerificationEmailAsync" disabled="@_isSendingVerification">Resend verification email</button>
@@ -100,7 +100,7 @@ else
                     </div>
                 </section>
 
-                <section class="brand-card profile-side-card profile-danger-card">
+                <section class="brand-card profile-side-card profile-danger-card p-4 sm:p-6">
                     <span class="section-eyebrow">Danger zone</span>
                     <h2>Delete account</h2>
                     <p>Type <strong>DELETE</strong> to confirm permanent account removal.</p>

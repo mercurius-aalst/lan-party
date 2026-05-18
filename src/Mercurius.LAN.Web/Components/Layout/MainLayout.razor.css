@@ -8,10 +8,10 @@
     position: sticky;
     top: 0;
     z-index: 1100;
-    background: rgba(255, 255, 255, 0.88);
-    border-bottom: 1px solid rgba(221, 227, 234, 0.9);
+    background: rgba(255, 255, 255, 0.74);
+    border-bottom: 1px solid rgba(221, 227, 234, 0.62);
     backdrop-filter: blur(16px);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
 }
 
 .brand-header-inner {
@@ -44,6 +44,10 @@
 .brand-main {
     flex: 1 1 auto;
     padding: 2rem 0 3rem;
+}
+
+.brand-main--home {
+    padding-top: 0;
 }
 
 .brand-main-content {
@@ -219,6 +223,10 @@
 @media (max-width: 640px) {
     .brand-main {
         padding-top: 1.5rem;
+    }
+
+    .brand-main--home {
+        padding-top: 0;
     }
 
     .footer-grid {

@@ -7,10 +7,10 @@
 <div>
     @if(_isDialogOpen)
     {
-        <div class="participants-modal-overlay" @onclick="() => CloseDialog(null!)">
-            <div class="participants-modal-dialog" @onclick:stopPropagation>
-                <button class="participants-modal-close" @onclick="() => CloseDialog(null!)">&times;</button>
-                <div class="form-container">
+        <div class="participants-modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/25 p-4" @onclick="() => CloseDialog(null!)">
+            <div class="participants-modal-dialog relative flex max-h-[90vh] w-full max-w-4xl flex-col items-center overflow-y-auto rounded-[15px] p-6 text-[#333] sm:p-8 lg:w-auto lg:min-w-[600px]" @onclick:stopPropagation>
+                <button class="participants-modal-close absolute right-2 top-2 text-[2rem]" @onclick="() => CloseDialog(null!)">&times;</button>
+                <div class="form-container w-full max-w-none p-0">
                     <h3>Create New Game</h3>
                     <EditForm EditContext="_editContext" OnValidSubmit="SubmitGameAsync" class="needs-validation">
                         <DataAnnotationsValidator />
@@ -21,7 +21,7 @@
                             <ValidationMessage For="@(() => _newGame.Name)"/>
                         </div>
 
-                        <div class="form-group-inline">
+                        <div class="form-group-inline grid gap-4 lg:grid-cols-2">
                             <div class="form-group">
                                 <label for="bracketType">Bracket Type</label>
                                 <InputSelect id="bracketType" class="form-control" @bind-Value="_newGame.BracketType">
@@ -45,7 +45,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group-inline">
+                        <div class="form-group-inline grid gap-4 lg:grid-cols-2">
                             <div class="form-group">
                                 <label for="format">Format</label>
                                 <InputSelect id="format" class="form-control" @bind-Value="_newGame.Format">

@@ -132,7 +132,7 @@ a:hover {
 }
 
 main {
-    width: calc(100% - 10rem);
+    width: 100%;
     color: var(--color-dark-navy);
 }
 

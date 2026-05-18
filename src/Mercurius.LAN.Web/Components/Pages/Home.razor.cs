@@ -19,6 +19,8 @@ public partial class Home
     private List<Sponsor> _sponsors = [];
 
     private IReadOnlyList<Game> FeaturedGames => _games?.Take(4).ToList() ?? [];
+    private IReadOnlyList<Game> HeroGames => _games?.Take(3).ToList() ?? [];
+    private int SponsorCount => _sponsors.Count;
 
     private int EventDays
     {

@@ -62,7 +62,6 @@ public partial class GamesOverview
     private List<Game> FilteredGames => ApplySort(ApplyFilters()).ToList();
 
     private int OpenRegistrationCount => _games.Count(CanRegister);
-    private int TeamTournamentCount => _games.Count(game => game.ParticipationMode == ParticipationMode.Team);
 
     private string EventWindow
     {

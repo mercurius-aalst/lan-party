@@ -1,0 +1,11 @@
+{
+  "name": "mercurius-lan-web",
+  "private": true,
+  "scripts": {
+    "build:tailwind": "tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/tailwind.css --minify",
+    "watch:tailwind": "tailwindcss -i ./Styles/tailwind.css -o ./wwwroot/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}
