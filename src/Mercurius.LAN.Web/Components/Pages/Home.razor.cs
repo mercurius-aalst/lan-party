@@ -19,10 +19,6 @@ public partial class Home
     private List<Sponsor> _sponsors = [];
 
     private IReadOnlyList<Game> FeaturedGames => _games?.Take(4).ToList() ?? [];
-    private IReadOnlyList<Sponsor> PresentingSponsors => GetSponsorsByTier(SponsorTier.Presenting);
-    private IReadOnlyList<Sponsor> GoldSponsors => GetSponsorsByTier(SponsorTier.Gold);
-    private IReadOnlyList<Sponsor> SilverSponsors => GetSponsorsByTier(SponsorTier.Silver);
-    private IReadOnlyList<Sponsor> BronzeSponsors => GetSponsorsByTier(SponsorTier.Bronze);
 
     private int EventDays
     {
@@ -77,13 +73,5 @@ public partial class Home
     private void NavigateToGame(Guid gameId)
     {
         NavigationManager.NavigateTo($"/games/{gameId}");
-    }
-
-    private IReadOnlyList<Sponsor> GetSponsorsByTier(SponsorTier tier)
-    {
-        return _sponsors
-            .Where(sponsor => sponsor.SponsorTier == tier)
-            .OrderBy(sponsor => sponsor.Name)
-            .ToList();
     }
 }

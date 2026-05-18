@@ -98,93 +98,33 @@ else
                     <a href="/sponsors" class="button-secondary">View All Partners</a>
                 </div>
 
-                <div class="home-sponsors__content">
-                    @if(PresentingSponsors.Any())
-                    {
-                        <section class="home-sponsor-group">
-                            <div class="home-sponsor-group__header">
-                                <h3>Presenting Partners</h3>
-                            </div>
-                            <div class="home-presenting-grid">
-                                @foreach(var sponsor in PresentingSponsors)
-                                {
-                                    <a class="brand-card home-sponsor-card home-sponsor-card--presenting" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <div class="home-sponsor-card__logo">
-                                            <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                        </div>
-                                        <div class="home-sponsor-card__body">
-                                            <span class="sponsor-tier-label">Presenting</span>
-                                            <h4>@sponsor.Name</h4>
-                                            @if(!string.IsNullOrWhiteSpace(sponsor.Description))
-                                            {
-                                                <p>@sponsor.Description</p>
-                                            }
-                                        </div>
-                                    </a>
-                                }
-                            </div>
-                        </section>
-                    }
+                <div class="home-sponsors__marquee brand-panel-dark">
+                    <div class="home-sponsors__marquee-header">
+                        <span class="section-eyebrow">Trusted by our partners</span>
+                        <p>Continuous logo showcase for the teams and brands supporting the event.</p>
+                    </div>
 
-                    @if(GoldSponsors.Any())
-                    {
-                        <section class="home-sponsor-group">
-                            <div class="home-sponsor-group__header">
-                                <h3>Gold Partners</h3>
-                            </div>
-                            <div class="home-tier-grid home-tier-grid--gold">
-                                @foreach(var sponsor in GoldSponsors)
+                    <div class="home-sponsors__viewport" aria-label="Sponsor logos">
+                        <div class="home-sponsors__track">
+                            <div class="home-sponsors__set">
+                                @foreach(var sponsor in _sponsors)
                                 {
-                                    <a class="brand-card home-sponsor-card" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <div class="home-sponsor-card__logo">
-                                            <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                        </div>
-                                        <div class="home-sponsor-card__body">
-                                            <h4>@sponsor.Name</h4>
-                                        </div>
+                                    <a class="home-sponsor-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
+                                        <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
                                     </a>
                                 }
                             </div>
-                        </section>
-                    }
 
-                    @if(SilverSponsors.Any())
-                    {
-                        <section class="home-sponsor-group">
-                            <div class="home-sponsor-group__header">
-                                <h3>Silver Partners</h3>
-                            </div>
-                            <div class="home-tier-grid home-tier-grid--silver">
-                                @foreach(var sponsor in SilverSponsors)
+                            <div class="home-sponsors__set" aria-hidden="true">
+                                @foreach(var sponsor in _sponsors)
                                 {
-                                    <a class="brand-card home-sponsor-card home-sponsor-card--compact" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <div class="home-sponsor-card__logo">
-                                            <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                        </div>
+                                    <a class="home-sponsor-logo" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" tabindex="-1">
+                                        <img src="@sponsor.LogoUrl" alt="" />
                                     </a>
                                 }
                             </div>
-                        </section>
-                    }
-
-                    @if(BronzeSponsors.Any())
-                    {
-                        <section class="home-sponsor-group">
-                            <div class="home-sponsor-group__header">
-                                <h3>Bronze Partners</h3>
-                            </div>
-                            <div class="home-tier-grid home-tier-grid--bronze">
-                                @foreach(var sponsor in BronzeSponsors)
-                                {
-                                    <a class="brand-card home-sponsor-card home-sponsor-card--tile" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                        <div class="home-sponsor-card__logo">
-                                            <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
-                                        </div>
-                                    </a>
-                                }
-                            </div>
-                        </section>
-                    }
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

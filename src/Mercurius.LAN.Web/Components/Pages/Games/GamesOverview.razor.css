@@ -209,7 +209,8 @@
     display: block;
     width: 100%;
     aspect-ratio: 16 / 8;
-    object-fit: cover;
+    object-fit: contain;
+    object-position: center;
     background: var(--color-dark-navy);
 }
 
