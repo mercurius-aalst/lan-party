@@ -1,4 +1,4 @@
-## ADDED Requirements
+## MODIFIED Requirements
 
 ### Requirement: Home page hero creates a strong landing impression
 
@@ -29,31 +29,3 @@ The home page SHALL present a visually striking hero that acts as the primary en
 - **AND** the transition from the fade into the white homepage content feels softened rather than abruptly cut off
 - **AND** the scroll prompt label, arrow, and highlight animate as a synchronized cue that invites the visitor to continue down the page
 - **AND** the transition remains visually continuous when reduced-motion preferences disable animation
-
-### Requirement: Sponsors page opens with a simple visitor-facing intro
-
-The sponsors page SHALL use a concise page intro instead of a heavyweight hero treatment.
-
-#### Scenario: Visitor opens sponsors page
-- **WHEN** a visitor opens the sponsors page
-- **THEN** the top section explains what the sponsors page is for and what value the visitor can expect from it
-- **AND** the page does not present a large showcase hero or internal-style metric summary ahead of the sponsor content
-
-#### Scenario: Sponsors intro guides the next action
-- **WHEN** the sponsors page intro is shown
-- **THEN** it includes a clear visitor-facing call to action or next step
-- **AND** that call to action is relevant to sponsor discovery or sponsor engagement
-
-### Requirement: Games overview page opens with simple visitor-facing orientation
-
-The games overview page SHALL use a concise page intro instead of a dashboard-style hero treatment.
-
-#### Scenario: Visitor opens games overview page
-- **WHEN** a visitor opens the games overview page
-- **THEN** the top section explains what the page helps them do
-- **AND** it focuses on useful tournament orientation for regular visitors
-
-#### Scenario: Games intro avoids dashboard-first framing
-- **WHEN** the games overview page is rendered
-- **THEN** internal-style event snapshot metrics are not the primary supporting content at the top of the page
-- **AND** the page instead emphasizes visitor-facing context or actions

@@ -41,32 +41,34 @@ else
             </div>
 
             <div class="home-hero-content">
-                <div class="home-hero-chip-row">
-                    <span class="home-hero-chip home-hero-chip--blue">@EventWindow</span>
-                </div>
-
                 <img src="/img/lan_logo_wide_light.svg" alt="Mercurius LAN" class="home-hero-wordmark" />
 
                 <h1 class="home-hero-title">The student LAN weekend with real atmosphere.</h1>
-                <p class="home-hero-lead">Competitive brackets, BYOC nights, and a crowd that shows up ready to play.</p>
 
                 <div class="home-hero-actions">
                     <a href="#tickets" class="button-primary">Get Your Tickets</a>
                     <a href="/games" class="button-secondary">Learn More</a>
                 </div>
 
-                <div class="home-hero-stat-row">
-                    <div class="home-hero-stat-card">
-                        <span class="home-hero-stat-value">@_games.Count</span>
-                        <span class="home-hero-stat-label">Tournaments</span>
+                <div class="home-hero-info-group">
+                    <div class="home-hero-date-card">
+                        <span class="home-hero-date-label">Event date</span>
+                        <span class="home-hero-date-value">@EventWindow</span>
                     </div>
-                    <div class="home-hero-stat-card">
-                        <span class="home-hero-stat-value">@EventDays</span>
-                        <span class="home-hero-stat-label">Days</span>
-                    </div>
-                    <div class="home-hero-stat-card">
-                        <span class="home-hero-stat-value">@SponsorCount</span>
-                        <span class="home-hero-stat-label">Partners</span>
+
+                    <div class="home-hero-stat-row">
+                        <div class="home-hero-stat-card">
+                            <span class="home-hero-stat-value">@_games.Count</span>
+                            <span class="home-hero-stat-label">Tournaments</span>
+                        </div>
+                        <div class="home-hero-stat-card">
+                            <span class="home-hero-stat-value">@EventDays</span>
+                            <span class="home-hero-stat-label">Days</span>
+                        </div>
+                        <div class="home-hero-stat-card">
+                            <span class="home-hero-stat-value">@SponsorCount</span>
+                            <span class="home-hero-stat-label">Partners</span>
+                        </div>
                     </div>
                 </div>
 
