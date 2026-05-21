@@ -26,10 +26,10 @@ public partial class NavMenu
         NavigationManager.NavigateTo(LoginHref, forceLoad: true);
     }
 
-    private void Logout()
+    private async Task Logout()
     {
-        _isUserMenuVisible = false;
-        OnNavigationSelected.InvokeAsync();
+        CloseDropdown();
+        await OnNavigationSelected.InvokeAsync();
         NavigationManager.NavigateTo("/account/logout", true);
     }
 

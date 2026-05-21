@@ -10,10 +10,10 @@
         <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Home
         </NavLink>
-        <NavLink href="games" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+        <NavLink href="/games" Match="NavLinkMatch.Prefix" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Games
-        </NavLink>        
-        <NavLink href="sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+        </NavLink>
+        <NavLink href="/sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Sponsors
         </NavLink>
         <a href="/#tickets" class="brand-nav-link text-center md:text-left" @onclick="HandleNavigationClicked">Tickets</a>
@@ -28,8 +28,8 @@
                     @if(_isDropdownVisible)
                     {
                         <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/admin/teams" @onclick="HandleNavigationClicked">Teams</a>
-                            <a class="dropdown-item" href="/admin/sponsors" @onclick="HandleNavigationClicked">Sponsors</a>
+                            <NavLink href="/admin/teams" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Teams</NavLink>
+                            <NavLink href="/admin/sponsors" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Sponsors</NavLink>
                         </div>
                     }
                 </div>
@@ -46,7 +46,7 @@
                     @if(_isUserMenuVisible)
                     {
                         <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/profile" @onclick="HandleNavigationClicked">Profile</a>
+                            <NavLink href="/profile" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Profile</NavLink>
                             <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
                         </div>
                     }
