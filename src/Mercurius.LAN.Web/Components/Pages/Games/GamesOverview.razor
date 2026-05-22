@@ -4,7 +4,7 @@
 @using Mercurius.LAN.Web.Models.Games
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-<PageTitle>Games</PageTitle>
+<PageTitle>Tournaments</PageTitle>
 
 @if(_isLoading)
 {
@@ -12,70 +12,68 @@
 }
 else
 {
-    <section class="brand-section games-intro grid gap-4">
-        <div class="games-intro-copy grid gap-4">
-            <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
-            <h1>Games &amp; Tournaments</h1>
-            <p>Use the filters below to compare formats, open registrations, and brackets without wading through a dashboard-style landing block.</p>
-        </div>
-        <div class="games-intro-actions flex flex-wrap gap-4">
-            <a href="#games-grid" class="button-primary">Browse Tournaments</a>
-            <a href="#games-process" class="button-secondary">How It Works</a>
+    <section class="brand-section games-browse-section">
+        <div class="brand-card games-browse-shell">
+            <div class="games-browse-lead">
+                <div class="games-browse-copy">
+                    <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
+                    <h1>Tournaments</h1>
+                    <p>Search the full line-up, compare formats, and narrow the field fast without wading through a separate landing block first.</p>
+                </div>
+                <div class="games-browse-links flex flex-wrap gap-4">
+                    <a href="#games-process" class="button-secondary">How It Works</a>
+                </div>
+            </div>
+
+            <div class="games-browse-controls">
+                <div class="games-control-field games-control-field--search">
+                    <label for="games-search">Search tournaments</label>
+                    <input id="games-search" type="text" class="games-search-input" placeholder="Search by tournament title..." @bind="_searchTerm" @bind:event="oninput" />
+                </div>
+
+                <div class="games-control-field games-control-field--sort">
+                    <label for="games-sort">Sort by</label>
+                    <select id="games-sort" class="games-sort-select" @bind="_sortOption">
+                        <option value="@GameSortOption.StartTime">Start time</option>
+                        <option value="@GameSortOption.Name">Name</option>
+                        <option value="@GameSortOption.Status">Status</option>
+                    </select>
+                </div>
+
+                <div class="games-filter-group">
+                    <div class="games-filter-group-header">
+                        <span class="section-eyebrow">Status</span>
+                        <span class="games-filter-caption">Follow openings, live brackets, and finished events.</span>
+                    </div>
+                    <div class="games-filter-chip-row flex flex-wrap gap-3">
+                        @foreach(var filter in StatusFilters)
+                        {
+                            <button type="button" class="games-filter-chip @(filter.Value == _statusFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _statusFilter)" @onclick="() => SetStatusFilter(filter.Value)">
+                                @filter.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="games-filter-group">
+                    <div class="games-filter-group-header">
+                        <span class="section-eyebrow">Mode</span>
+                        <span class="games-filter-caption">Switch between solo queues and team brackets.</span>
+                    </div>
+                    <div class="games-filter-chip-row flex flex-wrap gap-3">
+                        @foreach(var filter in ParticipationFilters)
+                        {
+                            <button type="button" class="games-filter-chip @(filter.Value == _participationFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _participationFilter)" @onclick="() => SetParticipationFilter(filter.Value)">
+                                @filter.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
-    <section class="brand-card games-toolbar grid gap-4 xl:[grid-template-columns:minmax(0,1fr)_16rem]">
-        <div class="games-toolbar-search flex flex-col gap-3">
-            <label for="games-search">Search tournaments</label>
-            <input id="games-search" type="text" class="games-search-input" placeholder="Search by game title..." @bind="_searchTerm" @bind:event="oninput" />
-        </div>
-
-        <div class="games-toolbar-sort flex flex-col gap-3">
-            <label for="games-sort">Sort by</label>
-            <select id="games-sort" class="games-sort-select" @bind="_sortOption">
-                <option value="@GameSortOption.StartTime">Start time</option>
-                <option value="@GameSortOption.Name">Name</option>
-                <option value="@GameSortOption.Status">Status</option>
-            </select>
-        </div>
-    </section>
-
-    <section class="games-filter-section mt-6 grid gap-5">
-        <div class="games-filter-group flex flex-col gap-3">
-            <span class="section-eyebrow">Status</span>
-            <div class="games-filter-chip-row flex flex-wrap gap-3">
-                @foreach(var filter in StatusFilters)
-                {
-                    <button type="button" class="games-filter-chip @(filter.Value == _statusFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _statusFilter)" @onclick="() => SetStatusFilter(filter.Value)">
-                        @filter.Label
-                    </button>
-                }
-            </div>
-        </div>
-
-        <div class="games-filter-group flex flex-col gap-3">
-            <span class="section-eyebrow">Mode</span>
-            <div class="games-filter-chip-row flex flex-wrap gap-3">
-                @foreach(var filter in ParticipationFilters)
-                {
-                    <button type="button" class="games-filter-chip @(filter.Value == _participationFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _participationFilter)" @onclick="() => SetParticipationFilter(filter.Value)">
-                        @filter.Label
-                    </button>
-                }
-            </div>
-        </div>
-    </section>
-
-    <section id="games-grid" class="brand-section">
-        <div class="games-results-header flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-                <span class="section-eyebrow">Tournament grid</span>
-                <h2>@ResultsHeading</h2>
-                <p>@ResultsSummary</p>
-            </div>
-            <a href="/#contact" class="button-secondary">Need event info?</a>
-        </div>
-
+    <section id="games-grid" class="brand-section games-grid-section">
         @if(FilteredGames.Count == 0)
         {
             <div class="brand-card games-empty-state">
@@ -148,7 +146,7 @@ else
         }
     </section>
 
-    <section id="games-process" class="brand-section">
+    <section id="games-process" class="brand-section games-process-section">
         <div class="games-results-header flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
                 <span class="section-eyebrow">How tournaments work</span>
@@ -177,19 +175,12 @@ else
         </div>
     </section>
 
-    <section class="brand-section">
-        <div class="brand-card games-callout flex flex-col gap-6 p-6 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-                <span class="section-eyebrow">Need more context?</span>
-                <h2>Plan your LAN weekend</h2>
-                <p>Use the Home page for schedule anchors and the Sponsors page for partner information while the tournament list stays focused on gameplay.</p>
+    @if(_sponsors.Any())
+    {
+        <section class="brand-section games-sponsors">
+            <div class="brand-panel-dark games-sponsors-panel">
+                <SponsorScroller Sponsors="_sponsors" AriaLabel="Games overview sponsor logos" />
             </div>
-            <div class="games-callout-actions flex flex-wrap gap-4">
-                <a href="/#schedule" class="button-secondary">View Schedule</a>
-                <a href="/sponsors" class="button-primary">Meet Sponsors</a>
-            </div>
-        </div>
-    </section>
+        </section>
+    }
 }
-
-<SponsorScroller />

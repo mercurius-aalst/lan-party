@@ -1,5 +1,7 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 
@@ -47,6 +49,7 @@ public partial class GamesOverview
     ];
 
     private List<Game> _games = [];
+    private List<Sponsor> _sponsors = [];
     private string _searchTerm = string.Empty;
     private bool _isAddGameDialogOpen;
     private bool _isLoading = true;
@@ -55,26 +58,13 @@ public partial class GamesOverview
     private OverviewParticipationFilter _participationFilter = OverviewParticipationFilter.All;
 
     [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private ISponsorService SponsorService { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
 
     private List<Game> FilteredGames => ApplySort(ApplyFilters()).ToList();
-
-    private int OpenRegistrationCount => _games.Count(CanRegister);
-
-    private string EventWindow
-    {
-        get
-        {
-            if(_games.Count == 0)
-                return "Tournament dates will appear here once games are available.";
-
-            var start = _games.Min(game => game.StartTime);
-            var end = _games.Max(game => game.EndTime);
-            return $"{start:dd MMM yyyy} - {end:dd MMM yyyy}";
-        }
-    }
+    private int OpenRegistrationCount => FilteredGames.Count(CanRegister);
 
     private string ResultsHeading => $"{FilteredGames.Count} tournament{(FilteredGames.Count == 1 ? string.Empty : "s")}";
 
@@ -91,22 +81,35 @@ public partial class GamesOverview
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(firstRender)
+        if(!firstRender)
+            return;
+
+        var gamesTask = GameService.GetGamesAsync();
+        var sponsorsTask = SponsorService.GetSponsorsAsync();
+
+        try
         {
-            try
-            {
-                _games = await GameService.GetGamesAsync();
-            }
-            catch(Exception)
-            {
-                ToastService.ShowError("Could not load games.");
-            }
-            finally
-            {
-                _isLoading = false;
-                await InvokeAsync(StateHasChanged);
-            }
+            _games = await gamesTask;
         }
+        catch(Exception)
+        {
+            ToastService.ShowError("Could not load games.");
+        }
+
+        try
+        {
+            _sponsors = (await sponsorsTask)
+                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
+                .ThenBy(sponsor => sponsor.Name)
+                .ToList();
+        }
+        catch(Exception)
+        {
+            _sponsors = [];
+        }
+
+        _isLoading = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private void NavigateToGameDetail(Guid gameId)

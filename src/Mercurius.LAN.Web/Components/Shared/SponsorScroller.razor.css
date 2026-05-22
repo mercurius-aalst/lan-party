@@ -1,41 +1,131 @@
-﻿.wrapper {
-    display: flex;
-    overflow: hidden;
-    margin-top: auto;
-    margin-bottom: 1rem;
+.sponsor-scroller {
+    display: grid;
+    gap: 0.45rem;
 }
-.slider {
-    width: 100%;
-    height: 100px;
+
+.sponsor-scroller__viewport {
+    overflow: hidden;
     position: relative;
+    padding-block: 0.15rem 0.25rem;
+    margin-inline: -0.15rem;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.14) 6%, rgba(0, 0, 0, 0.68) 12%, #000 20%, #000 80%, rgba(0, 0, 0, 0.68) 88%, rgba(0, 0, 0, 0.14) 94%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.14) 6%, rgba(0, 0, 0, 0.68) 12%, #000 20%, #000 80%, rgba(0, 0, 0, 0.68) 88%, rgba(0, 0, 0, 0.14) 94%, transparent 100%);
+}
+
+.sponsor-scroller__track {
     display: flex;
-    overflow: hidden;
-    mask-image: linear-gradient( to right, transparent, #000 15% 85%, transparent );    
-    
+    width: max-content;
+    gap: 0;
+    animation: sponsor-scroller-marquee 30s linear infinite;
+    will-change: transform;
 }
 
-.sponsor-logo {
-    filter: drop-shadow(2px 2px 2px #222);
-    -webkit-filter: drop-shadow(2px 2px 2px #222);
+.sponsor-scroller__viewport:hover .sponsor-scroller__track {
+    animation-play-state: paused;
 }
 
-.slide {
+.sponsor-scroller__loop {
     display: flex;
-    animation: slide 60s linear infinite;
-
+    gap: 0.85rem;
+    flex-shrink: 0;
+    padding-inline-end: 0.85rem;
 }
 
-    .slide img {
-        height: 100px;
-        padding: 0 30px 0 30px;
-    }
+.sponsor-scroller__logo {
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    width: clamp(9.75rem, 12vw, 11rem);
+    min-width: clamp(9.75rem, 12vw, 11rem);
+    height: clamp(5.8rem, 6.8vw, 6.6rem);
+    padding: 0.95rem 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at top, rgba(34, 197, 94, 0.1), transparent 56%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 22px rgba(4, 10, 24, 0.2);
+    text-decoration: none;
+    transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
 
-@keyframes slide {
-    0% {
+.sponsor-scroller__logo:hover,
+.sponsor-scroller__logo:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(34, 197, 94, 0.34);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
+        radial-gradient(circle at top, rgba(34, 197, 94, 0.15), transparent 56%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        0 14px 26px rgba(4, 10, 24, 0.26);
+    outline: none;
+}
+
+.sponsor-scroller__logo img {
+    max-width: 100%;
+    max-height: 3.8rem;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    opacity: 0.9;
+    transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.sponsor-scroller__logo:hover img,
+.sponsor-scroller__logo:focus-visible img {
+    opacity: 1;
+    transform: scale(1.02);
+}
+
+@keyframes sponsor-scroller-marquee {
+    from {
         transform: translateX(0);
     }
 
-    100% {
-        transform: translateX(-100%);
+    to {
+        transform: translateX(-25%);
+    }
+}
+
+@media (max-width: 900px) {
+    .sponsor-scroller__loop {
+        gap: 0.75rem;
+        padding-inline-end: 0.75rem;
+    }
+
+    .sponsor-scroller__logo {
+        width: clamp(8.5rem, 33vw, 10rem);
+        min-width: clamp(8.5rem, 33vw, 10rem);
+        height: clamp(5.4rem, 17vw, 6rem);
+        padding: 0.85rem 0.95rem;
+    }
+
+    .sponsor-scroller__logo img {
+        max-height: 3.35rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .sponsor-scroller__viewport {
+        margin-inline: -0.1rem;
+    }
+
+    .sponsor-scroller__logo {
+        width: clamp(7.85rem, 46vw, 8.85rem);
+        min-width: clamp(7.85rem, 46vw, 8.85rem);
+        height: 5rem;
+        border-radius: 16px;
+    }
+
+    .sponsor-scroller__logo img {
+        max-height: 2.95rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sponsor-scroller__track {
+        animation: none;
     }
 }
