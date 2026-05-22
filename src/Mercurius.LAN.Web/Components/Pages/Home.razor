@@ -56,18 +56,10 @@ else
                         <span class="home-hero-date-value">@EventWindow</span>
                     </div>
 
-                    <div class="home-hero-stat-row">
-                        <div class="home-hero-stat-card">
-                            <span class="home-hero-stat-value">@_games.Count</span>
-                            <span class="home-hero-stat-label">Tournaments</span>
-                        </div>
-                        <div class="home-hero-stat-card">
-                            <span class="home-hero-stat-value">@EventDays</span>
-                            <span class="home-hero-stat-label">Days</span>
-                        </div>
-                        <div class="home-hero-stat-card">
-                            <span class="home-hero-stat-value">@SponsorCount</span>
-                            <span class="home-hero-stat-label">Partners</span>
+                    <div class="home-hero-detail-row">
+                        <div class="home-hero-detail-card home-hero-location-card">
+                            <span class="home-hero-detail-label">Location</span>
+                            <span class="home-hero-detail-value home-hero-location-value">@HeroLocation</span>
                         </div>
                     </div>
                 </div>
@@ -91,28 +83,7 @@ else
                     </div>
 
                 <div class="home-sponsors-slider">
-                    <div class="home-sponsors-viewport" aria-label="Sponsor logos">
-                        <div class="home-sponsors-track">
-                            @for(var loopIndex = 0; loopIndex < 4; loopIndex++)
-                            {
-                                var isPrimaryLoop = loopIndex == 0;
-
-                                <div class="home-sponsors-loop" aria-hidden="@(!isPrimaryLoop)">
-                                    @foreach(var sponsor in _sponsors)
-                                    {
-                                        <a class="home-sponsors-logo"
-                                           href="@sponsor.InfoUrl"
-                                           target="_blank"
-                                           rel="noopener noreferrer"
-                                           aria-label="@(isPrimaryLoop ? $"Visit {sponsor.Name}" : null)"
-                                           tabindex="@(isPrimaryLoop ? null : "-1")">
-                                            <img src="@sponsor.LogoUrl" alt="@(isPrimaryLoop ? $"{sponsor.Name} logo" : string.Empty)" />
-                                        </a>
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
+                    <SponsorScroller Sponsors="_sponsors" AriaLabel="Home page sponsor logos" />
                 </div>
                 </div>
             </section>

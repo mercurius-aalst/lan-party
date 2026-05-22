@@ -207,6 +207,7 @@ main {
     border: 1px solid transparent;
     font-weight: 700;
     line-height: 1;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
@@ -215,6 +216,7 @@ main {
     background: var(--color-primary-green);
     border-color: var(--color-primary-green);
     color: var(--color-dark-navy);
+    box-shadow: 0 12px 24px rgba(34, 197, 94, 0.22);
 }
 
 .button-primary:hover,
@@ -222,6 +224,7 @@ main {
     background: var(--color-deep-green);
     border-color: var(--color-deep-green);
     color: var(--color-white);
+    box-shadow: 0 16px 28px rgba(21, 128, 61, 0.26);
     transform: translateY(-1px);
 }
 
@@ -230,17 +233,46 @@ main {
 .btn-outline-primary,
 .btn-outline-secondary {
     background: var(--color-white);
-    border-color: var(--color-primary-green);
+    border-color: rgba(15, 23, 42, 0.14);
     color: var(--color-deep-green);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
 }
 
 .button-secondary:hover,
 .btn-secondary:hover,
 .btn-outline-primary:hover,
 .btn-outline-secondary:hover {
-    background: rgba(34, 197, 94, 0.08);
-    border-color: var(--color-deep-green);
-    color: var(--color-deep-green);
+    background: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.22);
+    color: var(--color-dark-navy);
+    box-shadow: 0 14px 24px rgba(15, 23, 42, 0.1);
+    transform: translateY(-1px);
+}
+
+.button-secondary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-outline-primary:focus-visible,
+.btn-outline-secondary:focus-visible {
+    border-color: rgba(21, 128, 61, 0.4);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12), 0 14px 24px rgba(15, 23, 42, 0.1);
+}
+
+.button-secondary:active,
+.btn-secondary:active,
+.btn-outline-primary:active,
+.btn-outline-secondary:active,
+.button-secondary.is-active,
+.btn-secondary.is-active,
+.btn-outline-primary.is-active,
+.btn-outline-secondary.is-active,
+.button-secondary[aria-pressed="true"],
+.btn-secondary[aria-pressed="true"],
+.btn-outline-primary[aria-pressed="true"],
+.btn-outline-secondary[aria-pressed="true"] {
+    background: #f1f5f9;
+    border-color: rgba(15, 23, 42, 0.24);
+    color: var(--color-dark-navy);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
 }
 
 .btn-danger {

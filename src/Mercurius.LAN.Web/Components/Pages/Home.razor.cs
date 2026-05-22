@@ -9,6 +9,8 @@ namespace Mercurius.LAN.Web.Components.Pages;
 
 public partial class Home
 {
+    private const string HeroLocation = "Welvaartstraat 32, 9300 Aalst, Belgium";
+
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
@@ -20,20 +22,6 @@ public partial class Home
 
     private IReadOnlyList<Game> FeaturedGames => _games?.Take(4).ToList() ?? [];
     private IReadOnlyList<Game> HeroGames => _games?.Take(3).ToList() ?? [];
-    private int SponsorCount => _sponsors.Count;
-
-    private int EventDays
-    {
-        get
-        {
-            if(_games == null || _games.Count == 0)
-                return 0;
-
-            var start = _games.Min(game => game.StartTime).Date;
-            var end = _games.Max(game => game.EndTime).Date;
-            return Math.Max(1, (end - start).Days + 1);
-        }
-    }
 
     private string EventWindow
     {

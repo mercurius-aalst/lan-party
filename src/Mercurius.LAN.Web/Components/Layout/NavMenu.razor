@@ -11,7 +11,7 @@
             Home
         </NavLink>
         <NavLink href="/games" Match="NavLinkMatch.Prefix" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
-            Games
+            Tournaments
         </NavLink>
         <NavLink href="/sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Sponsors
@@ -24,7 +24,12 @@
         <AuthorizeView Roles="admin">
             <Authorized>
                 <div class="nav-menu-group" @onclick:stopPropagation="true">
-                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="ToggleDropdown">Admin</button>
+                    <button type="button"
+                            class="@GetAdminButtonClass()"
+                            @onclick="ToggleDropdown"
+                            aria-expanded="@GetAriaExpanded(_isDropdownVisible)">
+                        Admin
+                    </button>
                     @if(_isDropdownVisible)
                     {
                         <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
@@ -39,7 +44,10 @@
         <AuthorizeView>
             <Authorized Context="authState">
                 <div class="nav-menu-group" @onclick:stopPropagation="true">
-                    <button type="button" class="brand-utility-button user-button w-full justify-center md:w-auto" @onclick="ToggleUserMenu">
+                    <button type="button"
+                            class="@GetUserButtonClass()"
+                            @onclick="ToggleUserMenu"
+                            aria-expanded="@GetAriaExpanded(_isUserMenuVisible)">
                         <span class="user-icon bi bi-person-circle"></span>
                         <span>@GetDisplayName(authState.User)</span>
                     </button>

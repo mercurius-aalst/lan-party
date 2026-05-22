@@ -58,6 +58,18 @@ public partial class NavMenu
         await OnNavigationSelected.InvokeAsync();
     }
 
+    private string GetAdminButtonClass() => GetUtilityButtonClass(_isDropdownVisible);
+
+    private string GetUserButtonClass() => $"{GetUtilityButtonClass(_isUserMenuVisible)} user-button";
+
+    private static string GetAriaExpanded(bool isExpanded) => isExpanded ? "true" : "false";
+
+    private static string GetUtilityButtonClass(bool isOpen)
+    {
+        var classes = "brand-utility-button w-full justify-center md:w-auto";
+        return isOpen ? $"{classes} brand-utility-button--open" : classes;
+    }
+
     private string GetCurrentRelativeUrl()
     {
         var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
