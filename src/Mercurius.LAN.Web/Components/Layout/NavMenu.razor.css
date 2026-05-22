@@ -2,6 +2,8 @@
 .brand-nav-links ::deep .brand-nav-link {
     position: relative;
     padding: 0.5rem 0;
+    border: 0;
+    background: transparent;
     color: var(--color-dark-navy);
     font-weight: 600;
 }
@@ -29,6 +31,23 @@
 .brand-nav-links ::deep .brand-nav-link:hover::after,
 .brand-nav-links ::deep .brand-nav-link.brand-nav-link--active::after {
     background: var(--color-primary-green);
+}
+
+.info-nav-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    cursor: pointer;
+}
+
+.info-nav-caret {
+    font-size: 0.7rem;
+    transition: transform 160ms ease;
+}
+
+.info-nav-button[aria-expanded="true"] .info-nav-caret {
+    transform: rotate(180deg);
 }
 
 .brand-utility-button {
@@ -113,6 +132,12 @@
     box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
 }
 
+.info-dropdown {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+}
+
 .dropdown-item,
 .dropdown-menu-custom ::deep .dropdown-item {
     display: inline-flex;
@@ -164,5 +189,13 @@
 
     .dropdown-menu-custom {
         position: static;
+    }
+
+    .info-nav-button {
+        width: 100%;
+    }
+
+    .info-dropdown {
+        transform: none;
     }
 }

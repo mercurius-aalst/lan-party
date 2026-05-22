@@ -30,6 +30,18 @@ public static class OptionsExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddOptions<LanEventOptions>()
+            .Bind(configuration.GetSection(LanEventOptions.SectionName))
+            .ValidateDataAnnotations()
+            .Validate(options => options.PackingItems.Count > 0, "LanEvent:PackingItems must contain at least one item.")
+            .Validate(options => options.Tickets.Count > 0, "LanEvent:Tickets must contain at least one ticket.")
+            .Validate(options => options.SocialLinks.Count > 0, "LanEvent:SocialLinks must contain at least one link.")
+            .ValidateOnStart();
+
+        services.AddOptions<ContactEmailOptions>()
+            .Bind(configuration.GetSection(ContactEmailOptions.SectionName))
+            .ValidateDataAnnotations();
+
         return services;
     }
 

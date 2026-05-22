@@ -1,0 +1,192 @@
+@page "/info"
+@rendermode InteractiveServer
+
+<PageTitle>LAN Info</PageTitle>
+
+<section class="info-page">
+    <header class="info-hero brand-section">
+        <div class="info-hero-copy">
+            <span class="section-eyebrow">LAN survival guide</span>
+            <h1>Everything for the Mercurius LAN weekend</h1>
+            <p>Use this page as your LAN weekend briefing: see what to bring for your setup, where to go, which ticket fits your visit, what food and drinks are available, and how to reach the Mercurius crew if anything is unclear.</p>
+
+            <nav class="info-jump-links" aria-label="LAN information sections">
+                <a href="#packing" class="button-secondary"><span class="bi bi-backpack2" aria-hidden="true"></span> Pack</a>
+                <a href="#where" class="button-secondary"><span class="bi bi-geo-alt" aria-hidden="true"></span> Where</a>
+                <a href="#tickets" class="button-secondary"><span class="bi bi-ticket-perforated" aria-hidden="true"></span> Tickets</a>
+                <a href="#catering" class="button-secondary"><span class="bi bi-cup-straw" aria-hidden="true"></span> Menu</a>
+            </nav>
+        </div>
+
+        <aside class="info-hero-card" aria-label="LAN weekend quick facts">
+            <div class="info-hero-card-glow" aria-hidden="true"></div>
+            <span class="info-hero-card-kicker">Event briefing</span>
+            <strong>@Event.EventWindow</strong>
+            <div class="info-hero-card-row">
+                <span class="bi bi-geo-alt-fill" aria-hidden="true"></span>
+                <span>@Event.VenueName</span>
+            </div>
+            <div class="info-hero-card-row">
+                <span class="bi bi-ticket-perforated-fill" aria-hidden="true"></span>
+                <span>Gamer passes from @GamerTicketPrice</span>
+            </div>
+            <a href="#tickets" class="button-primary">Compare tickets</a>
+        </aside>
+    </header>
+
+    <section id="packing" class="brand-section info-section">
+        <div class="info-section-header">
+            <span class="section-eyebrow">What to bring</span>
+            <h2>Pack like you are setting up command central.</h2>
+            <p>Bring your gaming setup, the everyday basics, and any optional extras you want for a more comfortable play session.</p>
+        </div>
+
+        <div class="packing-guide" aria-label="LAN party packing guide">
+            @foreach(var item in Event.PackingItems)
+            {
+                <article class="packing-item packing-item--@item.GroupKey" style="--item-index: @item.Index" aria-label="@item.Name">
+                    <span class="packing-item-icon bi @item.Icon" aria-hidden="true"></span>
+                    <span class="packing-item-name">@item.Name</span>
+                    <span class="packing-item-group">@item.Group</span>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section id="where" class="brand-section info-section">
+        <div class="info-location-grid">
+            <article class="brand-card info-when-card">
+                <span class="section-eyebrow">When</span>
+                <h2>@Event.EventWindow</h2>
+                <div class="info-time-chip">
+                    <span class="bi bi-calendar-event" aria-hidden="true"></span>
+                    <span>LAN party schedule</span>
+                </div>
+            </article>
+
+            <article class="brand-card info-location-card">
+                <span class="section-eyebrow">Where</span>
+                <h2>@Event.VenueName</h2>
+                <p>@Event.Address</p>
+                <a href="@Event.DirectionsUrl" target="_blank" rel="noopener noreferrer" class="button-primary">
+                    <span class="bi bi-map" aria-hidden="true"></span>
+                    Open directions
+                </a>
+            </article>
+        </div>
+
+        <div class="info-map-shell">
+            <div class="info-map-fallback" aria-hidden="true">
+                <span class="bi bi-geo-alt-fill"></span>
+                <span>Kwalestraat 154, Aalst</span>
+            </div>
+            <iframe title="Map to Odisee Aalst at Kwalestraat 154, 9320 Aalst"
+                    src="@Event.MapEmbedUrl"
+                    loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade"
+                    allowfullscreen>
+            </iframe>
+        </div>
+    </section>
+
+    <section id="tickets" class="brand-section info-section">
+        <div class="info-section-header">
+            <span class="section-eyebrow">Tickets</span>
+            <h2>Pick your pass.</h2>
+        </div>
+
+        <div class="ticket-grid">
+            @foreach(var ticket in Event.Tickets)
+            {
+                <article class="lan-ticket lan-ticket--@ticket.Kind">
+                    <div class="lan-ticket-main">
+                        <span class="lan-ticket-kicker">Mercurius LAN</span>
+                        <h3>@ticket.Name</h3>
+                        <p>@ticket.Description</p>
+                    </div>
+                    <div class="lan-ticket-stub">
+                        <strong>@ticket.Price</strong>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section id="catering" class="brand-section info-section">
+        <div class="menu-board">
+            <div class="menu-board-header">
+                <span class="section-eyebrow">Catering</span>
+                <h2>Current LAN menu</h2>
+                <p>Grab a drink, pick a warm snack, and keep your squad fueled between matches.</p>
+            </div>
+
+            <div class="menu-columns">
+                @foreach(var section in Event.MenuSections)
+                {
+                    <article class="menu-column">
+                        <div class="menu-column-title">
+                            <span class="bi @section.Icon" aria-hidden="true"></span>
+                            <h3>@section.Name</h3>
+                        </div>
+
+                        @foreach(var item in section.Items)
+                        {
+                            <div class="menu-item">
+                                <span>@item.Name</span>
+                                <span class="menu-dots" aria-hidden="true"></span>
+                                <strong>@FormatMenuPrice(item.Price)</strong>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section id="contact-info" class="brand-section info-section">
+        <div class="contact-grid">
+            <article class="brand-card contact-card">
+                <span class="section-eyebrow">Contact</span>
+                <h2>Ask us anything LAN-related.</h2>
+                <EditForm Model="_contactModel" OnValidSubmit="SendContactAsync" FormName="lan-info-contact" class="info-contact-form">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <label>
+                        Name
+                        <InputText id="contact-name" @bind-Value="_contactModel.Name" autocomplete="name" class="form-control" />
+                        <ValidationMessage For="@(() => _contactModel.Name)" />
+                    </label>
+                    <label>
+                        Email or Discord
+                        <InputText id="contact-contact" @bind-Value="_contactModel.Contact" autocomplete="email" class="form-control" />
+                        <ValidationMessage For="@(() => _contactModel.Contact)" />
+                    </label>
+                    <label>
+                        Message
+                        <InputTextArea id="contact-message" @bind-Value="_contactModel.Message" rows="5" class="form-control" />
+                        <ValidationMessage For="@(() => _contactModel.Message)" />
+                    </label>
+                    <button type="submit" class="button-primary" disabled="@_isSendingContact">
+                        <span class="bi bi-send" aria-hidden="true"></span>
+                        @(_isSendingContact ? "Sending..." : "Send message")
+                    </button>
+                </EditForm>
+            </article>
+
+            <aside class="social-panel">
+                <span class="section-eyebrow">Community links</span>
+                <h2>Stay close to the updates.</h2>
+                <div class="social-links">
+                    @foreach(var link in Event.SocialLinks)
+                    {
+                        <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="@link.AriaLabel">
+                            <span class="bi @link.Icon" aria-hidden="true"></span>
+                            <span>@link.Label</span>
+                        </a>
+                    }
+                </div>
+            </aside>
+        </div>
+    </section>
+</section>

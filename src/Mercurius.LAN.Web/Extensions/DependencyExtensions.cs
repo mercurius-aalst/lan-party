@@ -127,6 +127,8 @@ public static class DependencyExtensions
 
     public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<IContactEmailService, SmtpContactEmailService>();
+
         if(IsMockBackendEnabled(configuration))
         {
             services.AddSingleton<MockBackendStore>();

@@ -2,20 +2,21 @@ using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Sponsors;
+using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Options;
 
 namespace Mercurius.LAN.Web.Components.Pages;
 
 public partial class Home
 {
-    private const string HeroLocation = "Welvaartstraat 32, 9300 Aalst, Belgium";
-
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
     [Inject] private ISponsorService SponsorService { get; set; } = null!;
+    [Inject] private IOptions<LanEventOptions> EventOptions { get; set; } = null!;
 
     private List<Game>? _games;
     private List<Sponsor> _sponsors = [];
@@ -23,18 +24,9 @@ public partial class Home
     private IReadOnlyList<Game> FeaturedGames => _games?.Take(4).ToList() ?? [];
     private IReadOnlyList<Game> HeroGames => _games?.Take(3).ToList() ?? [];
 
-    private string EventWindow
-    {
-        get
-        {
-            if(_games == null || _games.Count == 0)
-                return "Date To Be Announced";
+    private string EventWindow => EventOptions.Value.EventWindow;
 
-            var start = _games.Min(game => game.StartTime);
-            var end = _games.Max(game => game.EndTime);
-            return $"{start:dd MMM yyyy} - {end:dd MMM yyyy}";
-        }
-    }
+    private string HeroLocation => $"{EventOptions.Value.VenueName}, {EventOptions.Value.Address}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

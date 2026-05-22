@@ -1,6 +1,6 @@
 @rendermode InteractiveServer
 
-@if(_isUserMenuVisible || _isDropdownVisible)
+@if(_isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible)
 {
     <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label="Close menus"></button>
 }
@@ -16,8 +16,27 @@
         <NavLink href="/sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
             Sponsors
         </NavLink>
-        <a href="/#tickets" class="brand-nav-link text-center md:text-left" @onclick="HandleNavigationClicked">Tickets</a>
-        <a href="/#contact" class="brand-nav-link text-center md:text-left" @onclick="HandleNavigationClicked">Contact</a>
+        <div class="nav-menu-group info-nav-group" @onclick:stopPropagation="true">
+            <button type="button"
+                    class="@GetInfoButtonClass()"
+                    @onclick="ToggleInfoMenu"
+                    aria-expanded="@GetAriaExpanded(_isInfoMenuVisible)"
+                    aria-haspopup="true">
+                Info
+                <span class="bi bi-chevron-down info-nav-caret" aria-hidden="true"></span>
+            </button>
+            @if(_isInfoMenuVisible)
+            {
+                <div class="dropdown-menu-custom info-dropdown mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[13rem]" @onclick:stopPropagation="true">
+                    <NavLink href="/info" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Overview</NavLink>
+                    <a href="/info#packing" class="dropdown-item" @onclick="HandleNavigationClicked">What to bring</a>
+                    <a href="/info#where" class="dropdown-item" @onclick="HandleNavigationClicked">When &amp; where</a>
+                    <a href="/info#tickets" class="dropdown-item" @onclick="HandleNavigationClicked">Tickets</a>
+                    <a href="/info#catering" class="dropdown-item" @onclick="HandleNavigationClicked">Catering</a>
+                    <a href="/info#contact-info" class="dropdown-item" @onclick="HandleNavigationClicked">Contact</a>
+                </div>
+            }
+        </div>
     </nav>
 
     <div class="brand-nav-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end">
@@ -71,7 +90,7 @@
             </NotAuthorized>
         </AuthorizeView>
 
-        <a href="/#tickets" class="button-primary brand-ticket-cta w-full justify-center md:w-auto" @onclick="HandleNavigationClicked">
+        <a href="/info#tickets" class="button-primary brand-ticket-cta w-full justify-center md:w-auto" @onclick="HandleNavigationClicked">
             Get Tickets
         </a>
     </div>

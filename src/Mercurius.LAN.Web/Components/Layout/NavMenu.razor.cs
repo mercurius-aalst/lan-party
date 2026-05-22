@@ -11,6 +11,7 @@ public partial class NavMenu
     private IConfiguration Configuration { get; set; } = null!;
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
+    private bool _isInfoMenuVisible = false;
 
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
@@ -39,17 +40,28 @@ public partial class NavMenu
     {
         _isUserMenuVisible = false;
         _isDropdownVisible = false;
+        _isInfoMenuVisible = false;
     }
 
     private void ToggleDropdown()
     {
         _isDropdownVisible = !_isDropdownVisible;
+        _isUserMenuVisible = false;
+        _isInfoMenuVisible = false;
+    }
+
+    private void ToggleInfoMenu()
+    {
+        _isInfoMenuVisible = !_isInfoMenuVisible;
+        _isDropdownVisible = false;
+        _isUserMenuVisible = false;
     }
 
     private void CloseDropdown()
     {
         _isDropdownVisible = false;
         _isUserMenuVisible = false;
+        _isInfoMenuVisible = false;
     }
 
     private async Task HandleNavigationClicked()
@@ -60,7 +72,15 @@ public partial class NavMenu
 
     private string GetAdminButtonClass() => GetUtilityButtonClass(_isDropdownVisible);
 
+    private string GetInfoButtonClass()
+    {
+        var classes = "brand-nav-link info-nav-button text-center md:text-left";
+        return _isInfoMenuVisible || IsInfoPage ? $"{classes} brand-nav-link--active" : classes;
+    }
+
     private string GetUserButtonClass() => $"{GetUtilityButtonClass(_isUserMenuVisible)} user-button";
+
+    private bool IsInfoPage => NavigationManager.ToBaseRelativePath(NavigationManager.Uri).StartsWith("info", StringComparison.OrdinalIgnoreCase);
 
     private static string GetAriaExpanded(bool isExpanded) => isExpanded ? "true" : "false";
 
