@@ -420,3 +420,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Codex
+/.codex
+/mockups
+/output

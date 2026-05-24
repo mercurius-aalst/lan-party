@@ -64,7 +64,7 @@ else
                     </div>
                 </div>
 
-                <a href="#home-content" class="home-hero-scroll-link" aria-label="Scroll to the rest of the home page">
+                <a href="@(_sponsors.Any() ? "#home-sponsors" : "#home-content")" class="home-hero-scroll-link" aria-label="Scroll to the rest of the home page">
                     <span class="home-hero-scroll-label">Explore the event</span>
                     <span class="home-hero-scroll-indicator" aria-hidden="true"></span>
                 </a>
@@ -75,7 +75,7 @@ else
     <div id="home-content" class="home-flow">
         @if(_sponsors.Any())
         {
-            <section class="brand-section home-sponsors">
+            <section id="home-sponsors" class="brand-section home-sponsors">
                 <div class="home-sponsors-panel brand-panel-dark">
                     <div class="home-sponsors-header">                  
                         <span class="section-eyebrow">Our partners</span>

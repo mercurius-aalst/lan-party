@@ -337,6 +337,7 @@
     width: 100vw;
     margin-inline: calc(50% - 50vw);
     padding-inline: clamp(1rem, 4vw, 2rem);
+    scroll-margin-top: 5.75rem;
 }
 
 .home-sponsors-panel {
@@ -449,13 +450,18 @@
 
 .home-game-meta {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
 }
 
 .home-game-meta h3 {
     margin-bottom: 0;
+}
+
+.home-game-meta .game-status {
+    flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .schedule-strip {

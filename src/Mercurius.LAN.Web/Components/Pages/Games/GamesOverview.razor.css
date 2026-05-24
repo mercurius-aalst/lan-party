@@ -179,6 +179,10 @@
     margin-bottom: 1.5rem;
 }
 
+.games-process-anchor {
+    scroll-margin-top: 5.75rem;
+}
+
 .games-results-header h2 {
     margin-bottom: 0.45rem;
 }
