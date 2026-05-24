@@ -11,8 +11,8 @@
 }
 else
 {
-    <section class="brand-section sponsors-intro">
-        <div class="sponsors-intro-copy">
+    <section class="brand-section brand-section-shell sponsors-intro">
+        <div class="brand-section-shell sponsors-intro-copy">
             <span class="section-eyebrow">Sponsors & Partners</span>
             <h1>Sponsors</h1>
             <p>Meet the partners behind Mercurius LAN and browse the brands helping shape the weekend experience.</p>
@@ -36,7 +36,7 @@ else
         <div id="current-partners" class="sponsors-tier-list">
             @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
             {
-                <section class="brand-section sponsors-tier-section">
+                <section class="brand-section brand-section-shell sponsors-tier-section">
                     <div class="sponsors-tier-header">
                         <div>
                             <span class="section-eyebrow">Partner tier</span>
@@ -49,10 +49,10 @@ else
                         @foreach(var sponsor in GetSponsorsByTier(tier))
                         {
                             <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
-                                <div class="sponsor-card-logo sponsor-card-logo--@tier.ToString().ToLowerInvariant()">
+                                <div class="@GetSponsorCardLogoClass(tier)">
                                     <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
                                 </div>
-                                <div class="sponsor-card-body">
+                                <div class="brand-sponsor-card-body sponsor-card-body">
                                     <span class="sponsor-tier-label">@tier.GetShortLabel()</span>
                                     <h3>@sponsor.Name</h3>
                                     @if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Presenting)

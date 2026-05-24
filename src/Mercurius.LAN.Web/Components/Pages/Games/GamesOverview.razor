@@ -13,9 +13,9 @@
 else
 {
     <section class="brand-section games-browse-section">
-        <div class="brand-card games-browse-shell">
+        <div class="brand-card brand-page-hero games-browse-shell">
             <div class="games-browse-lead">
-                <div class="games-browse-copy">
+                <div class="brand-page-hero-copy games-browse-copy">
                     <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
                     <h1>Tournaments</h1>
                     <p>Search the full line-up, compare formats, and narrow the field fast without wading through a separate landing block first.</p>
@@ -98,22 +98,22 @@ else
                 @foreach(var game in FilteredGames)
                 {
                     var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
-                    <article class="brand-card games-card">
-                        <img src="@imageUrl" alt="@game.Name" class="games-card-image" />
-                        <div class="games-card-body">
-                            <div class="games-card-topline">
-                                <span class="games-card-date">@FormatDateTime(game.StartTime)</span>
+                    <article class="brand-card brand-tournament-card games-card">
+                        <img src="@imageUrl" alt="@game.Name" class="brand-tournament-card-image games-card-image" />
+                        <div class="brand-tournament-card-body games-card-body">
+                            <div class="brand-tournament-card-topline games-card-topline">
+                                <span class="brand-tournament-card-date games-card-date">@FormatDateTime(game.StartTime)</span>
                                 <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
                             </div>
 
                             <h3>@game.Name</h3>
 
-                            <div class="games-card-badges">
+                            <div class="brand-tournament-card-badges games-card-badges">
                                 <span class="badge">@game.ParticipationMode.GetLabel()</span>
                                 <span class="badge">@game.BracketType.GetLabel()</span>
                             </div>
 
-                            <dl class="games-card-meta">
+                            <dl class="brand-tournament-card-meta games-card-meta">
                                 <div>
                                     <dt>Format</dt>
                                     <dd>@game.Format.GetLabel()</dd>
@@ -129,7 +129,7 @@ else
                             </dl>
                         </div>
 
-                        <div class="games-card-actions grid gap-3">
+                        <div class="brand-tournament-card-actions games-card-actions grid gap-3">
                             <button type="button" class="button-secondary" @onclick="() => NavigateToGameDetail(game.Id)">View Details</button>
                             <button type="button" class="button-primary" disabled="@(!CanRegister(game))" @onclick="() => NavigateToRegister(game)">
                                 @(CanRegister(game) ? "Register" : "Registration Closed")

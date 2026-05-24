@@ -76,11 +76,17 @@ namespace Mercurius.LAN.Web.Components.Pages
         {
             return tier switch
             {
-                SponsorTier.Presenting => "brand-card sponsor-card sponsor-card--feature",
-                SponsorTier.Gold => "brand-card sponsor-card sponsor-card--gold",
-                SponsorTier.Silver => "brand-card sponsor-card sponsor-card--silver",
-                _ => "brand-card sponsor-card sponsor-card--bronze"
+                SponsorTier.Presenting => "brand-card brand-sponsor-card brand-sponsor-card--feature sponsor-card sponsor-card--feature",
+                SponsorTier.Gold => "brand-card brand-sponsor-card brand-sponsor-card--gold sponsor-card sponsor-card--gold",
+                SponsorTier.Silver => "brand-card brand-sponsor-card brand-sponsor-card--silver sponsor-card sponsor-card--silver",
+                _ => "brand-card brand-sponsor-card brand-sponsor-card--bronze sponsor-card sponsor-card--bronze"
             };
+        }
+
+        private static string GetSponsorCardLogoClass(SponsorTier tier)
+        {
+            var tierName = tier.ToString().ToLowerInvariant();
+            return $"brand-sponsor-card-logo brand-sponsor-card-logo--{tierName} sponsor-card-logo sponsor-card-logo--{tierName}";
         }
     }
 }

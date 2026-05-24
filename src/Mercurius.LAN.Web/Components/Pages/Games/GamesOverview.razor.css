@@ -1,20 +1,11 @@
 .games-browse-shell {
-    position: relative;
-    display: grid;
-    grid-template-columns: minmax(0, 0.82fr) minmax(30rem, 1.18fr);
-    align-items: center;
-    gap: clamp(1rem, 3vw, 2.5rem);
-    margin-top: 1rem;
-    padding: clamp(1.25rem, 2.6vw, 2.25rem);
-    overflow: hidden;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    border-radius: 36px;
-    background:
-        radial-gradient(circle at 82% 22%, rgba(34, 197, 94, 0.26), transparent 15rem),
-        radial-gradient(circle at 12% 86%, rgba(14, 165, 233, 0.14), transparent 18rem),
-        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(238, 247, 240, 0.9));
-    box-shadow: 0 24px 54px rgba(15, 23, 42, 0.1);
-    isolation: isolate;
+    --brand-page-hero-columns: minmax(0, 0.82fr) minmax(30rem, 1.18fr);
+    --brand-page-hero-gap: clamp(1rem, 3vw, 2.5rem);
+    --brand-page-hero-padding: clamp(1.25rem, 2.6vw, 2.25rem);
+    --brand-page-hero-padding-mobile: 1rem;
+    --brand-page-hero-copy-gap: 0.7rem;
+    --brand-page-hero-copy-paragraph-size: clamp(0.98rem, 1.25vw, 1.05rem);
+    --brand-page-hero-copy-paragraph-line-height: 1.58;
 }
 
 .games-browse-section {
@@ -30,28 +21,6 @@
     padding-block: clamp(2rem, 3.5vw, 3rem);
 }
 
-.games-browse-shell::before {
-    content: "";
-    position: absolute;
-    inset: 1rem;
-    z-index: -1;
-    border: 1px dashed rgba(21, 128, 61, 0.18);
-    border-radius: 28px;
-}
-
-.games-browse-shell::after {
-    content: "";
-    position: absolute;
-    top: -7rem;
-    right: 19rem;
-    z-index: -1;
-    width: 15rem;
-    height: 15rem;
-    border-radius: 999px;
-    background: rgba(34, 197, 94, 0.12);
-    filter: blur(2px);
-}
-
 .games-browse-lead,
 .games-browse-controls {
     position: relative;
@@ -62,12 +31,6 @@
     display: grid;
     align-content: center;
     gap: 0.8rem;
-}
-
-.games-browse-copy {
-    max-width: 48rem;
-    display: grid;
-    gap: 0.7rem;
 }
 
 .games-browse-copy h1,
@@ -96,12 +59,6 @@
 .games-browse-copy p,
 .games-filter-caption {
     color: var(--color-muted-text);
-}
-
-.games-browse-copy p {
-    max-width: 50rem;
-    font-size: clamp(0.98rem, 1.25vw, 1.05rem);
-    line-height: 1.58;
 }
 
 .games-browse-controls {
@@ -257,83 +214,6 @@
     line-height: 1;
 }
 
-.games-card {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.games-card-image {
-    display: block;
-    width: 100%;
-    aspect-ratio: 16 / 8;
-    object-fit: contain;
-    object-position: center;
-    background: var(--color-dark-navy);
-}
-
-.games-card-body {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1.2rem;
-}
-
-.games-card-topline {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-}
-
-.games-card-date {
-    color: var(--color-muted-text);
-    font-size: 0.88rem;
-    font-weight: 600;
-}
-
-.games-card-badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.games-card-meta {
-    display: grid;
-    gap: 0.75rem;
-    margin: 0;
-}
-
-.games-card-meta > div {
-    display: grid;
-    grid-template-columns: 5rem 1fr;
-    gap: 0.75rem;
-}
-
-.games-card-meta dt {
-    color: var(--color-muted-text);
-    font-weight: 600;
-}
-
-.games-card-meta dd {
-    margin: 0;
-    color: var(--color-dark-navy);
-    font-weight: 600;
-}
-
-.games-card-actions {
-    padding: 0 1.2rem 1.2rem;
-}
-
-.games-card-actions .button-primary[disabled] {
-    background: rgba(15, 23, 42, 0.08);
-    border-color: rgba(15, 23, 42, 0.08);
-    color: var(--color-muted-text);
-    cursor: not-allowed;
-    transform: none;
-}
-
 .games-process-card,
 .games-empty-state,
 .games-sponsors-panel {
@@ -373,7 +253,7 @@
 
 @media (max-width: 1100px) {
     .games-browse-shell {
-        grid-template-columns: 1fr;
+        --brand-page-hero-columns: 1fr;
     }
 
     .games-browse-lead {
@@ -406,10 +286,6 @@
 }
 
 @media (max-width: 640px) {
-    .games-browse-shell {
-        padding: 1rem;
-    }
-
     .games-browse-links {
         width: 100%;
     }

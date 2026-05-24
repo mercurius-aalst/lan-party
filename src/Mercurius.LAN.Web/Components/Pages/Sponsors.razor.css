@@ -1,13 +1,5 @@
-.sponsors-intro,
-.sponsors-intro-copy,
-.sponsor-card,
-.sponsor-card-body {
-    display: grid;
-    gap: 1rem;
-}
-
 .sponsors-intro {
-    gap: 1.1rem;
+    --brand-section-shell-gap: 1.1rem;
 }
 
 .sponsors-intro-copy {
@@ -16,8 +8,7 @@
 
 .sponsors-intro-copy p,
 .sponsors-tier-header p,
-.sponsors-empty-state p,
-.sponsor-card-body p {
+.sponsors-empty-state p {
     margin: 0;
 }
 
@@ -39,8 +30,7 @@
 }
 
 .sponsors-tier-section {
-    display: grid;
-    gap: 1.25rem;
+    --brand-section-shell-gap: 1.25rem;
 }
 
 .sponsors-tier-header {
@@ -77,141 +67,6 @@
 .sponsor-grid--bronze {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 13rem));
     gap: 0.9rem;
-}
-
-.sponsor-card {
-    min-height: 100%;
-    padding: 1.25rem;
-    border-radius: 22px;
-    border: 1px solid var(--sponsor-card-border);
-    background: var(--sponsor-card-bg);
-    box-shadow: var(--sponsor-card-shadow);
-    color: inherit;
-    text-decoration: none;
-    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
-}
-
-.sponsor-card:hover {
-    transform: translateY(-2px);
-    border-color: rgba(34, 197, 94, 0.32);
-    box-shadow: var(--sponsor-card-shadow-hover);
-}
-
-.sponsor-card--feature {
-    grid-template-columns: 1fr;
-    align-content: start;
-    gap: 1.25rem;
-    padding: 2rem;
-}
-
-.sponsor-card--gold {
-    padding: 1.2rem;
-}
-
-.sponsor-card--silver {
-    padding: 1.05rem;
-}
-
-.sponsor-card--bronze {
-    padding: 0.9rem;
-}
-
-.sponsor-card-logo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 8rem;
-    padding: 1rem;
-    border-radius: 18px;
-    background: var(--sponsor-logo-bg);
-}
-
-.sponsor-card-logo img {
-    max-width: 100%;
-    max-height: 6rem;
-    object-fit: contain;
-}
-
-.sponsor-card--feature .sponsor-card-logo {
-    min-height: 13.5rem;
-    padding: 1.75rem;
-}
-
-.sponsor-card--feature .sponsor-card-logo img {
-    max-height: 9.5rem;
-}
-
-.sponsor-card-logo--presenting {
-    min-height: 13.5rem;
-}
-
-.sponsor-card-logo--gold {
-    min-height: 7.75rem;
-}
-
-.sponsor-card-logo--silver {
-    min-height: 6.5rem;
-}
-
-.sponsor-card-logo--bronze {
-    min-height: 5.5rem;
-}
-
-.sponsor-tier-label {
-    color: var(--color-deep-green);
-    font-family: "Saira", system-ui, sans-serif;
-    font-size: 0.76rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
-
-.sponsor-card-body h3 {
-    margin-bottom: 0;
-    color: var(--color-dark-navy);
-}
-
-.sponsor-card--feature .sponsor-card-body {
-    gap: 0.8rem;
-}
-
-.sponsor-card--feature .sponsor-tier-label {
-    font-size: 0.9rem;
-}
-
-.sponsor-card--feature .sponsor-card-body h3 {
-    font-size: clamp(1.85rem, 3vw, 2.35rem);
-    line-height: 1.08;
-}
-
-.sponsor-card--feature .sponsor-card-body p {
-    font-size: 1.02rem;
-    line-height: 1.55;
-}
-
-.sponsor-card--gold .sponsor-card-body h3 {
-    font-size: 1.2rem;
-}
-
-.sponsor-card--silver .sponsor-card-body h3 {
-    font-size: 1.08rem;
-}
-
-.sponsor-card--bronze .sponsor-card-body h3 {
-    font-size: 1rem;
-}
-
-.sponsor-card-body p {
-    color: var(--color-muted-text);
-}
-
-.sponsor-card-link {
-    color: var(--color-deep-green);
-    font-weight: 700;
-}
-
-.sponsor-card--bronze .sponsor-card-link {
-    font-size: 0.92rem;
 }
 
 @media (max-width: 940px) {
