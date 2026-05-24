@@ -151,6 +151,7 @@
 
 .info-section {
     gap: 1.5rem;
+    scroll-margin-top: clamp(6.75rem, 9vw, 8rem);
 }
 
 .info-section-header {
