@@ -1,35 +1,37 @@
-﻿.participant-overview-card {
+.participant-overview-card {
     background: #f8f8f8;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
-    padding: 1.2em 1.5em 1.2em 1.5em;
-    width: 14rem;
     border: 2px solid #e0e0e0;
-    position: relative;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.08);
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-width: 0;
+    padding: 1rem 0.9rem;
+    position: relative;
     transition: border 0.2s, box-shadow 0.2s;
 }
 
-    .participant-overview-card:hover {
-        border: 2.5px solid #4caf50;
-        box-shadow: 0 0 0 2px #a5d6a7;
-    }
+.participant-overview-card:hover {
+    border: 2.5px solid #4caf50;
+    box-shadow: 0 0 0 2px #a5d6a7;
+}
 
 .participant-avatar {
-    width: 48px;
-    height: 48px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: #e0e0e0;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.7em;
+    font-size: 1.4em;
     font-weight: 700;
     color: #fff;
-    margin-bottom: 0.7em;
 }
 
 .player-avatar {
@@ -41,13 +43,13 @@
 }
 
 .participant-overview-name {
-    font-size: 1.15em;
+    font-size: 1rem;
     font-weight: 700;
     color: #222;
     text-align: center;
-    margin-bottom: 0.2em;
     word-wrap: break-word;
     overflow-wrap: break-word;
     max-width: 100%;
     white-space: normal;
+    line-height: 1.25;
 }

@@ -151,6 +151,13 @@ public partial class ParticipantsTab
         return Game.ParticipationMode == ParticipationMode.Team ? "teams" : "players";
     }
 
+    private string GetParticipantModalSummary()
+    {
+        return _selectedParticipant?.ParticipationMode == ParticipationMode.Team
+            ? "Team roster, captain, and registered members."
+            : "Player profile and connected account details.";
+    }
+
     private async Task ApplyUpdatedGameAsync(GameExtended updatedGame)
     {
         Game = updatedGame;

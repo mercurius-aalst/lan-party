@@ -23,6 +23,9 @@ internal sealed class MockBackendStore
         WriteIndented = true,
         Converters = { new JsonStringEnumConverter() }
     };
+    private static readonly Guid FeaturedDoubleEliminationGameId = Guid.Parse("11111111-1111-1111-1111-111111111112");
+    private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
 
     private readonly object _syncRoot = new();
     private readonly string _dataFilePath;
@@ -32,6 +35,7 @@ internal sealed class MockBackendStore
     {
         _dataFilePath = Path.Combine(environment.ContentRootPath, options.Value.DataFilePath);
         _document = LoadDocument(_dataFilePath);
+        SeedFeaturedDoubleEliminationFixture();
     }
 
     public List<Game> GetGames()
@@ -533,6 +537,215 @@ internal sealed class MockBackendStore
         }
 
         return document;
+    }
+
+    private void SeedFeaturedDoubleEliminationFixture()
+    {
+        var game = _document.Games.FirstOrDefault(candidate => candidate.Id == FeaturedDoubleEliminationGameId);
+        if(game == null)
+            return;
+
+        var teams = BuildFeaturedDoubleEliminationTeams();
+
+        game.Name = "Valorant";
+        game.StartTime = new DateTime(2026, 6, 14, 12, 0, 0, DateTimeKind.Utc);
+        game.EndTime = new DateTime(2026, 6, 14, 23, 0, 0, DateTimeKind.Utc);
+        game.Status = GameStatus.InProgress;
+        game.BracketType = BracketType.DoubleElimination;
+        game.Format = GameFormat.BestOf3;
+        game.FinalsFormat = GameFormat.BestOf5;
+        game.ParticipationMode = ParticipationMode.Team;
+        game.RegisterFormUrl = "https://example.test/register/valorant";
+        game.Placements = [];
+        game.Users = [];
+        game.Teams = Clone(teams)!;
+        game.Matches = BuildFeaturedDoubleEliminationMatches(game.Id, teams);
+
+        foreach(var team in teams)
+        {
+            AddOrReplaceTeam(team);
+        }
+    }
+
+    private static List<Team> BuildFeaturedDoubleEliminationTeams()
+    {
+        return
+        [
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111111", "Team Alpha", "41111111-1111-1111-1111-111111111111", "alpha1", "Alex", "Alder", "alex@example.test", "alpha#1111", "alpha#VAL"),
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111112", "Binary Bandits", "41111111-1111-1111-1111-111111111113", "binary1", "Ben", "Binary", "ben@example.test", "binary#1111", "binary#VAL"),
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111113", "Gamma Grid", "41111111-1111-1111-1111-111111111114", "gamma1", "Gina", "Grid", "gina@example.test", "gamma#1111", "gamma#VAL"),
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111114", "Delta Drop", "41111111-1111-1111-1111-111111111115", "delta1", "Dana", "Drop", "dana@example.test", "delta#1111", "delta#VAL"),
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111115", "Echo Unit", "41111111-1111-1111-1111-111111111116", "echo1", "Eli", "Echo", "eli@example.test", "echo#1111", "echo#VAL"),
+            BuildFeaturedTeam("21111111-1111-1111-1111-111111111116", "Frame Perfect", "41111111-1111-1111-1111-111111111117", "frame1", "Finn", "Frame", "finn@example.test", "frame#1111", "frame#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111121", "Pixel Pushers", "42111111-1111-1111-1111-111111111121", "pixel1", "Pia", "Pixel", "pia@example.test", "pixel#1111", "pixel#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111122", "Quantum Queue", "42111111-1111-1111-1111-111111111122", "queue1", "Quinn", "Queue", "quinn@example.test", "queue#1111", "queue#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111123", "Radiant Rift", "42111111-1111-1111-1111-111111111123", "radiant1", "Rhea", "Rift", "rhea@example.test", "rift#1111", "rift#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111124", "Spike Syndicate", "42111111-1111-1111-1111-111111111124", "spike1", "Soren", "Spike", "soren@example.test", "spike#1111", "spike#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111125", "Vector Vipers", "42111111-1111-1111-1111-111111111125", "vector1", "Vera", "Vector", "vera@example.test", "vector#1111", "vector#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111126", "Neon Knights", "42111111-1111-1111-1111-111111111126", "neon1", "Nia", "Neon", "nia@example.test", "neon#1111", "neon#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111127", "Orbital Ops", "42111111-1111-1111-1111-111111111127", "orbital1", "Owen", "Orbital", "owen@example.test", "orbital#1111", "orbital#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111128", "Prism Protocol", "42111111-1111-1111-1111-111111111128", "prism1", "Priya", "Prism", "priya@example.test", "prism#1111", "prism#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111129", "Haven Hackers", "42111111-1111-1111-1111-111111111129", "haven1", "Harper", "Haven", "harper@example.test", "haven#1111", "haven#VAL"),
+            BuildFeaturedTeam("22111111-1111-1111-1111-111111111130", "Mid Control", "42111111-1111-1111-1111-111111111130", "mid1", "Milo", "Control", "milo@example.test", "mid#1111", "mid#VAL")
+        ];
+    }
+
+    private static Team BuildFeaturedTeam(
+        string teamId,
+        string teamName,
+        string captainUserId,
+        string username,
+        string firstname,
+        string lastname,
+        string email,
+        string discordId,
+        string riotId)
+    {
+        var captain = new UserDTO
+        {
+            Id = Guid.Parse(captainUserId),
+            Username = username,
+            Firstname = firstname,
+            Lastname = lastname,
+            Email = email,
+            EmailVerified = true,
+            DiscordId = discordId,
+            SteamId = $"steam-{username}",
+            RiotId = riotId,
+            DisplayName = $"{firstname} {lastname}",
+            IsDeleted = false,
+            CreatedAtUtc = FeaturedFixtureCreatedAtUtc,
+            UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
+        };
+
+        return new Team
+        {
+            Id = Guid.Parse(teamId),
+            Name = teamName,
+            CaptainUserId = captain.Id,
+            Members = [captain],
+            TeamInvites = []
+        };
+    }
+
+    private static List<Match> BuildFeaturedDoubleEliminationMatches(Guid gameId, IReadOnlyList<Team> teams)
+    {
+        var teamIds = teams.ToDictionary(team => team.Name, team => team.Id);
+        var startTime = new DateTime(2026, 6, 14, 12, 0, 0, DateTimeKind.Utc);
+
+        const string ubRound1Match1Id = "31111111-1111-1111-1111-111111111001";
+        const string ubRound1Match2Id = "31111111-1111-1111-1111-111111111002";
+        const string ubRound1Match3Id = "31111111-1111-1111-1111-111111111003";
+        const string ubRound1Match4Id = "31111111-1111-1111-1111-111111111004";
+        const string ubRound1Match5Id = "31111111-1111-1111-1111-111111111005";
+        const string ubRound1Match6Id = "31111111-1111-1111-1111-111111111006";
+        const string ubRound1Match7Id = "31111111-1111-1111-1111-111111111007";
+        const string ubRound1Match8Id = "31111111-1111-1111-1111-111111111008";
+        const string ubRound2Match1Id = "31111111-1111-1111-1111-111111111009";
+        const string ubRound2Match2Id = "31111111-1111-1111-1111-111111111010";
+        const string ubRound2Match3Id = "31111111-1111-1111-1111-111111111011";
+        const string ubRound2Match4Id = "31111111-1111-1111-1111-111111111012";
+        const string ubRound3Match1Id = "31111111-1111-1111-1111-111111111013";
+        const string ubRound3Match2Id = "31111111-1111-1111-1111-111111111014";
+        const string ubFinalMatchId = "31111111-1111-1111-1111-111111111015";
+        const string lbRound1Match1Id = "31111111-1111-1111-1111-111111111101";
+        const string lbRound1Match2Id = "31111111-1111-1111-1111-111111111102";
+        const string lbRound1Match3Id = "31111111-1111-1111-1111-111111111103";
+        const string lbRound1Match4Id = "31111111-1111-1111-1111-111111111104";
+        const string lbRound2Match1Id = "31111111-1111-1111-1111-111111111105";
+        const string lbRound2Match2Id = "31111111-1111-1111-1111-111111111106";
+        const string lbRound2Match3Id = "31111111-1111-1111-1111-111111111107";
+        const string lbRound2Match4Id = "31111111-1111-1111-1111-111111111108";
+        const string lbRound3Match1Id = "31111111-1111-1111-1111-111111111109";
+        const string lbRound3Match2Id = "31111111-1111-1111-1111-111111111110";
+        const string lbRound4Match1Id = "31111111-1111-1111-1111-111111111111";
+        const string lbRound4Match2Id = "31111111-1111-1111-1111-111111111112";
+        const string lbRound5MatchId = "31111111-1111-1111-1111-111111111113";
+        const string lbRound6MatchId = "31111111-1111-1111-1111-111111111114";
+        const string grandFinalMatchId = "31111111-1111-1111-1111-111111111115";
+
+        return
+        [
+            BuildFeaturedMatch(ubRound1Match1Id, gameId, startTime, 1, 1, false, teamIds["Team Alpha"], teamIds["Mid Control"], 2, 0, teamIds["Team Alpha"], teamIds["Mid Control"], ubRound2Match1Id, lbRound1Match1Id),
+            BuildFeaturedMatch(ubRound1Match2Id, gameId, startTime, 1, 2, false, teamIds["Quantum Queue"], teamIds["Orbital Ops"], 2, 1, teamIds["Quantum Queue"], teamIds["Orbital Ops"], ubRound2Match1Id, lbRound1Match1Id),
+            BuildFeaturedMatch(ubRound1Match3Id, gameId, startTime, 1, 3, false, teamIds["Echo Unit"], teamIds["Neon Knights"], 2, 0, teamIds["Echo Unit"], teamIds["Neon Knights"], ubRound2Match2Id, lbRound1Match2Id),
+            BuildFeaturedMatch(ubRound1Match4Id, gameId, startTime, 1, 4, false, teamIds["Delta Drop"], teamIds["Vector Vipers"], 2, 1, teamIds["Delta Drop"], teamIds["Vector Vipers"], ubRound2Match2Id, lbRound1Match2Id),
+            BuildFeaturedMatch(ubRound1Match5Id, gameId, startTime, 1, 5, false, teamIds["Binary Bandits"], teamIds["Haven Hackers"], 2, 0, teamIds["Binary Bandits"], teamIds["Haven Hackers"], ubRound2Match3Id, lbRound1Match3Id),
+            BuildFeaturedMatch(ubRound1Match6Id, gameId, startTime, 1, 6, false, teamIds["Radiant Rift"], teamIds["Prism Protocol"], 2, 1, teamIds["Radiant Rift"], teamIds["Prism Protocol"], ubRound2Match3Id, lbRound1Match3Id),
+            BuildFeaturedMatch(ubRound1Match7Id, gameId, startTime, 1, 7, false, teamIds["Frame Perfect"], teamIds["Spike Syndicate"], 1, 2, teamIds["Spike Syndicate"], teamIds["Frame Perfect"], ubRound2Match4Id, lbRound1Match4Id),
+            BuildFeaturedMatch(ubRound1Match8Id, gameId, startTime, 1, 8, false, teamIds["Gamma Grid"], teamIds["Pixel Pushers"], 2, 0, teamIds["Gamma Grid"], teamIds["Pixel Pushers"], ubRound2Match4Id, lbRound1Match4Id),
+
+            BuildFeaturedMatch(lbRound1Match1Id, gameId, startTime.AddMinutes(90), 1, 1, true, teamIds["Mid Control"], teamIds["Orbital Ops"], 0, 2, teamIds["Orbital Ops"], teamIds["Mid Control"], lbRound2Match1Id, null),
+            BuildFeaturedMatch(lbRound1Match2Id, gameId, startTime.AddMinutes(90), 1, 2, true, teamIds["Neon Knights"], teamIds["Vector Vipers"], 1, 2, teamIds["Vector Vipers"], teamIds["Neon Knights"], lbRound2Match2Id, null),
+            BuildFeaturedMatch(lbRound1Match3Id, gameId, startTime.AddMinutes(90), 1, 3, true, teamIds["Haven Hackers"], teamIds["Prism Protocol"], 1, 2, teamIds["Prism Protocol"], teamIds["Haven Hackers"], lbRound2Match3Id, null),
+            BuildFeaturedMatch(lbRound1Match4Id, gameId, startTime.AddMinutes(90), 1, 4, true, teamIds["Frame Perfect"], teamIds["Pixel Pushers"], 2, 0, teamIds["Frame Perfect"], teamIds["Pixel Pushers"], lbRound2Match4Id, null),
+
+            BuildFeaturedMatch(ubRound2Match1Id, gameId, startTime.AddMinutes(180), 2, 1, false, teamIds["Team Alpha"], teamIds["Quantum Queue"], 2, 0, teamIds["Team Alpha"], teamIds["Quantum Queue"], ubRound3Match1Id, lbRound2Match1Id),
+            BuildFeaturedMatch(ubRound2Match2Id, gameId, startTime.AddMinutes(180), 2, 2, false, teamIds["Echo Unit"], teamIds["Delta Drop"], 1, 2, teamIds["Delta Drop"], teamIds["Echo Unit"], ubRound3Match1Id, lbRound2Match2Id),
+            BuildFeaturedMatch(ubRound2Match3Id, gameId, startTime.AddMinutes(180), 2, 3, false, teamIds["Binary Bandits"], teamIds["Radiant Rift"], 2, 1, teamIds["Binary Bandits"], teamIds["Radiant Rift"], ubRound3Match2Id, lbRound2Match3Id),
+            BuildFeaturedMatch(ubRound2Match4Id, gameId, startTime.AddMinutes(180), 2, 4, false, teamIds["Spike Syndicate"], teamIds["Gamma Grid"], 0, 2, teamIds["Gamma Grid"], teamIds["Spike Syndicate"], ubRound3Match2Id, lbRound2Match4Id),
+
+            BuildFeaturedMatch(lbRound2Match1Id, gameId, startTime.AddMinutes(270), 2, 1, true, teamIds["Orbital Ops"], teamIds["Quantum Queue"], 0, 2, teamIds["Quantum Queue"], teamIds["Orbital Ops"], lbRound3Match1Id, null),
+            BuildFeaturedMatch(lbRound2Match2Id, gameId, startTime.AddMinutes(270), 2, 2, true, teamIds["Vector Vipers"], teamIds["Echo Unit"], 0, 2, teamIds["Echo Unit"], teamIds["Vector Vipers"], lbRound3Match1Id, null),
+            BuildFeaturedMatch(lbRound2Match3Id, gameId, startTime.AddMinutes(270), 2, 3, true, teamIds["Prism Protocol"], teamIds["Radiant Rift"], 1, 2, teamIds["Radiant Rift"], teamIds["Prism Protocol"], lbRound3Match2Id, null),
+            BuildFeaturedMatch(lbRound2Match4Id, gameId, startTime.AddMinutes(270), 2, 4, true, teamIds["Frame Perfect"], teamIds["Spike Syndicate"], 1, 2, teamIds["Spike Syndicate"], teamIds["Frame Perfect"], lbRound3Match2Id, null),
+
+            BuildFeaturedMatch(ubRound3Match1Id, gameId, startTime.AddMinutes(360), 3, 1, false, teamIds["Team Alpha"], teamIds["Delta Drop"], 2, 1, teamIds["Team Alpha"], teamIds["Delta Drop"], ubFinalMatchId, lbRound4Match1Id),
+            BuildFeaturedMatch(ubRound3Match2Id, gameId, startTime.AddMinutes(360), 3, 2, false, teamIds["Binary Bandits"], teamIds["Gamma Grid"], 2, 1, teamIds["Binary Bandits"], teamIds["Gamma Grid"], ubFinalMatchId, lbRound4Match2Id),
+
+            BuildFeaturedMatch(lbRound3Match1Id, gameId, startTime.AddMinutes(450), 3, 1, true, teamIds["Quantum Queue"], teamIds["Echo Unit"], 1, 2, teamIds["Echo Unit"], teamIds["Quantum Queue"], lbRound4Match1Id, null),
+            BuildFeaturedMatch(lbRound3Match2Id, gameId, startTime.AddMinutes(450), 3, 2, true, teamIds["Radiant Rift"], teamIds["Spike Syndicate"], 1, 2, teamIds["Spike Syndicate"], teamIds["Radiant Rift"], lbRound4Match2Id, null),
+
+            BuildFeaturedMatch(lbRound4Match1Id, gameId, startTime.AddMinutes(540), 4, 1, true, teamIds["Echo Unit"], teamIds["Delta Drop"], 0, 2, teamIds["Delta Drop"], teamIds["Echo Unit"], lbRound5MatchId, null),
+            BuildFeaturedMatch(lbRound4Match2Id, gameId, startTime.AddMinutes(540), 4, 2, true, teamIds["Spike Syndicate"], teamIds["Gamma Grid"], 0, 2, teamIds["Gamma Grid"], teamIds["Spike Syndicate"], lbRound5MatchId, null),
+            BuildFeaturedMatch(ubFinalMatchId, gameId, startTime.AddMinutes(540), 4, 3, false, teamIds["Team Alpha"], teamIds["Binary Bandits"], 3, 1, teamIds["Team Alpha"], teamIds["Binary Bandits"], grandFinalMatchId, lbRound6MatchId, GameFormat.BestOf5),
+
+            BuildFeaturedMatch(lbRound5MatchId, gameId, startTime.AddMinutes(630), 5, 1, true, teamIds["Delta Drop"], teamIds["Gamma Grid"], 1, 3, teamIds["Gamma Grid"], teamIds["Delta Drop"], lbRound6MatchId, null, GameFormat.BestOf5),
+            BuildFeaturedMatch(lbRound6MatchId, gameId, startTime.AddMinutes(720), 6, 1, true, teamIds["Gamma Grid"], teamIds["Binary Bandits"], 3, 2, teamIds["Gamma Grid"], teamIds["Binary Bandits"], grandFinalMatchId, null, GameFormat.BestOf5),
+            BuildFeaturedMatch(grandFinalMatchId, gameId, startTime.AddMinutes(810), 7, 1, false, teamIds["Team Alpha"], teamIds["Gamma Grid"], null, null, null, null, null, null, GameFormat.BestOf5)
+        ];
+    }
+
+    private static Match BuildFeaturedMatch(
+        string matchId,
+        Guid gameId,
+        DateTime startTime,
+        int roundNumber,
+        int matchNumber,
+        bool isLowerBracketMatch,
+        Guid? participant1Id,
+        Guid? participant2Id,
+        int? participant1Score,
+        int? participant2Score,
+        Guid? teamWinnerId,
+        Guid? teamLoserId,
+        string? winnerNextMatchId,
+        string? loserNextMatchId,
+        GameFormat? format = null)
+    {
+        return new Match
+        {
+            Id = Guid.Parse(matchId),
+            StartTime = startTime,
+            EndTime = startTime.AddMinutes(format == GameFormat.BestOf5 ? 75 : 60),
+            BracketType = BracketType.DoubleElimination,
+            Format = format ?? GameFormat.BestOf3,
+            ParticipationMode = ParticipationMode.Team,
+            RoundNumber = roundNumber,
+            MatchNumber = matchNumber,
+            IsLowerBracketMatch = isLowerBracketMatch,
+            GameId = gameId,
+            TeamParticipant1Id = participant1Id,
+            TeamParticipant2Id = participant2Id,
+            Participant1IsBYE = false,
+            Participant2IsBYE = false,
+            TeamWinnerId = teamWinnerId,
+            TeamLoserId = teamLoserId,
+            Participant1Score = participant1Score,
+            Participant2Score = participant2Score,
+            WinnerNextMatchId = string.IsNullOrWhiteSpace(winnerNextMatchId) ? null : Guid.Parse(winnerNextMatchId),
+            LoserNextMatchId = string.IsNullOrWhiteSpace(loserNextMatchId) ? null : Guid.Parse(loserNextMatchId)
+        };
     }
 
     private static List<Placement> BuildPlacements(GameExtended game)

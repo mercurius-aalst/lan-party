@@ -2,60 +2,77 @@
 
 @if(Participant?.User is UserDTO user)
 {
-    <div>
-        <div class="participant-header-row">
-            <span class="participant-type">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a7.5 7.5 0 0 1 13 0" /></svg>
-                User
-            </span>
-            <span class="participant-name">@GetUserLabel(user)</span>
-        </div>
-        <table class="participant-table">
-            <tr><td>Name:</td><td>@user.Firstname @user.Lastname</td></tr>
-            <tr><td>Email:</td><td>@user.Email</td></tr>
-            <tr>
-                <td><span class="platform-icon discord-icon"></span>Discord:</td>
-                <td>@RenderValue(user.DiscordId)</td>
-            </tr>
-            <tr>
-                <td><span class="platform-icon steam-icon"></span>Steam:</td>
-                <td>@RenderValue(user.SteamId)</td>
-            </tr>
-            <tr>
-                <td><span class="platform-icon riot-icon"></span>Riot:</td>
-                <td>@RenderValue(user.RiotId)</td>
-            </tr>
-        </table>
-    </div>
+    <article class="participant-surface">
+        @if(ShowIdentityHeader)
+        {
+            <header class="participant-header-row">
+                <span class="participant-type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a7.5 7.5 0 0 1 13 0" /></svg>
+                    User
+                </span>
+                <h4 class="participant-name">@GetUserLabel(user)</h4>
+            </header>
+        }
+        <dl class="participant-details">
+            <div class="participant-detail-row">
+                <dt>Name</dt>
+                <dd>@user.Firstname @user.Lastname</dd>
+            </div>
+            <div class="participant-detail-row">
+                <dt>Email</dt>
+                <dd>@RenderValue(user.Email)</dd>
+            </div>
+            <div class="participant-detail-row">
+                <dt>Discord</dt>
+                <dd>@RenderValue(user.DiscordId)</dd>
+            </div>
+            <div class="participant-detail-row">
+                <dt>Steam</dt>
+                <dd>@RenderValue(user.SteamId)</dd>
+            </div>
+            <div class="participant-detail-row">
+                <dt>Riot</dt>
+                <dd>@RenderValue(user.RiotId)</dd>
+            </div>
+        </dl>
+    </article>
 }
 else if(Participant?.Team is Models.Participants.Team team)
 {
     var captain = team.Members.FirstOrDefault(member => member.Id == team.CaptainUserId);
 
-    <div>
-        <div class="participant-header-row">
-            <span class="participant-type">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                Team
-            </span>
-            <span class="participant-name">@team.Name</span>
-        </div>
-        <div class="captain-label">Captain</div>
-        <div class="captain-name">@(captain == null ? "Unknown" : GetUserLabel(captain))</div>
-        <div class="captain-label mt-3">Members</div>
-        <ul class="participant-table mb-0">
-            @foreach(var member in team.Members)
-            {
-                <li>@GetUserLabel(member)</li>
-            }
-        </ul>
-    </div>
+    <article class="participant-surface">
+        @if(ShowIdentityHeader)
+        {
+            <header class="participant-header-row">
+                <span class="participant-type">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                    Team
+                </span>
+                <h4 class="participant-name">@team.Name</h4>
+            </header>
+        }
+        <section class="participant-section">
+            <span class="participant-section-label">Captain</span>
+            <strong class="participant-section-value">@(captain == null ? "Unknown" : GetUserLabel(captain))</strong>
+        </section>
+        <section class="participant-section">
+            <span class="participant-section-label">Members</span>
+            <div class="participant-members">
+                @foreach(var member in team.Members)
+                {
+                    <span class="participant-member-chip">@GetUserLabel(member)</span>
+                }
+            </div>
+        </section>
+    </article>
 }
 else
 {
-    <div>
-        <div class="participant-header-row">
+    <article class="participant-surface participant-surface--empty">
+        <header class="participant-header-row">
             <span class="participant-type">@EmptyLabel</span>
-        </div>
-    </div>
+        </header>
+        <p class="participant-empty-copy">This slot has not been filled yet.</p>
+    </article>
 }

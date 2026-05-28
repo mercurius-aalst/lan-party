@@ -7,12 +7,17 @@
 <div>
     @if(_isDialogOpen)
     {
-        <div class="participants-modal-overlay fixed inset-0 z-[2000] flex items-center justify-center bg-black/25 p-4" @onclick="() => CloseDialog(null!)">
-            <div class="participants-modal-dialog relative flex max-h-[90vh] w-full max-w-4xl flex-col items-center overflow-y-auto rounded-[15px] p-6 text-[#333] sm:p-8 lg:w-auto lg:min-w-[600px]" @onclick:stopPropagation>
-                <button class="participants-modal-close absolute right-2 top-2 text-[2rem]" @onclick="() => CloseDialog(null!)">&times;</button>
+        <div class="game-editor-modal-overlay" @onclick="() => CloseDialog(null)">
+            <div class="game-editor-modal-dialog" @onclick:stopPropagation>
+                <button type="button" class="game-editor-modal-close" aria-label="Close add tournament dialog" @onclick="() => CloseDialog(null)">&times;</button>
+                <div class="game-editor-modal-header">
+                    <span class="section-eyebrow">Admin</span>
+                    <h3>Add tournament</h3>
+                    <p>Create a new tournament entry without leaving the overview page.</p>
+                </div>
+
                 <div class="form-container w-full max-w-none p-0">
-                    <h3>Create New Game</h3>
-                    <EditForm EditContext="_editContext" OnValidSubmit="SubmitGameAsync" class="needs-validation">
+                    <EditForm EditContext="_editContext" OnValidSubmit="SubmitGameAsync" class="game-editor-form">
                         <DataAnnotationsValidator />
 
                         <div class="form-group">
@@ -80,8 +85,8 @@
                         </div>
 
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Create</button>
-                            <button type="button" class="btn btn-secondary" @onclick="() => CloseDialog(null!)">Cancel</button>
+                            <button type="submit" class="button-primary">Create tournament</button>
+                            <button type="button" class="button-secondary" @onclick="() => CloseDialog(null)">Cancel</button>
                         </div>
                     </EditForm>
                 </div>

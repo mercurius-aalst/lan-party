@@ -58,15 +58,6 @@
     isolation: isolate;
 }
 
-.packing-guide::before {
-    content: "";
-    position: absolute;
-    inset: 1rem;
-    border: 1px dashed rgba(21, 128, 61, 0.24);
-    border-radius: 24px;
-    pointer-events: none;
-}
-
 .packing-item {
     position: relative;
     z-index: 3;
@@ -501,6 +492,7 @@
 
 .info-contact-form .button-primary {
     width: 100%;
+    margin-top: 0.35rem;
 }
 
 .social-panel {

@@ -1,19 +1,28 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.DTOs.Games;
-using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.DTOs.Users;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
 public partial class GameDetail
 {
+    private enum ScheduleBracketFilter
+    {
+        All,
+        Main,
+        Lower,
+        GrandFinal
+    }
+
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
@@ -22,36 +31,42 @@ public partial class GameDetail
 
     [Parameter] public Guid GameId { get; set; }
 
-    private static readonly IReadOnlyList<SponsorContext> SponsorContextOrder =
-        [SponsorContext.TournamentPartner, SponsorContext.PrizePartner, SponsorContext.InfrastructurePartner, SponsorContext.CateringPartner];
-
     private GameExtended? _game;
-    private int _selectedTab;
+    private Match? _selectedMatch;
+    private int? _selectedSponsorId;
     private List<Sponsor> _availableSponsors = [];
-    private List<GameSponsorPlacementInputDTO> _editablePlacements = [];
+    private ScheduleBracketFilter _selectedScheduleBracket = ScheduleBracketFilter.All;
+    private int? _selectedScheduleRound;
 
-    private int ParticipantCount => _game == null ? 0 : GetParticipants(_game).Count();
-    private int MatchCount => _game?.Matches.Count() ?? 0;
-    private int RoundCount => _game?.Matches.Select(match => match.RoundNumber).Distinct().Count() ?? 0;
-    private int CompletedMatchCount => _game?.Matches.Count(IsMatchDecided) ?? 0;
-    private int PlacementCount => _game?.Placements.Count() ?? 0;
-    private string ParticipantLabel => _game?.ParticipationMode == ParticipationMode.Team ? "teams" : "players";
-    private string ParticipantLabelAbbreviation => _game?.ParticipationMode == ParticipationMode.Team ? "TEAM" : "SOLO";
-
-    private IReadOnlyList<string> ParticipantPreviewNames =>
-        _game == null
-            ? []
-            : GetParticipants(_game).Take(6).ToList();
-
-    private IReadOnlyList<Match> UpcomingMatches =>
+    private IReadOnlyList<Match> ScheduledMatches =>
         _game?.Matches
-            .OrderBy(match => match.StartTime)
+            .OrderBy(match => match.StartTime == default ? 1 : 0)
+            .ThenBy(match => match.StartTime == default ? DateTime.MaxValue : match.StartTime)
             .ThenBy(match => match.RoundNumber)
             .ThenBy(match => match.MatchNumber)
-            .Take(4)
             .ToList() ?? [];
 
-    private IReadOnlyList<GameSponsorPlacement> TournamentPartners => GetSponsorPlacements(SponsorContext.TournamentPartner);
+    private IReadOnlyList<Match> FilteredScheduledMatches =>
+        ScheduledMatches
+            .Where(MatchesSelectedBracket)
+            .Where(match => !_selectedScheduleRound.HasValue || match.RoundNumber == _selectedScheduleRound.Value)
+            .ToList();
+
+    private IReadOnlyList<int> AvailableScheduleRounds =>
+        ScheduledMatches
+            .Where(MatchesSelectedBracket)
+            .Select(match => match.RoundNumber)
+            .Distinct()
+            .OrderBy(round => round)
+            .ToList();
+
+    private GameSponsorPlacement? FeaturedPartner =>
+        _game?.SponsorPlacements.FirstOrDefault();
+
+    private Sponsor? SelectedSponsor =>
+        _selectedSponsorId.HasValue
+            ? _availableSponsors.FirstOrDefault(sponsor => sponsor.Id == _selectedSponsorId.Value)
+            : null;
 
     private string GameSummary
     {
@@ -61,22 +76,31 @@ public partial class GameDetail
                 return string.Empty;
 
             var competitionType = _game.ParticipationMode == ParticipationMode.Team ? "team-based" : "solo";
-            return $"Mercurius LAN {competitionType} competition with {_game.BracketType.GetLabel().ToLowerInvariant()} rounds and {_game.Format.GetLabel().ToLowerInvariant()} matches.";
+            return $"Mercurius LAN {competitionType} competition with {_game.BracketType.GetLabel().ToLowerInvariant()} structure and {_game.Format.GetLabel().ToLowerInvariant()} match format.";
         }
     }
 
-    private string RegistrationSummary
+    private string ScheduleSummary
     {
         get
         {
             if(_game == null)
                 return string.Empty;
 
-            return CanRegister(_game)
-                ? "Registration is currently available through the linked form for this tournament."
-                : "Registration is closed because the tournament has moved beyond the scheduled state or no registration link is available.";
+            if(!ScheduledMatches.Any())
+                return "Match times will appear here once the bracket has been seeded and scheduled.";
+
+            var visibleMatches = FilteredScheduledMatches;
+            var scheduledCount = visibleMatches.Count(match => match.StartTime != default);
+            var visibleCount = visibleMatches.Count;
+            return scheduledCount == 0
+                ? $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} are loaded, but start times are still being arranged."
+                : $"{scheduledCount} match{(scheduledCount == 1 ? string.Empty : "es")} currently have a scheduled start time.";
         }
     }
+
+    private string ScheduleCountLabel =>
+        $"{FilteredScheduledMatches.Count} match{(FilteredScheduledMatches.Count == 1 ? string.Empty : "es")}";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -84,11 +108,6 @@ public partial class GameDetail
         {
             await LoadGameDataAsync();
         }
-    }
-
-    private void SelectTab(int tab)
-    {
-        _selectedTab = tab;
     }
 
     private async Task LoadGameDataAsync()
@@ -107,7 +126,7 @@ public partial class GameDetail
                 .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
                 .ThenBy(sponsor => sponsor.Name)
                 .ToList();
-            SyncEditablePlacements();
+            SyncSelectedSponsor();
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException)
@@ -123,16 +142,8 @@ public partial class GameDetail
     private Task HandleGameUpdated(GameExtended updatedGame)
     {
         _game = updatedGame;
-        SyncEditablePlacements();
+        SyncSelectedSponsor();
         return InvokeAsync(StateHasChanged);
-    }
-
-    private void OnTabDropdownChanged(ChangeEventArgs e)
-    {
-        if(int.TryParse(e.Value?.ToString(), out int tab))
-        {
-            _selectedTab = tab;
-        }
     }
 
     private Task FinishGameAsync() =>
@@ -185,6 +196,25 @@ public partial class GameDetail
         return AssetUrlResolver.Resolve(Configuration, imageUrl);
     }
 
+    private string GetFeaturedPartnerSummary(GameSponsorPlacement placement)
+    {
+        return placement.SponsorDescription ?? string.Empty;
+    }
+
+    private static string GetPartnerEyebrow(GameSponsorPlacement placement)
+    {
+        return placement.SponsorTier == SponsorTier.Presenting
+            ? "Presented by"
+            : $"{placement.SponsorTier.GetShortLabel()} partner";
+    }
+
+    private string GetPageAnchorUrl(string anchorId)
+    {
+        return _game == null
+            ? "/games"
+            : $"/games/{_game.Id}#{anchorId}";
+    }
+
     private void NavigateToRegister()
     {
         if(_game == null)
@@ -199,11 +229,6 @@ public partial class GameDetail
         Navigation.NavigateTo(_game.RegisterFormUrl, true);
     }
 
-    private string GetTabClass(int tab)
-    {
-        return _selectedTab == tab ? "is-active" : string.Empty;
-    }
-
     private static string FormatDateTime(DateTime dateTime)
     {
         return dateTime.ToString("dd MMM yyyy · HH:mm");
@@ -214,10 +239,42 @@ public partial class GameDetail
         return $"{GetMatchParticipantName(match, true)} vs {GetMatchParticipantName(match, false)}";
     }
 
-    private string GetMatchSchedule(Match match)
+    private string GetMatchTimeRange(Match match)
     {
-        var startLabel = match.StartTime == default ? "Start time TBD" : FormatDateTime(match.StartTime);
-        return $"Match {match.MatchNumber} · {startLabel}";
+        if(match.StartTime == default)
+            return "Start time TBD";
+
+        if(match.EndTime == default || match.EndTime <= match.StartTime)
+            return FormatDateTime(match.StartTime);
+
+        return $"{FormatDateTime(match.StartTime)} - {match.EndTime:HH:mm}";
+    }
+
+    private string GetMatchStageSummary(Match match)
+    {
+        var bracketLabel = GetScheduleBracketLabel(match);
+        return $"{bracketLabel} · Match {match.MatchNumber}";
+    }
+
+    private string GetRoundLabel(Match match)
+    {
+        return $"Round {match.RoundNumber}";
+    }
+
+    private string GetScheduleStatus(Match match)
+    {
+        if(IsMatchDecided(match))
+            return "Decided";
+
+        return match.StartTime == default ? "Awaiting time" : "Scheduled";
+    }
+
+    private string GetScheduleStatusClass(Match match)
+    {
+        if(IsMatchDecided(match))
+            return "game-schedule-status--complete";
+
+        return match.StartTime == default ? "game-schedule-status--pending" : "game-schedule-status--scheduled";
     }
 
     private string GetMatchParticipantName(Match match, bool firstParticipant)
@@ -253,16 +310,6 @@ public partial class GameDetail
         return string.IsNullOrWhiteSpace(user.Username) ? user.DisplayName : user.Username;
     }
 
-    private static IReadOnlyList<string> GetParticipants(GameExtended game)
-    {
-        return game.ParticipationMode switch
-        {
-            ParticipationMode.Team => game.Teams.Select(team => team.Name).ToList(),
-            ParticipationMode.Individual => game.Users.Select(user => string.IsNullOrWhiteSpace(user.Username) ? user.DisplayName : user.Username!).ToList(),
-            _ => []
-        };
-    }
-
     private static bool IsMatchDecided(Match match)
     {
         return match.UserWinnerId.HasValue || match.TeamWinnerId.HasValue;
@@ -274,35 +321,75 @@ public partial class GameDetail
             !string.IsNullOrWhiteSpace(game.RegisterFormUrl);
     }
 
-    private IReadOnlyList<GameSponsorPlacement> GetSponsorPlacements(SponsorContext sponsorContext)
+    private string GetScheduleBracketLabel(Match match)
     {
-        return _game?.SponsorPlacements
-            .Where(placement => placement.Context == sponsorContext)
-            .OrderBy(placement => placement.DisplayOrder)
-            .ThenBy(placement => placement.SponsorName)
-            .ToList() ?? [];
+        if(IsGrandFinalMatch(match))
+            return "Grand final";
+
+        return match.IsLowerBracketMatch ? "Lower bracket" : "Main bracket";
     }
 
-    private bool HasSponsorsInContext(SponsorContext sponsorContext)
+    private bool IsGrandFinalMatch(Match match)
     {
-        return GetSponsorPlacements(sponsorContext).Any();
+        return _game?.BracketType == BracketType.DoubleElimination &&
+            !match.IsLowerBracketMatch &&
+            match.RoundNumber == ScheduledMatches.LastOrDefault()?.RoundNumber;
     }
 
-    private void AddSponsorPlacementRow()
+    private bool MatchesSelectedBracket(Match match)
     {
-        _editablePlacements.Add(new GameSponsorPlacementInputDTO
+        return _selectedScheduleBracket switch
         {
-            Context = SponsorContext.TournamentPartner,
-            DisplayOrder = _editablePlacements.Count + 1
-        });
+            ScheduleBracketFilter.Main => !match.IsLowerBracketMatch && !IsGrandFinalMatch(match),
+            ScheduleBracketFilter.Lower => match.IsLowerBracketMatch,
+            ScheduleBracketFilter.GrandFinal => IsGrandFinalMatch(match),
+            _ => true
+        };
     }
 
-    private void RemoveSponsorPlacementRow(int index)
+    private void HandleScheduleBracketChanged(ChangeEventArgs args)
     {
-        if(index < 0 || index >= _editablePlacements.Count)
-            return;
+        if(Enum.TryParse<ScheduleBracketFilter>(args.Value?.ToString(), out var selectedBracket))
+            _selectedScheduleBracket = selectedBracket;
+        else
+            _selectedScheduleBracket = ScheduleBracketFilter.All;
 
-        _editablePlacements.RemoveAt(index);
+        if(_selectedScheduleRound.HasValue && !AvailableScheduleRounds.Contains(_selectedScheduleRound.Value))
+            _selectedScheduleRound = null;
+    }
+
+    private void HandleScheduleRoundChanged(ChangeEventArgs args)
+    {
+        var rawValue = args.Value?.ToString();
+        _selectedScheduleRound = int.TryParse(rawValue, out var parsedRound) ? parsedRound : null;
+    }
+
+    private string GetScheduleBracketFilterLabel(ScheduleBracketFilter bracketFilter) =>
+        bracketFilter switch
+        {
+            ScheduleBracketFilter.Main => "Main bracket",
+            ScheduleBracketFilter.Lower => "Lower bracket",
+            ScheduleBracketFilter.GrandFinal => "Grand final",
+            _ => "All brackets"
+        };
+
+    private void OpenMatchDetails(Match match)
+    {
+        _selectedMatch = match;
+    }
+
+    private void HandleScheduleItemKeyDown(KeyboardEventArgs args, Match match)
+    {
+        if(args.Key is "Enter" or " ")
+        {
+            OpenMatchDetails(match);
+        }
+    }
+
+    private Task CloseMatchDetailsAsync()
+    {
+        _selectedMatch = null;
+        return Task.CompletedTask;
     }
 
     private async Task SaveSponsorPlacementsAsync()
@@ -310,25 +397,28 @@ public partial class GameDetail
         if(_game == null)
             return;
 
-        if(_editablePlacements.Any(placement => placement.SponsorId <= 0))
-        {
-            ToastService.ShowError("Each sponsor placement must have a sponsor selected.");
-            return;
-        }
-
         try
         {
+            var sponsorPlacements = _selectedSponsorId.HasValue
+                ? new List<GameSponsorPlacementInputDTO>
+                {
+                    new()
+                    {
+                        SponsorId = _selectedSponsorId.Value,
+                        Context = SponsorContext.TournamentPartner,
+                        DisplayOrder = 1
+                    }
+                }
+                : [];
+
             var updatedGame = await GameService.ReplaceGameSponsorsAsync(_game.Id, new ReplaceGameSponsorsDTO
             {
-                SponsorPlacements = _editablePlacements
-                    .OrderBy(placement => placement.Context.GetDisplayOrder())
-                    .ThenBy(placement => placement.DisplayOrder)
-                    .ToList()
+                SponsorPlacements = sponsorPlacements
             });
 
             _game = updatedGame;
-            SyncEditablePlacements();
-            ToastService.ShowSuccess("Sponsor placements updated.");
+            SyncSelectedSponsor();
+            ToastService.ShowSuccess("Tournament sponsor updated.");
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException ex)
@@ -337,19 +427,8 @@ public partial class GameDetail
         }
     }
 
-    private void SyncEditablePlacements()
+    private void SyncSelectedSponsor()
     {
-        _editablePlacements = _game?.SponsorPlacements
-            .OrderBy(placement => placement.Context.GetDisplayOrder())
-            .ThenBy(placement => placement.DisplayOrder)
-            .Select(placement => new GameSponsorPlacementInputDTO
-            {
-                SponsorId = placement.SponsorId,
-                Context = placement.Context,
-                Headline = placement.Headline,
-                SupportLine = placement.SupportLine,
-                DisplayOrder = placement.DisplayOrder
-            })
-            .ToList() ?? [];
+        _selectedSponsorId = _game?.SponsorPlacements.FirstOrDefault()?.SponsorId;
     }
 }

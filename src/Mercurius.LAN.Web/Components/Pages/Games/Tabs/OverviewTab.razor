@@ -9,8 +9,8 @@
     <div class="overview-header-row">
         <div>
             <span class="section-eyebrow">Overview</span>
-            <h2 class="game-overview-header">Tournament setup</h2>
-            <p>Core format, registration, and scheduling details for this game.</p>
+            <h2 class="game-overview-header">Tournament overview</h2>
+            <p>Core format, status, scheduling, and registration details for this tournament.</p>
         </div>
 
         @if(!_isEditMode && Game.Status == GameStatus.Scheduled)
@@ -27,12 +27,8 @@
     {
         <div class="overview-grid">
             <section class="brand-card overview-card">
-                <h3>Competition details</h3>
+                <h3>Competition setup</h3>
                 <dl class="overview-list">
-                    <div>
-                        <dt>Name</dt>
-                        <dd>@Game.Name</dd>
-                    </div>
                     <div>
                         <dt>Status</dt>
                         <dd><span class="game-status @Game.Status.GetStatusClass()">@Game.Status.GetStatusLabel()</span></dd>
@@ -45,11 +41,15 @@
                         <dt>Mode</dt>
                         <dd>@Game.ParticipationMode.GetLabel()</dd>
                     </div>
+                    <div>
+                        <dt>Format</dt>
+                        <dd>@Game.Format.GetLabel()</dd>
+                    </div>
                 </dl>
             </section>
 
             <section class="brand-card overview-card">
-                <h3>Match settings</h3>
+                <h3>Schedule & registration</h3>
                 <dl class="overview-list">
                     <div>
                         <dt>Start</dt>
@@ -60,16 +60,12 @@
                         <dd>@Game.EndTime.ToString("dd MMM yyyy · HH:mm")</dd>
                     </div>
                     <div>
-                        <dt>Format</dt>
-                        <dd>@Game.Format.GetLabel()</dd>
-                    </div>
-                    <div>
                         <dt>Finals</dt>
                         <dd>@Game.FinalsFormat.GetLabel()</dd>
                     </div>
                     <div>
                         <dt>Registration</dt>
-                        <dd>@(string.IsNullOrWhiteSpace(Game.RegisterFormUrl) ? "No form linked" : "Form linked")</dd>
+                        <dd>@GetRegistrationStateLabel()</dd>
                     </div>
                 </dl>
             </section>

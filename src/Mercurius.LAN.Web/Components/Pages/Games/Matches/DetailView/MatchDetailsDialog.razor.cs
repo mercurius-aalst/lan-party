@@ -40,6 +40,14 @@ public partial class MatchDetailsDialog
 
     private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;
 
+    private string GetStageLabel() => Match.IsLowerBracketMatch ? "Lower bracket" : "Main bracket";
+
+    private string GetRoundLabel() => $"Round {Match.RoundNumber}";
+
+    private string GetStatusLabel() => WinnerId != null ? "Decided" : Match.StartTime == default ? "Awaiting time" : "Scheduled";
+
+    private string GetStatusClass() => WinnerId != null ? "match-status-pill--complete" : Match.StartTime == default ? "match-status-pill--pending" : "match-status-pill--scheduled";
+
     private string GetCardClass(Guid? participantId)
     {
         if(IsWinner(participantId))

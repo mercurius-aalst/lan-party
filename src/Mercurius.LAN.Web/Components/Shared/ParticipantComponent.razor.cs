@@ -7,6 +7,7 @@ public partial class ParticipantComponent
 {
     [Parameter] public ParticipantViewModel? Participant { get; set; }
     [Parameter] public string EmptyLabel { get; set; } = "TBD";
+    [Parameter] public bool ShowIdentityHeader { get; set; } = true;
 
     private static string GetUserLabel(UserDTO user)
     {
@@ -15,6 +16,6 @@ public partial class ParticipantComponent
 
     private static string RenderValue(string? value)
     {
-        return string.IsNullOrWhiteSpace(value) ? string.Empty : value;
+        return string.IsNullOrWhiteSpace(value) ? "Not provided" : value;
     }
 }

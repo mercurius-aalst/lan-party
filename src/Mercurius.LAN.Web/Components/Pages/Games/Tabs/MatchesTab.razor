@@ -5,17 +5,17 @@
 <div class="matches-tab-shell">
     <div class="matches-tab-header">
         <div>
-            <span class="section-eyebrow">Matches</span>
-            <h2>Bracket view</h2>
-            <p>@Game.Matches.Count() matches are currently loaded for this tournament.</p>
+            <span class="section-eyebrow">Bracket</span>
+            <h2>Tournament bracket</h2>
+            <p>@GetBracketSummary()</p>
         </div>
     </div>
 
     @if(!Game.Matches.Any())
     {
-        <div class="brand-card matches-empty-state">
+        <div class="matches-empty-state">
             <h3>No bracket data yet</h3>
-            <p>Match information will appear here once the tournament has been seeded and scheduled.</p>
+            <p>Bracket progression will appear here once the tournament has been seeded.</p>
         </div>
     }
     else

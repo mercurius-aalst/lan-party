@@ -22,6 +22,122 @@
     display: block;
 }
 
+.double-elimination-shell {
+    display: grid;
+    gap: 1.1rem;
+}
+
+.double-elimination-tabs {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 0.35rem;
+    border: 1px solid rgba(27, 42, 77, 0.08);
+    border-radius: 1.25rem;
+    background:
+        linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(240, 247, 241, 0.9));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.double-elimination-tab {
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: grid;
+    gap: 0.35rem;
+    justify-items: start;
+    min-height: 5.25rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.64);
+    color: var(--brand-ink, #14213d);
+    text-align: left;
+    transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, color 160ms ease;
+}
+
+.double-elimination-tab:hover {
+    border-color: rgba(34, 197, 94, 0.22);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+
+.double-elimination-tab:focus-visible {
+    outline: 2px solid rgba(34, 197, 94, 0.45);
+    outline-offset: 2px;
+}
+
+.double-elimination-tab--active {
+    border-color: rgba(21, 128, 61, 0.42);
+    background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.2), transparent 9rem),
+        linear-gradient(135deg, rgba(240, 255, 245, 0.98), rgba(255, 255, 255, 0.96));
+    box-shadow:
+        0 20px 42px rgba(20, 33, 61, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+}
+
+.double-elimination-tab--active::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0.38rem;
+    background: linear-gradient(180deg, var(--color-primary-green), var(--color-deep-green));
+}
+
+.double-elimination-tab--active .double-elimination-tab-label {
+    color: var(--color-deep-green);
+}
+
+.double-elimination-tab-label {
+    font-family: var(--headline-font, "Teko", sans-serif);
+    font-size: clamp(1.45rem, 2vw, 1.8rem);
+    letter-spacing: 0.045em;
+    line-height: 0.88;
+    text-transform: uppercase;
+}
+
+.double-elimination-tab-meta {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.8rem;
+    padding: 0.22rem 0.6rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.06);
+    color: rgba(27, 42, 77, 0.72);
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.double-elimination-tab--active .double-elimination-tab-meta {
+    background: var(--color-primary-green);
+    color: var(--color-dark-navy);
+}
+
+.double-elimination-panel {
+    display: grid;
+    padding: 1rem;
+    border: 1px solid rgba(27, 42, 77, 0.08);
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.66);
+    overflow: hidden;
+}
+
+.double-elimination-finals-card {
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0 0.25rem;
+}
+
+.double-elimination-finals-card :deep(.bracket-match) {
+    position: relative;
+    left: auto !important;
+    top: auto !important;
+}
+
 .bracket-titles {
     display: flex;
     flex-direction: row;
@@ -91,6 +207,32 @@
     font-size: 0.95em;
     margin-bottom: 2px;
 }
+
 .container-box{
     border: 1px solid #ccc;
+}
+
+@media (max-width: 860px) {
+    .double-elimination-tabs {
+        grid-template-columns: 1fr;
+    }
+
+    .double-elimination-tab {
+        min-height: 4.5rem;
+        padding: 0.75rem 0.85rem;
+    }
+
+    .double-elimination-panel {
+        padding: 0.75rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .double-elimination-tab {
+        transition: none;
+    }
+
+    .double-elimination-tab:hover {
+        transform: none;
+    }
 }

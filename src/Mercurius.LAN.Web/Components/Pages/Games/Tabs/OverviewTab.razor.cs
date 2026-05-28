@@ -44,6 +44,14 @@ public partial class OverviewTab
         _isEditMode = false;
     }
 
+    private string GetRegistrationStateLabel()
+    {
+        if(string.IsNullOrWhiteSpace(Game.RegisterFormUrl))
+            return "No form linked";
+
+        return Game.Status == GameStatus.Scheduled ? "Open via linked form" : "Closed after tournament start";
+    }
+
     private async Task SubmitEditAsync()
     {
         string? tempFilePath = _imageInputRef?.TempFilePath;
