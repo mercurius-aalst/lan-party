@@ -1,15 +1,19 @@
 .bracket-absolute-container {
     position: relative;
     min-width: 100%;
-    max-width: 100vw;
-    overflow-x: auto;
+    max-width: none;
+    overflow: visible;
     box-sizing: border-box;
 }
 
 .bracket-root {
-    max-width: 100vw;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
     padding-bottom: 1rem;
     cursor: grab;
 }
@@ -20,6 +24,8 @@
 
 .bracket-columns {
     display: block;
+    width: max-content;
+    min-width: 100%;
 }
 
 .double-elimination-shell {
@@ -35,9 +41,8 @@
     padding: 0.35rem;
     border: 1px solid rgba(27, 42, 77, 0.08);
     border-radius: 1.25rem;
-    background:
-        linear-gradient(135deg, rgba(248, 250, 252, 0.96), rgba(240, 247, 241, 0.9));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    background: #f8fafc;
+    box-shadow: none;
 }
 
 .double-elimination-tab {
@@ -51,7 +56,7 @@
     padding: 0.85rem 1rem;
     border: 1px solid transparent;
     border-radius: 1rem;
-    background: rgba(255, 255, 255, 0.64);
+    background: #ffffff;
     color: var(--brand-ink, #14213d);
     text-align: left;
     transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, color 160ms ease;
@@ -59,8 +64,8 @@
 
 .double-elimination-tab:hover {
     border-color: rgba(34, 197, 94, 0.22);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+    box-shadow: none;
     transform: translateY(-1px);
 }
 
@@ -70,13 +75,11 @@
 }
 
 .double-elimination-tab--active {
-    border-color: rgba(21, 128, 61, 0.42);
-    background:
-        radial-gradient(circle at top right, rgba(34, 197, 94, 0.2), transparent 9rem),
-        linear-gradient(135deg, rgba(240, 255, 245, 0.98), rgba(255, 255, 255, 0.96));
-    box-shadow:
-        0 20px 42px rgba(20, 33, 61, 0.1),
-        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    border-color: var(--color-primary-green);
+    background: #ffffff;
+    outline: 2px solid var(--color-primary-green);
+    outline-offset: -2px;
+    box-shadow: none;
 }
 
 .double-elimination-tab--active::before {
@@ -84,7 +87,7 @@
     position: absolute;
     inset: 0 auto 0 0;
     width: 0.38rem;
-    background: linear-gradient(180deg, var(--color-primary-green), var(--color-deep-green));
+    background: #22c55e;
 }
 
 .double-elimination-tab--active .double-elimination-tab-label {

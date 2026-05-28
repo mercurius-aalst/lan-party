@@ -8,8 +8,8 @@
     position: relative;
     padding-block: 0.15rem 0.25rem;
     margin-inline: -0.15rem;
-    -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.14) 6%, rgba(0, 0, 0, 0.68) 12%, #000 20%, #000 80%, rgba(0, 0, 0, 0.68) 88%, rgba(0, 0, 0, 0.14) 94%, transparent 100%);
-    mask-image: linear-gradient(90deg, transparent 0, rgba(0, 0, 0, 0.14) 6%, rgba(0, 0, 0, 0.68) 12%, #000 20%, #000 80%, rgba(0, 0, 0, 0.68) 88%, rgba(0, 0, 0, 0.14) 94%, transparent 100%);
+    -webkit-mask-image: none;
+    mask-image: none;
 }
 
 .sponsor-scroller__track {
@@ -41,9 +41,7 @@
     padding: 0.95rem 1.15rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 18px;
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-        radial-gradient(circle at top, rgba(34, 197, 94, 0.1), transparent 56%);
+    background: rgba(255, 255, 255, 0.08);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.05),
         0 10px 22px rgba(4, 10, 24, 0.2);
@@ -55,9 +53,7 @@
 .sponsor-scroller__logo:focus-visible {
     transform: translateY(-2px);
     border-color: rgba(34, 197, 94, 0.34);
-    background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04)),
-        radial-gradient(circle at top, rgba(34, 197, 94, 0.15), transparent 56%);
+    background: rgba(34, 197, 94, 0.12);
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.07),
         0 14px 26px rgba(4, 10, 24, 0.26);

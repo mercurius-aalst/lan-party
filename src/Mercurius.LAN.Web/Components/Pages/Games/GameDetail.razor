@@ -70,99 +70,93 @@ else
         </header>
 
         <div class="game-detail-layout">
-            <div class="game-detail-main">
-                <section id="tournament-overview" class="brand-card game-detail-section">
+            <div class="game-detail-top">
+                <section id="tournament-overview" class="brand-card game-detail-section game-detail-top-section game-detail-top-section--overview">
                     <OverviewTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
                 </section>
 
-                <section id="tournament-schedule" class="brand-card game-detail-section">
+                <section id="tournament-schedule" class="brand-card game-detail-section game-detail-section--dense game-detail-top-section game-detail-top-section--schedule">
                     <div class="game-section-header">
                         <div>
                             <span class="section-eyebrow">Schedule</span>
-                            <h2>Match schedule</h2>
-                            <p>@ScheduleSummary</p>
+                            <h2>Upcoming matches</h2>
                         </div>
-
-                        @if(ScheduledMatches.Any())
-                        {
-                            <span class="game-detail-section-count">@ScheduleCountLabel</span>
-                        }
                     </div>
 
                     @if(!ScheduledMatches.Any())
                     {
-                        <p class="game-empty-copy">Match timings will appear here once the tournament has been seeded and scheduled.</p>
+                        <p class="game-empty-copy">No scheduled matches are currently pending.</p>
                     }
                     else
                     {
-                        <div class="game-schedule-filters" aria-label="Schedule filters">
-                            <div class="game-schedule-filter-field">
-                                <label for="schedule-bracket-filter">Bracket</label>
-                                <select id="schedule-bracket-filter"
-                                        class="form-select"
-                                        value="@_selectedScheduleBracket"
-                                        @onchange="HandleScheduleBracketChanged">
-                                    @foreach(var bracketFilter in Enum.GetValues<ScheduleBracketFilter>())
-                                    {
-                                        <option value="@bracketFilter">@GetScheduleBracketFilterLabel(bracketFilter)</option>
-                                    }
-                                </select>
+                        <div class="game-schedule-body">
+                            <div class="game-schedule-filters" aria-label="Schedule filters">
+                                <div class="game-schedule-filter-field">
+                                    <label for="schedule-bracket-filter">Bracket</label>
+                                    <select id="schedule-bracket-filter"
+                                            class="form-select"
+                                            value="@_selectedScheduleBracket"
+                                            @onchange="HandleScheduleBracketChanged">
+                                        @foreach(var bracketFilter in Enum.GetValues<ScheduleBracketFilter>())
+                                        {
+                                            <option value="@bracketFilter">@GetScheduleBracketFilterLabel(bracketFilter)</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="game-schedule-filter-field">
+                                    <label for="schedule-round-filter">Round</label>
+                                    <select id="schedule-round-filter"
+                                            class="form-select"
+                                            value="@(_selectedScheduleRound?.ToString() ?? string.Empty)"
+                                            @onchange="HandleScheduleRoundChanged">
+                                        <option value="">All rounds</option>
+                                        @foreach(var round in AvailableScheduleRounds)
+                                        {
+                                            <option value="@round">Round @round</option>
+                                        }
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="game-schedule-filter-field">
-                                <label for="schedule-round-filter">Round</label>
-                                <select id="schedule-round-filter"
-                                        class="form-select"
-                                        value="@(_selectedScheduleRound?.ToString() ?? string.Empty)"
-                                        @onchange="HandleScheduleRoundChanged">
-                                    <option value="">All rounds</option>
-                                    @foreach(var round in AvailableScheduleRounds)
-                                    {
-                                        <option value="@round">Round @round</option>
-                                    }
-                                </select>
-                            </div>
-                        </div>
-
-                        @if(!FilteredScheduledMatches.Any())
-                        {
-                            <p class="game-empty-copy">No matches match the selected bracket and round filters.</p>
-                        }
-
-                        <div class="game-schedule-list">
-                            @foreach(var match in FilteredScheduledMatches)
+                            @if(!FilteredScheduledMatches.Any())
                             {
-                                <article class="game-schedule-item"
-                                         role="button"
-                                         tabindex="0"
-                                         aria-label="View details for @GetMatchTitle(match)"
-                                         @onclick="() => OpenMatchDetails(match)"
-                                         @onkeydown="args => HandleScheduleItemKeyDown(args, match)">
-                                    <div class="game-schedule-item-main">
-                                        <div class="game-schedule-item-topline">
-                                            <span class="game-schedule-time">@GetMatchTimeRange(match)</span>
-                                            <span class="game-schedule-status @GetScheduleStatusClass(match)">@GetScheduleStatus(match)</span>
-                                        </div>
-                                        <h3>@GetMatchTitle(match)</h3>
-                                        <p>@GetMatchStageSummary(match)</p>
-                                    </div>
-
-                                    <div class="game-schedule-item-meta">
-                                        <span class="badge">@GetRoundLabel(match)</span>
-                                        <span class="badge">@match.Format.GetLabel()</span>
-                                    </div>
-                                </article>
+                                <p class="game-empty-copy">No matches match the selected bracket and round filters.</p>
                             }
+
+                            <div class="game-schedule-list">
+                                @foreach(var match in FilteredScheduledMatches)
+                                {
+                                    <article class="game-schedule-item"
+                                             role="button"
+                                             tabindex="0"
+                                             aria-label="View details for @GetMatchTitle(match)"
+                                             @onclick="() => OpenMatchDetails(match)"
+                                             @onkeydown="args => HandleScheduleItemKeyDown(args, match)">
+                                        <div class="game-schedule-item-main">
+                                            <div class="game-schedule-item-topline">
+                                                <span class="game-schedule-time">@GetMatchTimeRange(match)</span>
+                                                <span class="game-schedule-status @GetScheduleStatusClass(match)">@GetScheduleStatus(match)</span>
+                                            </div>
+                                            <h3>@GetMatchTitle(match)</h3>
+                                            <p>@GetMatchStageSummary(match)</p>
+                                        </div>
+
+                                        <div class="game-schedule-item-meta">
+                                            <span class="badge">@GetRoundLabel(match)</span>
+                                            <span class="badge">@match.Format.GetLabel()</span>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
                         </div>
                     }
                 </section>
-            </div>
 
-            <aside class="game-detail-sidebar">
                 @if(FeaturedPartner is not null)
                 {
                     var partner = FeaturedPartner;
-                    <section class="brand-card game-detail-section">
+                    <section class="brand-card game-detail-section game-detail-partner-section game-detail-top-section game-detail-top-section--sponsor">
                         <a class="brand-sponsor-card game-detail-partner-card" href="@partner.SponsorInfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @partner.SponsorName">
                             <div class="brand-sponsor-card-logo game-detail-partner-logo">
                                 <img src="@GetSponsorLogoUrl(partner.SponsorLogoUrl)" alt="@partner.SponsorName logo" />
@@ -180,10 +174,10 @@ else
                     </section>
                 }
 
-                <section id="tournament-participants" class="brand-card game-detail-section">
+                <section id="tournament-participants" class="brand-card game-detail-section game-detail-section--dense game-detail-top-section @(FeaturedPartner is null ? "game-detail-top-section--participants-no-sponsor" : "game-detail-top-section--participants")">
                     <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
                 </section>
-            </aside>
+            </div>
 
             <section id="tournament-bracket" class="brand-card game-detail-section game-detail-section--full-span">
                 <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />

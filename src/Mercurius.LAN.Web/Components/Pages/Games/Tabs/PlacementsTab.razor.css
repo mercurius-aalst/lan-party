@@ -40,19 +40,19 @@
 .podium-step.gold {
     order: 1;
     min-height: 8rem;
-    background: linear-gradient(180deg, #fde68a, #facc15);
+    background: #facc15;
 }
 
 .podium-step.silver {
     order: 0;
     min-height: 6.5rem;
-    background: linear-gradient(180deg, #e5e7eb, #cbd5e1);
+    background: #cbd5e1;
 }
 
 .podium-step.bronze {
     order: 2;
     min-height: 5rem;
-    background: linear-gradient(180deg, #fdba74, #fb923c);
+    background: #fb923c;
 }
 
 .podium-step .participant-name {

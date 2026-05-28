@@ -40,6 +40,7 @@ public partial class GameDetail
 
     private IReadOnlyList<Match> ScheduledMatches =>
         _game?.Matches
+            .Where(IsScheduledMatch)
             .OrderBy(match => match.StartTime == default ? 1 : 0)
             .ThenBy(match => match.StartTime == default ? DateTime.MaxValue : match.StartTime)
             .ThenBy(match => match.RoundNumber)
@@ -88,14 +89,11 @@ public partial class GameDetail
                 return string.Empty;
 
             if(!ScheduledMatches.Any())
-                return "Match times will appear here once the bracket has been seeded and scheduled.";
+                return "No scheduled matches are currently pending.";
 
             var visibleMatches = FilteredScheduledMatches;
-            var scheduledCount = visibleMatches.Count(match => match.StartTime != default);
             var visibleCount = visibleMatches.Count;
-            return scheduledCount == 0
-                ? $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} are loaded, but start times are still being arranged."
-                : $"{scheduledCount} match{(scheduledCount == 1 ? string.Empty : "es")} currently have a scheduled start time.";
+            return $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} currently have a scheduled start time.";
         }
     }
 
@@ -313,6 +311,11 @@ public partial class GameDetail
     private static bool IsMatchDecided(Match match)
     {
         return match.UserWinnerId.HasValue || match.TeamWinnerId.HasValue;
+    }
+
+    private static bool IsScheduledMatch(Match match)
+    {
+        return match.StartTime != default && !IsMatchDecided(match);
     }
 
     private static bool CanRegister(Game game)

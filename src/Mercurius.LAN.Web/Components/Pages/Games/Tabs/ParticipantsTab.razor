@@ -12,22 +12,24 @@
         </div>
     </div>
 
-    <div class="participants-overview-grid">
-        <AuthorizeView Roles="admin">
-            <Authorized>
-                @if(Game.Status == GameStatus.Scheduled)
-                {
-                    <button type="button" class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
-                        <div class="participant-avatar add-avatar">+</div>
-                        <div class="participant-overview-name">Add @GetParticipantLabel()</div>
-                    </button>
-                }
-            </Authorized>
-        </AuthorizeView>
-        @foreach(var participant in _participants)
-        {
-            <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction="@(Game.Status == GameStatus.Scheduled)" OnParticipantDeleted="UnregisterParticipantAsync" />
-        }
+    <div class="participants-overview-body">
+        <div class="participants-overview-grid">
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    @if(Game.Status == GameStatus.Scheduled)
+                    {
+                        <button type="button" class="participant-overview-card add-participants-card" @onclick="DisplayAddParticipantsPopupAsync">
+                            <div class="participant-avatar add-avatar">+</div>
+                            <div class="participant-overview-name">Add @GetParticipantLabel()</div>
+                        </button>
+                    }
+                </Authorized>
+            </AuthorizeView>
+            @foreach(var participant in _participants)
+            {
+                <ParticipantCardComponent Participant="participant" OnParticipantSelected="ShowParticipantPopup" AllowDeleteFunction="@(Game.Status == GameStatus.Scheduled)" OnParticipantDeleted="UnregisterParticipantAsync" />
+            }
+        </div>
     </div>
     @if(_selectedParticipant != null)
     {
