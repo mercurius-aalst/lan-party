@@ -1,0 +1,120 @@
+@page "/teams/{TeamName}"
+@using Mercurius.LAN.Web.Components.Shared
+
+@rendermode InteractiveServer
+
+<PageTitle>Team Profile</PageTitle>
+
+@if(_isLoading)
+{
+    <LoadingScreen Message="Loading team profile..." />
+}
+else if(_hasError)
+{
+    <StatusPage Eyebrow="Teams"
+                Title="Team unavailable"
+                Message="This team profile could not be loaded right now."
+                PrimaryHref="/games"
+                PrimaryLabel="Browse tournaments"
+                SecondaryHref="/"
+                SecondaryLabel="Back home" />
+}
+else if(_team is null)
+{
+    <StatusPage Eyebrow="Teams"
+                Title="Team not found"
+                Message="We could not find a public profile for that team."
+                PrimaryHref="/games"
+                PrimaryLabel="Browse tournaments"
+                SecondaryHref="/"
+                SecondaryLabel="Back home" />
+}
+else
+{
+    <section class="public-team-page py-6 pb-12">
+        <div class="public-team-shell">
+            <nav class="public-team-breadcrumb" aria-label="Breadcrumb">
+                <a href="/">Home</a>
+                <span>/</span>
+                <span aria-current="page">@_team.TeamName</span>
+            </nav>
+
+            <header class="brand-card public-team-hero">
+                <div class="public-team-hero-identity">
+                    <span class="public-team-avatar" aria-hidden="true">@GetTeamInitials(_team.TeamName)</span>
+                    <div>
+                        <span class="section-eyebrow">Team profile</span>
+                        <h1>@_team.TeamName</h1>
+                        <p>Public roster for this team. Select a member to open their user profile.</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="public-team-content-grid">
+                <section class="brand-card public-team-card">
+                    <div class="public-team-card-heading">
+                        <h2>Roster</h2>
+                        <p>Members are shown by public username only.</p>
+                    </div>
+
+                    @if(_team.Members.Count == 0)
+                    {
+                        <p class="public-team-empty">No public members are listed for this team.</p>
+                    }
+                    else
+                    {
+                        <ul class="public-team-member-list">
+                            @foreach(var member in _team.Members)
+                            {
+                                var isCaptain = !string.IsNullOrWhiteSpace(_team.CaptainUsername) &&
+                                    string.Equals(member.Username, _team.CaptainUsername, StringComparison.OrdinalIgnoreCase);
+                                <li>
+                                    <a href="@BuildMemberProfileHref(member.Username)" class="public-team-member-link">
+                                        <span class="public-team-member-avatar" aria-hidden="true">@GetMemberInitials(member.Username)</span>
+                                        <span class="public-team-member-copy">
+                                            <strong>
+                                                @member.Username
+                                                @if(isCaptain)
+                                                {
+                                                    <span class="public-team-captain-badge">Captain</span>
+                                                }
+                                            </strong>
+                                            <span>View participant profile</span>
+                                        </span>
+                                        <span class="bi bi-arrow-up-right public-team-member-arrow" aria-hidden="true"></span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+
+                <section class="brand-card public-team-card public-team-tournaments-card">
+                    <div class="public-team-card-heading">
+                        <h2>Playing in</h2>
+                        <p>Tournaments where this team is currently participating.</p>
+                    </div>
+
+                    @if(_team.Tournaments.Count == 0)
+                    {
+                        <p class="public-team-empty">This team is not currently listed in any tournaments.</p>
+                    }
+                    else
+                    {
+                        <ul class="public-team-tournament-list">
+                            @foreach(var tournament in _team.Tournaments)
+                            {
+                                <li>
+                                    <a href="/games/@tournament.GameId" class="public-team-tournament-link">
+                                        <span class="bi bi-controller" aria-hidden="true"></span>
+                                        <span>@tournament.Name</span>
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </section>
+            </div>
+        </div>
+    </section>
+}

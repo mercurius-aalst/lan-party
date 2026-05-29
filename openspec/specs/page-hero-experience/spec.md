@@ -1,4 +1,9 @@
-## ADDED Requirements
+# page-hero-experience Specification
+
+## Purpose
+Defines how homepage and non-homepage hero or intro surfaces create a clear first impression, guide visitor orientation, and preserve appropriate visual hierarchy across the site.
+
+## Requirements
 
 ### Requirement: Home page hero creates a strong landing impression
 

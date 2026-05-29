@@ -36,6 +36,24 @@
     color: var(--color-dark-navy);
 }
 
+.participant-profile-link {
+    color: var(--color-deep-green);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.participant-profile-link:hover {
+    color: var(--color-dark-navy);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.participant-profile-link:focus-visible,
+.participant-member-link:focus-visible {
+    outline: 3px solid rgba(34, 197, 94, 0.22);
+    outline-offset: 3px;
+}
+
 .participant-details {
     display: grid;
     gap: 0.7rem;
@@ -79,12 +97,38 @@
 .participant-member-chip {
     display: inline-flex;
     align-items: center;
+    gap: 0.45rem;
     padding: 0.45rem 0.7rem;
     border-radius: 999px;
     background: rgba(34, 197, 94, 0.12);
     color: var(--color-dark-navy);
     font-size: 0.95rem;
     font-weight: 700;
+}
+
+.participant-member-link {
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.participant-member-link:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--color-deep-green);
+    transform: translateY(-1px);
+}
+
+.participant-captain-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.12rem 0.38rem;
+    border: 1px solid rgba(21, 128, 61, 0.24);
+    border-radius: 999px;
+    background: #e8f7ee;
+    color: var(--color-deep-green);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
 }
 
 .participant-empty-copy {

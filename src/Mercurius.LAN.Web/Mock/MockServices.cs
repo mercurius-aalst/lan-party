@@ -2,6 +2,8 @@ using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.DTOs.Sponsors;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
@@ -89,6 +91,9 @@ internal sealed class MockTeamService : ITeamService
 
     public Task<List<Team>> GetTeamsAsync() => Task.FromResult(_store.GetTeams());
 
+    public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetPublicTeamByName(teamName));
+
     public Task<Team> CreateTeamAsync(CreateTeamDTO team) => Task.FromResult(_store.CreateTeam(team));
 
     public Task<Team> UpdateTeamAsync(Guid id, UpdateTeamDTO team) => Task.FromResult(_store.UpdateTeam(id, team));
@@ -97,6 +102,40 @@ internal sealed class MockTeamService : ITeamService
     {
         _store.DeleteTeam(id);
         return Task.CompletedTask;
+    }
+}
+
+internal sealed class MockGlobalSearchService : IGlobalSearchService
+{
+    private readonly MockBackendStore _store;
+
+    public MockGlobalSearchService(MockBackendStore store)
+    {
+        _store = store;
+    }
+
+    public Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<GlobalSearchResultDTO> results = _store.SearchGlobal(query);
+        return Task.FromResult(results);
+    }
+}
+
+internal sealed class MockPublicProfileService : IPublicProfileService
+{
+    private readonly MockBackendStore _store;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public MockPublicProfileService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
+    {
+        _store = store;
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public Task<PublicUserProfileDTO?> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var includeLinkedIdentifiers = _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true;
+        return Task.FromResult(_store.GetPublicUserByUsername(username, includeLinkedIdentifiers));
     }
 }
 

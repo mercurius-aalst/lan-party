@@ -11,7 +11,17 @@ public partial class ParticipantComponent
 
     private static string GetUserLabel(UserDTO user)
     {
-        return user.Username ?? user.DisplayName;
+        return string.IsNullOrWhiteSpace(user.Username) ? user.DisplayName : user.Username.Trim();
+    }
+
+    private static bool HasPublicUsername(UserDTO user)
+    {
+        return !string.IsNullOrWhiteSpace(user.Username);
+    }
+
+    private static string GetUserProfileHref(UserDTO user)
+    {
+        return $"/users/{Uri.EscapeDataString(user.Username!.Trim())}";
     }
 
     private static string RenderValue(string? value)

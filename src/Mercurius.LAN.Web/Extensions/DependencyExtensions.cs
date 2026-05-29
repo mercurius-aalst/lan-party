@@ -135,6 +135,8 @@ public static class DependencyExtensions
             services.AddScoped<IGameService, MockGameService>();
             services.AddScoped<ITeamService, MockTeamService>();
             services.AddScoped<ISponsorService, MockSponsorService>();
+            services.AddScoped<IGlobalSearchService, MockGlobalSearchService>();
+            services.AddScoped<IPublicProfileService, MockPublicProfileService>();
             services.AddScoped<IUserClient, MockUserClient>();
             services.AddHttpContextAccessor();
             return services;
@@ -143,6 +145,8 @@ public static class DependencyExtensions
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<ITeamService, TeamService>();
         services.AddScoped<ISponsorService, SponsorService>();
+        services.AddScoped<IGlobalSearchService, GlobalSearchService>();
+        services.AddScoped<IPublicProfileService, PublicProfileService>();
         services.AddHttpContextAccessor();
 
         return services;

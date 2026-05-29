@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.DTOs.Sponsors;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
@@ -43,6 +45,135 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             return Clone(_document.Games.Select(ToGame).ToList())!;
+        }
+    }
+
+    public List<GlobalSearchResultDTO> SearchGlobal(string query)
+    {
+        lock(_syncRoot)
+        {
+            var trimmedQuery = query.Trim();
+            if(trimmedQuery.Length < 3)
+                return [];
+
+            var userResults = _document.Users
+                .Where(user =>
+                    !user.IsDeleted &&
+                    !string.IsNullOrWhiteSpace(user.Username) &&
+                    user.Username.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(user => user.Username, StringComparer.OrdinalIgnoreCase)
+                .Select(user => new GlobalSearchResultDTO
+                {
+                    Type = GlobalSearchResultType.User,
+                    DisplayLabel = user.Username!,
+                    SupportingText = "Player",
+                    Username = user.Username
+                });
+
+            var teamResults = _document.Teams
+                .Where(team =>
+                    !string.IsNullOrWhiteSpace(team.Name) &&
+                    team.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(team => new GlobalSearchResultDTO
+                {
+                    Type = GlobalSearchResultType.Team,
+                    DisplayLabel = team.Name,
+                    SupportingText = "Team",
+                    TeamName = team.Name
+                });
+
+            var gameResults = _document.Games
+                .Where(game =>
+                    !string.IsNullOrWhiteSpace(game.Name) &&
+                    game.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(game => new GlobalSearchResultDTO
+                {
+                    Type = GlobalSearchResultType.Game,
+                    DisplayLabel = game.Name,
+                    SupportingText = "Tournament",
+                    GameId = game.Id
+                });
+
+            return userResults
+                .Concat(teamResults)
+                .Concat(gameResults)
+                .ToList();
+        }
+    }
+
+    public PublicUserProfileDTO? GetPublicUserByUsername(string username, bool includeLinkedIdentifiers)
+    {
+        lock(_syncRoot)
+        {
+            var normalizedUsername = username.Trim();
+            if(string.IsNullOrWhiteSpace(normalizedUsername))
+                return null;
+
+            var user = _document.Users.FirstOrDefault(candidate =>
+                !candidate.IsDeleted &&
+                string.Equals(candidate.Username, normalizedUsername, StringComparison.OrdinalIgnoreCase));
+
+            if(user == null || string.IsNullOrWhiteSpace(user.Username))
+                return null;
+
+            return new PublicUserProfileDTO
+            {
+                Username = user.Username!,
+                DiscordId = includeLinkedIdentifiers ? user.DiscordId : null,
+                SteamId = includeLinkedIdentifiers ? user.SteamId : null,
+                RiotId = includeLinkedIdentifiers ? user.RiotId : null
+            };
+        }
+    }
+
+    public PublicTeamProfileDTO? GetPublicTeamByName(string teamName)
+    {
+        lock(_syncRoot)
+        {
+            var normalizedTeamName = teamName.Trim();
+            if(string.IsNullOrWhiteSpace(normalizedTeamName))
+                return null;
+
+            var team = _document.Teams.FirstOrDefault(candidate =>
+                string.Equals(candidate.Name, normalizedTeamName, StringComparison.OrdinalIgnoreCase));
+
+            if(team == null)
+                return null;
+
+            var members = team.Members
+                .Where(member => !string.IsNullOrWhiteSpace(member.Username))
+                .GroupBy(member => member.Username!, StringComparer.OrdinalIgnoreCase)
+                .Select(group => new PublicTeamMemberDTO
+                {
+                    Username = group.First().Username!
+                })
+                .OrderBy(member => member.Username, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var captainUsername = team.Members
+                .FirstOrDefault(member => member.Id == team.CaptainUserId)?.Username
+                ?? _document.Users.FirstOrDefault(member => member.Id == team.CaptainUserId)?.Username;
+
+            var tournaments = _document.Games
+                .Where(game => game.Teams.Any(candidate => candidate.Id == team.Id))
+                .OrderBy(game => game.StartTime)
+                .ThenBy(game => game.Name)
+                .Select(game => new PublicTeamTournamentDTO
+                {
+                    GameId = game.Id,
+                    Name = game.Name
+                })
+                .ToList();
+
+            return new PublicTeamProfileDTO
+            {
+                TeamName = team.Name,
+                CaptainUsername = captainUsername,
+                Members = members,
+                Tournaments = tournaments
+            };
         }
     }
 
