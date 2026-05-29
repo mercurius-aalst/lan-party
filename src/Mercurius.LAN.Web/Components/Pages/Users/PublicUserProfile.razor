@@ -1,0 +1,107 @@
+@page "/users/{Username}"
+@using Mercurius.LAN.Web.Components.Shared
+
+@rendermode InteractiveServer
+
+<PageTitle>User Profile</PageTitle>
+
+@if(_isLoading)
+{
+    <LoadingScreen Message="Loading user profile..." />
+}
+else if(_hasError)
+{
+    <StatusPage Eyebrow="Participants"
+                Title="Profile unavailable"
+                Message="This user profile could not be loaded right now."
+                PrimaryHref="/games"
+                PrimaryLabel="Browse tournaments"
+                SecondaryHref="/"
+                SecondaryLabel="Back home" />
+}
+else if(_profile is null)
+{
+    <StatusPage Eyebrow="Participants"
+                Title="User not found"
+                Message="We could not find a public profile for that username."
+                PrimaryHref="/games"
+                PrimaryLabel="Browse tournaments"
+                SecondaryHref="/"
+                SecondaryLabel="Back home" />
+}
+else
+{
+    <section class="public-user-page py-6 pb-12">
+        <div class="public-user-shell">
+            <nav class="public-profile-breadcrumb" aria-label="Breadcrumb">
+                <a href="/">Home</a>
+                <span>/</span>
+                <span aria-current="page">@_profile.Username</span>
+            </nav>
+
+            <header class="brand-card public-user-hero">
+                <div class="public-user-hero-identity">
+                    <span class="public-user-avatar" aria-hidden="true">@GetInitials(_profile.Username)</span>
+                    <div>
+                        <span class="section-eyebrow">Participant profile</span>
+                        <h1>@_profile.Username</h1>
+                        <p>Public participant details for tournament discovery and team browsing.</p>
+                    </div>
+                </div>
+            </header>
+
+            <section class="brand-card public-user-card">
+                <div class="public-user-card-heading">
+                    <h2>Profile details</h2>
+                    <p>Only privacy-approved fields are shown on this public page.</p>
+                </div>
+
+                <div class="public-user-username-panel">
+                    <span class="public-user-panel-label">Username</span>
+                    <strong>@_profile.Username</strong>
+                </div>
+
+                @if(HasLinkedIdentities)
+                {
+                    <div class="public-user-linked-section">
+                        <h3>Linked IDs</h3>
+                        <dl class="public-user-linked-grid">
+                            @if(!string.IsNullOrWhiteSpace(_profile.DiscordId))
+                            {
+                                <div class="public-user-linked-card">
+                                    <dt>
+                                        <span class="bi bi-discord" aria-hidden="true"></span>
+                                        Discord
+                                    </dt>
+                                    <dd>@_profile.DiscordId</dd>
+                                </div>
+                            }
+
+                            @if(!string.IsNullOrWhiteSpace(_profile.SteamId))
+                            {
+                                <div class="public-user-linked-card">
+                                    <dt>
+                                        <span class="bi bi-steam" aria-hidden="true"></span>
+                                        Steam
+                                    </dt>
+                                    <dd>@_profile.SteamId</dd>
+                                </div>
+                            }
+
+                            @if(!string.IsNullOrWhiteSpace(_profile.RiotId))
+                            {
+                                <div class="public-user-linked-card">
+                                    <dt>
+                                        <span class="bi bi-controller" aria-hidden="true"></span>
+                                        Riot
+                                    </dt>
+                                    <dd>@_profile.RiotId</dd>
+                                </div>
+                            }
+                        </dl>
+                    </div>
+                }
+            </section>
+        </div>
+    </section>
+}

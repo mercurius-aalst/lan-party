@@ -1,60 +1,186 @@
-@page "/"
 @page "/games"
+@using Mercurius.LAN.Web.Components.Shared
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Games
-@using Mercurius.LAN.Web.Models
-@using Mercurius.LAN.Web.Components.Shared
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-<PageTitle>Games</PageTitle>
+<PageTitle>Tournaments</PageTitle>
 
-<div class="overview-header">
-    <h2>Games</h2>
-</div>
-<div class="search-bar-container">
-    <input type="text" class="form-control search-bar-input" placeholder="Search by game title..." @bind="_searchTerm" @bind:event="oninput" />
-</div>
-
-@if(_games == null)
+@if(_isLoading)
 {
-    <LoadingScreen Message="Loading..." />
+    <LoadingScreen Message="Loading tournaments..." />
 }
 else
 {
-    <div class="card-deck">
-        <AuthorizeView Roles="admin">
-            <Authorized>
-                <div class="card mb-3 modern-add-game-card text-center" @onclick="ShowAddGameDialog">
-                    <div class="card-body d-flex flex-column justify-content-center">
-                        <i class="bi bi-plus-circle" style="font-size: 3rem; color: var(--accent-color);"></i>
-                        <h5>Add New Game</h5>
-                        <p>Click to create a new game</p>
-                    </div>
+    <section class="brand-section games-browse-section">
+        <div class="brand-card brand-page-hero games-browse-shell">
+            <div class="games-browse-lead">
+                <div class="brand-page-hero-copy games-browse-copy">
+                    <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
+                    <h1>Tournaments</h1>
+                    <p>Search the full line-up, compare formats, and narrow the field fast without wading through a separate landing block first.</p>
                 </div>
-            </Authorized>
-        </AuthorizeView>
-
-        @foreach(var game in FilteredGames)
-        {
-            var imageUrl = Configuration["MercuriusAPI:BaseAddress"] + game.ImageUrl;
-            <div class="card mb-3" style="cursor:pointer;" @onclick="() => NavigateToGameDetail(game.Id)">
-                <img src="@imageUrl" srcset="@imageUrl?w=1800 600w" class="card-img-top" alt="@game.Name">
-                <div class="card-body">
-                    <h5 class="card-title">@game.Name</h5>
-                    <p class="card-text">
-                        <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
-                    </p>
-                    <p class="card-text"><small>@game.BracketType.GetLabel()</small></p>
-                </div>
-                <div class="card-footer text-center" @onclick:stopPropagation @onclick="() => NavigateToRegister(game)">
-                    <a class="card-link" tabindex="-1">Register</a>
+                <div class="games-browse-links flex flex-wrap gap-4">
+                    <a href="/games#process" class="button-secondary">How It Works</a>
                 </div>
             </div>
+
+            <div class="games-browse-controls">
+                <div class="games-control-field games-control-field--search">
+                    <label for="games-search">Search tournaments</label>
+                    <input id="games-search" type="text" class="games-search-input" placeholder="Search by tournament title..." @bind="_searchTerm" @bind:event="oninput" />
+                </div>
+
+                <div class="games-control-field games-control-field--sort">
+                    <label for="games-sort">Sort by</label>
+                    <select id="games-sort" class="games-sort-select" @bind="_sortOption">
+                        <option value="@GameSortOption.StartTime">Start time</option>
+                        <option value="@GameSortOption.Name">Name</option>
+                        <option value="@GameSortOption.Status">Status</option>
+                    </select>
+                </div>
+
+                <div class="games-filter-group">
+                    <div class="games-filter-group-header">
+                        <span class="section-eyebrow">Status</span>
+                        <span class="games-filter-caption">Follow openings, live brackets, and finished events.</span>
+                    </div>
+                    <div class="games-filter-chip-row flex flex-wrap gap-3">
+                        @foreach(var filter in StatusFilters)
+                        {
+                            <button type="button" class="games-filter-chip @(filter.Value == _statusFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _statusFilter)" @onclick="() => SetStatusFilter(filter.Value)">
+                                @filter.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="games-filter-group">
+                    <div class="games-filter-group-header">
+                        <span class="section-eyebrow">Mode</span>
+                        <span class="games-filter-caption">Switch between solo queues and team brackets.</span>
+                    </div>
+                    <div class="games-filter-chip-row flex flex-wrap gap-3">
+                        @foreach(var filter in ParticipationFilters)
+                        {
+                            <button type="button" class="games-filter-chip @(filter.Value == _participationFilter ? "is-active" : null)" aria-pressed="@(filter.Value == _participationFilter)" @onclick="() => SetParticipationFilter(filter.Value)">
+                                @filter.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="games-grid" class="brand-section games-grid-section">
+        @if(FilteredGames.Count == 0)
+        {
+            <div class="brand-card games-empty-state">
+                <h3>No tournaments match the current filters.</h3>
+                <p>Adjust the search, status, or mode filters to see the full line-up again.</p>
+            </div>
         }
-    </div>
-    @if(_isAddGameDialogOpen)
+        else
+        {
+            <div class="games-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <button type="button" class="brand-card games-add-card" @onclick="ShowAddGameDialog">
+                            <span class="brand-section-number">Admin</span>
+                            <h3>Add Tournament</h3>
+                            <p>Create a new game entry without leaving the overview page.</p>
+                            <span class="games-add-card-icon" aria-hidden="true">+</span>
+                        </button>
+                    </Authorized>
+                </AuthorizeView>
+
+                @foreach(var game in FilteredGames)
+                {
+                    var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
+                    <article class="brand-card brand-tournament-card games-card">
+                        <img src="@imageUrl" alt="@game.Name" class="brand-tournament-card-image games-card-image" />
+                        <div class="brand-tournament-card-body games-card-body">
+                            <div class="brand-tournament-card-topline games-card-topline">
+                                <span class="brand-tournament-card-date games-card-date">@FormatDateTime(game.StartTime)</span>
+                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
+                            </div>
+
+                            <h3>@game.Name</h3>
+
+                            <div class="brand-tournament-card-badges games-card-badges">
+                                <span class="badge">@game.ParticipationMode.GetLabel()</span>
+                                <span class="badge">@game.BracketType.GetLabel()</span>
+                            </div>
+
+                            <dl class="brand-tournament-card-meta games-card-meta">
+                                <div>
+                                    <dt>Format</dt>
+                                    <dd>@game.Format.GetLabel()</dd>
+                                </div>
+                                <div>
+                                    <dt>Finals</dt>
+                                    <dd>@game.FinalsFormat.GetLabel()</dd>
+                                </div>
+                                <div>
+                                    <dt>Ends</dt>
+                                    <dd>@FormatDateTime(game.EndTime)</dd>
+                                </div>
+                            </dl>
+                        </div>
+
+                        <div class="brand-tournament-card-actions games-card-actions grid gap-3">
+                            <button type="button" class="button-secondary" @onclick="() => NavigateToGameDetail(game.Id)">View Details</button>
+                            <button type="button" class="button-primary" disabled="@(!CanRegister(game))" @onclick="() => NavigateToRegister(game)">
+                                @(CanRegister(game) ? "Register" : "Registration Closed")
+                            </button>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+
+        @if(_isAddGameDialogOpen)
+        {
+            <AddGameDialog OnClose="CloseAddGameDialog" />
+        }
+    </section>
+
+    <section class="brand-section games-process-section">
+        <div id="process" class="games-results-header games-process-anchor flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+                <span class="section-eyebrow">How tournaments work</span>
+                <h2>From registration to finals</h2>
+            </div>
+        </div>
+
+        <div class="games-process-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <article class="brand-card games-process-card">
+                <span class="brand-section-number">01</span>
+                <h3>Pick your tournament</h3>
+                <p>Use the filters to compare game formats, bracket structure, and whether the event is solo or team-based.</p>
+            </article>
+
+            <article class="brand-card games-process-card">
+                <span class="brand-section-number">02</span>
+                <h3>Register while it is open</h3>
+                <p>Scheduled tournaments keep their registration links available so players can lock in before matches begin.</p>
+            </article>
+
+            <article class="brand-card games-process-card">
+                <span class="brand-section-number">03</span>
+                <h3>Show up ready to play</h3>
+                <p>Bring your setup, keep your profile current, and watch the bracket once the event moves into progress.</p>
+            </article>
+        </div>
+    </section>
+
+    @if(_sponsors.Any())
     {
-        <AddGameDialog OnClose="CloseAddGameDialog" />
+        <section class="brand-section games-sponsors">
+            <div class="brand-panel-dark games-sponsors-panel">
+                <SponsorScroller Sponsors="_sponsors" AriaLabel="Games overview sponsor logos" />
+            </div>
+        </section>
     }
 }
-<SponsorScroller></SponsorScroller>

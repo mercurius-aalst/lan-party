@@ -1,6 +1,7 @@
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
@@ -8,6 +9,8 @@ using Polly;
 using Refit;
 using System.Text.Json;
 using System.Web;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using System.Security.Claims;
 
 namespace Mercurius.LAN.Web.Extensions;
 
@@ -15,6 +18,23 @@ public static class DependencyExtensions
 {
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
+        if(IsMockBackendEnabled(configuration))
+        {
+            services.AddAuthorization();
+            services.AddCascadingAuthenticationState();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+                {
+                    options.LoginPath = "/account/login";
+                    options.LogoutPath = "/account/logout";
+                    options.AccessDeniedPath = "/";
+                    options.ClaimsIssuer = "MercuriusMock";
+                    options.Cookie.Name = "mercurius-mock-auth";
+                });
+
+            return services;
+        }
+
         var auth0Options = GetAuth0Options(configuration);
 
         services.AddAuthorization();
@@ -60,6 +80,9 @@ public static class DependencyExtensions
 
     public static IServiceCollection AddHttpClients(this IServiceCollection services, JsonSerializerOptions jsonOptions, IConfiguration configuration)
     {
+        if(IsMockBackendEnabled(configuration))
+            return services;
+
         var refitSettings = new RefitSettings
         {
             ContentSerializer = new SystemTextJsonContentSerializer(jsonOptions)
@@ -102,14 +125,77 @@ public static class DependencyExtensions
         return services;
     }
 
-    public static IServiceCollection AddCustomServices(this IServiceCollection services)
+    public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<IContactEmailService, SmtpContactEmailService>();
+
+        if(IsMockBackendEnabled(configuration))
+        {
+            services.AddSingleton<MockBackendStore>();
+            services.AddScoped<IGameService, MockGameService>();
+            services.AddScoped<ITeamService, MockTeamService>();
+            services.AddScoped<ISponsorService, MockSponsorService>();
+            services.AddScoped<IGlobalSearchService, MockGlobalSearchService>();
+            services.AddScoped<IPublicProfileService, MockPublicProfileService>();
+            services.AddScoped<IUserClient, MockUserClient>();
+            services.AddHttpContextAccessor();
+            return services;
+        }
+
         services.AddScoped<IGameService, GameService>();
         services.AddScoped<ITeamService, TeamService>();
         services.AddScoped<ISponsorService, SponsorService>();
+        services.AddScoped<IGlobalSearchService, GlobalSearchService>();
+        services.AddScoped<IPublicProfileService, PublicProfileService>();
         services.AddHttpContextAccessor();
 
         return services;
+    }
+
+    public static bool IsMockBackendEnabled(IConfiguration configuration) =>
+        configuration.GetValue<bool>($"{MockBackendOptions.SectionName}:Enabled");
+
+    public static string NormalizeMockPersona(string? persona, string fallbackPersona)
+    {
+        var candidate = string.IsNullOrWhiteSpace(persona) ? fallbackPersona : persona;
+
+        return candidate.Trim().ToLowerInvariant() switch
+        {
+            "admin" => "admin",
+            "anonymous" => "anonymous",
+            _ => "user"
+        };
+    }
+
+    internal static ClaimsPrincipal BuildMockPrincipal(string persona, MockBackendStore store)
+    {
+        var normalizedPersona = NormalizeMockPersona(persona, "user");
+        var claims = new List<Claim>
+        {
+            new("mock_persona", normalizedPersona)
+        };
+
+        if(!string.Equals(normalizedPersona, "anonymous", StringComparison.OrdinalIgnoreCase))
+        {
+            var currentProfile = store.GetCurrentProfile(normalizedPersona);
+            var profileUser = currentProfile.User;
+            claims.Add(new Claim(ClaimTypes.Name, profileUser?.DisplayName ?? normalizedPersona));
+
+            if(!string.IsNullOrWhiteSpace(currentProfile.Email))
+                claims.Add(new Claim(ClaimTypes.Email, currentProfile.Email));
+
+            if(profileUser != null)
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, profileUser.Id.ToString()));
+
+            if(string.Equals(normalizedPersona, "admin", StringComparison.OrdinalIgnoreCase))
+                claims.Add(new Claim(ClaimTypes.Role, "admin"));
+        }
+
+        var identity = string.Equals(normalizedPersona, "anonymous", StringComparison.OrdinalIgnoreCase)
+            ? new ClaimsIdentity()
+            : new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role);
+
+        return new ClaimsPrincipal(identity);
     }
 
     private static Auth0Options GetAuth0Options(IConfiguration configuration)

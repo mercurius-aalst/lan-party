@@ -12,6 +12,10 @@
     <Content Remove="Components\Pages\Admin\Tabs\**" />
     <EmbeddedResource Remove="Components\Pages\Admin\Tabs\**" />
     <None Remove="Components\Pages\Admin\Tabs\**" />
+    <Compile Remove="artifacts\**" />
+    <Content Remove="artifacts\**" />
+    <EmbeddedResource Remove="artifacts\**" />
+    <None Remove="artifacts\**" />
   </ItemGroup>
 
 	<ItemGroup>

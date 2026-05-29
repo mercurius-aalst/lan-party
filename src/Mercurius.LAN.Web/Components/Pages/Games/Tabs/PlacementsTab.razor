@@ -5,9 +5,16 @@
 @using Mercurius.LAN.Web.Models.Participants
 
 <div class="placements-container">
+    <div class="placements-header-block">
+        <span class="section-eyebrow">Results</span>
+        <h2>Current placements</h2>
+    </div>
+
     @if(Placements == null || !Placements.Any())
     {
-        <p>No results found.</p>
+        <div class="brand-card placements-empty-state">
+            <p>No results found.</p>
+        </div>
     }
     else
     {

@@ -1,7 +1,6 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Sponsors;
-using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -16,6 +15,7 @@ public partial class SponsorManagement
     private List<SponsorManagementDTO> _displaySponsors = new();
     private SponsorManagementDTO _selectedSponsor = new();
     private bool _isCreateMode = true;
+    private bool _isLoading = true;
     private EditContext? _editContext;
     private CustomInputFile? _imageInputRef;
 
@@ -38,19 +38,16 @@ public partial class SponsorManagement
             try
             {
                 _sponsors = (await SponsorService.GetSponsorsAsync()).ToList();
-                _displaySponsors = _sponsors.Select(s => new SponsorManagementDTO
-                {
-                    Name = s.Name,
-                    InfoUrl = s.InfoUrl,
-                    SponsorTier = s.SponsorTier,
-                    Id = s.Id,
-                    IsCreateMode = _isCreateMode
-                }).ToList();
-                await InvokeAsync(StateHasChanged);
+                SyncDisplaySponsors();
             }
             catch(Exception)
             {
                 ToastService.ShowError("Sponsors could not be loaded.");
+            }
+            finally
+            {
+                _isLoading = false;
+                await InvokeAsync(StateHasChanged);
             }
         }
     }
@@ -78,14 +75,7 @@ public partial class SponsorManagement
         _selectedSponsor = new SponsorManagementDTO();
         _isCreateMode = true;
         _selectedSponsor.IsCreateMode = true;
-        _displaySponsors = _sponsors.Select(s => new SponsorManagementDTO
-        {
-            Name = s.Name,
-            InfoUrl = s.InfoUrl,
-            SponsorTier = s.SponsorTier,
-            Id = s.Id,
-            IsCreateMode = _isCreateMode
-        }).ToList();
+        SyncDisplaySponsors();
         _autoCompleteComponent.ClearSearchField();       
         ReInitEditContext();
         StateHasChanged();
@@ -104,10 +94,12 @@ public partial class SponsorManagement
                     Name = _selectedSponsor!.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
+                    Description = _selectedSponsor.Description
                 }, tempFilePath,
             contentType,
             fileName);
                 _sponsors.Add(sponsor);
+                SyncDisplaySponsors();
                 ToastService.ShowSuccess("Sponsor created successfully.");
             }
             else
@@ -117,9 +109,19 @@ public partial class SponsorManagement
                     Name = _selectedSponsor.Name,
                     InfoUrl = _selectedSponsor.InfoUrl,
                     SponsorTier = _selectedSponsor.SponsorTier,
+                    Description = _selectedSponsor.Description
                 }, tempFilePath,
             contentType,
             fileName);
+                var existingSponsor = _sponsors.SingleOrDefault(sponsor => sponsor.Id == _selectedSponsor.Id);
+                if(existingSponsor != null)
+                {
+                    existingSponsor.Name = _selectedSponsor.Name;
+                    existingSponsor.InfoUrl = _selectedSponsor.InfoUrl;
+                    existingSponsor.SponsorTier = _selectedSponsor.SponsorTier;
+                    existingSponsor.Description = _selectedSponsor.Description;
+                }
+                SyncDisplaySponsors();
                 ToastService.ShowSuccess("Sponsor updated successfully.");
             }
         }
@@ -137,6 +139,7 @@ public partial class SponsorManagement
         {
             await SponsorService.DeleteSponsorAsync(_selectedSponsor.Id);
             _sponsors.Remove(_sponsors.SingleOrDefault(_sponsors => _sponsors.Id == _selectedSponsor.Id)!);
+            SyncDisplaySponsors();
             ToastService.ShowSuccess("Sponsor deleted successfully.");
             ClearForm();
         }
@@ -144,5 +147,18 @@ public partial class SponsorManagement
         {
             ToastService.ShowError(ex.Content!);
         }
+    }
+
+    private void SyncDisplaySponsors()
+    {
+        _displaySponsors = _sponsors.Select(sponsor => new SponsorManagementDTO
+        {
+            Name = sponsor.Name,
+            InfoUrl = sponsor.InfoUrl,
+            SponsorTier = sponsor.SponsorTier,
+            Description = sponsor.Description,
+            Id = sponsor.Id,
+            IsCreateMode = _isCreateMode
+        }).ToList();
     }
 }

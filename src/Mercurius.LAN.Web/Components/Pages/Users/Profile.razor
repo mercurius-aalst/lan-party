@@ -6,88 +6,113 @@
 
 <PageTitle>Profile</PageTitle>
 
-<h1>Profile</h1>
-
 @if(_editContext is null)
 {
     <LoadingScreen />
 }
 else
 {
-    <div class="form-container">
-        <div class="mb-3">
-            <label class="form-label">Email</label>
-            <input class="form-control" value="@_emailDisplay" disabled />
-            <div class="@_emailStatusClass">@_emailStatusText</div>
+    <section class="profile-page grid gap-6 py-6 pb-12">
+        <header class="profile-header brand-section grid gap-3">
+            <span class="section-eyebrow">Account</span>
+            <h1>Profile</h1>
+            <p>Keep your tournament profile accurate so registrations, brackets, and contact details stay in sync.</p>
+        </header>
+
+        <div class="profile-layout grid gap-6 lg:[grid-template-columns:minmax(0,1.4fr)_minmax(18rem,0.8fr)] lg:items-start">
+            <section class="brand-card profile-main-card p-4 sm:p-6">
+                <div class="profile-card-header">
+                    <div>
+                        <span class="section-eyebrow">Profile details</span>
+                        <h2>Your public and linked identifiers</h2>
+                    </div>
+                </div>
+
+                <div class="profile-email-row mb-5 grid gap-2">
+                    <label class="form-label">Email</label>
+                    <input class="form-control" value="@_emailDisplay" disabled />
+                    <div class="@_emailStatusClass profile-status-text">@_emailStatusText</div>
+                </div>
+
+                <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" FormName="profile">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="profile-form-grid grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+                        <div class="form-group lg:col-span-2">
+                            <label for="username">Username</label>
+                            <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" />
+                            <ValidationMessage For="@(() => _model.Username)" />
+                            @if(!string.IsNullOrWhiteSpace(_usernameAvailabilityMessage))
+                            {
+                                <div class="@_usernameAvailabilityClass profile-status-text">@_usernameAvailabilityMessage</div>
+                            }
+                        </div>
+
+                        <div class="form-group">
+                            <label for="firstname">First name</label>
+                            <InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" />
+                            <ValidationMessage For="@(() => _model.Firstname)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lastname">Last name</label>
+                            <InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" />
+                            <ValidationMessage For="@(() => _model.Lastname)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="discordId">Discord ID</label>
+                            <InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" />
+                            <ValidationMessage For="@(() => _model.DiscordId)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="steamId">Steam ID</label>
+                            <InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" />
+                            <ValidationMessage For="@(() => _model.SteamId)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="riotId">Riot ID</label>
+                            <InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" />
+                            <ValidationMessage For="@(() => _model.RiotId)" />
+                        </div>
+                    </div>
+
+                    <div class="form-actions-section">
+                        <button type="submit" class="btn btn-primary" disabled="@_isSaving">Save profile</button>
+                    </div>
+                </EditForm>
+            </section>
+
+            <aside class="profile-sidebar grid gap-6">
+                <section class="brand-card profile-side-card p-4 sm:p-6">
+                    <span class="section-eyebrow">Account tools</span>
+                    <h2>Security and verification</h2>
+                    <p>Use these actions to verify your email or trigger a password reset without changing profile data.</p>
+                    <div class="profile-side-actions mt-4 grid gap-3">
+                        @if(!_emailVerified)
+                        {
+                            <button type="button" class="btn btn-outline-primary" @onclick="ResendVerificationEmailAsync" disabled="@_isSendingVerification">Resend verification email</button>
+                        }
+                        <button type="button" class="btn btn-outline-secondary" @onclick="SendPasswordResetEmailAsync" disabled="@_isSendingPasswordReset">Reset password</button>
+                    </div>
+                </section>
+
+                <section class="brand-card profile-side-card profile-danger-card p-4 sm:p-6">
+                    <span class="section-eyebrow">Danger zone</span>
+                    <h2>Delete account</h2>
+                    <p>Type <strong>DELETE</strong> to confirm permanent account removal.</p>
+                    <div class="form-group">
+                        <label for="deleteConfirm">Delete confirmation</label>
+                        <InputText id="deleteConfirm" @bind-Value="_deleteConfirmation" placeholder="DELETE" class="form-control" />
+                    </div>
+                    <div class="form-actions-section">
+                        <button type="button" class="btn btn-danger" @onclick="DeleteAccountAsync" disabled="@(!_canDelete || _isDeleting)">Delete account</button>
+                    </div>
+                </section>
+            </aside>
         </div>
-
-        <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" FormName="profile">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <div class="form-group">
-                <label for="username">Username</label>
-                <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" />
-                <ValidationMessage For="@(() => _model.Username)" />
-                @if(!string.IsNullOrWhiteSpace(_usernameAvailabilityMessage))
-                {
-                    <div class="@_usernameAvailabilityClass">@_usernameAvailabilityMessage</div>
-                }
-            </div>
-
-            <div class="form-group">
-                <label for="firstname">First name</label>
-                <InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" />
-                <ValidationMessage For="@(() => _model.Firstname)" />
-            </div>
-
-            <div class="form-group">
-                <label for="lastname">Last name</label>
-                <InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" />
-                <ValidationMessage For="@(() => _model.Lastname)" />
-            </div>
-
-            <div class="form-group">
-                <label for="discordId">Discord ID</label>
-                <InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" />
-                <ValidationMessage For="@(() => _model.DiscordId)" />
-            </div>
-
-            <div class="form-group">
-                <label for="steamId">Steam ID</label>
-                <InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" />
-                <ValidationMessage For="@(() => _model.SteamId)" />
-            </div>
-
-            <div class="form-group">
-                <label for="riotId">Riot ID</label>
-                <InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" />
-                <ValidationMessage For="@(() => _model.RiotId)" />
-            </div>
-
-            <div class="form-actions-section">
-                <button type="submit" class="btn btn-primary" disabled="@_isSaving">Save profile</button>
-            </div>
-        </EditForm>
-    </div>
-
-    <div class="form-container mt-4">
-        <div class="form-actions-section">
-            @if(!_emailVerified)
-            {
-                <button type="button" class="btn btn-outline-primary" @onclick="ResendVerificationEmailAsync" disabled="@_isSendingVerification">Resend verification email</button>
-            }
-            <button type="button" class="btn btn-outline-secondary" @onclick="SendPasswordResetEmailAsync" disabled="@_isSendingPasswordReset">Reset password</button>
-        </div>
-    </div>
-
-    <div class="form-container mt-4">
-        <div class="form-group">
-            <label for="deleteConfirm">Delete confirmation</label>
-            <InputText id="deleteConfirm" @bind-Value="_deleteConfirmation" placeholder="DELETE" class="form-control" />
-        </div>
-        <div class="form-actions-section">
-            <button type="button" class="btn btn-danger" @onclick="DeleteAccountAsync" disabled="@(!_canDelete || _isDeleting)">Delete account</button>
-        </div>
-    </div>
+    </section>
 }

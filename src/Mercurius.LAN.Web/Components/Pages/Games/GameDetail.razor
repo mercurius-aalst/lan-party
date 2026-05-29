@@ -1,8 +1,11 @@
 @page "/games/{GameId:guid}"
-@using Mercurius.LAN.Web.Extensions
-@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Components.Pages.Games.Matches.DetailView
 @using Mercurius.LAN.Web.Components.Pages.Games.Tabs
 @using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Games
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Sponsors
 @using Microsoft.AspNetCore.Components.Authorization
 
 @rendermode InteractiveServer
@@ -10,63 +13,243 @@
 <PageTitle>Game Detail</PageTitle>
 @if(_game == null)
 {
-    <LoadingScreen Message="Loading..." />
+    <LoadingScreen Message="Loading tournament..." />
 }
 else
 {
-    <div class="game-detail">
-        <div class="game-image">
-            <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-image-display" />
-        </div>
-        <div class="game-detail-content">
-            <div class="game-header-tabs">
-                <h1>
-                    @_game.Name
-                    <AuthorizeView Roles="admin">
-                        <Authorized>
-                            <div class="action-buttons">
-                                <button class="btn btn-success" @onclick="StartGameAsync">Start</button>
-                                <button class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
-                                <button class="btn btn-warning" @onclick="FinishGameAsync">Finish</button>
-                                <button class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
-                                <button class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
-                            </div>
-                        </Authorized>
-                    </AuthorizeView>
-                </h1>
-                <div class="tabs">
-                    <button class="tab-btn" @onclick="() => SelectTab(0)" disabled="@(_selectedTab == 0)">Overview</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(1)" disabled="@(_selectedTab == 1)">Matches</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(2)" disabled="@(_selectedTab == 2)">Participants</button>
-                    <button class="tab-btn" @onclick="() => SelectTab(3)" disabled="@(_selectedTab == 3)">Results</button>
+    <div class="game-detail-page">
+        <nav class="game-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <a href="/games">Games</a>
+            <span>/</span>
+            <span aria-current="page">@_game.Name</span>
+        </nav>
+
+        <header class="brand-page-hero game-detail-hero brand-section">
+            <div class="brand-page-hero-copy game-detail-hero-copy">
+                <span class="section-eyebrow">Tournament</span>
+                <h1>@_game.Name</h1>
+                <p>@GameSummary</p>
+
+                <div class="game-detail-badges">
+                    <span class="badge">@_game.ParticipationMode.GetLabel()</span>
+                    <span class="badge">@_game.BracketType.GetLabel()</span>
+                    <span class="badge">@_game.Format.GetLabel()</span>
+                    <span class="game-status @_game.Status.GetStatusClass()">@_game.Status.GetStatusLabel()</span>
                 </div>
-                <div class="tabs-dropdown">
-                    <select id="tab-selector" @onchange="OnTabDropdownChanged" value="@_selectedTab">
-                        <option value="0">Overview</option>
-                        <option value="1">Matches</option>
-                        <option value="2">Participants</option>
-                        <option value="3">Results</option>
-                    </select>
+
+                <div class="game-detail-hero-actions">
+                    <button type="button"
+                            class="button-primary @(CanRegister(_game) ? string.Empty : "game-detail-registration-closed")"
+                            disabled="@(!CanRegister(_game))"
+                            @onclick="NavigateToRegister">
+                        @(CanRegister(_game) ? "Register Now" : "Registration Closed")
+                    </button>
+                    <a href="@GetPageAnchorUrl("tournament-bracket")" class="button-secondary">View Bracket</a>
                 </div>
+
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <div class="game-admin-actions">
+                            <button type="button" class="btn btn-primary" @onclick="StartGameAsync">Start</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelGameAsync">Cancel</button>
+                            <button type="button" class="btn btn-secondary" @onclick="FinishGameAsync">Finish</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ResetGameAsync">Reset</button>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteGameAsync">Delete</button>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
             </div>
-            <div class="tab-content">
-                @if(_selectedTab == 0)
+
+            <aside class="game-detail-hero-visual" aria-label="Tournament artwork and featured partner">
+                <div class="game-detail-image-frame">
+                    <img src="@GetImageUrl(_game.ImageUrl)" alt="@_game.Name" class="game-detail-image" />
+                </div>
+            </aside>
+        </header>
+
+        <div class="game-detail-layout">
+            <div class="game-detail-top">
+                <section id="tournament-overview" class="brand-card game-detail-section game-detail-top-section game-detail-top-section--overview">
+                    <OverviewTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
+                </section>
+
+                <section id="tournament-schedule" class="brand-card game-detail-section game-detail-section--dense game-detail-top-section game-detail-top-section--schedule">
+                    <div class="game-section-header">
+                        <div>
+                            <span class="section-eyebrow">Schedule</span>
+                            <h2>Upcoming matches</h2>
+                        </div>
+                    </div>
+
+                    @if(!ScheduledMatches.Any())
+                    {
+                        <p class="game-empty-copy">No scheduled matches are currently pending.</p>
+                    }
+                    else
+                    {
+                        <div class="game-schedule-body">
+                            <div class="game-schedule-filters" aria-label="Schedule filters">
+                                <div class="game-schedule-filter-field">
+                                    <label for="schedule-bracket-filter">Bracket</label>
+                                    <select id="schedule-bracket-filter"
+                                            class="form-select"
+                                            value="@_selectedScheduleBracket"
+                                            @onchange="HandleScheduleBracketChanged">
+                                        @foreach(var bracketFilter in Enum.GetValues<ScheduleBracketFilter>())
+                                        {
+                                            <option value="@bracketFilter">@GetScheduleBracketFilterLabel(bracketFilter)</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="game-schedule-filter-field">
+                                    <label for="schedule-round-filter">Round</label>
+                                    <select id="schedule-round-filter"
+                                            class="form-select"
+                                            value="@(_selectedScheduleRound?.ToString() ?? string.Empty)"
+                                            @onchange="HandleScheduleRoundChanged">
+                                        <option value="">All rounds</option>
+                                        @foreach(var round in AvailableScheduleRounds)
+                                        {
+                                            <option value="@round">Round @round</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if(!FilteredScheduledMatches.Any())
+                            {
+                                <p class="game-empty-copy">No matches match the selected bracket and round filters.</p>
+                            }
+
+                            <div class="game-schedule-list">
+                                @foreach(var match in FilteredScheduledMatches)
+                                {
+                                    <article class="game-schedule-item"
+                                             role="button"
+                                             tabindex="0"
+                                             aria-label="View details for @GetMatchTitle(match)"
+                                             @onclick="() => OpenMatchDetails(match)"
+                                             @onkeydown="args => HandleScheduleItemKeyDown(args, match)">
+                                        <div class="game-schedule-item-main">
+                                            <div class="game-schedule-item-topline">
+                                                <span class="game-schedule-time">@GetMatchTimeRange(match)</span>
+                                                <span class="game-schedule-status @GetScheduleStatusClass(match)">@GetScheduleStatus(match)</span>
+                                            </div>
+                                            <h3>@GetMatchTitle(match)</h3>
+                                            <p>@GetMatchStageSummary(match)</p>
+                                        </div>
+
+                                        <div class="game-schedule-item-meta">
+                                            <span class="badge">@GetRoundLabel(match)</span>
+                                            <span class="badge">@match.Format.GetLabel()</span>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        </div>
+                    }
+                </section>
+
+                @if(FeaturedPartner is not null)
                 {
-                    <OverviewTab Game="@_game" />
+                    var partner = FeaturedPartner;
+                    <section class="brand-card game-detail-section game-detail-partner-section game-detail-top-section game-detail-top-section--sponsor">
+                        <a class="brand-sponsor-card game-detail-partner-card" href="@partner.SponsorInfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @partner.SponsorName">
+                            <div class="brand-sponsor-card-logo game-detail-partner-logo">
+                                <img src="@GetSponsorLogoUrl(partner.SponsorLogoUrl)" alt="@partner.SponsorName logo" />
+                            </div>
+                            <div class="brand-sponsor-card-body game-detail-partner-copy">
+                                <span class="sponsor-tier-label">@GetPartnerEyebrow(partner)</span>
+                                <h2>@partner.SponsorName</h2>
+                                @if(!string.IsNullOrWhiteSpace(GetFeaturedPartnerSummary(partner)))
+                                {
+                                    <p>@GetFeaturedPartnerSummary(partner)</p>
+                                }
+                                <span class="sponsor-card-link">Visit website</span>
+                            </div>
+                        </a>
+                    </section>
                 }
-                else if(_selectedTab == 1)
-                {
-                    <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
-                }
-                else if(_selectedTab == 2)
-                {
+
+                <section id="tournament-participants" class="brand-card game-detail-section game-detail-section--dense game-detail-top-section @(FeaturedPartner is null ? "game-detail-top-section--participants-no-sponsor" : "game-detail-top-section--participants")">
                     <ParticipantsTab Game="@_game" OnGameUpdated="HandleGameUpdated" />
-                }
-                else if(_selectedTab == 3)
-                {
+                </section>
+            </div>
+
+            <section id="tournament-bracket" class="brand-card game-detail-section game-detail-section--full-span">
+                <MatchesTab OnDataReload="LoadGameDataAsync" Game="@_game" />
+            </section>
+
+            <div class="game-detail-secondary">
+                <section id="tournament-results" class="brand-card game-detail-section">
                     <PlacementsTab Placements="@_game.Placements" ParticipationMode="@_game.ParticipationMode" />
-                }
+                </section>
+
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <section class="brand-card game-detail-section game-sponsor-admin-card">
+                            <div class="game-section-header">
+                                <div>
+                                    <span class="section-eyebrow">Admin</span>
+                                    <h2>Tournament partner</h2>
+                                    <p>Select the single sponsor shown on the public page. All public content is pulled directly from the sponsor data.</p>
+                                </div>
+                            </div>
+
+                            @if(!_availableSponsors.Any())
+                            {
+                                <p class="game-empty-copy">Create sponsors first before assigning one to this tournament.</p>
+                            }
+                            else
+                            {
+                                <div class="game-sponsor-admin-form">
+                                    <div class="form-group">
+                                        <label for="tournament-sponsor">Sponsor</label>
+                                        <InputSelect id="tournament-sponsor" class="form-control" @bind-Value="_selectedSponsorId">
+                                            <option value="">No sponsor selected</option>
+                                            @foreach(var sponsor in _availableSponsors)
+                                            {
+                                                <option value="@sponsor.Id">@sponsor.Name</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+
+                                    @if(SelectedSponsor is not null)
+                                    {
+                                        <article class="game-sponsor-admin-preview">
+                                            <span class="section-eyebrow">Preview</span>
+                                            <h3>@SelectedSponsor.Name</h3>
+                                            <p class="game-sponsor-admin-preview-tier">@SelectedSponsor.SponsorTier.GetShortLabel() partner</p>
+                                            @if(!string.IsNullOrWhiteSpace(SelectedSponsor.Description))
+                                            {
+                                                <p>@SelectedSponsor.Description</p>
+                                            }
+                                            <p class="game-sponsor-admin-preview-link">@SelectedSponsor.InfoUrl</p>
+                                        </article>
+                                    }
+                                </div>
+
+                                <div class="game-sponsor-admin-actions">
+                                    <button type="button" class="button-primary" @onclick="SaveSponsorPlacementsAsync">Save sponsor</button>
+                                </div>
+                            }
+                        </section>
+                    </Authorized>
+                </AuthorizeView>
             </div>
         </div>
     </div>
+
+    @if(_selectedMatch is not null)
+    {
+        <MatchDetailsDialog Match="@_selectedMatch"
+                            Game="@_game"
+                            Participant1Name="@GetMatchParticipantName(_selectedMatch, true)"
+                            Participant2Name="@GetMatchParticipantName(_selectedMatch, false)"
+                            OnClose="CloseMatchDetailsAsync"
+                            OnDataReload="LoadGameDataAsync" />
+    }
 }

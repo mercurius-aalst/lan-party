@@ -1,109 +1,122 @@
-.participants-modal-overlay {
+.game-editor-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.25);
+    inset: 0;
     z-index: 2000;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(8px);
 }
 
-.participants-modal-dialog {
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-    border-radius: 15px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    padding: 2.5rem 3rem;
-    min-width: 600px;
-    max-width: 80vw;
-    max-height: 90vh;
-    overflow-y: auto;
+.game-editor-modal-dialog {
     position: relative;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
+    display: grid;
+    gap: 1.35rem;
+    width: min(56rem, calc(100vw - 2rem));
+    max-height: min(92vh, 58rem);
+    overflow-y: auto;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--color-border);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.99);
+    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
+    color: var(--color-dark-navy);
 }
 
-.participants-modal-dialog h3 {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: var(--accent-color);
-    margin-bottom: 1.5rem;
-    text-align: center;
+.game-editor-modal-header {
+    display: grid;
+    gap: 0.35rem;
 }
 
-.participants-modal-dialog .bi-plus-circle {
-    font-size: 3rem;
-    color: var(--accent-color);
-    margin-bottom: 1rem;
-    transition: color 0.2s;
+.game-editor-modal-header h3,
+.game-editor-modal-header p {
+    margin: 0;
 }
 
-.participants-modal-dialog .bi-plus-circle:hover {
-    color: var(--accent-dark);
+.game-editor-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2.6rem;
+    height: 2.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-white);
+    color: var(--color-dark-navy);
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.game-editor-modal-close:hover {
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+.game-editor-form {
+    display: grid;
+    gap: 1rem;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
-    margin-bottom: 1.2rem;
-}
-
-.form-group-inline {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    gap: 0.45rem;
     width: 100%;
 }
 
 .form-group-inline .form-group {
-    flex: 1;
+    min-width: 0;
 }
 
 .form-group label {
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-    color: #495057;
+    margin: 0;
+    color: var(--color-muted-text);
+    font-weight: 700;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    font-size: 1rem;
-    color: #495057;
-    background-color: #fff;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-white);
+    color: var(--color-dark-navy);
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: #28a745;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+    border-color: rgba(34, 197, 94, 0.52);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    outline: none;
 }
 
-.participants-modal-close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    background: none;
-    border: none;
-    font-size: 2rem;
-    color: var(--accent-color);
-    cursor: pointer;
-    transition: color 0.2s;
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
 }
 
-.participants-modal-close:hover {
-    color: var(--accent-dark);
+@media (max-width: 640px) {
+    .game-editor-modal-overlay {
+        align-items: flex-start;
+        padding: 0.75rem;
+    }
+
+    .game-editor-modal-dialog {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding-top: 3rem;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions > * {
+        width: 100%;
+    }
 }

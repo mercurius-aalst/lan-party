@@ -7,6 +7,15 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Matches.BracketView;
 
 public partial class DoubleEliminationBracketComponent
 {
+    private enum BracketView
+    {
+        Upper,
+        Lower,
+        GrandFinal
+    }
+
+    private readonly record struct BracketViewOption(BracketView View, string Label, string Meta);
+
     [Parameter] public GameExtended Game { get; set; } = null!;
     [Parameter] public EventCallback OnDataReload { get; set; }
 
@@ -16,6 +25,9 @@ public partial class DoubleEliminationBracketComponent
     private IEnumerable<Match> _lBMatches = Enumerable.Empty<Match>();
     private Match? _gFMatch;
     private GameExtended _upperBracketGame = new();
+    private IReadOnlyList<BracketViewOption> _viewOptions = [];
+    private BracketView _activeView = BracketView.Upper;
+    private BracketView? _lastInitializedDragView;
     private int LastRound => Game.Matches?.Max(m => m.RoundNumber) ?? 0;
 
     protected override void OnParametersSet()
@@ -43,14 +55,28 @@ public partial class DoubleEliminationBracketComponent
                 Teams = Game.Teams.ToList(),
                 Placements = Game.Placements.ToList()
             };
+
+            _viewOptions =
+            [
+                new(BracketView.Upper, "Upper bracket", $"{_uBMatches.Count()} matches"),
+                new(BracketView.Lower, "Lower bracket", $"{_lBMatches.Count()} matches"),
+                new(BracketView.GrandFinal, "Grand final", _gFMatch == null ? "Pending" : GetMatchFormatLabel(_gFMatch))
+            ];
+
+            if(_activeView == BracketView.Lower && !_lBMatches.Any())
+                _activeView = BracketView.Upper;
+
+            if(_activeView == BracketView.GrandFinal && _gFMatch == null)
+                _activeView = _lBMatches.Any() ? BracketView.Lower : BracketView.Upper;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(firstRender)
+        if(_activeView == BracketView.Lower && _lastInitializedDragView != BracketView.Lower)
         {
             await JS.InvokeVoidAsync("makeDraggable", "double-elimination-bracket-root");
+            _lastInitializedDragView = BracketView.Lower;
         }
     }
 
@@ -157,4 +183,24 @@ public partial class DoubleEliminationBracketComponent
 
         return matchData;
     }
+
+    private void SelectView(BracketView view)
+    {
+        if(view != BracketView.Lower)
+            _lastInitializedDragView = null;
+
+        _activeView = view;
+    }
+
+    private string GetTabCssClass(BracketView view) =>
+        view == _activeView ? "double-elimination-tab--active" : string.Empty;
+
+    private static string GetMatchFormatLabel(Match match) =>
+        match.Format switch
+        {
+            GameFormat.BestOf1 => "Best of 1",
+            GameFormat.BestOf3 => "Best of 3",
+            GameFormat.BestOf5 => "Best of 5",
+            _ => "Final set"
+        };
 }

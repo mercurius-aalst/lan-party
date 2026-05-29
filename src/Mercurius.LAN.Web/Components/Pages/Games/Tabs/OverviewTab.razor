@@ -6,39 +6,78 @@
 @rendermode InteractiveServer
 
 <div class="game-overview-container">
-    <h2 class="game-overview-header">Overview</h2>
-    @if(!_isEditMode)
-    {
-        <div class="overview-details">
-            <div class="overview-column">
-                <p><b>Name:</b> @Game.Name</p>
-                <p class="card-text">
-                    <b>Status:</b> <span class="game-status @Game.Status.GetStatusClass()">@Game.Status.GetStatusLabel()</span>
-                </p>
-                <p class="card-text"><b>Bracket type:</b> <small>@Game.BracketType.GetLabel()</small></p>
-            </div>
-            <div class="overview-column">
-                <p><b>Participation Mode:</b> <span>@Game.ParticipationMode</span></p>
-                <p><b>Match Format:</b> <span>@Game.Format.GetLabel()</span></p>
-                <p><b>Finals Format:</b> <span>@Game.FinalsFormat.GetLabel()</span></p>
-            </div>
+    <div class="overview-header-row">
+        <div>
+            <span class="section-eyebrow">Overview</span>
+            <h2 class="game-overview-header">Tournament overview</h2>
+            <p>Core format, status, scheduling, and registration details for this tournament.</p>
         </div>
-        @if(Game.Status == GameStatus.Scheduled)
+
+        @if(!_isEditMode && Game.Status == GameStatus.Scheduled)
         {
             <AuthorizeView Roles="admin">
                 <Authorized>
-                    <button class="btn btn-primary" @onclick="EnableEditMode">Edit</button>
+                    <button type="button" class="btn btn-primary" @onclick="EnableEditMode">Edit</button>
                 </Authorized>
             </AuthorizeView>
         }
+    </div>
+
+    @if(!_isEditMode)
+    {
+        <div class="overview-grid">
+            <section class="brand-card overview-card">
+                <h3>Competition setup</h3>
+                <dl class="overview-list">
+                    <div>
+                        <dt>Status</dt>
+                        <dd><span class="game-status @Game.Status.GetStatusClass()">@Game.Status.GetStatusLabel()</span></dd>
+                    </div>
+                    <div>
+                        <dt>Bracket</dt>
+                        <dd>@Game.BracketType.GetLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Mode</dt>
+                        <dd>@Game.ParticipationMode.GetLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Format</dt>
+                        <dd>@Game.Format.GetLabel()</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="brand-card overview-card">
+                <h3>Schedule & registration</h3>
+                <dl class="overview-list">
+                    <div>
+                        <dt>Start</dt>
+                        <dd>@Game.StartTime.ToString("dd MMM yyyy · HH:mm")</dd>
+                    </div>
+                    <div>
+                        <dt>End</dt>
+                        <dd>@Game.EndTime.ToString("dd MMM yyyy · HH:mm")</dd>
+                    </div>
+                    <div>
+                        <dt>Finals</dt>
+                        <dd>@Game.FinalsFormat.GetLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Registration</dt>
+                        <dd>@GetRegistrationStateLabel()</dd>
+                    </div>
+                </dl>
+            </section>
+        </div>
     }
     else
     {
         <AuthorizeView Roles="admin">
             <Authorized Context="adminContext">
-                <EditForm EditContext="_editContext" OnValidSubmit="SubmitEditAsync" class="needs-validation">
+                <EditForm EditContext="_editContext" OnValidSubmit="SubmitEditAsync">
                     <DataAnnotationsValidator />
-                    <div class="form-section">
+                    <div class="brand-card overview-edit-card">
                         <div class="form-group">
                             <label for="name">Name</label>
                             <InputText id="name" class="form-control" @bind-Value="_editGame.Name" />
@@ -61,7 +100,7 @@
                             <InputSelect id="participationMode" class="form-control" @bind-Value="_editGame.ParticipationMode">
                                 @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
                                 {
-                                    <option value="@type">@type</option>
+                                    <option value="@type">@type.GetLabel()</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editGame.ParticipationMode)" />

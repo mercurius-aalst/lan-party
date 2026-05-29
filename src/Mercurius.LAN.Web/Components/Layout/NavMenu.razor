@@ -1,78 +1,173 @@
 @rendermode InteractiveServer
 
-@if(_isUserMenuVisible || _isDropdownVisible)
+@if(ShouldShowInteractionOverlay)
 {
-    <div class="overlay" @onclick="HandleOutsideClick">
-    </div>
+    <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label="Close menus"></button>
 }
-<div class="top-row px-3 navbar navbar-dark">
-    <div class="container-fluid ps-0">
-        <a class="navbar-brand" href="">
-            <img src="/img/lanlogo.png" alt="Mercurius Aalst" class="logo-image" />
-        </a>
-    </div>
-</div>
 
-<div class="nav-scrollable">
-    <nav class="flex-column">
-        <NavLink href="/" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Home
-            </div>
+<div class="brand-nav-shell flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between" @onclick="HandleNavShellClick">
+    <nav class="brand-nav-links flex flex-col items-stretch gap-3 md:flex-1 md:flex-row md:items-center md:justify-center md:gap-5" aria-label="Primary">
+        <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+            Home
         </NavLink>
-        <NavLink href="/sponsors" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Our Sponsors
-            </div>
+        <NavLink href="/games" Match="NavLinkMatch.Prefix" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+            Tournaments
         </NavLink>
-        <NavLink href="https://discord.gg/dsmahrAtTG" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                 Discord
-            </div>
+        <NavLink href="/sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
+            Sponsors
         </NavLink>
-        <NavLink href="/privacy-policy" Match="NavLinkMatch.All" @onclick="() => OnNavigationSelected.InvokeAsync()">
-            <div class="nav-section nav-item px-3">
-                Privacy Policy
-            </div>
-        </NavLink>
-        <AuthorizeView Roles="admin">
-            <Authorized Context="adminAuthState">
-                <div class="nav-section nav-item px-3 dropdown dropdown-toggle" @onclick:stopPropagation="true" @onclick="ToggleDropdown">
-                    <div class="user-profile">
-                        <span>Admin</span>
+        <div class="nav-menu-group info-nav-group" @onclick:stopPropagation="true">
+            <button type="button"
+                    class="@GetInfoButtonClass()"
+                    @onclick="ToggleInfoMenu"
+                    aria-expanded="@GetAriaExpanded(_isInfoMenuVisible)"
+                    aria-haspopup="true">
+                Info
+                <span class="bi bi-chevron-down info-nav-caret" aria-hidden="true"></span>
+            </button>
+            @if(_isInfoMenuVisible)
+            {
+                <div class="dropdown-menu-custom info-dropdown mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[13rem]" @onclick:stopPropagation="true">
+                    <NavLink href="/info" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Overview</NavLink>
+                    <a href="/info#packing" class="dropdown-item" @onclick="HandleNavigationClicked">What to bring</a>
+                    <a href="/info#where" class="dropdown-item" @onclick="HandleNavigationClicked">When &amp; where</a>
+                    <a href="/info#tickets" class="dropdown-item" @onclick="HandleNavigationClicked">Tickets</a>
+                    <a href="/info#catering" class="dropdown-item" @onclick="HandleNavigationClicked">Catering</a>
+                    <a href="/info#contact-info" class="dropdown-item" @onclick="HandleNavigationClicked">Contact</a>
+                </div>
+            }
+        </div>
+    </nav>
+
+    <div id="@SearchContainerElementId" class="@GetSearchContainerClass()" @onclick:stopPropagation="true">
+        <label class="visually-hidden" for="global-nav-search">Search users, teams, and tournaments</label>
+        <div class="@GetSearchInputShellClass()">
+            <span class="bi bi-search nav-search-icon" aria-hidden="true"></span>
+            <input id="global-nav-search"
+                   class="nav-search-input"
+                   type="search"
+                   placeholder="Search players, teams, tournaments"
+                   value="@_searchQuery"
+                   @oninput="HandleSearchInputAsync"
+                   @onfocus="HandleSearchFocus"
+                   @onkeydown="HandleSearchKeyDownAsync"
+                   autocomplete="off"
+                   spellcheck="false"
+                   aria-label="Search players, teams, and tournaments"
+                   aria-autocomplete="list"
+                   aria-expanded="@GetAriaExpanded(_isSearchDropdownVisible)"
+                   aria-controls="global-nav-search-results" />
+
+            @if(!string.IsNullOrWhiteSpace(_searchQuery))
+            {
+                <button type="button" class="nav-search-clear-button" @onclick="ClearSearchInputAsync" aria-label="Clear search">
+                    <span class="bi bi-x-lg" aria-hidden="true"></span>
+                </button>
+            }
+        </div>
+
+        @if(_isSearchDropdownVisible)
+        {
+            <div id="global-nav-search-results" class="nav-search-dropdown" role="listbox" aria-label="Search results" @onclick:stopPropagation="true">
+                @if(_isSearchLoading)
+                {
+                    <div class="nav-search-state" aria-live="polite">
+                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                        <span>Searching...</span>
                     </div>
+                }
+                else if(_hasSearchError)
+                {
+                    <div class="nav-search-state nav-search-state--error" aria-live="polite">
+                        Search is unavailable right now.
+                    </div>
+                }
+                else if(!HasSearchResults)
+                {
+                    <div class="nav-search-state" aria-live="polite">
+                        No matches found.
+                    </div>
+                }
+                else
+                {
+                    @for(var index = 0; index < _searchResults.Count; index++)
+                    {
+                        var result = _searchResults[index];
+                        <button type="button"
+                                class="@GetSearchResultItemClass(index)"
+                                role="option"
+                                aria-selected="@(_highlightedSearchIndex == index)"
+                                @onclick="() => SelectSearchResultAsync(result)"
+                                @onmouseover="() => SetSearchHighlight(index)">
+                            <span class="@GetSearchResultIconClass(result.Type)" aria-hidden="true"></span>
+                            <span class="nav-search-result-copy">
+                                <span class="nav-search-result-label">@result.DisplayLabel</span>
+                                @if(!string.IsNullOrWhiteSpace(result.SupportingText))
+                                {
+                                    <span class="nav-search-result-support">@result.SupportingText</span>
+                                }
+                            </span>
+                            <span class="nav-search-result-type">@GetSearchResultTypeLabel(result.Type)</span>
+                        </button>
+                    }
+                }
+            </div>
+        }
+    </div>
+
+    <div class="brand-nav-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end">
+        <AuthorizeView Roles="admin">
+            <Authorized>
+                <div class="nav-menu-group" @onclick:stopPropagation="true">
+                    <button type="button"
+                            class="@GetAdminButtonClass()"
+                            @onclick="ToggleDropdown"
+                            aria-expanded="@GetAriaExpanded(_isDropdownVisible)">
+                        Admin
+                    </button>
                     @if(_isDropdownVisible)
                     {
-                        <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                            <a class="dropdown-item" href="/admin/teams" @onclick="CloseDropdown">Teams</a>
-                            <a class="dropdown-item" href="/admin/sponsors" @onclick="CloseDropdown">Sponsors</a>
+                        <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
+                            <NavLink href="/admin/teams" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Teams</NavLink>
+                            <NavLink href="/admin/sponsors" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Sponsors</NavLink>
                         </div>
                     }
                 </div>
             </Authorized>
         </AuthorizeView>
-    </nav>
 
-</div>
-<AuthorizeView>
-    <Authorized Context="authState">
-        <div class="nav-section nav-item user-section dropdown px-3" @onclick:stopPropagation="true" @onclick="ToggleUserMenu">
-            <div class="user-profile align-middle">
-                <span class="user-icon bi bi-person-circle"></span>
-                <span>@GetDisplayName(authState.User)</span>
-            </div>
-            @if(_isUserMenuVisible)
-            {
-                <div class="dropdown-menu-custom" @onclick:stopPropagation="true">
-                    <a class="dropdown-item" href="/profile" @onclick="CloseDropdown">Profile</a>
-                    <a class="dropdown-item" @onclick="Logout">Logout</a>
+        <AuthorizeView>
+            <Authorized Context="authState">
+                <div class="nav-menu-group" @onclick:stopPropagation="true">
+                    <button type="button"
+                            class="@GetUserButtonClass()"
+                            @onclick="ToggleUserMenu"
+                            aria-expanded="@GetAriaExpanded(_isUserMenuVisible)">
+                        <span class="user-icon bi bi-person-circle"></span>
+                        <span>@GetDisplayName(authState.User)</span>
+                    </button>
+                    @if(_isUserMenuVisible)
+                    {
+                        <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
+                            <NavLink href="/profile" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Profile</NavLink>
+                            <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
+                        </div>
+                    }
                 </div>
-            }
-        </div>
-    </Authorized>
-    <NotAuthorized>
-        <div class="nav-section nav-item user-section px-3">
-            <button type="button" class="dropdown-item" @onclick="BeginLogin">Login</button>
-        </div>
-    </NotAuthorized>
-</AuthorizeView>
+            </Authorized>
+            <NotAuthorized>
+                <div class="brand-auth-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center">
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">Login</button>
+                    @if(IsMockBackendEnabled)
+                    {
+                        <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">Mock Admin</a>
+                    }
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+
+        <a href="/info#tickets" class="button-primary brand-ticket-cta w-full justify-center md:w-auto" @onclick="HandleNavigationClicked">
+            Get Tickets
+        </a>
+    </div>
+</div>

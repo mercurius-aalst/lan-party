@@ -12,6 +12,7 @@ namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
 public partial class OverviewTab
 {
     [Parameter] public GameExtended Game { get; set; } = null!;
+    [Parameter] public EventCallback<GameExtended> OnGameUpdated { get; set; }
 
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -43,6 +44,14 @@ public partial class OverviewTab
         _isEditMode = false;
     }
 
+    private string GetRegistrationStateLabel()
+    {
+        if(string.IsNullOrWhiteSpace(Game.RegisterFormUrl))
+            return "No form linked";
+
+        return Game.Status == GameStatus.Scheduled ? "Open via linked form" : "Closed after tournament start";
+    }
+
     private async Task SubmitEditAsync()
     {
         string? tempFilePath = _imageInputRef?.TempFilePath;
@@ -58,8 +67,10 @@ public partial class OverviewTab
             Game.BracketType = updatedGame.BracketType;
             Game.ParticipationMode = updatedGame.ParticipationMode;
             Game.RegisterFormUrl = updatedGame.RegisterFormUrl;
+            Game.ImageUrl = updatedGame.ImageUrl;
             _isEditMode = false;
             ToastService.ShowSuccess("Edit successful");
+            await OnGameUpdated.InvokeAsync(Game);
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException ex)

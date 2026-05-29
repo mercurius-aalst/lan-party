@@ -1,6 +1,8 @@
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
@@ -17,11 +19,18 @@ namespace Mercurius.LAN.Web.APIClients
         [Get("/lan/games/{id}")]
         Task<GameExtended?> GetGameByIdAsync(Guid id);
 
+        // TODO(backend): implement GET /lan/search?query={query} endpoint that returns normalized user/team/game search results.
+        [Get("/lan/search")]
+        Task<List<GlobalSearchResultDTO>> SearchAsync([AliasAs("query")] string query, CancellationToken cancellationToken = default);
+
         [Post("/lan/games")]
         Task<GameExtended> CreateGameAsync([Body] MultipartFormDataContent content);
 
         [Patch("/lan/games/{id}")]
         Task<Game> UpdateGameAsync(Guid id, [Body] MultipartFormDataContent formData);
+
+        [Put("/lan/games/{id}/sponsors")]
+        Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, [Body] ReplaceGameSponsorsDTO sponsors);
 
         [Delete("/lan/games/{id}")]
         Task DeleteGameAsync(Guid id);
@@ -62,6 +71,10 @@ namespace Mercurius.LAN.Web.APIClients
         [Get("/lan/teams/{id}")]
         Task<Team> GetTeamByIdAsync(Guid id);
 
+        // TODO(backend): implement GET /lan/public/teams/{teamName} endpoint with privacy-safe public team profile response.
+        [Get("/lan/public/teams/{teamName}")]
+        Task<PublicTeamProfileDTO> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default);
+
         [Post("/lan/teams")]
         Task<Team> CreateTeamAsync([Body] CreateTeamDTO team);
 
@@ -70,6 +83,10 @@ namespace Mercurius.LAN.Web.APIClients
 
         [Delete("/lan/teams/{id}")]
         Task DeleteTeamAsync(Guid id);
+
+        // TODO(backend): implement GET /lan/public/users/{username} endpoint with privacy-safe public user profile response.
+        [Get("/lan/public/users/{username}")]
+        Task<PublicUserProfileDTO> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
         [Get("/lan/sponsors")]
         Task<IEnumerable<Sponsor>> GetSponsorsAsync();

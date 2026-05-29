@@ -1,0 +1,740 @@
+{
+  "games": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "name": "Counter-Strike 2",
+      "startTime": "2026-06-13T10:00:00Z",
+      "endTime": "2026-06-13T16:00:00Z",
+      "imageUrl": "/mock-data-local/games/cs2.svg",
+      "status": "Scheduled",
+      "bracketType": "SingleElimination",
+      "format": "BestOf3",
+      "finalsFormat": "BestOf5",
+      "participationMode": "Team",
+      "registerFormUrl": "https://example.test/register/cs2",
+      "placements": [],
+      "sponsorPlacements": [
+        {
+          "id": 1,
+          "sponsorId": 1,
+          "sponsorName": "Mercurius Tech",
+          "sponsorTier": "Presenting",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/mercurius-tech",
+          "sponsorDescription": "Headline technology partner for the Mercurius LAN weekend.",
+          "context": "TournamentPartner",
+          "headline": "Presented by Mercurius Tech",
+          "supportLine": "Main stage network and broadcast support.",
+          "displayOrder": 1
+        },
+        {
+          "id": 2,
+          "sponsorId": 2,
+          "sponsorName": "Campus Fiber",
+          "sponsorTier": "Presenting",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/campus-fiber",
+          "sponsorDescription": "Connectivity partner for high-capacity student events.",
+          "context": "TournamentPartner",
+          "headline": "Official co-presenting partner",
+          "supportLine": "Powers venue connectivity across the tournament floor.",
+          "displayOrder": 2
+        },
+        {
+          "id": 3,
+          "sponsorId": 3,
+          "sponsorName": "Pixel Forge",
+          "sponsorTier": "Gold",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/pixel-forge",
+          "sponsorDescription": "Custom PC and stream setup partner.",
+          "context": "PrizePartner",
+          "headline": "Playoff prize support",
+          "supportLine": "Backs the bracket prize pool.",
+          "displayOrder": 1
+        },
+        {
+          "id": 4,
+          "sponsorId": 6,
+          "sponsorName": "Arena Hardware",
+          "sponsorTier": "Gold",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/arena-hardware",
+          "sponsorDescription": "Tournament-ready peripherals and stage hardware.",
+          "context": "InfrastructurePartner",
+          "headline": "Stage-ready equipment",
+          "supportLine": "Provides peripherals and desk-side support.",
+          "displayOrder": 1
+        },
+        {
+          "id": 5,
+          "sponsorId": 4,
+          "sponsorName": "Byte Bakery",
+          "sponsorTier": "Silver",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/byte-bakery",
+          "sponsorDescription": "Student-favorite late-night snack partner.",
+          "context": "CateringPartner",
+          "headline": "Fuel for the finals",
+          "supportLine": "Keeps players and casters going through the bracket.",
+          "displayOrder": 1
+        },
+        {
+          "id": 6,
+          "sponsorId": 5,
+          "sponsorName": "Pulse Energy",
+          "sponsorTier": "Bronze",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/pulse-energy",
+          "sponsorDescription": "Weekend energy and hydration support.",
+          "context": "PrizePartner",
+          "headline": "Finals MVP extras",
+          "supportLine": "Adds bonus giveaways for playoff winners.",
+          "displayOrder": 2
+        }
+      ],
+      "matches": [
+        {
+          "id": "31111111-1111-1111-1111-111111111111",
+          "startTime": "2026-06-13T10:00:00Z",
+          "endTime": "2026-06-13T11:00:00Z",
+          "bracketType": "SingleElimination",
+          "format": "BestOf3",
+          "participationMode": "Team",
+          "roundNumber": 1,
+          "matchNumber": 1,
+          "isLowerBracketMatch": false,
+          "gameId": "11111111-1111-1111-1111-111111111111",
+          "teamParticipant1Id": "21111111-1111-1111-1111-111111111111",
+          "teamParticipant2Id": "21111111-1111-1111-1111-111111111112",
+          "participant1IsBYE": false,
+          "participant2IsBYE": false,
+          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113"
+        },
+        {
+          "id": "31111111-1111-1111-1111-111111111112",
+          "startTime": "2026-06-13T10:00:00Z",
+          "endTime": "2026-06-13T11:00:00Z",
+          "bracketType": "SingleElimination",
+          "format": "BestOf3",
+          "participationMode": "Team",
+          "roundNumber": 1,
+          "matchNumber": 2,
+          "isLowerBracketMatch": false,
+          "gameId": "11111111-1111-1111-1111-111111111111",
+          "teamParticipant1Id": "21111111-1111-1111-1111-111111111113",
+          "teamParticipant2Id": "21111111-1111-1111-1111-111111111114",
+          "participant1IsBYE": false,
+          "participant2IsBYE": false,
+          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113"
+        },
+        {
+          "id": "31111111-1111-1111-1111-111111111113",
+          "startTime": "2026-06-13T13:00:00Z",
+          "endTime": "2026-06-13T14:30:00Z",
+          "bracketType": "SingleElimination",
+          "format": "BestOf5",
+          "participationMode": "Team",
+          "roundNumber": 2,
+          "matchNumber": 3,
+          "isLowerBracketMatch": false,
+          "gameId": "11111111-1111-1111-1111-111111111111",
+          "participant1IsBYE": false,
+          "participant2IsBYE": false
+        }
+      ],
+      "users": [],
+      "teams": [
+        {
+          "id": "21111111-1111-1111-1111-111111111111",
+          "name": "Team Alpha",
+          "captainUserId": "41111111-1111-1111-1111-111111111111",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111111",
+              "username": "alpha1",
+              "firstname": "Alex",
+              "lastname": "Alder",
+              "email": "alex@example.test",
+              "emailVerified": true,
+              "discordId": "alpha#1111",
+              "steamId": "steam-alpha",
+              "riotId": null,
+              "displayName": "Alex Alder",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111112",
+              "username": "alpha2",
+              "firstname": "Ava",
+              "lastname": "Aster",
+              "email": "ava@example.test",
+              "emailVerified": true,
+              "discordId": "ava#1111",
+              "steamId": "steam-ava",
+              "riotId": null,
+              "displayName": "Ava Aster",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        },
+        {
+          "id": "21111111-1111-1111-1111-111111111112",
+          "name": "Binary Bandits",
+          "captainUserId": "41111111-1111-1111-1111-111111111113",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111113",
+              "username": "binary1",
+              "firstname": "Ben",
+              "lastname": "Binary",
+              "email": "ben@example.test",
+              "emailVerified": true,
+              "discordId": "ben#1111",
+              "steamId": "steam-ben",
+              "riotId": null,
+              "displayName": "Ben Binary",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        },
+        {
+          "id": "21111111-1111-1111-1111-111111111113",
+          "name": "Gamma Grid",
+          "captainUserId": "41111111-1111-1111-1111-111111111114",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111114",
+              "username": "gamma1",
+              "firstname": "Gina",
+              "lastname": "Grid",
+              "email": "gina@example.test",
+              "emailVerified": true,
+              "discordId": "gina#1111",
+              "steamId": "steam-gina",
+              "riotId": null,
+              "displayName": "Gina Grid",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        },
+        {
+          "id": "21111111-1111-1111-1111-111111111114",
+          "name": "Delta Drop",
+          "captainUserId": "41111111-1111-1111-1111-111111111115",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111115",
+              "username": "delta1",
+              "firstname": "Dana",
+              "lastname": "Drop",
+              "email": "dana@example.test",
+              "emailVerified": true,
+              "discordId": "dana#1111",
+              "steamId": "steam-dana",
+              "riotId": null,
+              "displayName": "Dana Drop",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        }
+      ]
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111112",
+      "name": "Valorant",
+      "startTime": "2026-06-14T12:00:00Z",
+      "endTime": "2026-06-14T18:00:00Z",
+      "imageUrl": "/mock-data-local/games/valorant.svg",
+      "status": "InProgress",
+      "bracketType": "SingleElimination",
+      "format": "BestOf3",
+      "finalsFormat": "BestOf5",
+      "participationMode": "Team",
+      "registerFormUrl": "https://example.test/register/valorant",
+      "placements": [],
+      "sponsorPlacements": [
+        {
+          "id": 7,
+          "sponsorId": 3,
+          "sponsorName": "Pixel Forge",
+          "sponsorTier": "Gold",
+          "sponsorLogoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+          "sponsorInfoUrl": "https://example.test/sponsors/pixel-forge",
+          "sponsorDescription": "Custom PC and stream setup partner.",
+          "context": "TournamentPartner",
+          "headline": "Tournament partner",
+          "supportLine": "Supports featured match production.",
+          "displayOrder": 1
+        }
+      ],
+      "matches": [],
+      "users": [],
+      "teams": [
+        {
+          "id": "21111111-1111-1111-1111-111111111115",
+          "name": "Echo Unit",
+          "captainUserId": "41111111-1111-1111-1111-111111111116",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111116",
+              "username": "echo1",
+              "firstname": "Eli",
+              "lastname": "Echo",
+              "email": "eli@example.test",
+              "emailVerified": true,
+              "discordId": "eli#1111",
+              "steamId": "steam-eli",
+              "riotId": "eli#VAL",
+              "displayName": "Eli Echo",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        },
+        {
+          "id": "21111111-1111-1111-1111-111111111116",
+          "name": "Frame Perfect",
+          "captainUserId": "41111111-1111-1111-1111-111111111117",
+          "members": [
+            {
+              "id": "41111111-1111-1111-1111-111111111117",
+              "username": "frame1",
+              "firstname": "Finn",
+              "lastname": "Frame",
+              "email": "finn@example.test",
+              "emailVerified": true,
+              "discordId": "finn#1111",
+              "steamId": "steam-finn",
+              "riotId": "finn#VAL",
+              "displayName": "Finn Frame",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            }
+          ],
+          "teamInvites": []
+        }
+      ]
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111113",
+      "name": "Trackmania",
+      "startTime": "2026-06-15T09:00:00Z",
+      "endTime": "2026-06-15T12:00:00Z",
+      "imageUrl": "/mock-data-local/games/trackmania.svg",
+      "status": "Scheduled",
+      "bracketType": "SingleElimination",
+      "format": "BestOf1",
+      "finalsFormat": "BestOf3",
+      "participationMode": "Individual",
+      "registerFormUrl": "https://example.test/register/trackmania",
+      "placements": [],
+      "sponsorPlacements": [],
+      "matches": [],
+      "users": [
+        {
+          "id": "41111111-1111-1111-1111-111111111118",
+          "username": "track1",
+          "firstname": "Tara",
+          "lastname": "Track",
+          "email": "tara@example.test",
+          "emailVerified": true,
+          "discordId": "tara#1111",
+          "steamId": "steam-tara",
+          "riotId": null,
+          "displayName": "Tara Track",
+          "isDeleted": false,
+          "createdAtUtc": "2026-05-01T09:00:00Z",
+          "updatedAtUtc": "2026-05-11T12:00:00Z"
+        },
+        {
+          "id": "41111111-1111-1111-1111-111111111119",
+          "username": "track2",
+          "firstname": "Theo",
+          "lastname": "Turn",
+          "email": "theo@example.test",
+          "emailVerified": true,
+          "discordId": "theo#1111",
+          "steamId": "steam-theo",
+          "riotId": null,
+          "displayName": "Theo Turn",
+          "isDeleted": false,
+          "createdAtUtc": "2026-05-01T09:00:00Z",
+          "updatedAtUtc": "2026-05-11T12:00:00Z"
+        }
+      ],
+      "teams": []
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111114",
+      "name": "Rocket League",
+      "startTime": "2026-06-16T11:00:00Z",
+      "endTime": "2026-06-16T15:00:00Z",
+      "imageUrl": "/mock-data-local/games/rocketleague.svg",
+      "status": "Completed",
+      "bracketType": "SingleElimination",
+      "format": "BestOf5",
+      "finalsFormat": "BestOf5",
+      "participationMode": "Team",
+      "registerFormUrl": "https://example.test/register/rocketleague",
+      "placements": [
+        {
+          "place": 1,
+          "users": [],
+          "teams": [
+            {
+              "id": "21111111-1111-1111-1111-111111111111",
+              "name": "Team Alpha",
+              "captainUserId": "41111111-1111-1111-1111-111111111111",
+              "members": [],
+              "teamInvites": []
+            }
+          ]
+        },
+        {
+          "place": 2,
+          "users": [],
+          "teams": [
+            {
+              "id": "21111111-1111-1111-1111-111111111115",
+              "name": "Echo Unit",
+              "captainUserId": "41111111-1111-1111-1111-111111111116",
+              "members": [],
+              "teamInvites": []
+            }
+          ]
+        }
+      ],
+      "sponsorPlacements": [],
+      "matches": [],
+      "users": [],
+      "teams": [
+        {
+          "id": "21111111-1111-1111-1111-111111111111",
+          "name": "Team Alpha",
+          "captainUserId": "41111111-1111-1111-1111-111111111111",
+          "members": [],
+          "teamInvites": []
+        },
+        {
+          "id": "21111111-1111-1111-1111-111111111115",
+          "name": "Echo Unit",
+          "captainUserId": "41111111-1111-1111-1111-111111111116",
+          "members": [],
+          "teamInvites": []
+        }
+      ]
+    }
+  ],
+  "teams": [
+    {
+      "id": "21111111-1111-1111-1111-111111111111",
+      "name": "Team Alpha",
+      "captainUserId": "41111111-1111-1111-1111-111111111111",
+      "members": [],
+      "teamInvites": []
+    },
+    {
+      "id": "21111111-1111-1111-1111-111111111112",
+      "name": "Binary Bandits",
+      "captainUserId": "41111111-1111-1111-1111-111111111113",
+      "members": [],
+      "teamInvites": []
+    },
+    {
+      "id": "21111111-1111-1111-1111-111111111113",
+      "name": "Gamma Grid",
+      "captainUserId": "41111111-1111-1111-1111-111111111114",
+      "members": [],
+      "teamInvites": []
+    },
+    {
+      "id": "21111111-1111-1111-1111-111111111114",
+      "name": "Delta Drop",
+      "captainUserId": "41111111-1111-1111-1111-111111111115",
+      "members": [],
+      "teamInvites": []
+    },
+    {
+      "id": "21111111-1111-1111-1111-111111111115",
+      "name": "Echo Unit",
+      "captainUserId": "41111111-1111-1111-1111-111111111116",
+      "members": [],
+      "teamInvites": []
+    },
+    {
+      "id": "21111111-1111-1111-1111-111111111116",
+      "name": "Frame Perfect",
+      "captainUserId": "41111111-1111-1111-1111-111111111117",
+      "members": [],
+      "teamInvites": []
+    }
+  ],
+  "users": [
+    {
+      "id": "41111111-1111-1111-1111-111111111111",
+      "username": "alpha1",
+      "firstname": "Alex",
+      "lastname": "Alder",
+      "email": "alex@example.test",
+      "emailVerified": true,
+      "discordId": "alpha#1111",
+      "steamId": "steam-alpha",
+      "riotId": null,
+      "displayName": "Alex Alder",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111113",
+      "username": "binary1",
+      "firstname": "Ben",
+      "lastname": "Binary",
+      "email": "ben@example.test",
+      "emailVerified": true,
+      "discordId": "ben#1111",
+      "steamId": "steam-ben",
+      "riotId": null,
+      "displayName": "Ben Binary",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111114",
+      "username": "gamma1",
+      "firstname": "Gina",
+      "lastname": "Grid",
+      "email": "gina@example.test",
+      "emailVerified": true,
+      "discordId": "gina#1111",
+      "steamId": "steam-gina",
+      "riotId": null,
+      "displayName": "Gina Grid",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111115",
+      "username": "delta1",
+      "firstname": "Dana",
+      "lastname": "Drop",
+      "email": "dana@example.test",
+      "emailVerified": true,
+      "discordId": "dana#1111",
+      "steamId": "steam-dana",
+      "riotId": null,
+      "displayName": "Dana Drop",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111116",
+      "username": "echo1",
+      "firstname": "Eli",
+      "lastname": "Echo",
+      "email": "eli@example.test",
+      "emailVerified": true,
+      "discordId": "eli#1111",
+      "steamId": "steam-eli",
+      "riotId": "eli#VAL",
+      "displayName": "Eli Echo",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111117",
+      "username": "frame1",
+      "firstname": "Finn",
+      "lastname": "Frame",
+      "email": "finn@example.test",
+      "emailVerified": true,
+      "discordId": "finn#1111",
+      "steamId": "steam-finn",
+      "riotId": "finn#VAL",
+      "displayName": "Finn Frame",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111118",
+      "username": "track1",
+      "firstname": "Tara",
+      "lastname": "Track",
+      "email": "tara@example.test",
+      "emailVerified": true,
+      "discordId": "tara#1111",
+      "steamId": "steam-tara",
+      "riotId": null,
+      "displayName": "Tara Track",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111119",
+      "username": "track2",
+      "firstname": "Theo",
+      "lastname": "Turn",
+      "email": "theo@example.test",
+      "emailVerified": true,
+      "discordId": "theo#1111",
+      "steamId": "steam-theo",
+      "riotId": null,
+      "displayName": "Theo Turn",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111120",
+      "username": "mockuser",
+      "firstname": "Morgan",
+      "lastname": "Player",
+      "email": "mockuser@example.test",
+      "emailVerified": true,
+      "discordId": "morgan#1111",
+      "steamId": "steam-morgan",
+      "riotId": null,
+      "displayName": "Morgan Player",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111121",
+      "username": "mockadmin",
+      "firstname": "Avery",
+      "lastname": "Admin",
+      "email": "mockadmin@example.test",
+      "emailVerified": true,
+      "discordId": "avery#1111",
+      "steamId": "steam-avery",
+      "riotId": null,
+      "displayName": "Avery Admin",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    }
+  ],
+  "profiles": [
+    {
+      "persona": "user",
+      "profile": {
+        "isComplete": true,
+        "user": {
+          "id": "41111111-1111-1111-1111-111111111120",
+          "username": "mockuser",
+          "firstname": "Morgan",
+          "lastname": "Player",
+          "email": "mockuser@example.test",
+          "emailVerified": true,
+          "discordId": "morgan#1111",
+          "steamId": "steam-morgan",
+          "riotId": null,
+          "displayName": "Morgan Player",
+          "isDeleted": false,
+          "createdAtUtc": "2026-05-01T09:00:00Z",
+          "updatedAtUtc": "2026-05-11T12:00:00Z"
+        },
+        "email": "mockuser@example.test",
+        "emailVerified": true
+      }
+    },
+    {
+      "persona": "admin",
+      "profile": {
+        "isComplete": true,
+        "user": {
+          "id": "41111111-1111-1111-1111-111111111121",
+          "username": "mockadmin",
+          "firstname": "Avery",
+          "lastname": "Admin",
+          "email": "mockadmin@example.test",
+          "emailVerified": true,
+          "discordId": "avery#1111",
+          "steamId": "steam-avery",
+          "riotId": null,
+          "displayName": "Avery Admin",
+          "isDeleted": false,
+          "createdAtUtc": "2026-05-01T09:00:00Z",
+          "updatedAtUtc": "2026-05-11T12:00:00Z"
+        },
+        "email": "mockadmin@example.test",
+        "emailVerified": true
+      }
+    }
+  ],
+  "sponsors": [
+    {
+      "id": 1,
+      "name": "Mercurius Tech",
+      "sponsorTier": "Presenting",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/mercurius-tech",
+      "description": "Headline technology partner for the Mercurius LAN weekend."
+    },
+    {
+      "id": 2,
+      "name": "Campus Fiber",
+      "sponsorTier": "Presenting",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/campus-fiber",
+      "description": "Connectivity partner for high-capacity student events."
+    },
+    {
+      "id": 3,
+      "name": "Pixel Forge",
+      "sponsorTier": "Gold",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/pixel-forge",
+      "description": "Custom PC and stream setup partner."
+    },
+    {
+      "id": 4,
+      "name": "Byte Bakery",
+      "sponsorTier": "Silver",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/byte-bakery",
+      "description": "Student-favorite late-night snack partner."
+    },
+    {
+      "id": 5,
+      "name": "Pulse Energy",
+      "sponsorTier": "Bronze",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/pulse-energy",
+      "description": "Weekend energy and hydration support."
+    },
+    {
+      "id": 6,
+      "name": "Arena Hardware",
+      "sponsorTier": "Gold",
+      "logoUrl": "/mock-data-local/sponsors/mock-sponsor.svg",
+      "infoUrl": "https://example.test/sponsors/arena-hardware",
+      "description": "Tournament-ready peripherals and stage hardware."
+    }
+  ]
+}

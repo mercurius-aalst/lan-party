@@ -1,95 +1,107 @@
-﻿.privacy-policy-container {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    color: #333;
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
+.privacy-page {
+    display: grid;
+    gap: 1.5rem;
+    padding-block: 1.5rem 3rem;
 }
 
-    .privacy-policy-container h1 {
-        font-size: 2em;
-        border-bottom: 2px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 20px;
-    }
+.privacy-hero {
+    display: grid;
+    gap: 0.75rem;
+}
 
-    .privacy-policy-container h2 {
-        font-size: 1.5em;
-        color: #2c3e50;
-        margin-top: 30px;
-        margin-bottom: 15px;
-        border-bottom: 1px solid #eee;
-    }
+.privacy-hero p,
+.privacy-policy-container p,
+.warning-box p {
+    margin: 0;
+}
 
-    .privacy-policy-container h3 {
-        font-size: 1.2em;
-        color: #444;
-        margin-top: 25px;
-    }
+.privacy-policy-container {
+    width: min(100%, 62rem);
+    padding: 1.75rem;
+    line-height: 1.7;
+}
 
-    .privacy-policy-container p {
-        margin-bottom: 15px;
-    }
+.privacy-policy-container h2 {
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+}
 
-    .privacy-policy-container ul {
-        margin-bottom: 15px;
-        padding-left: 20px;
-    }
+.privacy-policy-container h3 {
+    margin-top: 1.5rem;
+    margin-bottom: 0.65rem;
+}
 
-/* Styling voor de datalijsten in sectie 3 */
+.privacy-policy-container ul,
+.privacy-policy-container ol {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0.75rem 0 1rem;
+    padding-left: 1.25rem;
+}
+
 .data-list {
-    list-style-type: none;
     padding: 0;
+    list-style: none;
 }
 
-    .data-list li {
-        background: #f9f9f9;
-        margin-bottom: 10px;
-        padding: 15px;
-        border-left: 4px solid #0073aa; /* Kleuraccent */
-        border-radius: 4px;
-    }
+.data-list li {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: var(--color-soft-white);
+}
 
 .data-label {
-    display: block;
-    font-weight: bold;
-    font-size: 1.05em;
-    color: #222;
+    color: var(--color-dark-navy);
+    font-weight: 700;
 }
 
 .data-meta {
-    font-size: 0.9em;
-    color: #666;
-    display: inline-block;
-    margin-top: 4px;
+    color: var(--color-muted-text);
 }
 
 .tag {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 0.8em;
-    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.35rem;
+    padding: 0.18rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
     text-transform: uppercase;
-    margin-right: 5px;
 }
 
 .tag-req {
-    background-color: #ffebee;
-    color: #c62828;
+    background: rgba(220, 38, 38, 0.12);
+    color: var(--color-danger);
 }
-/* Rood voor verplicht */
+
 .tag-opt {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--color-deep-green);
 }
-/* Groen voor optioneel */
+
+.tag-tech {
+    background: rgba(15, 23, 42, 0.1);
+    color: var(--color-dark-navy);
+}
 
 .warning-box {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    padding: 15px;
-    border-radius: 5px;
-    color: #856404;
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 18px;
+    background: rgba(245, 158, 11, 0.08);
+}
+
+@media (max-width: 640px) {
+    .privacy-policy-container {
+        padding: 1rem;
+    }
 }

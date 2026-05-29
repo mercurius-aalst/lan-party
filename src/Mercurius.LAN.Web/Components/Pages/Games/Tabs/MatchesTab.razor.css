@@ -1,0 +1,17 @@
+.matches-tab-shell {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.matches-tab-header p,
+.matches-empty-state p {
+    margin: 0.35rem 0 0;
+}
+
+.matches-empty-state {
+    padding: 1.25rem;
+}
+
+.matches-empty-state h3 {
+    margin-bottom: 0.4rem;
+}

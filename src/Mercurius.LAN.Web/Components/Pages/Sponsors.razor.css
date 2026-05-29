@@ -1,75 +1,234 @@
-.sponsors-container {
-    height: 100%;
-    overflow-y: auto;
-    text-align: center;
+.sponsors-hero-section {
+    padding-top: 0;
+    padding-bottom: clamp(1rem, 2vw, 1.5rem);
 }
 
-
-.card-deck {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.sponsors-hero {
+    --brand-page-hero-columns: 1fr;
+    --brand-page-hero-gap: clamp(1rem, 3vw, 2.1rem);
+    --brand-page-hero-padding: clamp(1.25rem, 2.8vw, 2.35rem);
+    --brand-page-hero-padding-mobile: 1rem;
+    --brand-page-hero-copy-gap: 0.75rem;
+    --brand-page-hero-copy-paragraph-size: clamp(0.98rem, 1.24vw, 1.06rem);
+    --brand-page-hero-copy-paragraph-line-height: 1.58;
+    background: rgba(255, 255, 255, 0.98);
 }
 
-.card-row {
+.sponsors-hero::after {
+    display: none;
+}
+
+.sponsors-hero-lead {
+    display: grid;
+    gap: 1rem;
+}
+
+.sponsors-hero-copy h1 {
+    margin-bottom: 0;
+    font-size: clamp(2.35rem, 4.3vw, 3.7rem);
+    line-height: 0.94;
+}
+
+.sponsors-hero-copy p,
+.sponsors-impact-header p,
+.sponsors-impact-card p,
+.sponsor-card-body p,
+.sponsors-empty-state p {
+    margin: 0;
+}
+
+.sponsors-hero-actions {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
+    gap: 0.7rem;
 }
 
-.card-img{
-    object-fit: contain;
-    background: none;
+.sponsors-impact-section {
+    --brand-section-shell-gap: 1.15rem;
+    padding-block: clamp(1.2rem, 2.2vw, 1.8rem);
 }
 
-.card {
-    position: relative;
-    overflow: hidden;
-    padding: 0.5rem;
-    display: flex;
-    width: auto;
-    border: none;
-    box-shadow: none;
-    background: none;
-}
-.card::after {
-    content: attr(data-overlay-text); /* Get the text from a data attribute */
-    visibility: hidden; /* Hide the pseudo-element, but keep it in the flow */
-    white-space: nowrap; /* Prevent the text from wrapping */
-    font-size: 1.2rem;
-    font-weight: bold;
-    padding: 0; /* Adjust padding if needed to match the overlay */
+.sponsors-impact-header {
+    max-width: 52rem;
 }
 
-.card img {
-    transition: transform 0.3s ease;
-    border-bottom: none;
-
+.sponsors-impact-header h2,
+.sponsors-tier-heading h2,
+.sponsors-empty-state h2 {
+    margin-bottom: 0.25rem;
 }
 
-.card:hover img {
-    transform: scale(1.1);
-    filter: blur(3px);
+.sponsors-impact-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-.card-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
+.sponsors-impact-card {
+    display: grid;
+    align-content: start;
+    gap: 0.65rem;
+    padding: 1.35rem;
+    border: 1px solid rgba(15, 23, 42, 0.09);
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 251, 248, 0.96));
+}
+
+.sponsors-tier-list {
+    display: grid;
+    gap: clamp(1.4rem, 2.7vw, 2.3rem);
+    padding-bottom: clamp(2rem, 4vw, 3rem);
+}
+
+.sponsors-tier-section {
+    --brand-section-shell-gap: 1.2rem;
+    padding: clamp(1rem, 2.4vw, 1.75rem);
+    border: 1px solid rgba(15, 23, 42, 0.1);
+    border-radius: 28px;
+    box-shadow: var(--shadow-brand);
+}
+
+.sponsors-tier-section--presenting {
+    background:
+        radial-gradient(circle at top right, rgba(163, 230, 53, 0.24), transparent 16rem),
+        linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(13, 63, 43, 0.95));
+    border-color: rgba(163, 230, 53, 0.3);
+    color: var(--color-white);
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.24);
+}
+
+.sponsors-tier-section--presenting .section-eyebrow,
+.sponsors-tier-section--presenting .sponsor-tier-label,
+.sponsors-tier-section--presenting .sponsor-card-link {
+    color: var(--color-electric-lime);
+}
+
+.sponsors-tier-section--presenting h2 {
+    color: var(--color-white);
+}
+
+.sponsors-tier-section--gold {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.2), transparent 15rem),
+        linear-gradient(132deg, rgba(255, 255, 255, 0.98), rgba(255, 248, 231, 0.96));
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.sponsors-tier-section--silver {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(148, 163, 184, 0.19), transparent 16rem),
+        linear-gradient(134deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 251, 0.95));
+    border-color: rgba(148, 163, 184, 0.3);
+}
+
+.sponsors-tier-section--bronze {
+    background:
+        radial-gradient(circle at 100% 0%, rgba(180, 83, 9, 0.16), transparent 17rem),
+        linear-gradient(138deg, rgba(255, 255, 255, 0.98), rgba(250, 245, 239, 0.95));
+    border-color: rgba(180, 83, 9, 0.26);
+}
+
+.sponsors-tier-header {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.sponsors-tier-heading {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.sponsor-grid {
+    display: grid;
+    align-items: stretch;
+    justify-content: start;
+}
+
+.sponsor-grid--presenting {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+    gap: 1.25rem;
+}
+
+.sponsor-grid--gold {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: 1rem;
+}
+
+.sponsor-grid--silver {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: 0.9rem;
+}
+
+.sponsor-grid--bronze {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: 0.85rem;
+}
+
+.sponsor-card {
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    font-size: 1.2rem;
-    font-weight: bold;
 }
 
-.card:hover .card-overlay {
-    opacity: 1;
+.sponsor-card-logo {
+    box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.sponsor-card-body {
+    gap: 0.7rem;
+}
+
+.sponsor-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sponsor-card-link .bi {
+    font-size: 0.88rem;
+}
+
+.sponsors-empty-section {
+    padding-top: clamp(1rem, 2vw, 1.5rem);
+}
+
+.sponsors-empty-state {
+    display: grid;
+    gap: 0.9rem;
+    max-width: 50rem;
+    padding: clamp(1.2rem, 2.5vw, 1.75rem);
+    border: 1px solid rgba(15, 23, 42, 0.11);
+    background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.12), transparent 15rem),
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 249, 246, 0.96));
+}
+
+.sponsors-empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+}
+
+@media (max-width: 960px) {
+    .sponsors-impact-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .sponsors-hero-actions,
+    .sponsors-empty-actions {
+        width: 100%;
+    }
+
+    .sponsors-hero-actions a,
+    .sponsors-empty-actions a {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+
+    .sponsor-grid--presenting,
+    .sponsor-grid--gold,
+    .sponsor-grid--silver,
+    .sponsor-grid--bronze {
+        grid-template-columns: 1fr;
+    }
 }

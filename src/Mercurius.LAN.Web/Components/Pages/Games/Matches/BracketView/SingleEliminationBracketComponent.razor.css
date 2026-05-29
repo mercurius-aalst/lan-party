@@ -1,18 +1,19 @@
 .bracket-absolute-container {
     position: relative;
-    min-height: auto;
     min-width: 100%;
-    max-width: 100vw;
-    overflow-x: auto;
-    overflow-y: hidden; /* Ensure only horizontal scrolling */
-    box-sizing: border-box;    
+    max-width: none;
+    overflow: visible;
+    box-sizing: border-box;
 }
 
 .bracket-root {
-    max-width: 100vw;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     box-sizing: border-box;
     overflow-x: auto;
-    overflow-y: hidden; /* Ensure only horizontal scrolling */
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
     padding-bottom: 1rem;
     cursor: grab;
 }
@@ -23,6 +24,8 @@
 
 .bracket-columns {
     display: block;
+    width: max-content;
+    min-width: 100%;
 }
 
 .bracket-titles {

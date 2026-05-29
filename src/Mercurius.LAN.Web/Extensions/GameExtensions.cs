@@ -11,6 +11,7 @@ public static class GameExtensions
         {
             GameStatus.Scheduled => "Open",
             GameStatus.InProgress => "Ongoing",
+            GameStatus.Started => "Ongoing",
             GameStatus.Completed => "Finished",
             GameStatus.Canceled => "Cancelled",
             _ => status.ToString()
@@ -44,9 +45,20 @@ public static class GameExtensions
         {
             GameStatus.Scheduled => "status-scheduled",
             GameStatus.InProgress => "status-inprogress",
+            GameStatus.Started => "status-inprogress",
             GameStatus.Completed => "status-completed",
             GameStatus.Canceled => "status-canceled",
             _ => string.Empty
+        };
+    }
+
+    public static string GetLabel(this ParticipationMode participationMode)
+    {
+        return participationMode switch
+        {
+            ParticipationMode.Individual => "Solo",
+            ParticipationMode.Team => "Team",
+            _ => participationMode.ToString()
         };
     }
 }

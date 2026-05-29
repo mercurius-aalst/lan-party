@@ -1,5 +1,6 @@
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Sponsors;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Sponsors;
 using System.Net.Http;
 
@@ -19,14 +20,16 @@ namespace Mercurius.LAN.Web.Services
         public async Task<IEnumerable<Sponsor>> GetSponsorsAsync()
         {
             var sponsors = await _lanClient.GetSponsorsAsync();
-            sponsors.ToList().ForEach(sp => sp.LogoUrl = _configuration["MercuriusAPI:BaseAddress"] + sp.LogoUrl);
+            sponsors.ToList().ForEach(sp => sp.LogoUrl = AssetUrlResolver.Resolve(_configuration, sp.LogoUrl));
 
             return sponsors;
         }
 
-        public Task<Sponsor> GetSponsorByIdAsync(int id)
+        public async Task<Sponsor> GetSponsorByIdAsync(int id)
         {
-            return _lanClient.GetSponsorByIdAsync(id);
+            var sponsor = await _lanClient.GetSponsorByIdAsync(id);
+            sponsor.LogoUrl = AssetUrlResolver.Resolve(_configuration, sponsor.LogoUrl);
+            return sponsor;
         }
 
         public async Task<Sponsor> CreateSponsorAsync(SponsorManagementDTO createSponsorDTO,string? tempFilePath,string? contentType,string? fileName)
@@ -36,6 +39,7 @@ namespace Mercurius.LAN.Web.Services
                     { new StringContent(createSponsorDTO.Name), "Name" },
                     { new StringContent(createSponsorDTO.InfoUrl), "InfoUrl" },
                     { new StringContent(createSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
+                    { new StringContent(createSponsorDTO.Description ?? string.Empty), "Description" },
                 };
 
             bool tempFileNeedsCleanup = false;
@@ -53,7 +57,9 @@ namespace Mercurius.LAN.Web.Services
 
             try
             {
-                return await _lanClient.CreateSponsorAsync(createSponsorFormData);
+                var sponsor = await _lanClient.CreateSponsorAsync(createSponsorFormData);
+                sponsor.LogoUrl = AssetUrlResolver.Resolve(_configuration, sponsor.LogoUrl);
+                return sponsor;
             }
             finally
             {
@@ -77,6 +83,7 @@ namespace Mercurius.LAN.Web.Services
                     { new StringContent(updateSponsorDTO.Name), "Name" },
                     { new StringContent(updateSponsorDTO.InfoUrl), "InfoUrl" },
                     { new StringContent(updateSponsorDTO.SponsorTier.ToString()), "SponsorTier" },
+                    { new StringContent(updateSponsorDTO.Description ?? string.Empty), "Description" },
                 };
 
             bool tempFileNeedsCleanup = false;
@@ -94,7 +101,9 @@ namespace Mercurius.LAN.Web.Services
 
             try
             {
-                return await _lanClient.UpdateSponsorAsync(id, updateSponsorFormData);
+                var sponsor = await _lanClient.UpdateSponsorAsync(id, updateSponsorFormData);
+                sponsor.LogoUrl = AssetUrlResolver.Resolve(_configuration, sponsor.LogoUrl);
+                return sponsor;
             }
             finally
             {

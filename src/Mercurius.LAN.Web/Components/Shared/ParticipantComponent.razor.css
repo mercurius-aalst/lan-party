@@ -1,82 +1,137 @@
-.participant-card {
-    background: #f8f8f8;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
-    padding: 1.1em 1.5em 1.1em 1.5em;
-    min-width: 220px;
-    max-width: 320px;
-    border: 2px solid #e0e0e0;
-    position: relative;
-    transition: border 0.2s;
+.participant-surface {
+    display: grid;
+    gap: 1rem;
+    padding: 1.1rem 1.15rem;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: var(--shadow-brand);
 }
+
+.participant-surface--empty {
+    justify-items: start;
+}
+
 .participant-header-row {
     display: flex;
     align-items: center;
-    gap: 0.7em;
-    margin-bottom: 0.3em;
-}
-.participant-type {
-    font-size: 1.05em;
-    font-weight: 600;
-    color: #4caf50;
-    display: flex;
-    align-items: center;
-    gap: 0.4em;
-}
-.participant-name {
-    font-size: 1.15em;
-    font-weight: 700;
-    color: #222;
-    margin-bottom: 0;
-}
-.captain-label {
-    font-size: 0.95em;
-    color: #388e3c;
-    font-weight: 600;
-    margin-top: 0.5em;
-}
-.captain-name {
-    font-size: 1.08em;
-    font-weight: 600;
-    margin-bottom: 0.2em;
-}
-.participant-table {
-    width: 100%;
-    font-size: 0.98em;
-    margin-bottom: 0.5em;
-    border-collapse: collapse;
-}
-.participant-table td {
-    padding: 0.1em 0.3em;
-    color: #444;
+    gap: 0.7rem;
+    margin: 0;
 }
 
-.copy-icon {
+.participant-type {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-deep-green);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    letter-spacing: 0.01em;
+}
+
+.participant-name {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--color-dark-navy);
+}
+
+.participant-profile-link {
+    color: var(--color-deep-green);
+    font-weight: 800;
+    text-decoration: none;
+}
+
+.participant-profile-link:hover {
+    color: var(--color-dark-navy);
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.participant-profile-link:focus-visible,
+.participant-member-link:focus-visible {
+    outline: 3px solid rgba(34, 197, 94, 0.22);
+    outline-offset: 3px;
+}
+
+.participant-details {
+    display: grid;
+    gap: 0.7rem;
+    margin: 0;
+}
+
+.participant-detail-row {
+    display: grid;
+    gap: 0.18rem;
+}
+
+.participant-detail-row dt,
+.participant-section-label {
+    color: var(--color-muted-text);
+    font-size: 0.84rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.participant-detail-row dd,
+.participant-section-value,
+.participant-empty-copy {
+    margin: 0;
+    color: var(--color-dark-navy);
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.participant-section {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.participant-members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.participant-member-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--color-dark-navy);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.participant-member-link {
+    text-decoration: none;
+    transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.participant-member-link:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--color-deep-green);
+    transform: translateY(-1px);
+}
+
+.participant-captain-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
-    margin-left: 0.45em;
-    vertical-align: middle;
-    cursor: pointer;
-    opacity: 0.85;
+    padding: 0.12rem 0.38rem;
+    border: 1px solid rgba(21, 128, 61, 0.24);
+    border-radius: 999px;
+    background: #e8f7ee;
+    color: var(--color-deep-green);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
 }
-.copy-icon svg { width: 14px; height: 14px; fill: none; stroke: var(--accent-color); stroke-width: 1.6; }
-.copy-icon:hover { opacity: 1; }
-.copy-icon.copied { transform: scale(0.98); opacity: 0.95; }
 
-/* Toast from uiInteractions.js */
-.js-copy-toast {
-    background: var(--accent-color);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.16);
-    font-size: 0.95em;
-    opacity: 0;
-    transition: opacity 160ms ease, transform 160ms ease;
-    z-index: 9999;
+.participant-empty-copy {
+    color: var(--color-muted-text);
 }
-.js-copy-toast.show { opacity: 1; transform: translateY(-4px); }
 

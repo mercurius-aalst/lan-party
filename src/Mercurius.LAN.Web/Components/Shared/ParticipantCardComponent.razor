@@ -1,9 +1,15 @@
+@using Microsoft.AspNetCore.Components.Authorization
+
 <div class="participant-overview-card" @onmouseover="() => _showDeleteIcon = true" @onmouseout="() => _showDeleteIcon = false" @onclick="() => ShowParticipantPopup(Participant)">
     @if(_showDeleteIcon && AllowDeleteFunction)
     {
-        <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
-            <i class="bi bi-trash"></i>
-        </button>
+        <AuthorizeView Roles="admin">
+            <Authorized>
+                <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </Authorized>
+        </AuthorizeView>
     }
     <div class="participant-avatar @(Participant.ParticipationMode == Models.Games.ParticipationMode.Team ? "team-avatar" : "player-avatar")">
         @Participant.DisplayName.Substring(0, 1).ToUpper()

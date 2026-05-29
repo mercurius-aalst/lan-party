@@ -13,7 +13,7 @@ namespace Mercurius.LAN.Web.Components.Pages.Games;
 public partial class AddGameDialog
 {
     [Parameter]
-    public EventCallback<GameExtended> OnClose { get; set; }
+    public EventCallback<GameExtended?> OnClose { get; set; }
 
     [Inject]
     private IGameService GameService { get; set; } = null!;
@@ -54,7 +54,7 @@ public partial class AddGameDialog
             }
     }
 
-    private void CloseDialog(GameExtended createdGame)
+    private void CloseDialog(GameExtended? createdGame)
     {
         _isDialogOpen = false;
         OnClose.InvokeAsync(createdGame);

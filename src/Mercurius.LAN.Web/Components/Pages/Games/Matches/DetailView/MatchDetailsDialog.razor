@@ -9,41 +9,89 @@
 <CascadingValue Value="Match">
     <div class="match-modal-overlay" @onclick="OnClose">
         <div class="match-modal-dialog" @onclick:stopPropagation>
-            <button class="match-modal-close" @onclick="OnClose">&times;</button>
-            <div class="match-header">
-                <span class="match-header-name">
-                    @Participant1Name
-                    <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
-                </span>
-                <span class="match-header-vs">vs</span>
-                <span class="match-header-name">
-                    @Participant2Name
-                    <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
-                </span>
+            <button type="button" class="match-modal-close" aria-label="Close match details" @onclick="OnClose">&times;</button>
+
+            <div class="match-modal-header">
+                <span class="section-eyebrow">Match details</span>
+                <div class="match-header">
+                    <span class="match-header-name">
+                        @Participant1Name
+                        <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
+                    </span>
+                    <span class="match-header-vs">vs</span>
+                    <span class="match-header-name">
+                        @Participant2Name
+                        <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
+                    </span>
+                </div>
+                <div class="match-summary-badges">
+                    <span class="badge">@GetStageLabel()</span>
+                    <span class="badge">@GetRoundLabel()</span>
+                    <span class="badge">@Match.Format.GetLabel()</span>
+                    <span class="match-status-pill @GetStatusClass()">@GetStatusLabel()</span>
+                </div>
             </div>
+
             <AuthorizeView Roles="admin">
                 <Authorized>
-                    <div class="score-inputs">
-                        <input id="participant1-score" type="number" class="form-control score-input" @bind="Match.Participant1Score" />
-                        <input id="participant2-score" type="number" class="form-control score-input" @bind="Match.Participant2Score" />
+                    <div class="match-score-editor">
+                        <div class="match-score-editor-copy">
+                            <span class="section-eyebrow">Admin</span>
+                            <h3>Update scoreline</h3>
+                        </div>
+                        <div class="score-inputs">
+                            <div class="match-score-field">
+                                <label for="participant1-score">@Participant1Name</label>
+                                <input id="participant1-score" type="number" class="form-control score-input" @bind="Match.Participant1Score" />
+                            </div>
+                            <div class="match-score-field">
+                                <label for="participant2-score">@Participant2Name</label>
+                                <input id="participant2-score" type="number" class="form-control score-input" @bind="Match.Participant2Score" />
+                            </div>
+                        </div>
                     </div>
                 </Authorized>
             </AuthorizeView>
 
-            <div class="match-format">@Match.Format.GetLabel()</div>
-
             <div class="participants-grid">
-                <div class="@GetCardClass(Participant1Id)">
+                <section class="@GetCardClass(Participant1Id)">
+                    @if(IsWinner(Participant1Id) || (WinnerId != null && Participant1Id != null))
+                    {
+                        <div class="match-participant-panel-header">
+                        @if(IsWinner(Participant1Id))
+                        {
+                            <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                        }
+                        else if(WinnerId != null && Participant1Id != null)
+                        {
+                            <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                        }
+                        </div>
+                    }
                     <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
-                </div>
-                <div class="@GetCardClass(Participant2Id)">
+                </section>
+                <section class="@GetCardClass(Participant2Id)">
+                    @if(IsWinner(Participant2Id) || (WinnerId != null && Participant2Id != null))
+                    {
+                        <div class="match-participant-panel-header">
+                        @if(IsWinner(Participant2Id))
+                        {
+                            <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                        }
+                        else if(WinnerId != null && Participant2Id != null)
+                        {
+                            <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                        }
+                        </div>
+                    }
                     <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
-                </div>
+                </section>
             </div>
+
             <AuthorizeView Roles="admin">
                 <Authorized>
-                    <div class="save-button-container">
-                        <button class="btn btn-primary mt-2" @onclick="SaveScoresAsync">Save Scores</button>
+                    <div class="match-modal-actions">
+                        <button type="button" class="button-primary" @onclick="SaveScoresAsync">Save scores</button>
                     </div>
                 </Authorized>
             </AuthorizeView>

@@ -1,3 +1,5 @@
+@using Mercurius.LAN.Web.Components.Shared
+
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
@@ -6,8 +8,7 @@
                 {
                     <LayoutView Layout="typeof(Layout.MainLayout)">
                         <PageTitle>Forbidden</PageTitle>
-                        <h1>Forbidden</h1>
-                        <p>You do not have permission to access this page.</p>
+                        <StatusPage Eyebrow="System" Title="Forbidden" Message="You do not have permission to access this page." PrimaryHref="/" PrimaryLabel="Back Home" SecondaryHref="/games" SecondaryLabel="Browse Games" />
                     </LayoutView>
                 }
                 else
@@ -21,7 +22,9 @@
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
     <NotFound>
-        <PageTitle>Not Found</PageTitle>
-        <h1>Page not found</h1>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <PageTitle>Not Found</PageTitle>
+            <StatusPage Eyebrow="System" Title="Page Not Found" Message="The page you requested does not exist or has moved." PrimaryHref="/" PrimaryLabel="Back Home" SecondaryHref="/games" SecondaryLabel="Browse Games" />
+        </LayoutView>
     </NotFound>
 </Router>

@@ -10,5 +10,6 @@ namespace Mercurius.LAN.Web.Models.Games
         public IEnumerable<Match> Matches { get; set; } = new List<Match>();
         public IEnumerable<UserDTO> Users { get; set; } = new List<UserDTO>();
         public IEnumerable<Team> Teams { get; set; } = new List<Team>();
+        public IEnumerable<GameSponsorPlacement> SponsorPlacements { get; set; } = new List<GameSponsorPlacement>();
     }
 }
