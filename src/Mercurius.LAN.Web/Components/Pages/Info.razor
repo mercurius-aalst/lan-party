@@ -122,15 +122,15 @@
             </div>
 
             <div class="menu-columns">
-                @foreach(var section in Event.MenuSections)
+                @foreach(var menuSection in Event.MenuSections)
                 {
                     <article class="menu-column">
                         <div class="menu-column-title">
-                            <span class="bi @section.Icon" aria-hidden="true"></span>
-                            <h3>@section.Name</h3>
+                            <span class="bi @menuSection.Icon" aria-hidden="true"></span>
+                            <h3>@menuSection.Name</h3>
                         </div>
 
-                        @foreach(var item in section.Items)
+                        @foreach(var item in menuSection.Items)
                         {
                             <div class="menu-item">
                                 <span>@item.Name</span>
