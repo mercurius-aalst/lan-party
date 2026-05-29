@@ -2,9 +2,7 @@
 
 ## Purpose
 Defines how homepage and non-homepage hero or intro surfaces create a clear first impression, guide visitor orientation, and preserve appropriate visual hierarchy across the site.
-
 ## Requirements
-
 ### Requirement: Home page hero creates a strong landing impression
 
 The home page SHALL present a visually striking hero that acts as the primary entry experience for the site. The hero SHALL keep event information visually grouped, aligned with the surrounding hero information elements, and smoothly connected to the following homepage content.
@@ -36,13 +34,13 @@ The home page SHALL present a visually striking hero that acts as the primary en
 - **AND** the transition remains visually continuous when reduced-motion preferences disable animation
 
 ### Requirement: Sponsors page opens with a simple visitor-facing intro
-
-The sponsors page SHALL use a concise page intro instead of a heavyweight hero treatment.
+The sponsors page SHALL use a polished, visitor-facing partner intro that creates a stronger first impression than a plain heading while remaining lighter than the home page hero and avoiding internal dashboard-style metric summaries.
 
 #### Scenario: Visitor opens sponsors page
 - **WHEN** a visitor opens the sponsors page
 - **THEN** the top section explains what the sponsors page is for and what value the visitor can expect from it
-- **AND** the page does not present a large showcase hero or internal-style metric summary ahead of the sponsor content
+- **AND** the top section presents sponsor and partner messaging with clear visual hierarchy
+- **AND** the page does not present a home-page-style fullscreen showcase hero or internal-style metric summary ahead of the sponsor content
 
 #### Scenario: Sponsors intro guides the next action
 - **WHEN** the sponsors page intro is shown
@@ -83,3 +81,4 @@ The site SHALL keep the home page hero on its distinct existing styling path whe
 - **WHEN** the shared non-homepage hero foundation is added to the application
 - **THEN** the home page hero does not adopt that shared non-homepage hero treatment
 - **AND** the home page hero remains governed by its own existing experience requirements
+

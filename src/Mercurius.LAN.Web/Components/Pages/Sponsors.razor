@@ -11,38 +11,72 @@
 }
 else
 {
-    <section class="brand-section brand-section-shell sponsors-intro">
-        <div class="brand-section-shell sponsors-intro-copy">
-            <span class="section-eyebrow">Sponsors & Partners</span>
-            <h1>Sponsors</h1>
-            <p>Meet the partners behind Mercurius LAN and browse the brands helping shape the weekend experience.</p>
+    <section class="brand-section sponsors-hero-section">
+        <div class="brand-card brand-page-hero sponsors-hero">
+            <div class="sponsors-hero-lead">
+                <div class="brand-page-hero-copy sponsors-hero-copy">
+                    <span class="section-eyebrow">Sponsors & Partners</span>
+                    <h1>Partners powering every corner of Mercurius LAN</h1>
+                    <p>Discover the brands helping us level up tournaments, production, and the full LAN weekend atmosphere for every player and visitor.</p>
+                </div>
+                <div class="sponsors-hero-actions">
+                    <a href="@GetBrowsePartnersHref()" class="button-primary">Browse Partners</a>
+                    <a href="/#contact" class="button-secondary">Become a Sponsor</a>
+                </div>
+            </div>
         </div>
-        <div class="sponsors-intro-actions">
-            <a href="/sponsors#current-partners" class="button-primary">Browse Partners</a>
-            <a href="/#contact" class="button-secondary">Become a Sponsor</a>
+    </section>
+
+    <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section">
+        <div class="brand-section-shell sponsors-impact-header">
+            <span class="section-eyebrow">Sponsors & Partners</span>
+            <h2>Why sponsors matter to the event</h2>
+            <p>Partner support helps us run a better LAN for everyone: stronger tournaments, better on-site comfort, and a more memorable community weekend.</p>
+        </div>
+
+        <div class="sponsors-impact-grid">
+            <article class="brand-card sponsors-impact-card">
+                <span class="brand-section-number">01</span>
+                <h3>Stronger tournament experience</h3>
+                <p>Partners help us support prizes, stage quality, and better player-facing tournament moments.</p>
+            </article>
+            <article class="brand-card sponsors-impact-card">
+                <span class="brand-section-number">02</span>
+                <h3>More comfort across the weekend</h3>
+                <p>Sponsorship support helps improve venue setup, connectivity, and practical on-site quality for participants.</p>
+            </article>
+            <article class="brand-card sponsors-impact-card">
+                <span class="brand-section-number">03</span>
+                <h3>Community momentum</h3>
+                <p>Long-term partnerships help Mercurius LAN keep growing while staying accessible to returning and new visitors.</p>
+            </article>
         </div>
     </section>
 
     @if(!_sponsors.Any())
     {
-        <div class="brand-card sponsors-empty-state">
-            <h2>No sponsors available.</h2>
-            <p>Once sponsor data is available, it will appear here grouped by tier.</p>
-            <a href="/#contact" class="button-primary">Become a Sponsor</a>
-        </div>
+        <section class="brand-section sponsors-empty-section">
+            <div class="brand-card sponsors-empty-state">
+                <span class="section-eyebrow">Partner opportunities</span>
+                <h2>We are currently shaping the partner lineup.</h2>
+                <p>Want your brand featured as part of the next Mercurius LAN weekend? Reach out and let's build something strong together.</p>
+                <div class="sponsors-empty-actions">
+                    <a href="/#contact" class="button-primary">Become a Sponsor</a>
+                    <a href="/info" class="button-secondary">View Event Info</a>
+                </div>
+            </div>
+        </section>
     }
     else
     {
         <div id="current-partners" class="sponsors-tier-list">
             @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
             {
-                <section class="brand-section brand-section-shell sponsors-tier-section">
+                <section class="@GetTierSectionClass(tier)">
                     <div class="sponsors-tier-header">
-                        <div>
-                            <span class="section-eyebrow">Partner tier</span>
+                        <div class="sponsors-tier-heading">
                             <h2>@tier.GetLabel()</h2>
                         </div>
-                        <p>@GetTierSummary(tier)</p>
                     </div>
 
                     <div class="@GetTierGridClass(tier)">
@@ -53,17 +87,15 @@ else
                                     <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
                                 </div>
                                 <div class="brand-sponsor-card-body sponsor-card-body">
-                                    <span class="sponsor-tier-label">@tier.GetShortLabel()</span>
                                     <h3>@sponsor.Name</h3>
-                                    @if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Presenting)
+                                    @if(ShouldShowDescription(tier) && !string.IsNullOrWhiteSpace(sponsor.Description))
                                     {
                                         <p>@sponsor.Description</p>
                                     }
-                                    else if(!string.IsNullOrWhiteSpace(sponsor.Description) && tier == SponsorTier.Gold)
-                                    {
-                                        <p>@sponsor.Description</p>
-                                    }
-                                    <span class="sponsor-card-link">Visit website</span>
+                                    <span class="sponsor-card-link">
+                                        Visit website
+                                        <span class="bi bi-arrow-up-right" aria-hidden="true"></span>
+                                    </span>
                                 </div>
                             </a>
                         }

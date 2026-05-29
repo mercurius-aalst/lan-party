@@ -55,10 +55,20 @@ namespace Mercurius.LAN.Web.Components.Pages
             return _sponsors.Any(sponsor => sponsor.SponsorTier == tier);
         }
 
-        private string GetTierSummary(SponsorTier tier)
+        private static bool ShouldShowDescription(SponsorTier tier)
         {
-            var count = GetSponsorsByTier(tier).Count();
-            return $"{count} partner{(count == 1 ? string.Empty : "s")} in this tier.";
+            return tier is SponsorTier.Presenting or SponsorTier.Gold;
+        }
+
+        private string GetBrowsePartnersHref()
+        {
+            return _sponsors.Any() ? "/sponsors#current-partners" : "/sponsors#why-partners";
+        }
+
+        private static string GetTierSectionClass(SponsorTier tier)
+        {
+            var tierName = tier.ToString().ToLowerInvariant();
+            return $"brand-section brand-section-shell sponsors-tier-section sponsors-tier-section--{tierName}";
         }
 
         private static string GetTierGridClass(SponsorTier tier)

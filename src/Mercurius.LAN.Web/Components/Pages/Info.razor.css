@@ -41,6 +41,22 @@
     max-width: 44rem;
 }
 
+.info-hero {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.info-hero::after {
+    display: none;
+}
+
+.info-hero-card {
+    background: var(--color-dark-navy);
+}
+
+.info-hero-card-glow {
+    display: none;
+}
+
 .packing-guide {
     position: relative;
     display: grid;
