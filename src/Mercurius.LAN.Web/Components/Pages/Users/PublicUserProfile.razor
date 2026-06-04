@@ -3,7 +3,7 @@
 
 @rendermode InteractiveServer
 
-<PageTitle>User Profile</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 
 @if(_isLoading)
 {
@@ -41,11 +41,11 @@ else
 
             <header class="brand-card public-user-hero">
                 <div class="public-user-hero-identity">
-                    <span class="public-user-avatar" aria-hidden="true">@GetInitials(_profile.Username)</span>
+                    <span class="public-user-avatar" aria-hidden="true">@GetInitials(_profile)</span>
                     <div>
                         <span class="section-eyebrow">Participant profile</span>
-                        <h1>@_profile.Username</h1>
-                        <p>Public participant details for tournament discovery and team browsing.</p>
+                        <h1>@FullName</h1>
+                        <p>@_profile.Username</p>
                     </div>
                 </div>
             </header>
@@ -56,9 +56,16 @@ else
                     <p>Only privacy-approved fields are shown on this public page.</p>
                 </div>
 
-                <div class="public-user-username-panel">
-                    <span class="public-user-panel-label">Username</span>
-                    <strong>@_profile.Username</strong>
+                <div class="public-user-identity-grid">
+                    <div class="public-user-detail-panel">
+                        <span class="public-user-panel-label">Name</span>
+                        <strong>@FullName</strong>
+                    </div>
+
+                    <div class="public-user-detail-panel">
+                        <span class="public-user-panel-label">Username</span>
+                        <strong>@_profile.Username</strong>
+                    </div>
                 </div>
 
                 @if(HasLinkedIdentities)
