@@ -124,18 +124,15 @@ internal sealed class MockGlobalSearchService : IGlobalSearchService
 internal sealed class MockPublicProfileService : IPublicProfileService
 {
     private readonly MockBackendStore _store;
-    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MockPublicProfileService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
+    public MockPublicProfileService(MockBackendStore store)
     {
         _store = store;
-        _httpContextAccessor = httpContextAccessor;
     }
 
     public Task<PublicUserProfileDTO?> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
-        var includeLinkedIdentifiers = _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true;
-        return Task.FromResult(_store.GetPublicUserByUsername(username, includeLinkedIdentifiers));
+        return Task.FromResult(_store.GetPublicUserByUsername(username));
     }
 }
 
