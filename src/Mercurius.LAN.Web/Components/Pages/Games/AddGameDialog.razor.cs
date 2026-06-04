@@ -27,6 +27,12 @@ public partial class AddGameDialog
     private EditContext? _editContext;
     private CustomInputFile? _imageInputRef;
 
+    private static readonly BracketType[] SupportedBracketTypes =
+    [
+        BracketType.SingleElimination,
+        BracketType.DoubleElimination
+    ];
+
 
     protected override void OnInitialized() {
        

@@ -169,8 +169,8 @@ public partial class GamesOverview
         return _sortOption switch
         {
             GameSortOption.Name => games.OrderBy(game => game.Name),
-            GameSortOption.Status => games.OrderBy(GetStatusOrder).ThenBy(game => game.StartTime),
-            _ => games.OrderBy(game => game.StartTime)
+            GameSortOption.Status => games.OrderBy(GetStatusOrder).ThenBy(GetPlannedStartForSort),
+            _ => games.OrderBy(GetPlannedStartForSort)
         };
     }
 
@@ -218,6 +218,25 @@ public partial class GamesOverview
     private static string FormatDateTime(DateTime dateTime)
     {
         return dateTime.ToString("dd MMM · HH:mm");
+    }
+
+    private static DateTime GetPlannedStartForSort(Game game)
+    {
+        return game.PlannedStartTime ?? DateTime.MaxValue;
+    }
+
+    private static string GetPlannedStartLabel(Game game)
+    {
+        return game.PlannedStartTime.HasValue
+            ? FormatDateTime(game.PlannedStartTime.Value)
+            : "Planned start unavailable";
+    }
+
+    private static string GetEstimatedEndLabel(Game game)
+    {
+        return game.EstimatedEndTime.HasValue
+            ? FormatDateTime(game.EstimatedEndTime.Value)
+            : "Estimate unavailable";
     }
 
     private static bool CanRegister(Game game)

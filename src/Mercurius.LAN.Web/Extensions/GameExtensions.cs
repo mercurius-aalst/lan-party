@@ -24,6 +24,8 @@ public static class GameExtensions
         {
             BracketType.SingleElimination => "Single Elimination",
             BracketType.DoubleElimination => "Double Elimination",
+            BracketType.RoundRobin => "Round Robin (unsupported)",
+            BracketType.Swiss => "Swiss (unsupported)",
             _ => bracketType.ToString()
         };
     }

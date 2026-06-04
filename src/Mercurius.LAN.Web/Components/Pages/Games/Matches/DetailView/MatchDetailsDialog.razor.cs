@@ -44,9 +44,9 @@ public partial class MatchDetailsDialog
 
     private string GetRoundLabel() => $"Round {Match.RoundNumber}";
 
-    private string GetStatusLabel() => WinnerId != null ? "Decided" : Match.StartTime == default ? "Awaiting time" : "Scheduled";
+    private string GetStatusLabel() => WinnerId != null ? "Decided" : Match.EstimatedStartTime.HasValue ? "Estimated" : "Awaiting estimate";
 
-    private string GetStatusClass() => WinnerId != null ? "match-status-pill--complete" : Match.StartTime == default ? "match-status-pill--pending" : "match-status-pill--scheduled";
+    private string GetStatusClass() => WinnerId != null ? "match-status-pill--complete" : Match.EstimatedStartTime.HasValue ? "match-status-pill--scheduled" : "match-status-pill--pending";
 
     private string GetCardClass(Guid? participantId)
     {
