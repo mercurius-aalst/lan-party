@@ -2,7 +2,7 @@
 
 The redesigned front-end currently uses Refit contracts and models that were shaped around local mock data. The live back-end now exposes versioned `v{version}/lan/...` route groups and returns DTOs that differ in two important read paths: global search returns a response wrapper with `results`, `nextCursor`, and `hasMore`, while game detail returns a nullable singular `sponsorPlacement`.
 
-The front-end also appends `/v1` to `MercuriusAPI:BaseAddress`, but its Refit attributes begin with `/lan/...`. In .NET URI resolution, a leading slash request path replaces the base URI path, so the current combination can resolve to unversioned `/lan/...` URLs instead of `/v1/lan/...`.
+The front-end Refit attributes intentionally begin with `/lan/...`. API versioning is kept centralized by normalizing the configured Mercurius API base address before registering Refit clients.
 
 ## Goals / Non-Goals
 
@@ -25,9 +25,9 @@ The front-end also appends `/v1` to `MercuriusAPI:BaseAddress`, but its Refit at
 
 ## Decisions
 
-### Preserve API versioning by using relative Refit paths
+### Preserve API versioning while keeping leading-slash Refit paths
 
-Refit route attributes should not start with `/` when the configured base address includes `/v1`. Relative attributes such as `lan/games` compose with a normalized base address such as `https://localhost:7047/v1/` and preserve the version segment.
+Refit route attributes should start with `/lan/...` to match the project's client convention. The configured Mercurius API base address should be normalized with a `/v1` suffix before registering the live Refit clients.
 
 Alternative considered: move `/v1` into every Refit attribute. That would work, but it duplicates versioning across every client method and makes future version changes broader.
 

@@ -90,8 +90,8 @@ public static class DependencyExtensions
 
         services.AddTransient<AccessTokenHandler>();
 
-        var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
-     
+        var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
+        var baseAddress = $"{configuredBaseAddress.TrimEnd('/')}/v1";
 
         services.AddRefitClient<ILANClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))

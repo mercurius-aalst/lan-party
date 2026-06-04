@@ -1,8 +1,8 @@
 ## 1. API Version Routing
 
-- [x] 1.1 Normalize the configured Mercurius API base address so the live Refit clients compose requests under `/v1/`.
-- [x] 1.2 Convert `ILANClient` Refit route attributes from leading-slash paths to relative `lan/...` paths.
-- [x] 1.3 Convert `IUserClient` Refit route attributes from leading-slash paths to relative `lan/...` paths.
+- [x] 1.1 Normalize the configured Mercurius API base address with a `/v1` suffix for live Refit clients.
+- [x] 1.2 Keep `ILANClient` Refit route attributes as leading-slash `/lan/...` paths.
+- [x] 1.3 Keep `IUserClient` Refit route attributes as leading-slash `/lan/...` paths.
 - [x] 1.4 Verify the resulting live request URIs preserve `/v1/lan/...` for games, sponsors, search, teams, public profiles, users, and matches.
 
 ## 2. Complete Refit Endpoint Coverage
@@ -49,5 +49,5 @@
 
 - Backend endpoint inventory covered `GameEndpoints`, `MatchEndpoints`, `SearchEndpoints`, `SponsorEndpoints`, `TeamEndpoints`, and `UserEndpoints`.
 - Automated checks passed: front-end `dotnet build src/Mercurius.LAN.Web/Mercurius.LAN.Web.csproj`; back-end `dotnet test LAN.API.sln`.
-- Front-end build was rerun after the admin add tournament card visibility fix.
+- Front-end build was rerun after the admin add tournament card visibility, Auth0 role claim, and Refit API version routing fixes.
 - Manual browser smoke checks for live and mock modes remain pending.
