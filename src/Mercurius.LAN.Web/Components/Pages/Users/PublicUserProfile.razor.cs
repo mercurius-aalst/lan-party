@@ -17,6 +17,8 @@ public partial class PublicUserProfile
         !string.IsNullOrWhiteSpace(_profile?.DiscordId) ||
         !string.IsNullOrWhiteSpace(_profile?.SteamId) ||
         !string.IsNullOrWhiteSpace(_profile?.RiotId);
+    private string FullName => GetFullName(_profile);
+    private string PageTitleText => _profile is null ? "User Profile" : $"{FullName} Profile";
 
     protected override async Task OnParametersSetAsync()
     {
@@ -45,8 +47,24 @@ public partial class PublicUserProfile
         }
     }
 
-    private static string GetInitials(string username)
+    private static string GetFullName(PublicUserProfileDTO? profile)
     {
+        if(profile is null)
+            return string.Empty;
+
+        var fullName = $"{profile.Firstname} {profile.Lastname}".Trim();
+        return string.IsNullOrWhiteSpace(fullName) ? profile.Username : fullName;
+    }
+
+    private static string GetInitials(PublicUserProfileDTO profile)
+    {
+        var firstInitial = GetFirstCharacter(profile.Firstname);
+        var lastInitial = GetFirstCharacter(profile.Lastname);
+
+        if(!string.IsNullOrWhiteSpace(firstInitial + lastInitial))
+            return $"{firstInitial}{lastInitial}".ToUpperInvariant();
+
+        var username = profile.Username;
         if(string.IsNullOrWhiteSpace(username))
             return "?";
 
@@ -55,5 +73,11 @@ public partial class PublicUserProfile
             return trimmed.ToUpperInvariant();
 
         return trimmed[..2].ToUpperInvariant();
+    }
+
+    private static string GetFirstCharacter(string value)
+    {
+        var trimmed = value.Trim();
+        return trimmed.Length == 0 ? string.Empty : trimmed[..1];
     }
 }

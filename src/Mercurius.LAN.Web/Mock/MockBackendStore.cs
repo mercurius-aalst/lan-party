@@ -106,7 +106,7 @@ internal sealed class MockBackendStore
         }
     }
 
-    public PublicUserProfileDTO? GetPublicUserByUsername(string username, bool includeLinkedIdentifiers)
+    public PublicUserProfileDTO? GetPublicUserByUsername(string username)
     {
         lock(_syncRoot)
         {
@@ -118,15 +118,20 @@ internal sealed class MockBackendStore
                 !candidate.IsDeleted &&
                 string.Equals(candidate.Username, normalizedUsername, StringComparison.OrdinalIgnoreCase));
 
-            if(user == null || string.IsNullOrWhiteSpace(user.Username))
+            if(user == null ||
+               string.IsNullOrWhiteSpace(user.Username) ||
+               string.IsNullOrWhiteSpace(user.Firstname) ||
+               string.IsNullOrWhiteSpace(user.Lastname))
                 return null;
 
             return new PublicUserProfileDTO
             {
                 Username = user.Username!,
-                DiscordId = includeLinkedIdentifiers ? user.DiscordId : null,
-                SteamId = includeLinkedIdentifiers ? user.SteamId : null,
-                RiotId = includeLinkedIdentifiers ? user.RiotId : null
+                Firstname = user.Firstname,
+                Lastname = user.Lastname,
+                DiscordId = user.DiscordId,
+                SteamId = user.SteamId,
+                RiotId = user.RiotId
             };
         }
     }
