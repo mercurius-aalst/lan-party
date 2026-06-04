@@ -13,94 +13,107 @@ namespace Mercurius.LAN.Web.APIClients
 {
     public interface ILANClient
     {
-        [Get("/lan/games")]
+        [Get("/v1/lan/games")]
         Task<List<Game>> GetGamesAsync();
 
-        [Get("/lan/games/{id}")]
+        [Get("/v1/lan/games/{id}")]
         Task<GameExtended?> GetGameByIdAsync(Guid id);
 
-        // TODO(backend): implement GET /lan/search?query={query} endpoint that returns normalized user/team/game search results.
-        [Get("/lan/search")]
-        Task<List<GlobalSearchResultDTO>> SearchAsync([AliasAs("query")] string query, CancellationToken cancellationToken = default);
+        [Get("/v1/lan/search")]
+        Task<SearchResponseDTO> SearchAsync(
+            [AliasAs("query")] string query,
+            [AliasAs("cursor")] string? cursor = null,
+            [AliasAs("pageSize")] int? pageSize = null,
+            CancellationToken cancellationToken = default);
 
-        [Post("/lan/games")]
+        [Post("/v1/lan/games")]
         Task<GameExtended> CreateGameAsync([Body] MultipartFormDataContent content);
 
-        [Patch("/lan/games/{id}")]
-        Task<Game> UpdateGameAsync(Guid id, [Body] MultipartFormDataContent formData);
+        [Patch("/v1/lan/games/{id}")]
+        Task<GameExtended> UpdateGameAsync(Guid id, [Body] MultipartFormDataContent formData);
 
-        [Put("/lan/games/{id}/sponsors")]
+        [Put("/v1/lan/games/{id}/sponsors")]
         Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, [Body] ReplaceGameSponsorsDTO sponsors);
 
-        [Delete("/lan/games/{id}")]
+        [Delete("/v1/lan/games/{id}")]
         Task DeleteGameAsync(Guid id);
 
-        [Post("/lan/games/{id}/users")]
+        [Post("/v1/lan/games/{id}/users")]
         Task<GameExtended> RegisterUserForGameAsync(Guid id, [Body] RegisterGameUserDTO registration);
 
-        [Delete("/lan/games/{id}/users/{userId}")]
+        [Delete("/v1/lan/games/{id}/users/{userId}")]
         Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId);
 
-        [Post("/lan/games/{id}/teams")]
+        [Post("/v1/lan/games/{id}/teams")]
         Task<GameExtended> RegisterTeamForGameAsync(Guid id, [Body] RegisterGameTeamDTO registration);
 
-        [Delete("/lan/games/{id}/teams/{teamId}")]
+        [Delete("/v1/lan/games/{id}/teams/{teamId}")]
         Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId);
 
-        [Post("/lan/games/{id}/start")]
+        [Post("/v1/lan/games/{id}/start")]
         Task StartGameAsync(Guid id);
 
-        [Post("/lan/games/{id}/complete")]
+        [Post("/v1/lan/games/{id}/complete")]
         Task<IEnumerable<Placement>> CompleteGameAsync(Guid id);
 
-        [Post("/lan/games/{id}/cancel")]
+        [Post("/v1/lan/games/{id}/cancel")]
         Task CancelGameAsync(Guid id);
 
-        [Post("/lan/games/{id}/reset")]
+        [Post("/v1/lan/games/{id}/reset")]
         Task ResetGameAsync(Guid id);
 
-        [Get("/lan/matches/{id}")]
+        [Get("/v1/lan/matches/{id}")]
         Task<Match> GetMatchByIdAsync(Guid id);
 
-        [Put("/lan/matches/{id}")]
+        [Put("/v1/lan/matches/{id}")]
         Task<Match> UpdateMatchAsync(Guid id, [Body] UpdateMatchDTO match);
 
-        [Get("/lan/teams")]
+        [Get("/v1/lan/teams")]
         Task<List<Team>> GetTeamsAsync();
 
-        [Get("/lan/teams/{id}")]
+        [Get("/v1/lan/teams/{id}")]
         Task<Team> GetTeamByIdAsync(Guid id);
 
-        // TODO(backend): implement GET /lan/public/teams/{teamName} endpoint with privacy-safe public team profile response.
-        [Get("/lan/public/teams/{teamName}")]
+        [Get("/v1/lan/public/teams/{teamName}")]
         Task<PublicTeamProfileDTO> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default);
 
-        [Post("/lan/teams")]
+        [Post("/v1/lan/teams")]
         Task<Team> CreateTeamAsync([Body] CreateTeamDTO team);
 
-        [Put("/lan/teams/{id}")]
+        [Delete("/v1/lan/teams/{id}/users/{userId}")]
+        Task<Team> RemoveTeamMemberAsync(Guid id, Guid userId);
+
+        [Put("/v1/lan/teams/{id}")]
         Task<Team> UpdateTeamAsync(Guid id, [Body] UpdateTeamDTO team);
 
-        [Delete("/lan/teams/{id}")]
+        [Delete("/v1/lan/teams/{id}")]
         Task DeleteTeamAsync(Guid id);
 
-        // TODO(backend): implement GET /lan/public/users/{username} endpoint with privacy-safe public user profile response.
-        [Get("/lan/public/users/{username}")]
+        [Post("/v1/lan/teams/{id}/users/invite/{userId}")]
+        Task<TeamInvite> InviteTeamUserAsync(Guid id, Guid userId);
+
+        [Put("/v1/lan/teams/{id}/users/invite/{userId}")]
+        Task<TeamInvite> RespondToTeamInviteAsync(Guid id, Guid userId, [Body] RespondTeamInviteDTO response);
+
+        [Get("/v1/lan/teams/users/{userId}/invites")]
+        Task<IEnumerable<TeamInvite>> GetUserTeamInvitesAsync(Guid userId);
+
+        [Get("/v1/lan/public/users/{username}")]
         Task<PublicUserProfileDTO> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default);
 
-        [Get("/lan/sponsors")]
+        [Get("/v1/lan/sponsors")]
         Task<IEnumerable<Sponsor>> GetSponsorsAsync();
 
-        [Get("/lan/sponsors/{id}")]
+        [Get("/v1/lan/sponsors/{id}")]
         Task<Sponsor> GetSponsorByIdAsync(int id);
 
-        [Post("/lan/sponsors")]
+        [Post("/v1/lan/sponsors")]
         Task<Sponsor> CreateSponsorAsync([Body] MultipartFormDataContent createSponsorFormData);
 
-        [Patch("/lan/sponsors/{id}")]
+        [Patch("/v1/lan/sponsors/{id}")]
         Task<Sponsor> UpdateSponsorAsync(int id, [Body] MultipartFormDataContent updateSponsorFormData);
 
-        [Delete("/lan/sponsors/{id}")]
+        [Delete("/v1/lan/sponsors/{id}")]
         Task DeleteSponsorAsync(int id);
     }
 }

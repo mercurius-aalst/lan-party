@@ -74,71 +74,69 @@ else
     </section>
 
     <section id="games-grid" class="brand-section games-grid-section">
-        @if(FilteredGames.Count == 0)
-        {
-            <div class="brand-card games-empty-state">
-                <h3>No tournaments match the current filters.</h3>
-                <p>Adjust the search, status, or mode filters to see the full line-up again.</p>
-            </div>
-        }
-        else
-        {
-            <div class="games-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                <AuthorizeView Roles="admin">
-                    <Authorized>
-                        <button type="button" class="brand-card games-add-card" @onclick="ShowAddGameDialog">
-                            <span class="brand-section-number">Admin</span>
-                            <h3>Add Tournament</h3>
-                            <p>Create a new game entry without leaving the overview page.</p>
-                            <span class="games-add-card-icon" aria-hidden="true">+</span>
+        <div class="games-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <button type="button" class="brand-card games-add-card" @onclick="ShowAddGameDialog">
+                        <span class="brand-section-number">Admin</span>
+                        <h3>Add Tournament</h3>
+                        <p>Create a new game entry without leaving the overview page.</p>
+                        <span class="games-add-card-icon" aria-hidden="true">+</span>
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+
+            @if(FilteredGames.Count == 0)
+            {
+                <div class="brand-card games-empty-state">
+                    <h3>No tournaments match the current filters.</h3>
+                    <p>Adjust the search, status, or mode filters to see the full line-up again.</p>
+                </div>
+            }
+
+            @foreach(var game in FilteredGames)
+            {
+                var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
+                <article class="brand-card brand-tournament-card games-card">
+                    <img src="@imageUrl" alt="@game.Name" class="brand-tournament-card-image games-card-image" />
+                    <div class="brand-tournament-card-body games-card-body">
+                        <div class="brand-tournament-card-topline games-card-topline">
+                            <span class="brand-tournament-card-date games-card-date">@FormatDateTime(game.StartTime)</span>
+                            <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
+                        </div>
+
+                        <h3>@game.Name</h3>
+
+                        <div class="brand-tournament-card-badges games-card-badges">
+                            <span class="badge">@game.ParticipationMode.GetLabel()</span>
+                            <span class="badge">@game.BracketType.GetLabel()</span>
+                        </div>
+
+                        <dl class="brand-tournament-card-meta games-card-meta">
+                            <div>
+                                <dt>Format</dt>
+                                <dd>@game.Format.GetLabel()</dd>
+                            </div>
+                            <div>
+                                <dt>Finals</dt>
+                                <dd>@game.FinalsFormat.GetLabel()</dd>
+                            </div>
+                            <div>
+                                <dt>Ends</dt>
+                                <dd>@FormatDateTime(game.EndTime)</dd>
+                            </div>
+                        </dl>
+                    </div>
+
+                    <div class="brand-tournament-card-actions games-card-actions grid gap-3">
+                        <button type="button" class="button-secondary" @onclick="() => NavigateToGameDetail(game.Id)">View Details</button>
+                        <button type="button" class="button-primary" disabled="@(!CanRegister(game))" @onclick="() => NavigateToRegister(game)">
+                            @(CanRegister(game) ? "Register" : "Registration Closed")
                         </button>
-                    </Authorized>
-                </AuthorizeView>
-
-                @foreach(var game in FilteredGames)
-                {
-                    var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
-                    <article class="brand-card brand-tournament-card games-card">
-                        <img src="@imageUrl" alt="@game.Name" class="brand-tournament-card-image games-card-image" />
-                        <div class="brand-tournament-card-body games-card-body">
-                            <div class="brand-tournament-card-topline games-card-topline">
-                                <span class="brand-tournament-card-date games-card-date">@FormatDateTime(game.StartTime)</span>
-                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
-                            </div>
-
-                            <h3>@game.Name</h3>
-
-                            <div class="brand-tournament-card-badges games-card-badges">
-                                <span class="badge">@game.ParticipationMode.GetLabel()</span>
-                                <span class="badge">@game.BracketType.GetLabel()</span>
-                            </div>
-
-                            <dl class="brand-tournament-card-meta games-card-meta">
-                                <div>
-                                    <dt>Format</dt>
-                                    <dd>@game.Format.GetLabel()</dd>
-                                </div>
-                                <div>
-                                    <dt>Finals</dt>
-                                    <dd>@game.FinalsFormat.GetLabel()</dd>
-                                </div>
-                                <div>
-                                    <dt>Ends</dt>
-                                    <dd>@FormatDateTime(game.EndTime)</dd>
-                                </div>
-                            </dl>
-                        </div>
-
-                        <div class="brand-tournament-card-actions games-card-actions grid gap-3">
-                            <button type="button" class="button-secondary" @onclick="() => NavigateToGameDetail(game.Id)">View Details</button>
-                            <button type="button" class="button-primary" disabled="@(!CanRegister(game))" @onclick="() => NavigateToRegister(game)">
-                                @(CanRegister(game) ? "Register" : "Registration Closed")
-                            </button>
-                        </div>
-                    </article>
-                }
+                    </div>
+                </article>
+            }
             </div>
-        }
 
         @if(_isAddGameDialogOpen)
         {

@@ -62,7 +62,7 @@ public partial class GameDetail
             .ToList();
 
     private GameSponsorPlacement? FeaturedPartner =>
-        _game?.SponsorPlacements.FirstOrDefault();
+        _game?.SponsorPlacement;
 
     private Sponsor? SelectedSponsor =>
         _selectedSponsorId.HasValue
@@ -432,6 +432,6 @@ public partial class GameDetail
 
     private void SyncSelectedSponsor()
     {
-        _selectedSponsorId = _game?.SponsorPlacements.FirstOrDefault()?.SponsorId;
+        _selectedSponsorId = _game?.SponsorPlacement?.SponsorId;
     }
 }

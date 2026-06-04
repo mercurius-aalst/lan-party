@@ -5,34 +5,46 @@ namespace Mercurius.LAN.Web.APIClients
 {
     public interface IUserClient
     {
-        [Get("/lan/users/me")]
+        [Get("/v1/lan/users/me")]
         Task<CurrentUserProfileResponse> GetCurrentUserProfileAsync();
 
-        [Post("/lan/users/me/complete-profile")]
+        [Post("/v1/lan/users/me/complete-profile")]
         Task<UserProfileDTO> CompleteCurrentUserProfileAsync([Body] CompleteUserProfileRequest request);
 
-        [Patch("/lan/users/me")]
+        [Patch("/v1/lan/users/me")]
         Task<UserProfileDTO> UpdateCurrentUserProfileAsync([Body] UpdateUserProfileRequest request);
 
-        [Get("/lan/users/me/username-availability")]
+        [Get("/v1/lan/users/me/username-availability")]
         Task<UsernameAvailabilityResponse> CheckUsernameAvailabilityAsync([AliasAs("username")] string username);
 
-        [Post("/lan/users/me/resend-verification-email")]
+        [Post("/v1/lan/users/me/resend-verification-email")]
         Task<UserActionResponse> ResendVerificationEmailAsync();
 
-        [Post("/lan/users/me/password-reset")]
+        [Post("/v1/lan/users/me/password-reset")]
         Task<UserActionResponse> SendPasswordResetEmailAsync();
 
-        [Delete("/lan/users/me")]
+        [Delete("/v1/lan/users/me")]
         Task<UserActionResponse> DeleteCurrentUserAsync();
 
-        [Get("/lan/users")]
+        [Post("/v1/lan/users")]
+        Task<UserDTO> CreateUserAsync([Body] CreateUserProfileRequest request);
+
+        [Get("/v1/lan/users")]
         Task<IEnumerable<UserDTO>> GetAllUsersAsync();
 
-        [Get("/lan/users/{id}")]
+        [Get("/v1/lan/users/{id}")]
         Task<UserDTO> GetUserByIdAsync(Guid id);
 
-        [Delete("/lan/users/{username}")]
+        [Patch("/v1/lan/users/{id}")]
+        Task<UserDTO> UpdateUserAsync(Guid id, [Body] UpdateUserProfileRequest request);
+
+        [Delete("/v1/lan/users/{id}")]
+        Task DeleteUserAsync(Guid id);
+
+        [Delete("/v1/lan/users/{username}")]
         Task DeleteUserAsync(string username);
+
+        [Delete("/v1/lan/users/{username}/account")]
+        Task DeleteUserAccountAsync(string username);
     }
 }
