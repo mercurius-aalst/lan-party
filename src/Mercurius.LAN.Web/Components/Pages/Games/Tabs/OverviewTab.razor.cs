@@ -32,7 +32,10 @@ public partial class OverviewTab
             FinalsFormat = Game.FinalsFormat,
             BracketType = Game.BracketType,
             ParticipationMode = Game.ParticipationMode,
-            RegisterFormUrl = Game.RegisterFormUrl
+            RegisterFormUrl = Game.RegisterFormUrl,
+            PlannedStartTime = Game.PlannedStartTime == default ? Game.StartTime : Game.PlannedStartTime,
+            AverageGameDurationMinutes = Game.AverageGameDurationMinutes <= 0 ? 60 : Game.AverageGameDurationMinutes,
+            RoundBreakDurationMinutes = Game.RoundBreakDurationMinutes <= 0 ? 15 : Game.RoundBreakDurationMinutes
         };
         _editContext = new(_editGame);
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
@@ -68,6 +71,10 @@ public partial class OverviewTab
             Game.ParticipationMode = updatedGame.ParticipationMode;
             Game.RegisterFormUrl = updatedGame.RegisterFormUrl;
             Game.ImageUrl = updatedGame.ImageUrl;
+            Game.PlannedStartTime = updatedGame.PlannedStartTime;
+            Game.AverageGameDurationMinutes = updatedGame.AverageGameDurationMinutes;
+            Game.RoundBreakDurationMinutes = updatedGame.RoundBreakDurationMinutes;
+            Game.EstimatedEndTime = updatedGame.EstimatedEndTime;
             _isEditMode = false;
             ToastService.ShowSuccess("Edit successful");
             await OnGameUpdated.InvokeAsync(Game);

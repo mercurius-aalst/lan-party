@@ -7,6 +7,8 @@ namespace Mercurius.LAN.Web.Models.Matches
         public Guid Id { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
+        public DateTime? EstimatedStartTime { get; set; }
+        public DateTime? EstimatedEndTime { get; set; }
         public BracketType BracketType { get; set; }
         public GameFormat Format { get; set; }
         public ParticipationMode ParticipationMode { get; set; }

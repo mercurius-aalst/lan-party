@@ -60,8 +60,9 @@ internal sealed class MockBackendStore
                 .Where(user =>
                     !user.IsDeleted &&
                     !string.IsNullOrWhiteSpace(user.Username) &&
-                    user.Username.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(user => user.Username, StringComparer.OrdinalIgnoreCase)
+                    user.Username.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(user => user.Username!.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(user => user.Username, StringComparer.OrdinalIgnoreCase)
                 .Select(user => new GlobalSearchResultDTO
                 {
                     Type = GlobalSearchResultType.User,
@@ -73,8 +74,9 @@ internal sealed class MockBackendStore
             var teamResults = _document.Teams
                 .Where(team =>
                     !string.IsNullOrWhiteSpace(team.Name) &&
-                    team.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+                    team.Name.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(team => team.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(team => new GlobalSearchResultDTO
                 {
                     Type = GlobalSearchResultType.Team,
@@ -86,8 +88,9 @@ internal sealed class MockBackendStore
             var gameResults = _document.Games
                 .Where(game =>
                     !string.IsNullOrWhiteSpace(game.Name) &&
-                    game.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
+                    game.Name.Contains(trimmedQuery, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(game => game.Name.StartsWith(trimmedQuery, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(game => game.Name, StringComparer.OrdinalIgnoreCase)
                 .Select(game => new GlobalSearchResultDTO
                 {
                     Type = GlobalSearchResultType.Game,
@@ -209,7 +212,7 @@ internal sealed class MockBackendStore
         }
     }
 
-    public Game UpdateGame(Guid id, UpdateGameDTO dto)
+    public GameExtended UpdateGame(Guid id, UpdateGameDTO dto)
     {
         lock(_syncRoot)
         {
@@ -224,7 +227,7 @@ internal sealed class MockBackendStore
             if(dto.Image != null)
                 game.ImageUrl = "/mock-data-local/generated-game.svg";
 
-            return Clone(ToGame(game))!;
+            return Clone(game)!;
         }
     }
 
@@ -233,7 +236,7 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var game = GetRequiredGame(id);
-            var placements = dto.SponsorPlacements ?? [];
+            var placements = (dto.SponsorPlacements ?? []).Take(1).ToList();
 
             game.SponsorPlacements = placements
                 .Select((placement, index) =>

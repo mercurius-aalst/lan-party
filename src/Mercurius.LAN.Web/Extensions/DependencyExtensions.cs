@@ -90,17 +90,8 @@ public static class DependencyExtensions
 
         services.AddTransient<AccessTokenHandler>();
 
-        var baseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
-        baseAddress += "/v1";
-
-        services.AddHttpClient("MercuriusApiAntiforgery", client =>
-        {
-            client.BaseAddress = new Uri(baseAddress);
-        })
-        .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
-        {
-            UseCookies = false
-        });
+        var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
+        var baseAddress = $"{configuredBaseAddress.TrimEnd('/')}/v1";
 
         services.AddRefitClient<ILANClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))

@@ -18,7 +18,7 @@ public class GlobalSearchService : IGlobalSearchService
         if(trimmedQuery.Length < 3)
             return [];
 
-        var results = await _lanClient.SearchAsync(trimmedQuery, cancellationToken);
-        return results;
+        var response = await _lanClient.SearchAsync(trimmedQuery, cancellationToken: cancellationToken);
+        return response.Results;
     }
 }

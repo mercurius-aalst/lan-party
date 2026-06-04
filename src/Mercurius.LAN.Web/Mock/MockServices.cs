@@ -31,7 +31,7 @@ internal sealed class MockGameService : IGameService
     public Task<GameExtended> CreateGameAsync(CreateGameDTO newGame, string? tempFilePath, string? contentType, string? fileName) =>
         Task.FromResult(_store.CreateGame(newGame));
 
-    public Task<Game> UpdateGameAsync(Guid id, UpdateGameDTO updatedGame, string? tempFilePath, string? contentType, string? fileName) =>
+    public Task<GameExtended> UpdateGameAsync(Guid id, UpdateGameDTO updatedGame, string? tempFilePath, string? contentType, string? fileName) =>
         Task.FromResult(_store.UpdateGame(id, updatedGame));
 
     public Task<GameExtended?> GetGameDetailAsync(Guid id) => Task.FromResult(_store.GetGame(id));
@@ -202,6 +202,31 @@ internal sealed class MockUserClient : IUserClient
     public Task<UserDTO> GetUserByIdAsync(Guid id) => Task.FromResult(_store.GetUserById(id));
 
     public Task DeleteUserAsync(string username)
+    {
+        _store.DeleteUser(username);
+        return Task.CompletedTask;
+    }
+
+    public Task<UserDTO> CreateUserAsync(CreateUserProfileRequest request)
+    {
+        throw new NotSupportedException("Mock admin user creation is not implemented.");
+    }
+
+    public Task<UserDTO> UpdateUserAsync(Guid id, UpdateUserProfileRequest request)
+    {
+        throw new NotSupportedException("Mock admin user updates are not implemented.");
+    }
+
+    public Task DeleteUserAsync(Guid id)
+    {
+        var user = _store.GetUserById(id);
+        if(!string.IsNullOrWhiteSpace(user.Username))
+            _store.DeleteUser(user.Username);
+
+        return Task.CompletedTask;
+    }
+
+    public Task DeleteUserAccountAsync(string username)
     {
         _store.DeleteUser(username);
         return Task.CompletedTask;

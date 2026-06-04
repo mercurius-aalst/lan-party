@@ -25,5 +25,14 @@ namespace Mercurius.LAN.Web.DTOs.Games
 
         [Required]
         public string RegisterFormUrl { get; set; } = null!;
+
+        [Required]
+        public DateTime PlannedStartTime { get; set; }
+
+        [Range(1, 1440)]
+        public int AverageGameDurationMinutes { get; set; }
+
+        [Range(1, int.MaxValue)]
+        public int RoundBreakDurationMinutes { get; set; }
     }
 }

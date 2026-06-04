@@ -26,13 +26,25 @@ namespace Mercurius.LAN.Web.APIClients
         [Delete("/lan/users/me")]
         Task<UserActionResponse> DeleteCurrentUserAsync();
 
+        [Post("/lan/users")]
+        Task<UserDTO> CreateUserAsync([Body] CreateUserProfileRequest request);
+
         [Get("/lan/users")]
         Task<IEnumerable<UserDTO>> GetAllUsersAsync();
 
         [Get("/lan/users/{id}")]
         Task<UserDTO> GetUserByIdAsync(Guid id);
 
+        [Patch("/lan/users/{id}")]
+        Task<UserDTO> UpdateUserAsync(Guid id, [Body] UpdateUserProfileRequest request);
+
+        [Delete("/lan/users/{id}")]
+        Task DeleteUserAsync(Guid id);
+
         [Delete("/lan/users/{username}")]
         Task DeleteUserAsync(string username);
+
+        [Delete("/lan/users/{username}/account")]
+        Task DeleteUserAccountAsync(string username);
     }
 }

@@ -1,8 +1,5 @@
-# global-search Specification
+## ADDED Requirements
 
-## Purpose
-TBD - created by archiving change add-global-menu-search-public-profiles. Update Purpose after archive.
-## Requirements
 ### Requirement: Global search uses the live public search contract
 The system SHALL search users, teams, and games/tournaments through the live public search contract when the trimmed query contains at least 3 characters, and matching eligibility and ordering SHALL follow the back-end response.
 
@@ -16,6 +13,8 @@ The system SHALL search users, teams, and games/tournaments through the live pub
 - **THEN** users, teams, and games returned by the live search response are eligible search results
 - **AND** result ordering follows the deterministic relevance order returned by the live search response
 - **AND** result matching is case-insensitive according to the live search contract
+
+## MODIFIED Requirements
 
 ### Requirement: Global search returns normalized safe result records
 The global search API SHALL return a response wrapper that contains bounded normalized search result records and pagination metadata, and each result SHALL identify the result type and provide only the data needed to render a result and navigate to its public destination.
@@ -40,17 +39,8 @@ The global search API SHALL return a response wrapper that contains bounded norm
 - **THEN** user results do not include email, first name, last name, roles, timestamps, deletion state, Auth0 identifiers, platform identifiers, or admin/internal fields
 - **AND** team results do not include team invites or private member/account fields
 
-### Requirement: Global search failures are representable to consumers
-The global search service SHALL make loading, empty, and error outcomes distinguishable so the navigation dropdown can render the correct state.
+## REMOVED Requirements
 
-#### Scenario: Search is pending
-- **WHEN** a valid debounced search query is in flight
-- **THEN** the consumer can identify that results are loading
-
-#### Scenario: Search completes with no matches
-- **WHEN** a valid search query completes without matching users, teams, or games
-- **THEN** the consumer can identify the empty result state
-
-#### Scenario: Search fails
-- **WHEN** a valid search query fails because the search service or API cannot complete the request
-- **THEN** the consumer can identify the error state without treating stale previous results as current matches
+### Requirement: Global search uses trimmed prefix matching
+**Reason**: The live back-end search contract supports bounded public search with deterministic relevance ordering and pagination metadata, but it does not promise prefix-only matching.
+**Migration**: Use `Global search uses the live public search contract` for minimum query length, matching eligibility, and ordering expectations.
