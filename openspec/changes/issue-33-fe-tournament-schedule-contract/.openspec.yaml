@@ -1,0 +1,6 @@
+schema: spec-driven
+created: 2026-06-04
+issue: https://github.com/mercurius-aalst/lan-party/issues/33
+companion:
+  backend_issue: https://github.com/mercurius-aalst/mercurius-aalst-back-end/issues/81
+  backend_source_contract: openspec/specs/tournament-schedule-estimation/spec.md
