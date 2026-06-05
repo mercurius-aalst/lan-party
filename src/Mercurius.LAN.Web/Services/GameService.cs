@@ -1,6 +1,7 @@
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Games;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 
@@ -41,7 +42,7 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(newGame.FinalsFormat.ToString()), "FinalsFormat" },
                 { new StringContent(newGame.ParticipationMode.ToString()), "ParticipationMode" },
                 { new StringContent(newGame.RegisterFormUrl), "RegisterFormUrl" },
-                { new StringContent(newGame.PlannedStartTime.ToString("O")), "PlannedStartTime" },
+                { new StringContent(newGame.PlannedStartTime.ToUtcIsoString()), "PlannedStartTime" },
                 { new StringContent(newGame.AverageGameDurationMinutes.ToString()), "AverageGameDurationMinutes" },
                 { new StringContent(newGame.RoundBreakDurationMinutes.ToString()), "RoundBreakDurationMinutes" },
             };
@@ -86,7 +87,7 @@ namespace Mercurius.LAN.Web.Services
                 { new StringContent(updatedGame.FinalsFormat.ToString()), "FinalsFormat" },
                 { new StringContent(updatedGame.ParticipationMode.ToString()), "ParticipationMode" },
                 { new StringContent(updatedGame.RegisterFormUrl), "RegisterFormUrl" },
-                { new StringContent(updatedGame.PlannedStartTime.ToString("O")), "PlannedStartTime" },
+                { new StringContent(updatedGame.PlannedStartTime.ToUtcIsoString()), "PlannedStartTime" },
                 { new StringContent(updatedGame.AverageGameDurationMinutes.ToString()), "AverageGameDurationMinutes" },
                 { new StringContent(updatedGame.RoundBreakDurationMinutes.ToString()), "RoundBreakDurationMinutes" },
             };
@@ -122,6 +123,7 @@ namespace Mercurius.LAN.Web.Services
         }
 
         public Task<GameExtended?> GetGameDetailAsync(Guid id) => _lanClient.GetGameByIdAsync(id);
+
         public Task StartGameAsync(Guid id) => _lanClient.StartGameAsync(id);
         public Task CancelGameAsync(Guid id) => _lanClient.CancelGameAsync(id);
         public Task ResetGameAsync(Guid id) => _lanClient.ResetGameAsync(id);

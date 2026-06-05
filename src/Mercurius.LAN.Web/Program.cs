@@ -5,8 +5,10 @@ using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Options;
+using Mercurius.LAN.Web.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using MudBlazor.Services;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -18,13 +20,14 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddBlazoredToast();
+builder.Services.AddMudServices();
 builder.Services.AddAntiforgery();
 var jsonOptions = new JsonSerializerOptions
 {
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true,
-    Converters = { new JsonStringEnumConverter() },
+    Converters = { new JsonStringEnumConverter(), new LocalDateTimeJsonConverter() },
     AllowOutOfOrderMetadataProperties = true
 };
 

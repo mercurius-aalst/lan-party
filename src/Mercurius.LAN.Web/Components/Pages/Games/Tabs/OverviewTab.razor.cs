@@ -1,6 +1,7 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -22,6 +23,12 @@ public partial class OverviewTab
     private EditContext? _editContext;
     private CustomInputFile? _imageInputRef;
 
+    private static readonly BracketType[] SupportedBracketTypes =
+    [
+        BracketType.SingleElimination,
+        BracketType.DoubleElimination
+    ];
+
     private void EnableEditMode()
     {
         _isEditMode = true;
@@ -33,9 +40,9 @@ public partial class OverviewTab
             BracketType = Game.BracketType,
             ParticipationMode = Game.ParticipationMode,
             RegisterFormUrl = Game.RegisterFormUrl,
-            PlannedStartTime = Game.PlannedStartTime == default ? Game.StartTime : Game.PlannedStartTime,
-            AverageGameDurationMinutes = Game.AverageGameDurationMinutes <= 0 ? 60 : Game.AverageGameDurationMinutes,
-            RoundBreakDurationMinutes = Game.RoundBreakDurationMinutes <= 0 ? 15 : Game.RoundBreakDurationMinutes
+            PlannedStartTime = Game.PlannedStartTime?.ToLocalDisplayTime() ?? DateTime.Now.AddDays(7),
+            AverageGameDurationMinutes = Game.AverageGameDurationMinutes > 0 ? Game.AverageGameDurationMinutes : 30,
+            RoundBreakDurationMinutes = Game.RoundBreakDurationMinutes > 0 ? Game.RoundBreakDurationMinutes : 10
         };
         _editContext = new(_editGame);
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
@@ -46,6 +53,15 @@ public partial class OverviewTab
     {
         _isEditMode = false;
     }
+
+    private string GetPlannedStartLabel() =>
+        Game.PlannedStartTime.HasValue ? FormatDateTime(Game.PlannedStartTime.Value) : "Planned start unavailable";
+
+    private string GetEstimatedEndLabel() =>
+        Game.EstimatedEndTime.HasValue ? FormatDateTime(Game.EstimatedEndTime.Value) : "Estimate unavailable";
+
+    private static string FormatDateTime(DateTime dateTime) =>
+        dateTime.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
 
     private string GetRegistrationStateLabel()
     {
@@ -70,11 +86,11 @@ public partial class OverviewTab
             Game.BracketType = updatedGame.BracketType;
             Game.ParticipationMode = updatedGame.ParticipationMode;
             Game.RegisterFormUrl = updatedGame.RegisterFormUrl;
-            Game.ImageUrl = updatedGame.ImageUrl;
             Game.PlannedStartTime = updatedGame.PlannedStartTime;
             Game.AverageGameDurationMinutes = updatedGame.AverageGameDurationMinutes;
             Game.RoundBreakDurationMinutes = updatedGame.RoundBreakDurationMinutes;
             Game.EstimatedEndTime = updatedGame.EstimatedEndTime;
+            Game.ImageUrl = updatedGame.ImageUrl;
             _isEditMode = false;
             ToastService.ShowSuccess("Edit successful");
             await OnGameUpdated.InvokeAsync(Game);

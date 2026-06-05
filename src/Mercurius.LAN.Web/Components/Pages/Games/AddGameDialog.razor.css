@@ -13,10 +13,11 @@
 .game-editor-modal-dialog {
     position: relative;
     display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     gap: 1.35rem;
     width: min(56rem, calc(100vw - 2rem));
     max-height: min(92vh, 58rem);
-    overflow-y: auto;
+    overflow: hidden;
     padding: clamp(1.25rem, 3vw, 2rem);
     border: 1px solid var(--color-border);
     border-radius: 28px;
@@ -25,9 +26,41 @@
     color: var(--color-dark-navy);
 }
 
+.game-editor-form-container {
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    padding: clamp(1.35rem, 2vw, 1.75rem) clamp(1rem, 2vw, 1.5rem);
+}
+
+.game-editor-form-container::-webkit-scrollbar {
+    width: 0.65rem;
+}
+
+.game-editor-form-container::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 0.85rem;
+}
+
+.game-editor-form-container::-webkit-scrollbar-thumb {
+    border: 0.18rem solid transparent;
+    border-radius: 999px;
+    background: rgba(71, 85, 105, 0.45);
+    background-clip: content-box;
+}
+
+.game-editor-form-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.68);
+    background-clip: content-box;
+}
+
 .game-editor-modal-header {
     display: grid;
     gap: 0.35rem;
+    padding-inline: clamp(0.35rem, 1.5vw, 0.85rem);
 }
 
 .game-editor-modal-header h3,
@@ -56,17 +89,139 @@
 
 .game-editor-form {
     display: grid;
-    gap: 1rem;
+    gap: 1.15rem;
+    max-width: none;
 }
 
 .form-group {
     display: grid;
     gap: 0.45rem;
     width: 100%;
+    margin: 0;
 }
 
 .form-group-inline .form-group {
     min-width: 0;
+}
+
+.game-editor-schedule-fields {
+    display: grid;
+    gap: 1rem;
+}
+
+.game-editor-datetime-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 0.7fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.game-editor-datetime-row ::deep .game-editor-mud-picker {
+    width: 100%;
+    margin: 0;
+}
+
+.game-editor-datetime-row ::deep .mud-input-control {
+    margin: 0;
+}
+
+.game-editor-datetime-row ::deep .mud-input-control > .mud-input-control-input-container {
+    margin-top: 0;
+    height: 3rem;
+}
+
+.game-editor-datetime-row ::deep .mud-input.mud-input-outlined {
+    height: 3rem;
+    min-height: 3rem;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--color-white);
+    color: var(--color-dark-navy);
+    font-family: inherit;
+    font-size: 1rem;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.game-editor-datetime-row ::deep .mud-input.mud-input-outlined .mud-input-outlined-border {
+    border-color: var(--color-border);
+    border-radius: 16px;
+    top: 0;
+    height: 3rem;
+}
+
+.game-editor-datetime-row ::deep .mud-input.mud-input-outlined:hover .mud-input-outlined-border {
+    border-color: var(--color-border);
+}
+
+.game-editor-datetime-row ::deep .mud-input.mud-input-outlined.mud-input-focused {
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+}
+
+.game-editor-datetime-row ::deep .mud-input.mud-input-outlined.mud-input-focused .mud-input-outlined-border {
+    border-color: rgba(34, 197, 94, 0.52);
+    border-width: 1px;
+}
+
+.game-editor-datetime-row ::deep input.mud-input-root {
+    height: 3rem;
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--color-white);
+    color: var(--color-dark-navy);
+    font: inherit;
+}
+
+.game-editor-datetime-row ::deep .mud-input-root-outlined {
+    padding-top: 0;
+    padding-bottom: 0;
+    background: var(--color-white);
+}
+
+.game-editor-datetime-row ::deep input.mud-input-root::placeholder {
+    color: rgba(71, 85, 105, 0.72);
+    opacity: 1;
+}
+
+.game-editor-datetime-row ::deep .mud-input-adornment {
+    align-self: stretch;
+    display: inline-flex;
+    align-items: center;
+    margin-inline-end: 0.75rem;
+    background: var(--color-white);
+}
+
+.game-editor-datetime-row ::deep .mud-input-adornment-end {
+    height: 3rem;
+    max-height: 3rem;
+}
+
+.game-editor-datetime-row ::deep .mud-icon-button {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0.45rem;
+}
+
+.game-editor-datetime-row ::deep .mud-input-adornment .mud-icon-root {
+    color: rgba(71, 85, 105, 0.9);
+    font-size: 1.2rem;
+}
+
+.game-editor-duration-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.game-editor-duration-row .form-group {
+    width: 100%;
+}
+
+.game-editor-duration-row label {
+    min-height: 2.5rem;
+    display: flex;
+    align-items: flex-end;
 }
 
 .form-group label {
@@ -87,6 +242,11 @@
     box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
+.form-group ::deep .form-control {
+    width: 100%;
+    max-width: 100%;
+}
+
 .form-group input:focus,
 .form-group select:focus {
     border-color: rgba(34, 197, 94, 0.52);
@@ -98,6 +258,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
+    margin-top: 0.35rem;
 }
 
 @media (max-width: 640px) {
@@ -109,7 +270,21 @@
     .game-editor-modal-dialog {
         width: 100%;
         margin-top: 0.5rem;
-        padding-top: 3rem;
+        padding: 3rem 1.1rem 1.25rem;
+        max-height: calc(100vh - 1.5rem);
+    }
+
+    .game-editor-form-container,
+    .game-editor-modal-header {
+        padding-inline: 0.65rem;
+    }
+
+    .game-editor-form-container {
+        padding-block: 1.25rem;
+    }
+
+    .game-editor-datetime-row {
+        grid-template-columns: 1fr;
     }
 
     .form-actions {

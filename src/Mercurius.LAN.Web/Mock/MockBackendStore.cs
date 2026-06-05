@@ -201,8 +201,12 @@ internal sealed class MockBackendStore
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
-                StartTime = DateTime.UtcNow.AddDays(7),
-                EndTime = DateTime.UtcNow.AddDays(7).AddHours(4),
+                StartTime = dto.PlannedStartTime,
+                EndTime = dto.PlannedStartTime.AddHours(4),
+                PlannedStartTime = dto.PlannedStartTime,
+                AverageGameDurationMinutes = dto.AverageGameDurationMinutes,
+                RoundBreakDurationMinutes = dto.RoundBreakDurationMinutes,
+                EstimatedEndTime = null,
                 ImageUrl = "/mock-data-local/generated-game.svg",
                 Status = GameStatus.Scheduled,
                 BracketType = dto.BracketType,
@@ -228,6 +232,10 @@ internal sealed class MockBackendStore
             game.BracketType = dto.BracketType;
             game.ParticipationMode = dto.ParticipationMode;
             game.RegisterFormUrl = dto.RegisterFormUrl;
+            game.PlannedStartTime = dto.PlannedStartTime;
+            game.AverageGameDurationMinutes = dto.AverageGameDurationMinutes;
+            game.RoundBreakDurationMinutes = dto.RoundBreakDurationMinutes;
+            game.EstimatedEndTime = game.Matches.Any() ? game.Matches.Max(match => match.EstimatedEndTime) : null;
 
             if(dto.Image != null)
                 game.ImageUrl = "/mock-data-local/generated-game.svg";
@@ -675,7 +683,34 @@ internal sealed class MockBackendStore
                 : profile.Profile.User.DisplayName;
         }
 
+        foreach(var game in document.Games)
+        {
+            EnsureScheduleFields(game);
+        }
+
         return document;
+    }
+
+    private static void EnsureScheduleFields(GameExtended game)
+    {
+        game.PlannedStartTime ??= game.StartTime == default ? DateTime.UtcNow.AddDays(7) : game.StartTime;
+
+        if(game.AverageGameDurationMinutes <= 0)
+            game.AverageGameDurationMinutes = 30;
+
+        if(game.RoundBreakDurationMinutes <= 0)
+            game.RoundBreakDurationMinutes = 10;
+
+        foreach(var match in game.Matches)
+        {
+            match.EstimatedStartTime ??= match.StartTime == default ? null : match.StartTime;
+            match.EstimatedEndTime ??= match.EndTime == default ? null : match.EndTime;
+        }
+
+        game.EstimatedEndTime ??= game.Matches
+            .Select(match => match.EstimatedEndTime)
+            .Where(estimatedEnd => estimatedEnd.HasValue)
+            .Max();
     }
 
     private void SeedFeaturedDoubleEliminationFixture()
@@ -689,6 +724,10 @@ internal sealed class MockBackendStore
         game.Name = "Valorant";
         game.StartTime = new DateTime(2026, 6, 14, 12, 0, 0, DateTimeKind.Utc);
         game.EndTime = new DateTime(2026, 6, 14, 23, 0, 0, DateTimeKind.Utc);
+        game.PlannedStartTime = game.StartTime;
+        game.AverageGameDurationMinutes = 30;
+        game.RoundBreakDurationMinutes = 15;
+        game.EstimatedEndTime = game.EndTime;
         game.Status = GameStatus.InProgress;
         game.BracketType = BracketType.DoubleElimination;
         game.Format = GameFormat.BestOf3;
@@ -757,12 +796,33 @@ internal sealed class MockBackendStore
             UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
         };
 
+        var teammateUsername = username.EndsWith("1", StringComparison.Ordinal)
+            ? $"{username[..^1]}2"
+            : $"{username}2";
+        var teammateFirstName = $"{firstname} Mate";
+        var teammate = new UserDTO
+        {
+            Id = Guid.Parse(captainUserId.Replace("-1111-1111-1111-", "-2222-2222-2222-", StringComparison.Ordinal)),
+            Username = teammateUsername,
+            Firstname = teammateFirstName,
+            Lastname = lastname,
+            Email = email.Replace("@", "+2@", StringComparison.Ordinal),
+            EmailVerified = true,
+            DiscordId = discordId.Replace("#", "2#", StringComparison.Ordinal),
+            SteamId = $"steam-{teammateUsername}",
+            RiotId = riotId.Replace("#", "2#", StringComparison.Ordinal),
+            DisplayName = $"{teammateFirstName} {lastname}",
+            IsDeleted = false,
+            CreatedAtUtc = FeaturedFixtureCreatedAtUtc,
+            UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
+        };
+
         return new Team
         {
             Id = Guid.Parse(teamId),
             Name = teamName,
             CaptainUserId = captain.Id,
-            Members = [captain],
+            Members = [captain, teammate],
             TeamInvites = []
         };
     }
@@ -867,6 +927,8 @@ internal sealed class MockBackendStore
             Id = Guid.Parse(matchId),
             StartTime = startTime,
             EndTime = startTime.AddMinutes(format == GameFormat.BestOf5 ? 75 : 60),
+            EstimatedStartTime = startTime,
+            EstimatedEndTime = startTime.AddMinutes(format == GameFormat.BestOf5 ? 75 : 60),
             BracketType = BracketType.DoubleElimination,
             Format = format ?? GameFormat.BestOf3,
             ParticipationMode = ParticipationMode.Team,
@@ -972,6 +1034,15 @@ internal sealed class MockBackendStore
             _document.Teams.Add(Clone(team)!);
         }
 
+        foreach(var member in team.Members)
+        {
+            var userIndex = _document.Users.FindIndex(existing => existing.Id == member.Id);
+            if(userIndex >= 0)
+                _document.Users[userIndex] = Clone(member)!;
+            else
+                _document.Users.Add(Clone(member)!);
+        }
+
         foreach(var game in _document.Games)
         {
             var teams = game.Teams.ToList();
@@ -992,6 +1063,10 @@ internal sealed class MockBackendStore
             Name = game.Name,
             StartTime = game.StartTime,
             EndTime = game.EndTime,
+            PlannedStartTime = game.PlannedStartTime,
+            AverageGameDurationMinutes = game.AverageGameDurationMinutes,
+            RoundBreakDurationMinutes = game.RoundBreakDurationMinutes,
+            EstimatedEndTime = game.EstimatedEndTime,
             ImageUrl = game.ImageUrl,
             Status = game.Status,
             BracketType = game.BracketType,

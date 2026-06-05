@@ -30,6 +30,10 @@
                     <span class="badge">@Match.Format.GetLabel()</span>
                     <span class="match-status-pill @GetStatusClass()">@GetStatusLabel()</span>
                 </div>
+                <div class="match-start-time">
+                    <span>Start time</span>
+                    <strong>@GetStartDateTimeLabel()</strong>
+                </div>
             </div>
 
             <AuthorizeView Roles="admin">

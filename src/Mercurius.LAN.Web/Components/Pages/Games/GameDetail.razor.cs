@@ -41,8 +41,8 @@ public partial class GameDetail
     private IReadOnlyList<Match> ScheduledMatches =>
         _game?.Matches
             .Where(IsScheduledMatch)
-            .OrderBy(match => match.StartTime == default ? 1 : 0)
-            .ThenBy(match => match.StartTime == default ? DateTime.MaxValue : match.StartTime)
+            .OrderBy(match => !match.EstimatedStartTime.HasValue ? 1 : 0)
+            .ThenBy(match => match.EstimatedStartTime ?? DateTime.MaxValue)
             .ThenBy(match => match.RoundNumber)
             .ThenBy(match => match.MatchNumber)
             .ToList() ?? [];
@@ -89,11 +89,11 @@ public partial class GameDetail
                 return string.Empty;
 
             if(!ScheduledMatches.Any())
-                return "No scheduled matches are currently pending.";
+                return "No estimated matches are currently available yet.";
 
             var visibleMatches = FilteredScheduledMatches;
             var visibleCount = visibleMatches.Count;
-            return $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} currently have a scheduled start time.";
+            return $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} currently have estimated timing.";
         }
     }
 
@@ -229,7 +229,15 @@ public partial class GameDetail
 
     private static string FormatDateTime(DateTime dateTime)
     {
-        return dateTime.ToString("dd MMM yyyy · HH:mm");
+        return dateTime.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
+    }
+
+    private string GetScheduleEmptyMessage()
+    {
+        if(_game?.PlannedStartTime is DateTime plannedStart)
+            return $"No estimated match times are available yet. Tournament planning starts {FormatDateTime(plannedStart)}.";
+
+        return "No estimated match times are available yet.";
     }
 
     private string GetMatchTitle(Match match)
@@ -239,13 +247,13 @@ public partial class GameDetail
 
     private string GetMatchTimeRange(Match match)
     {
-        if(match.StartTime == default)
-            return "Start time TBD";
+        if(!match.EstimatedStartTime.HasValue)
+            return "Estimate unavailable";
 
-        if(match.EndTime == default || match.EndTime <= match.StartTime)
-            return FormatDateTime(match.StartTime);
+        if(!match.EstimatedEndTime.HasValue || match.EstimatedEndTime <= match.EstimatedStartTime)
+            return $"Start time {FormatDateTime(match.EstimatedStartTime.Value)}";
 
-        return $"{FormatDateTime(match.StartTime)} - {match.EndTime:HH:mm}";
+        return $"Start time {FormatDateTime(match.EstimatedStartTime.Value)} - {match.EstimatedEndTime.Value.ToLocalDisplayTime():HH:mm}";
     }
 
     private string GetMatchStageSummary(Match match)
@@ -264,7 +272,7 @@ public partial class GameDetail
         if(IsMatchDecided(match))
             return "Decided";
 
-        return match.StartTime == default ? "Awaiting time" : "Scheduled";
+        return match.EstimatedStartTime.HasValue ? "Estimated" : "Awaiting estimate";
     }
 
     private string GetScheduleStatusClass(Match match)
@@ -272,7 +280,7 @@ public partial class GameDetail
         if(IsMatchDecided(match))
             return "game-schedule-status--complete";
 
-        return match.StartTime == default ? "game-schedule-status--pending" : "game-schedule-status--scheduled";
+        return match.EstimatedStartTime.HasValue ? "game-schedule-status--scheduled" : "game-schedule-status--pending";
     }
 
     private string GetMatchParticipantName(Match match, bool firstParticipant)
@@ -315,7 +323,7 @@ public partial class GameDetail
 
     private static bool IsScheduledMatch(Match match)
     {
-        return match.StartTime != default && !IsMatchDecided(match);
+        return match.EstimatedStartTime.HasValue && !IsMatchDecided(match);
     }
 
     private static bool CanRegister(Game game)

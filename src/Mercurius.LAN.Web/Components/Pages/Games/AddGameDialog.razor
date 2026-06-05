@@ -16,7 +16,7 @@
                     <p>Create a new tournament entry without leaving the overview page.</p>
                 </div>
 
-                <div class="form-container w-full max-w-none p-0">
+                <div class="form-container game-editor-form-container">
                     <EditForm EditContext="_editContext" OnValidSubmit="SubmitGameAsync" class="game-editor-form">
                         <DataAnnotationsValidator />
 
@@ -30,7 +30,7 @@
                             <div class="form-group">
                                 <label for="bracketType">Bracket Type</label>
                                 <InputSelect id="bracketType" class="form-control" @bind-Value="_newGame.BracketType">
-                                    @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
+                                    @foreach(var type in SupportedBracketTypes)
                                     {
                                         <option value="@type">@type.GetLabel()</option>
                                     }
@@ -73,6 +73,50 @@
                                 <ValidationMessage For="@(() => _newGame.FinalsFormat)" />
                             </div>
                         </div>
+                        <div class="game-editor-schedule-fields">
+                            <div class="form-group">
+                                <label>Planned start time</label>
+                                <div class="game-editor-datetime-row">
+                                    <MudDatePicker Date="@_plannedStartDate"
+                                                   DateChanged="HandlePlannedStartDateChanged"
+                                                   DateFormat="dd/MM/yyyy"
+                                                   Placeholder="Date"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Clearable="false"
+                                                   Class="game-editor-mud-picker" />
+                                    <MudTimePicker Time="@_plannedStartTime"
+                                                   TimeChanged="HandlePlannedStartTimeChanged"
+                                                   AmPm="false"
+                                                   TimeFormat="HH:mm"
+                                                   Placeholder="Time"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense"
+                                                   Clearable="false"
+                                                   Class="game-editor-mud-picker" />
+                                </div>
+                                <ValidationMessage For="@(() => _newGame.PlannedStartTime)" />
+                                @if(!string.IsNullOrWhiteSpace(_plannedStartTimeError))
+                                {
+                                    <div class="validation-message">@_plannedStartTimeError</div>
+                                }
+                            </div>
+
+                            <div class="game-editor-duration-row">
+                                <div class="form-group">
+                                    <label for="averageGameDuration">Average game duration (minutes)</label>
+                                    <InputNumber id="averageGameDuration" class="form-control" @bind-Value="_newGame.AverageGameDurationMinutes" />
+                                    <ValidationMessage For="@(() => _newGame.AverageGameDurationMinutes)" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="roundBreakDuration">Round break (minutes)</label>
+                                    <InputNumber id="roundBreakDuration" class="form-control" @bind-Value="_newGame.RoundBreakDurationMinutes" />
+                                    <ValidationMessage For="@(() => _newGame.RoundBreakDurationMinutes)" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="registrationUrl">Registration form url</label>
                             <InputText id="registrationUrl" class="form-control" @bind-Value="_newGame.RegisterFormUrl" />

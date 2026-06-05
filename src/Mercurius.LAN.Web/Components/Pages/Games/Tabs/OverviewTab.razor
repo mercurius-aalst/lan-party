@@ -52,12 +52,12 @@
                 <h3>Schedule & registration</h3>
                 <dl class="overview-list">
                     <div>
-                        <dt>Start</dt>
-                        <dd>@Game.StartTime.ToString("dd MMM yyyy · HH:mm")</dd>
+                        <dt>Start time</dt>
+                        <dd>@GetPlannedStartLabel()</dd>
                     </div>
                     <div>
-                        <dt>End</dt>
-                        <dd>@Game.EndTime.ToString("dd MMM yyyy · HH:mm")</dd>
+                        <dt>Estimated end</dt>
+                        <dd>@GetEstimatedEndLabel()</dd>
                     </div>
                     <div>
                         <dt>Finals</dt>
@@ -87,7 +87,7 @@
                         <div class="form-group">
                             <label for="bracketType">Bracket Type</label>
                             <InputSelect id="bracketType" class="form-control" @bind-Value="_editGame.BracketType">
-                                @foreach(BracketType type in Enum.GetValues(typeof(BracketType)))
+                                @foreach(var type in SupportedBracketTypes)
                                 {
                                     <option value="@type">@type.GetLabel()</option>
                                 }
@@ -127,6 +127,28 @@
                             </InputSelect>
                             <ValidationMessage For="@(() => _editGame.FinalsFormat)" />
                         </div>
+                        <div class="overview-edit-schedule-fields">
+                            <div class="form-group">
+                                <label for="plannedStartTime">Planned start time</label>
+                                <input id="plannedStartTime" type="datetime-local" class="form-control" @bind="_editGame.PlannedStartTime" @bind:format="yyyy-MM-ddTHH:mm" />
+                                <ValidationMessage For="@(() => _editGame.PlannedStartTime)" />
+                            </div>
+
+                            <div class="overview-edit-duration-row">
+                                <div class="form-group">
+                                    <label for="averageGameDuration">Average game duration (minutes)</label>
+                                    <InputNumber id="averageGameDuration" class="form-control" @bind-Value="_editGame.AverageGameDurationMinutes" />
+                                    <ValidationMessage For="@(() => _editGame.AverageGameDurationMinutes)" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="roundBreakDuration">Round break (minutes)</label>
+                                    <InputNumber id="roundBreakDuration" class="form-control" @bind-Value="_editGame.RoundBreakDurationMinutes" />
+                                    <ValidationMessage For="@(() => _editGame.RoundBreakDurationMinutes)" />
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label for="registrationUrl">Registration form url</label>
                             <InputText id="registrationUrl" class="form-control" @bind-Value="_editGame.RegisterFormUrl" />

@@ -81,7 +81,7 @@ else if(Participant?.Team is Models.Participants.Team team)
 
                     @if(HasPublicUsername(member))
                     {
-                        <a class="participant-member-chip participant-member-link" href="@GetUserProfileHref(member)">
+                        <a class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)" href="@GetUserProfileHref(member)">
                             <span>@GetUserLabel(member)</span>
                             @if(isCaptain)
                             {
@@ -91,7 +91,7 @@ else if(Participant?.Team is Models.Participants.Team team)
                     }
                     else
                     {
-                        <span class="participant-member-chip">
+                        <span class="participant-member-chip @(isCaptain ? "participant-member-chip--captain" : null)">
                             <span>@GetUserLabel(member)</span>
                             @if(isCaptain)
                             {
