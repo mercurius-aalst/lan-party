@@ -1,6 +1,8 @@
 using Mercurius.LAN.Web.DTOs.Search;
+using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using System.Security.Claims;
@@ -21,6 +23,11 @@ public partial class NavMenu : IAsyncDisposable
     private IGlobalSearchService GlobalSearchService { get; set; } = null!;
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = null!;
+    [Inject]
+    private IUserClient UserClient { get; set; } = null!;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
@@ -35,6 +42,8 @@ public partial class NavMenu : IAsyncDisposable
     private CancellationTokenSource? _searchCancellationTokenSource;
     private IJSObjectReference? _searchOutsideClickListener;
     private DotNetObjectReference<NavMenu>? _searchOutsideClickReference;
+    private string? _loadedIdentityKey;
+    private string? _currentProfileUsername;
 
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
@@ -44,6 +53,37 @@ public partial class NavMenu : IAsyncDisposable
     private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
     private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible;
     private bool HasSearchResults => _searchResults.Count > 0;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if(AuthenticationStateTask == null)
+            return;
+
+        var authState = await AuthenticationStateTask;
+        var user = authState.User;
+        if(user.Identity?.IsAuthenticated != true)
+        {
+            _loadedIdentityKey = null;
+            _currentProfileUsername = null;
+            return;
+        }
+
+        var identityKey = GetIdentityKey(user);
+        if(string.Equals(identityKey, _loadedIdentityKey, StringComparison.Ordinal))
+            return;
+
+        _loadedIdentityKey = identityKey;
+        _currentProfileUsername = null;
+
+        try
+        {
+            var profile = await UserClient.GetCurrentUserProfileAsync();
+            _currentProfileUsername = profile.User?.Username?.Trim();
+        }
+        catch(Exception)
+        {
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -366,12 +406,29 @@ public partial class NavMenu : IAsyncDisposable
         };
     }
 
-    private static string GetDisplayName(ClaimsPrincipal user)
+    private string GetDisplayName(ClaimsPrincipal user)
     {
-        return user.Identity?.Name
+        return _currentProfileUsername
+            ?? GetUsernameClaim(user)
+            ?? user.Identity?.Name
             ?? user.FindFirst("name")?.Value
             ?? user.FindFirst("email")?.Value
             ?? "Account";
+    }
+
+    private static string GetIdentityKey(ClaimsPrincipal user)
+    {
+        return user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user.FindFirst("sub")?.Value
+            ?? user.Identity?.Name
+            ?? "authenticated";
+    }
+
+    private static string? GetUsernameClaim(ClaimsPrincipal user)
+    {
+        return user.FindFirst("preferred_username")?.Value?.Trim()
+            ?? user.FindFirst("nickname")?.Value?.Trim()
+            ?? user.FindFirst("username")?.Value?.Trim();
     }
 
     private async ValueTask DisposeSearchOutsideClickListenerAsync()
