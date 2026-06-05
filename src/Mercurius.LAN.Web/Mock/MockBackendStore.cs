@@ -287,7 +287,7 @@ internal sealed class MockBackendStore
             var user = GetRequiredUser(userId);
 
             if(game.Users.All(existing => existing.Id != userId))
-                game.Users = game.Users.Append(Clone(user)!).ToList();
+                game.Users = game.Users.Append(PublicUserDTO.FromUser(user)).ToList();
 
             return Clone(game)!;
         }
@@ -438,7 +438,7 @@ internal sealed class MockBackendStore
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 CaptainUserId = dto.CaptainUserId,
-                Members = [Clone(captain)!],
+                Members = [PublicUserDTO.FromUser(captain)],
                 TeamInvites = []
             };
 
@@ -456,7 +456,7 @@ internal sealed class MockBackendStore
             team.CaptainUserId = dto.CaptainUserId ?? team.CaptainUserId;
 
             if(dto.CaptainUserId.HasValue && team.Members.All(member => member.Id != dto.CaptainUserId.Value))
-                team.Members = team.Members.Append(Clone(GetRequiredUser(dto.CaptainUserId.Value))!).ToList();
+                team.Members = team.Members.Append(PublicUserDTO.FromUser(GetRequiredUser(dto.CaptainUserId.Value))).ToList();
 
             AddOrReplaceTeam(team);
             return Clone(team)!;
@@ -779,42 +779,33 @@ internal sealed class MockBackendStore
         string discordId,
         string riotId)
     {
-        var captain = new UserDTO
+        var captain = new PublicUserDTO
         {
             Id = Guid.Parse(captainUserId),
             Username = username,
             Firstname = firstname,
             Lastname = lastname,
-            Email = email,
-            EmailVerified = true,
             DiscordId = discordId,
             SteamId = $"steam-{username}",
             RiotId = riotId,
-            DisplayName = $"{firstname} {lastname}",
-            IsDeleted = false,
-            CreatedAtUtc = FeaturedFixtureCreatedAtUtc,
-            UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
+            DisplayName = username
         };
 
         var teammateUsername = username.EndsWith("1", StringComparison.Ordinal)
             ? $"{username[..^1]}2"
             : $"{username}2";
-        var teammateFirstName = $"{firstname} Mate";
-        var teammate = new UserDTO
+        var teammateIsUsernameOnly = string.Equals(teamName, "Team Alpha", StringComparison.Ordinal);
+        var teammateFirstName = teammateIsUsernameOnly ? null : $"{firstname} Mate";
+        var teammate = new PublicUserDTO
         {
             Id = Guid.Parse(captainUserId.Replace("-1111-1111-1111-", "-2222-2222-2222-", StringComparison.Ordinal)),
             Username = teammateUsername,
             Firstname = teammateFirstName,
-            Lastname = lastname,
-            Email = email.Replace("@", "+2@", StringComparison.Ordinal),
-            EmailVerified = true,
-            DiscordId = discordId.Replace("#", "2#", StringComparison.Ordinal),
-            SteamId = $"steam-{teammateUsername}",
-            RiotId = riotId.Replace("#", "2#", StringComparison.Ordinal),
-            DisplayName = $"{teammateFirstName} {lastname}",
-            IsDeleted = false,
-            CreatedAtUtc = FeaturedFixtureCreatedAtUtc,
-            UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
+            Lastname = teammateIsUsernameOnly ? null : lastname,
+            DiscordId = teammateIsUsernameOnly ? null : discordId.Replace("#", "2#", StringComparison.Ordinal),
+            SteamId = teammateIsUsernameOnly ? null : $"steam-{teammateUsername}",
+            RiotId = teammateIsUsernameOnly ? null : riotId.Replace("#", "2#", StringComparison.Ordinal),
+            DisplayName = teammateUsername
         };
 
         return new Team
@@ -1036,11 +1027,7 @@ internal sealed class MockBackendStore
 
         foreach(var member in team.Members)
         {
-            var userIndex = _document.Users.FindIndex(existing => existing.Id == member.Id);
-            if(userIndex >= 0)
-                _document.Users[userIndex] = Clone(member)!;
-            else
-                _document.Users.Add(Clone(member)!);
+            UpsertUserPublicFields(member);
         }
 
         foreach(var game in _document.Games)
@@ -1053,6 +1040,45 @@ internal sealed class MockBackendStore
                 game.Teams = teams;
             }
         }
+    }
+
+    private void UpsertUserPublicFields(PublicUserDTO member)
+    {
+        var userIndex = _document.Users.FindIndex(existing => existing.Id == member.Id);
+        if(userIndex >= 0)
+        {
+            var existingUser = _document.Users[userIndex];
+            existingUser.Username = member.Username;
+            existingUser.Firstname = member.Firstname ?? existingUser.Firstname;
+            existingUser.Lastname = member.Lastname ?? existingUser.Lastname;
+            existingUser.DiscordId = member.DiscordId;
+            existingUser.SteamId = member.SteamId;
+            existingUser.RiotId = member.RiotId;
+            existingUser.DisplayName = string.IsNullOrWhiteSpace(member.DisplayName)
+                ? BuildDisplayName(existingUser.Firstname, existingUser.Lastname, existingUser.Username)
+                : member.DisplayName;
+            existingUser.UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc;
+            return;
+        }
+
+        _document.Users.Add(new UserDTO
+        {
+            Id = member.Id,
+            Username = member.Username,
+            Firstname = member.Firstname,
+            Lastname = member.Lastname,
+            Email = string.Empty,
+            EmailVerified = false,
+            DiscordId = member.DiscordId,
+            SteamId = member.SteamId,
+            RiotId = member.RiotId,
+            DisplayName = string.IsNullOrWhiteSpace(member.DisplayName)
+                ? BuildDisplayName(member.Firstname, member.Lastname, member.Username)
+                : member.DisplayName,
+            IsDeleted = false,
+            CreatedAtUtc = FeaturedFixtureCreatedAtUtc,
+            UpdatedAtUtc = FeaturedFixtureUpdatedAtUtc
+        });
     }
 
     private static Game ToGame(GameExtended game)

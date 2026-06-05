@@ -25,18 +25,16 @@ public partial class MatchDetailsDialog
     private Guid? Participant1Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant1Id : Match.UserParticipant1Id;
     private Guid? Participant2Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant2Id : Match.UserParticipant2Id;
     private Guid? WinnerId => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamWinnerId : Match.UserWinnerId;
+    private GameParticipantLookup _participantLookup = GameParticipantLookup.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _participantLookup = GameParticipantLookup.FromGame(Game);
+    }
 
     private ParticipantViewModel? GetParticipantById(Guid? participantId)
     {
-        if(participantId is null)
-            return null;
-
-        return Match.ParticipationMode switch
-        {
-            ParticipationMode.Individual => Game.Users.Where(user => user.Id == participantId.Value).Select(ParticipantViewModel.FromUser).FirstOrDefault(),
-            ParticipationMode.Team => Game.Teams.Where(team => team.Id == participantId.Value).Select(ParticipantViewModel.FromTeam).FirstOrDefault(),
-            _ => null
-        };
+        return _participantLookup.Resolve(Match.ParticipationMode, participantId);
     }
 
     private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;

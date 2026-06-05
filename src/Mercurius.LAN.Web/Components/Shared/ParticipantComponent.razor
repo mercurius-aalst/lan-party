@@ -1,6 +1,6 @@
 @using Mercurius.LAN.Web.DTOs.Users
 
-@if(Participant?.User is UserDTO user)
+@if(Participant?.User is PublicUserDTO user)
 {
     <article class="participant-surface">
         @if(ShowIdentityHeader)
@@ -32,30 +32,38 @@
                     }
                     else
                     {
-                        @RenderValue(user.Username)
+                        @GetUserLabel(user)
                     }
                 </dd>
             </div>
-            <div class="participant-detail-row">
-                <dt>Name</dt>
-                <dd>@user.Firstname @user.Lastname</dd>
-            </div>
-            <div class="participant-detail-row">
-                <dt>Email</dt>
-                <dd>@RenderValue(user.Email)</dd>
-            </div>
-            <div class="participant-detail-row">
-                <dt>Discord</dt>
-                <dd>@RenderValue(user.DiscordId)</dd>
-            </div>
-            <div class="participant-detail-row">
-                <dt>Steam</dt>
-                <dd>@RenderValue(user.SteamId)</dd>
-            </div>
-            <div class="participant-detail-row">
-                <dt>Riot</dt>
-                <dd>@RenderValue(user.RiotId)</dd>
-            </div>
+            @if(!string.IsNullOrWhiteSpace(GetFullName(user)))
+            {
+                <div class="participant-detail-row">
+                    <dt>Name</dt>
+                    <dd>@GetFullName(user)</dd>
+                </div>
+            }
+            @if(!string.IsNullOrWhiteSpace(user.DiscordId))
+            {
+                <div class="participant-detail-row">
+                    <dt>Discord</dt>
+                    <dd>@user.DiscordId</dd>
+                </div>
+            }
+            @if(!string.IsNullOrWhiteSpace(user.SteamId))
+            {
+                <div class="participant-detail-row">
+                    <dt>Steam</dt>
+                    <dd>@user.SteamId</dd>
+                </div>
+            }
+            @if(!string.IsNullOrWhiteSpace(user.RiotId))
+            {
+                <div class="participant-detail-row">
+                    <dt>Riot</dt>
+                    <dd>@user.RiotId</dd>
+                </div>
+            }
         </dl>
     </article>
 }
@@ -69,39 +77,51 @@ else if(Participant?.Team is Models.Participants.Team team)
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
                     Team
                 </span>
-                <h4 class="participant-name">@team.Name</h4>
-            </header>
-        }
-        <section class="participant-section">
-            <span class="participant-section-label">Members</span>
-            <div class="participant-members">
-                @foreach(var member in team.Members)
-                {
-                    var isCaptain = member.Id == team.CaptainUserId;
-
-                    @if(HasPublicUsername(member))
+                <h4 class="participant-name">
+                    @if(HasTeamName(team))
                     {
-                        <a class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)" href="@GetUserProfileHref(member)">
-                            <span>@GetUserLabel(member)</span>
-                            @if(isCaptain)
-                            {
-                                <span class="participant-captain-badge">Captain</span>
-                            }
-                        </a>
+                        <a class="participant-profile-link" href="@GetTeamProfileHref(team)">@team.Name</a>
                     }
                     else
                     {
-                        <span class="participant-member-chip @(isCaptain ? "participant-member-chip--captain" : null)">
-                            <span>@GetUserLabel(member)</span>
-                            @if(isCaptain)
-                            {
-                                <span class="participant-captain-badge">Captain</span>
-                            }
-                        </span>
+                        @Participant.DisplayName
                     }
-                }
-            </div>
-        </section>
+                </h4>
+            </header>
+        }
+        @if(team.Members.Any())
+        {
+            <section class="participant-section">
+                <span class="participant-section-label">Members</span>
+                <div class="participant-members">
+                    @foreach(var member in team.Members)
+                    {
+                        var isCaptain = member.Id == team.CaptainUserId;
+
+                        @if(HasPublicUsername(member))
+                        {
+                            <a class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)" href="@GetUserProfileHref(member)">
+                                <span>@GetUserLabel(member)</span>
+                                @if(isCaptain)
+                                {
+                                    <span class="participant-captain-badge">Captain</span>
+                                }
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="participant-member-chip @(isCaptain ? "participant-member-chip--captain" : null)">
+                                <span>@GetUserLabel(member)</span>
+                                @if(isCaptain)
+                                {
+                                    <span class="participant-captain-badge">Captain</span>
+                                }
+                            </span>
+                        }
+                    }
+                </div>
+            </section>
+        }
     </article>
 }
 else

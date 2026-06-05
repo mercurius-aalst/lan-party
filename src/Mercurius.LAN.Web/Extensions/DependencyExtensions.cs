@@ -172,6 +172,13 @@ public static class DependencyExtensions
             var profileUser = currentProfile.User;
             claims.Add(new Claim(ClaimTypes.Name, profileUser?.DisplayName ?? normalizedPersona));
 
+            if(!string.IsNullOrWhiteSpace(profileUser?.Username))
+            {
+                claims.Add(new Claim("preferred_username", profileUser.Username));
+                claims.Add(new Claim("nickname", profileUser.Username));
+                claims.Add(new Claim("username", profileUser.Username));
+            }
+
             if(!string.IsNullOrWhiteSpace(currentProfile.Email))
                 claims.Add(new Claim(ClaimTypes.Email, currentProfile.Email));
 

@@ -18,26 +18,24 @@ public partial class BracketMatchComponent
     private string Participant1Name => RetrieveParticipantName(Participant1Id, Match.Participant1IsBYE);
     private string Participant2Name => RetrieveParticipantName(Participant2Id, Match.Participant2IsBYE);
     private bool _showDialog;
+    private GameParticipantLookup _participantLookup = GameParticipantLookup.Empty;
+
+    protected override void OnParametersSet()
+    {
+        _participantLookup = GameParticipantLookup.FromGame(Game);
+    }
 
     private string RetrieveParticipantName(Guid? participantId, bool isBye)
     {
         if(isBye)
             return "BYE";
 
-        return ResolveParticipant(participantId)?.DisplayName ?? "TBD";
+        return _participantLookup.ResolveName(Match.ParticipationMode, participantId);
     }
 
     private ParticipantViewModel? ResolveParticipant(Guid? participantId)
     {
-        if(participantId is null)
-            return null;
-
-        return Match.ParticipationMode switch
-        {
-            ParticipationMode.Individual => Game.Users.Where(user => user.Id == participantId.Value).Select(ParticipantViewModel.FromUser).FirstOrDefault(),
-            ParticipationMode.Team => Game.Teams.Where(team => team.Id == participantId.Value).Select(ParticipantViewModel.FromTeam).FirstOrDefault(),
-            _ => null
-        };
+        return _participantLookup.Resolve(Match.ParticipationMode, participantId);
     }
 
     private void DisplayDetails()

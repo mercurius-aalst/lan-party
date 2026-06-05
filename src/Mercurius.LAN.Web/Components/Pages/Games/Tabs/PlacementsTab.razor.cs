@@ -1,7 +1,5 @@
-using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
-using Mercurius.LAN.Web.Models.Participants;
 using Microsoft.AspNetCore.Components;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games.Tabs;
@@ -21,9 +19,14 @@ public partial class PlacementsTab
         };
     }
 
-    private static string GetUserLabel(UserDTO user)
+    private static string GetUserLabel(DTOs.Users.PublicUserDTO user)
     {
-        return user.Username ?? user.DisplayName;
+        if(!string.IsNullOrWhiteSpace(user.Username))
+            return user.Username.Trim();
+
+        return string.IsNullOrWhiteSpace(user.DisplayName)
+            ? "Participant"
+            : user.DisplayName.Trim();
     }
 
     private string GetOrdinalSuffix(int number)

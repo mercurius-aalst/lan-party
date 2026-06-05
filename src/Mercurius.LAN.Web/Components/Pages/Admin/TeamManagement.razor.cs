@@ -154,4 +154,18 @@ public partial class TeamManagement
     {
         return user.Username ?? user.DisplayName;
     }
+
+    private string GetMemberLabel(PublicUserDTO member)
+    {
+        var authorizedUser = _users.FirstOrDefault(user => user.Id == member.Id);
+        if(authorizedUser != null)
+            return GetUserLabel(authorizedUser);
+
+        if(!string.IsNullOrWhiteSpace(member.Username))
+            return member.Username.Trim();
+
+        return string.IsNullOrWhiteSpace(member.DisplayName)
+            ? "Participant"
+            : member.DisplayName.Trim();
+    }
 }
