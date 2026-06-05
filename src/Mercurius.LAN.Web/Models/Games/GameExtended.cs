@@ -8,7 +8,7 @@ namespace Mercurius.LAN.Web.Models.Games
     {
         public IEnumerable<Placement> Placements { get; set; } = new List<Placement>();
         public IEnumerable<Match> Matches { get; set; } = new List<Match>();
-        public IEnumerable<UserDTO> Users { get; set; } = new List<UserDTO>();
+        public IEnumerable<PublicUserDTO> Users { get; set; } = new List<PublicUserDTO>();
         public IEnumerable<Team> Teams { get; set; } = new List<Team>();
         public GameSponsorPlacement? SponsorPlacement { get; set; }
         public IEnumerable<GameSponsorPlacement> SponsorPlacements

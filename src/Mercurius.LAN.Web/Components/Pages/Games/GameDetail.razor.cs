@@ -1,6 +1,6 @@
 using Blazored.Toast.Services;
+using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Games;
-using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
@@ -37,6 +37,7 @@ public partial class GameDetail
     private List<Sponsor> _availableSponsors = [];
     private ScheduleBracketFilter _selectedScheduleBracket = ScheduleBracketFilter.All;
     private int? _selectedScheduleRound;
+    private GameParticipantLookup _participantLookup = GameParticipantLookup.Empty;
 
     private IReadOnlyList<Match> ScheduledMatches =>
         _game?.Matches
@@ -120,6 +121,7 @@ public partial class GameDetail
             await Task.WhenAll(gameTask, sponsorsTask);
 
             _game = gameTask.Result;
+            _participantLookup = GameParticipantLookup.FromGame(_game);
             _availableSponsors = sponsorsTask.Result
                 .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
                 .ThenBy(sponsor => sponsor.Name)
@@ -140,6 +142,7 @@ public partial class GameDetail
     private Task HandleGameUpdated(GameExtended updatedGame)
     {
         _game = updatedGame;
+        _participantLookup = GameParticipantLookup.FromGame(_game);
         SyncSelectedSponsor();
         return InvokeAsync(StateHasChanged);
     }
@@ -296,24 +299,10 @@ public partial class GameDetail
 
         return _game.ParticipationMode switch
         {
-            ParticipationMode.Team => ResolveTeamName(firstParticipant ? match.TeamParticipant1Id : match.TeamParticipant2Id, _game.Teams),
-            ParticipationMode.Individual => ResolveUserName(firstParticipant ? match.UserParticipant1Id : match.UserParticipant2Id, _game.Users),
+            ParticipationMode.Team => _participantLookup.ResolveName(ParticipationMode.Team, firstParticipant ? match.TeamParticipant1Id : match.TeamParticipant2Id),
+            ParticipationMode.Individual => _participantLookup.ResolveName(ParticipationMode.Individual, firstParticipant ? match.UserParticipant1Id : match.UserParticipant2Id),
             _ => "TBD"
         };
-    }
-
-    private static string ResolveTeamName(Guid? teamId, IEnumerable<Team> teams)
-    {
-        return teams.FirstOrDefault(team => team.Id == teamId)?.Name ?? "TBD";
-    }
-
-    private static string ResolveUserName(Guid? userId, IEnumerable<UserDTO> users)
-    {
-        var user = users.FirstOrDefault(candidate => candidate.Id == userId);
-        if(user == null)
-            return "TBD";
-
-        return string.IsNullOrWhiteSpace(user.Username) ? user.DisplayName : user.Username;
     }
 
     private static bool IsMatchDecided(Match match)
@@ -428,6 +417,7 @@ public partial class GameDetail
             });
 
             _game = updatedGame;
+            _participantLookup = GameParticipantLookup.FromGame(_game);
             SyncSelectedSponsor();
             ToastService.ShowSuccess("Tournament sponsor updated.");
             await InvokeAsync(StateHasChanged);
