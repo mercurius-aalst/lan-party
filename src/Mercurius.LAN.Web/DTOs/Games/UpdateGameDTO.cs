@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Mercurius.LAN.Web.DTOs.Games
 {
-    public class UpdateGameDTO
+    public class UpdateGameDTO : IValidatableObject
     {
         [Required]
         public string Name { get; set; } = null!;
@@ -34,5 +34,15 @@ namespace Mercurius.LAN.Web.DTOs.Games
 
         [Range(1, int.MaxValue)]
         public int RoundBreakDurationMinutes { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if(PlannedStartTime == default)
+            {
+                yield return new ValidationResult(
+                    "Planned start time is required.",
+                    [nameof(PlannedStartTime)]);
+            }
+        }
     }
 }

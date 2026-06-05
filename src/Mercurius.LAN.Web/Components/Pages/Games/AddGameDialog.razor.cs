@@ -6,7 +6,6 @@ using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
-using System.Reflection;
 
 namespace Mercurius.LAN.Web.Components.Pages.Games;
 
@@ -26,10 +25,20 @@ public partial class AddGameDialog
     private bool _isDialogOpen = true;
     private EditContext? _editContext;
     private CustomInputFile? _imageInputRef;
+    private DateTime? _plannedStartDate;
+    private TimeSpan? _plannedStartTime;
+    private string? _plannedStartTimeError;
+
+    private static readonly BracketType[] SupportedBracketTypes =
+    [
+        BracketType.SingleElimination,
+        BracketType.DoubleElimination
+    ];
 
 
     protected override void OnInitialized() {
-       
+
+        SetPlannedStartInputs(_newGame.PlannedStartTime);
         _editContext = new(_newGame);
        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
         _editContext.OnFieldChanged += (sender, args) => {
@@ -41,6 +50,10 @@ public partial class AddGameDialog
         string? tempFilePath = _imageInputRef?.TempFilePath;
         string? contentType = _imageInputRef?.FileContentType;
         string? fileName = _imageInputRef?.FileName;
+
+        if(!TryApplyPlannedStartTime())
+            return;
+
         try
             {
                 
@@ -52,6 +65,46 @@ public partial class AddGameDialog
             {
                 ToastService.ShowError(ex.Content!);
             }
+    }
+
+    private bool TryApplyPlannedStartTime()
+    {
+        _plannedStartTimeError = null;
+
+        if(!_plannedStartDate.HasValue)
+        {
+            _plannedStartTimeError = "Choose a valid planned start date.";
+            return false;
+        }
+
+        if(!_plannedStartTime.HasValue)
+        {
+            _plannedStartTimeError = "Choose a valid planned start time.";
+            return false;
+        }
+
+        var plannedStartTime = _plannedStartDate.Value
+            .Date
+            .Add(_plannedStartTime.Value);
+
+        _newGame.PlannedStartTime = DateTime.SpecifyKind(plannedStartTime, DateTimeKind.Local);
+        return true;
+    }
+
+    private void HandlePlannedStartDateChanged(DateTime? plannedStartDate)
+    {
+        _plannedStartDate = plannedStartDate;
+    }
+
+    private void HandlePlannedStartTimeChanged(TimeSpan? plannedStartTime)
+    {
+        _plannedStartTime = plannedStartTime;
+    }
+
+    private void SetPlannedStartInputs(DateTime plannedStartTime)
+    {
+        _plannedStartDate = plannedStartTime.Date;
+        _plannedStartTime = plannedStartTime.TimeOfDay;
     }
 
     private void CloseDialog(GameExtended? createdGame)

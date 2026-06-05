@@ -27,7 +27,7 @@ The game detail page SHALL keep match schedule and participant sections scannabl
 - **THEN** the schedule section keeps its header and filter controls separate from the dense match list
 - **AND** the match list remains visually contained within the schedule section
 - **AND** the section communicates the current visible match count or filtered result state
-- **AND** estimated match start/end values are labeled as estimates rather than actual lifecycle timestamps
+- **AND** match schedule values are derived from generated estimates without being labeled as actual lifecycle timestamps
 
 #### Scenario: Visitor views a large participant roster
 - **WHEN** the participant section contains enough registered participants to create a long roster
@@ -42,7 +42,7 @@ The game detail page SHALL distinguish planned tournament schedule configuration
 #### Scenario: Visitor views tournament overview metadata
 - **WHEN** the tournament overview section renders schedule metadata
 - **THEN** planned tournament start time is labeled as planned or scheduled timing
-- **AND** average game duration and round break duration may be shown as schedule configuration when useful to visitors or admins
+- **AND** average game duration and round break duration are not shown in public schedule or registration metadata because they are internal estimation inputs
 - **AND** estimated tournament end time is labeled as estimated when present
 
 #### Scenario: Tournament has actual lifecycle timestamps

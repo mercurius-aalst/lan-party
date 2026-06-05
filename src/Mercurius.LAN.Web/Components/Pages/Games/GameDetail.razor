@@ -85,7 +85,7 @@ else
 
                     @if(!ScheduledMatches.Any())
                     {
-                        <p class="game-empty-copy">No scheduled matches are currently pending.</p>
+                        <p class="game-empty-copy">@GetScheduleEmptyMessage()</p>
                     }
                     else
                     {

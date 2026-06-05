@@ -58,7 +58,42 @@
 
 .overview-edit-card {
     display: grid;
+    gap: 1.1rem;
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.overview-edit-card .form-group {
+    width: 100%;
+    margin: 0;
+}
+
+.overview-edit-card input,
+.overview-edit-card select,
+.overview-edit-card ::deep .form-control {
+    width: 100%;
+    max-width: 100%;
+}
+
+.overview-edit-schedule-fields {
+    display: grid;
     gap: 1rem;
+}
+
+.overview-edit-duration-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.overview-edit-duration-row .form-group {
+    width: 100%;
+}
+
+.overview-edit-duration-row label {
+    min-height: 2.5rem;
+    display: flex;
+    align-items: flex-end;
 }
 
 @media (max-width: 800px) {

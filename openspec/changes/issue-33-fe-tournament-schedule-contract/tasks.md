@@ -10,6 +10,8 @@
 - [x] 2.2 Add explicit planned/estimated schedule properties to `Game` and `Match` models without reusing lifecycle `StartTime`/`EndTime` labels for estimates.
 - [x] 2.3 Include schedule fields in `GameService` create/update multipart form data using backend-compatible field names and UTC-compatible serialization.
 - [x] 2.4 Confirm list/detail deserialization handles backend schedule field casing and missing pre-generation estimate values safely.
+- [x] 2.5 Convert API-received `DateTime` values to local time during frontend JSON deserialization while preserving UTC-safe outbound serialization.
+- [x] 2.6 Apply the frontend timestamp convention: local datetime inputs, local display formatting, and UTC ISO `Z` schedule values when sending to the backend.
 
 ## 3. Admin Create/Edit Experience
 
@@ -18,6 +20,7 @@
 - [x] 3.3 Prevent or gracefully handle schedule edits after the tournament is no longer editable, matching backend validation.
 - [x] 3.4 Preserve form state and surface backend validation errors when schedule submit fails.
 - [x] 3.5 Keep bracket type choices limited to frontend-supported single- and double-elimination values.
+- [x] 3.6 Render the create-form planned start input with MudBlazor date and 24-hour time pickers.
 
 ## 4. Public Schedule Display
 
@@ -26,6 +29,9 @@
 - [x] 4.3 Update game detail match schedule ordering/labels to use loaded match estimated start/end timing and clearly identify estimates.
 - [x] 4.4 Render clear empty/unavailable states when match estimates are not generated yet, without additional per-match API calls.
 - [x] 4.5 Gracefully handle any unsupported bracket type returned before backend companion constraints are complete.
+- [x] 4.6 Keep average game duration and round break duration out of public schedule/registration display because they are internal estimation inputs.
+- [x] 4.7 Label upcoming match start timing as start time while continuing to use generated estimated schedule fields.
+- [x] 4.8 Show match start datetime in the shared match detail popup used by schedule and bracket interactions.
 
 ## 5. Mock Mode And Verification
 

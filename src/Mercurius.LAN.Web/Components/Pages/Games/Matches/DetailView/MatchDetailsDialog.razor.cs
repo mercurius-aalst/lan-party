@@ -1,6 +1,7 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Services;
@@ -44,9 +45,14 @@ public partial class MatchDetailsDialog
 
     private string GetRoundLabel() => $"Round {Match.RoundNumber}";
 
-    private string GetStatusLabel() => WinnerId != null ? "Decided" : Match.StartTime == default ? "Awaiting time" : "Scheduled";
+    private string GetStatusLabel() => WinnerId != null ? "Decided" : Match.EstimatedStartTime.HasValue ? "Estimated" : "Awaiting estimate";
 
-    private string GetStatusClass() => WinnerId != null ? "match-status-pill--complete" : Match.StartTime == default ? "match-status-pill--pending" : "match-status-pill--scheduled";
+    private string GetStatusClass() => WinnerId != null ? "match-status-pill--complete" : Match.EstimatedStartTime.HasValue ? "match-status-pill--scheduled" : "match-status-pill--pending";
+
+    private string GetStartDateTimeLabel() =>
+        Match.EstimatedStartTime.HasValue
+            ? Match.EstimatedStartTime.Value.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm")
+            : "Unavailable";
 
     private string GetCardClass(Guid? participantId)
     {

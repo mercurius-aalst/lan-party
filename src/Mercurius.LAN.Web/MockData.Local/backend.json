@@ -109,7 +109,9 @@
           "teamParticipant2Id": "21111111-1111-1111-1111-111111111112",
           "participant1IsBYE": false,
           "participant2IsBYE": false,
-          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113"
+          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113",
+          "estimatedStartTime": "2026-06-13T10:00:00Z",
+          "estimatedEndTime": "2026-06-13T11:00:00Z"
         },
         {
           "id": "31111111-1111-1111-1111-111111111112",
@@ -126,7 +128,9 @@
           "teamParticipant2Id": "21111111-1111-1111-1111-111111111114",
           "participant1IsBYE": false,
           "participant2IsBYE": false,
-          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113"
+          "winnerNextMatchId": "31111111-1111-1111-1111-111111111113",
+          "estimatedStartTime": "2026-06-13T10:00:00Z",
+          "estimatedEndTime": "2026-06-13T11:00:00Z"
         },
         {
           "id": "31111111-1111-1111-1111-111111111113",
@@ -140,7 +144,9 @@
           "isLowerBracketMatch": false,
           "gameId": "11111111-1111-1111-1111-111111111111",
           "participant1IsBYE": false,
-          "participant2IsBYE": false
+          "participant2IsBYE": false,
+          "estimatedStartTime": "2026-06-13T13:00:00Z",
+          "estimatedEndTime": "2026-06-13T14:30:00Z"
         }
       ],
       "users": [],
@@ -202,6 +208,21 @@
               "isDeleted": false,
               "createdAtUtc": "2026-05-01T09:00:00Z",
               "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111122",
+              "username": "binary2",
+              "firstname": "Britt",
+              "lastname": "Bit",
+              "email": "britt@example.test",
+              "emailVerified": true,
+              "discordId": "britt#1111",
+              "steamId": "steam-britt",
+              "riotId": null,
+              "displayName": "Britt Bit",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
             }
           ],
           "teamInvites": []
@@ -222,6 +243,21 @@
               "steamId": "steam-gina",
               "riotId": null,
               "displayName": "Gina Grid",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111123",
+              "username": "gamma2",
+              "firstname": "Gabe",
+              "lastname": "Grid",
+              "email": "gabe@example.test",
+              "emailVerified": true,
+              "discordId": "gabe#1111",
+              "steamId": "steam-gabe",
+              "riotId": null,
+              "displayName": "Gabe Grid",
               "isDeleted": false,
               "createdAtUtc": "2026-05-01T09:00:00Z",
               "updatedAtUtc": "2026-05-11T12:00:00Z"
@@ -248,11 +284,30 @@
               "isDeleted": false,
               "createdAtUtc": "2026-05-01T09:00:00Z",
               "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111124",
+              "username": "delta2",
+              "firstname": "Drew",
+              "lastname": "Drop",
+              "email": "drew@example.test",
+              "emailVerified": true,
+              "discordId": "drew#1111",
+              "steamId": "steam-drew",
+              "riotId": null,
+              "displayName": "Drew Drop",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
             }
           ],
           "teamInvites": []
         }
-      ]
+      ],
+      "plannedStartTime": "2026-06-13T10:00:00Z",
+      "averageGameDurationMinutes": 30,
+      "roundBreakDurationMinutes": 10,
+      "estimatedEndTime": "2026-06-13T16:00:00Z"
     },
     {
       "id": "11111111-1111-1111-1111-111111111112",
@@ -304,6 +359,21 @@
               "isDeleted": false,
               "createdAtUtc": "2026-05-01T09:00:00Z",
               "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111125",
+              "username": "echo2",
+              "firstname": "Emmy",
+              "lastname": "Echo",
+              "email": "emmy@example.test",
+              "emailVerified": true,
+              "discordId": "emmy#1111",
+              "steamId": "steam-emmy",
+              "riotId": "emmy#VAL",
+              "displayName": "Emmy Echo",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
             }
           ],
           "teamInvites": []
@@ -327,11 +397,30 @@
               "isDeleted": false,
               "createdAtUtc": "2026-05-01T09:00:00Z",
               "updatedAtUtc": "2026-05-11T12:00:00Z"
+            },
+            {
+              "id": "41111111-1111-1111-1111-111111111126",
+              "username": "frame2",
+              "firstname": "Faye",
+              "lastname": "Frame",
+              "email": "faye@example.test",
+              "emailVerified": true,
+              "discordId": "faye#1111",
+              "steamId": "steam-faye",
+              "riotId": "faye#VAL",
+              "displayName": "Faye Frame",
+              "isDeleted": false,
+              "createdAtUtc": "2026-05-01T09:00:00Z",
+              "updatedAtUtc": "2026-05-11T12:00:00Z"
             }
           ],
           "teamInvites": []
         }
-      ]
+      ],
+      "plannedStartTime": "2026-06-14T12:00:00Z",
+      "averageGameDurationMinutes": 30,
+      "roundBreakDurationMinutes": 10,
+      "estimatedEndTime": "2026-06-14T18:00:00Z"
     },
     {
       "id": "11111111-1111-1111-1111-111111111113",
@@ -380,7 +469,11 @@
           "updatedAtUtc": "2026-05-11T12:00:00Z"
         }
       ],
-      "teams": []
+      "teams": [],
+      "plannedStartTime": "2026-06-15T09:00:00Z",
+      "averageGameDurationMinutes": 30,
+      "roundBreakDurationMinutes": 10,
+      "estimatedEndTime": "2026-06-15T12:00:00Z"
     },
     {
       "id": "11111111-1111-1111-1111-111111111114",
@@ -440,7 +533,11 @@
           "members": [],
           "teamInvites": []
         }
-      ]
+      ],
+      "plannedStartTime": "2026-06-16T11:00:00Z",
+      "averageGameDurationMinutes": 30,
+      "roundBreakDurationMinutes": 10,
+      "estimatedEndTime": "2026-06-16T15:00:00Z"
     }
   ],
   "teams": [
@@ -604,6 +701,81 @@
       "steamId": "steam-theo",
       "riotId": null,
       "displayName": "Theo Turn",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111122",
+      "username": "binary2",
+      "firstname": "Britt",
+      "lastname": "Bit",
+      "email": "britt@example.test",
+      "emailVerified": true,
+      "discordId": "britt#1111",
+      "steamId": "steam-britt",
+      "riotId": null,
+      "displayName": "Britt Bit",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111123",
+      "username": "gamma2",
+      "firstname": "Gabe",
+      "lastname": "Grid",
+      "email": "gabe@example.test",
+      "emailVerified": true,
+      "discordId": "gabe#1111",
+      "steamId": "steam-gabe",
+      "riotId": null,
+      "displayName": "Gabe Grid",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111124",
+      "username": "delta2",
+      "firstname": "Drew",
+      "lastname": "Drop",
+      "email": "drew@example.test",
+      "emailVerified": true,
+      "discordId": "drew#1111",
+      "steamId": "steam-drew",
+      "riotId": null,
+      "displayName": "Drew Drop",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111125",
+      "username": "echo2",
+      "firstname": "Emmy",
+      "lastname": "Echo",
+      "email": "emmy@example.test",
+      "emailVerified": true,
+      "discordId": "emmy#1111",
+      "steamId": "steam-emmy",
+      "riotId": "emmy#VAL",
+      "displayName": "Emmy Echo",
+      "isDeleted": false,
+      "createdAtUtc": "2026-05-01T09:00:00Z",
+      "updatedAtUtc": "2026-05-11T12:00:00Z"
+    },
+    {
+      "id": "41111111-1111-1111-1111-111111111126",
+      "username": "frame2",
+      "firstname": "Faye",
+      "lastname": "Frame",
+      "email": "faye@example.test",
+      "emailVerified": true,
+      "discordId": "faye#1111",
+      "steamId": "steam-faye",
+      "riotId": "faye#VAL",
+      "displayName": "Faye Frame",
       "isDeleted": false,
       "createdAtUtc": "2026-05-01T09:00:00Z",
       "updatedAtUtc": "2026-05-11T12:00:00Z"

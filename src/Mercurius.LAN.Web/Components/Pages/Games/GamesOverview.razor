@@ -101,7 +101,7 @@ else
                     <img src="@imageUrl" alt="@game.Name" class="brand-tournament-card-image games-card-image" />
                     <div class="brand-tournament-card-body games-card-body">
                         <div class="brand-tournament-card-topline games-card-topline">
-                            <span class="brand-tournament-card-date games-card-date">@FormatDateTime(game.StartTime)</span>
+                            <span class="brand-tournament-card-date games-card-date">@GetPlannedStartLabel(game)</span>
                             <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
                         </div>
 
@@ -122,8 +122,8 @@ else
                                 <dd>@game.FinalsFormat.GetLabel()</dd>
                             </div>
                             <div>
-                                <dt>Ends</dt>
-                                <dd>@FormatDateTime(game.EndTime)</dd>
+                                <dt>Estimated end</dt>
+                                <dd>@GetEstimatedEndLabel(game)</dd>
                             </div>
                         </dl>
                     </div>
@@ -136,7 +136,7 @@ else
                     </div>
                 </article>
             }
-            </div>
+        </div>
 
         @if(_isAddGameDialogOpen)
         {

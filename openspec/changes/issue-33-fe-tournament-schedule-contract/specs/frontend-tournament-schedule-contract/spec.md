@@ -9,6 +9,7 @@ The frontend SHALL require admins to provide planned tournament schedule configu
 #### Scenario: Admin creates a scheduled tournament
 - **WHEN** an admin opens the create tournament form
 - **THEN** the form includes controls for planned tournament start time, average single-game duration, and break duration between rounds
+- **AND** the planned tournament start time control lets admins select a date and 24-hour time from picker controls without relying on AM/PM input
 - **AND** the form prevents submission when planned start time is missing or duration values are missing, zero, or negative
 
 #### Scenario: Admin updates an editable scheduled tournament
@@ -54,6 +55,17 @@ The frontend SHALL model planned and estimated schedule values with explicit nam
 - **THEN** the frontend treats estimated match and tournament end values as unavailable
 - **AND** public schedule UI continues to show planned tournament configuration when that data is available
 
+#### Scenario: API datetime values are received
+- **WHEN** the frontend deserializes DateTime values from API-backed responses
+- **THEN** the frontend converts those values to the local timezone before models are consumed by UI components
+- **AND** outbound DateTime values remain serialized in a UTC-compatible representation when sent back to the backend
+
+#### Scenario: Schedule values are edited and displayed
+- **WHEN** the frontend displays schedule DateTime values
+- **THEN** the UI formats them using local time
+- **AND** datetime input and picker controls use local DateTime values while editing
+- **AND** create and update submissions convert those local input values to UTC ISO strings with a `Z` suffix before sending them to the backend
+
 ### Requirement: Public timing displays label generated values as estimates
 
 The frontend SHALL distinguish planned schedule values, generated estimates, and actual lifecycle timestamps in visitor-facing displays.
@@ -61,10 +73,12 @@ The frontend SHALL distinguish planned schedule values, generated estimates, and
 #### Scenario: Visitor views planned tournament timing
 - **WHEN** a tournament has a planned start time before match generation
 - **THEN** the UI labels the value as planned or scheduled timing rather than an actual start timestamp
+- **AND** average game duration and round break duration are not shown in public schedule or registration displays because they are internal estimation inputs
 
 #### Scenario: Visitor views generated match timing
 - **WHEN** a match has estimated start and end times
-- **THEN** the schedule UI labels the timing as estimated
+- **THEN** the upcoming matches UI labels the visible start timing as `Start time`
+- **AND** match detail popups opened from schedule or bracket views show the same local start datetime
 - **AND** the schedule can order matches by estimated start time without requiring extra per-match API calls
 
 #### Scenario: Visitor views actual lifecycle timing
