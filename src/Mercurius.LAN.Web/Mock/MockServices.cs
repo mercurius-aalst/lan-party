@@ -83,10 +83,12 @@ internal sealed class MockGameService : IGameService
 internal sealed class MockTeamService : ITeamService
 {
     private readonly MockBackendStore _store;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MockTeamService(MockBackendStore store)
+    public MockTeamService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
     {
         _store = store;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public Task<List<Team>> GetTeamsAsync() => Task.FromResult(_store.GetTeams());
@@ -94,14 +96,38 @@ internal sealed class MockTeamService : ITeamService
     public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetPublicTeamByName(teamName));
 
-    public Task<Team> CreateTeamAsync(CreateTeamDTO team) => Task.FromResult(_store.CreateTeam(team));
+    public Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetCurrentUserTeamSummary(GetCurrentPersona()));
 
-    public Task<Team> UpdateTeamAsync(Guid id, UpdateTeamDTO team) => Task.FromResult(_store.UpdateTeam(id, team));
+    public Task<Team> CreateTeamAsync(CreateTeamDTO team) => Task.FromResult(_store.CreateCurrentUserTeam(GetCurrentPersona(), team));
 
-    public Task DeleteTeamAsync(Guid id)
+    public Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId) => Task.FromResult(_store.CreateTeamInvite(GetCurrentPersona(), teamId, userId));
+
+    public Task<TeamInvite> CancelInviteAsync(Guid teamId, Guid inviteId) => Task.FromResult(_store.CancelTeamInvite(GetCurrentPersona(), teamId, inviteId));
+
+    public Task<TeamInvite> RespondToInviteAsync(Guid inviteId, bool accept) => Task.FromResult(_store.RespondToTeamInvite(GetCurrentPersona(), inviteId, accept));
+
+    public Task<TeamManagementSummaryDTO> LeaveTeamAsync(Guid teamId) => Task.FromResult(_store.LeaveTeam(GetCurrentPersona(), teamId));
+
+    public Task<TeamManagementSummaryDTO> RemoveMemberAsync(Guid teamId, Guid userId) => Task.FromResult(_store.RemoveTeamMember(GetCurrentPersona(), teamId, userId));
+
+    public Task<TeamManagementSummaryDTO> TransferCaptainAsync(Guid teamId, Guid newCaptainUserId) => Task.FromResult(_store.TransferCaptain(GetCurrentPersona(), teamId, newCaptainUserId));
+
+    public Task<TeamLogoResponseDTO> UploadLogoAsync(Guid teamId, Stream logoStream, string contentType, string fileName) =>
+        Task.FromResult(_store.UploadTeamLogo(GetCurrentPersona(), teamId, contentType, fileName));
+
+    public Task<TeamLogoResponseDTO> RemoveLogoAsync(Guid teamId) => Task.FromResult(_store.RemoveTeamLogo(GetCurrentPersona(), teamId));
+
+    public Task DeleteTeamAsync(Guid teamId)
     {
-        _store.DeleteTeam(id);
+        _store.DeleteCurrentUserTeam(GetCurrentPersona(), teamId);
         return Task.CompletedTask;
+    }
+
+    private string GetCurrentPersona()
+    {
+        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
+        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
     }
 }
 
@@ -117,6 +143,26 @@ internal sealed class MockGlobalSearchService : IGlobalSearchService
     public Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<GlobalSearchResultDTO> results = _store.SearchGlobal(query);
+        return Task.FromResult(results);
+    }
+}
+
+internal sealed class MockUserSearchService : IUserSearchService
+{
+    private readonly MockBackendStore _store;
+
+    public MockUserSearchService(MockBackendStore store)
+    {
+        _store = store;
+    }
+
+    public Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<GlobalSearchResultDTO> results = _store.SearchGlobal(query)
+            .Where(result => result.Type == GlobalSearchResultType.User && result.UserId.HasValue)
+            .Take(6)
+            .ToList();
+
         return Task.FromResult(results);
     }
 }

@@ -3,11 +3,25 @@
 @using System.IO
 @implements IDisposable
 
-<InputFile OnChange="HandleFileChange" class="@GetCssClass()" accept="image/png, image/jpeg, image/webp" />
+<div class="image-upload-field">
+    <label class="@GetPickerCssClass()">
+        <span class="bi bi-image" aria-hidden="true"></span>
+        <span>@LabelText</span>
+        <InputFile OnChange="HandleFileChange"
+                   class="image-upload-native"
+                   accept="@Accept"
+                   @attributes="AdditionalAttributes" />
+    </label>
+    <small>@SelectedFileText</small>
+</div>
 
 @code {
     [Inject]
     private IConfiguration Configuration { get; set; } = null!;
+
+    [Parameter] public string LabelText { get; set; } = "Choose image";
+    [Parameter] public string EmptyText { get; set; } = "No file selected";
+    [Parameter] public string Accept { get; set; } = "image/png, image/jpeg, image/webp";
 
     private ValidationMessageStore? messageStore;
     private long _maxFileSize;
@@ -16,6 +30,8 @@
     public string? TempFilePath { get; private set; }
     public string? FileContentType { get; private set; }
     public string? FileName { get; private set; }
+
+    private string SelectedFileText => FileName ?? EmptyText;
 
     protected override void OnInitialized()
     {
@@ -114,9 +130,9 @@
         }
     }
 
-    protected string GetCssClass()
+    protected string GetPickerCssClass()
     {
-        string css = "form-control";
+        string css = "image-upload-picker";
         if(EditContext is null || !EditContext.IsModified(FieldIdentifier))
             return css;
 

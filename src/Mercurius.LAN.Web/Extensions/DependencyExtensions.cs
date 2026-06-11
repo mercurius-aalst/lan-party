@@ -127,8 +127,11 @@ public static class DependencyExtensions
             services.AddScoped<ITeamService, MockTeamService>();
             services.AddScoped<ISponsorService, MockSponsorService>();
             services.AddScoped<IGlobalSearchService, MockGlobalSearchService>();
+            services.AddScoped<IUserSearchService, MockUserSearchService>();
             services.AddScoped<IPublicProfileService, MockPublicProfileService>();
             services.AddScoped<IUserClient, MockUserClient>();
+            services.AddScoped<ITeamNotificationService, TeamNotificationService>();
+            services.AddScoped<ITeamRealtimeService, NoopTeamRealtimeService>();
             services.AddHttpContextAccessor();
             return services;
         }
@@ -137,7 +140,10 @@ public static class DependencyExtensions
         services.AddScoped<ITeamService, TeamService>();
         services.AddScoped<ISponsorService, SponsorService>();
         services.AddScoped<IGlobalSearchService, GlobalSearchService>();
+        services.AddScoped<IUserSearchService, UserSearchService>();
         services.AddScoped<IPublicProfileService, PublicProfileService>();
+        services.AddScoped<ITeamNotificationService, TeamNotificationService>();
+        services.AddScoped<ITeamRealtimeService, TeamRealtimeService>();
         services.AddHttpContextAccessor();
 
         return services;

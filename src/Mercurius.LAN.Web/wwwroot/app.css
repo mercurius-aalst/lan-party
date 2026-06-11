@@ -839,6 +839,10 @@ select:focus {
     background: url('/img/riot.svg') no-repeat center center/contain;
 }
 
+.blazored-toast-container {
+    z-index: 4000 !important;
+}
+
 @media (max-width: 640px) {
     .brand-page-hero {
         padding: var(--brand-page-hero-padding-mobile);

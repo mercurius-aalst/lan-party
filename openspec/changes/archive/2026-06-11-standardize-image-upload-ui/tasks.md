@@ -1,0 +1,4 @@
+- [x] 1.1 Identify image upload fields outside team logo management.
+- [x] 1.2 Update the shared image upload component to use the branded picker styling.
+- [x] 1.3 Apply logo/image-specific picker copy where needed.
+- [x] 1.4 Build the Blazor project.

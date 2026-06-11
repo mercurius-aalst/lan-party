@@ -45,24 +45,6 @@ public partial class PublicTeamProfile
     private static string BuildMemberProfileHref(string username) =>
         $"/users/{Uri.EscapeDataString(username)}";
 
-    private static string GetTeamInitials(string teamName)
-    {
-        if(string.IsNullOrWhiteSpace(teamName))
-            return "?";
-
-        var words = teamName
-            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Where(word => !string.IsNullOrWhiteSpace(word))
-            .Take(2)
-            .Select(word => char.ToUpperInvariant(word[0]))
-            .ToArray();
-
-        if(words.Length == 0)
-            return "?";
-
-        return new string(words);
-    }
-
     private static string GetMemberInitials(string username)
     {
         if(string.IsNullOrWhiteSpace(username))

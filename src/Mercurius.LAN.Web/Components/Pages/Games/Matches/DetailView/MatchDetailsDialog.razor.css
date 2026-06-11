@@ -65,6 +65,16 @@
     line-height: 1;
 }
 
+.match-header-name ::deep(.team-identity-display) {
+    color: inherit;
+}
+
+.match-header-name ::deep(.team-identity-name) {
+    font-family: "Saira", system-ui, sans-serif;
+    font-size: inherit;
+    font-weight: inherit;
+}
+
 .match-header-score {
     color: var(--color-deep-green);
 }

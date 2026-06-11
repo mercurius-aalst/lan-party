@@ -44,3 +44,24 @@ function addNavSearchOutsideClickListener(elementId, dotNetHelper) {
         }
     };
 }
+
+function addNavMenuOutsideClickListener(elementId, dotNetHelper) {
+    const listener = (event) => {
+        const element = document.getElementById(elementId);
+        const eventPath = event.composedPath ? event.composedPath() : [];
+
+        if (!element || element.contains(event.target) || eventPath.includes(element)) {
+            return;
+        }
+
+        dotNetHelper.invokeMethodAsync('CloseAccountDropdowns').catch(() => {});
+    };
+
+    document.addEventListener('pointerdown', listener, true);
+
+    return {
+        dispose: () => {
+            document.removeEventListener('pointerdown', listener, true);
+        }
+    };
+}

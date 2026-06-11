@@ -9,15 +9,17 @@ public partial class PlacementsTab
     [Parameter] public IEnumerable<Placement> Placements { get; set; } = Enumerable.Empty<Placement>();
     [Parameter] public ParticipationMode ParticipationMode { get; set; }
 
-    private IEnumerable<string> GetParticipantNames(Placement placement)
+    private IEnumerable<string> GetUserParticipantNames(Placement placement)
     {
-        return ParticipationMode switch
-        {
-            ParticipationMode.Individual => placement.Users.Select(GetUserLabel),
-            ParticipationMode.Team => placement.Teams.Select(team => team.Name),
-            _ => Enumerable.Empty<string>()
-        };
+        return ParticipationMode == ParticipationMode.Individual
+            ? placement.Users.Select(GetUserLabel)
+            : Enumerable.Empty<string>();
     }
+
+    private static string BuildTeamProfileHref(string teamName) =>
+        string.IsNullOrWhiteSpace(teamName)
+            ? string.Empty
+            : $"/teams/{Uri.EscapeDataString(teamName.Trim())}";
 
     private static string GetUserLabel(DTOs.Users.PublicUserDTO user)
     {

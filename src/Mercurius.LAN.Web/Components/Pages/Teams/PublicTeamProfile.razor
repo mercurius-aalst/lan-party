@@ -41,7 +41,7 @@ else
 
             <header class="brand-card public-team-hero">
                 <div class="public-team-hero-identity">
-                    <span class="public-team-avatar" aria-hidden="true">@GetTeamInitials(_team.TeamName)</span>
+                    <TeamIdentityDisplay Name="@_team.TeamName" LogoUrl="@_team.LogoUrl" Variant="hero" Size="large" ShowName="false" />
                     <div>
                         <span class="section-eyebrow">Team profile</span>
                         <h1>@_team.TeamName</h1>

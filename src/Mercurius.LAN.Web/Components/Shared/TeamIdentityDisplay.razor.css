@@ -1,0 +1,102 @@
+.team-identity-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.team-identity-display--card {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.65rem;
+    width: 100%;
+}
+
+.team-identity-display--hero {
+    display: inline-flex;
+}
+
+.team-identity-display--placement {
+    gap: 0.45rem;
+}
+
+.team-identity-avatar {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #1976d2;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.team-identity-avatar--image {
+    background: transparent;
+}
+
+.team-identity-logo {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.team-identity-name {
+    min-width: 0;
+    max-width: 100%;
+    color: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+    text-align: inherit;
+}
+
+.team-identity-display--participant-card .team-identity-avatar {
+    width: 44px;
+    height: 44px;
+}
+
+.team-identity-display--large .team-identity-avatar {
+    width: clamp(3rem, 7vw, 3.8rem);
+    height: clamp(3rem, 7vw, 3.8rem);
+    border-radius: 16px;
+    background: var(--color-dark-navy);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    font-weight: 800;
+}
+
+.team-identity-display--large .team-identity-avatar--image {
+    background: transparent;
+}
+
+.team-identity-display--small .team-identity-avatar {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.82rem;
+}
+
+.team-identity-display--compact .team-identity-avatar {
+    width: 1.35rem;
+    height: 1.35rem;
+    font-size: 0.7rem;
+}
+
+.team-identity-display--link:hover .team-identity-name,
+.team-identity-display[href]:hover .team-identity-name {
+    text-decoration: underline;
+    text-underline-offset: 0.18em;
+}
+
+.team-identity-display[href]:focus-visible {
+    border-radius: 10px;
+    outline: 3px solid rgba(34, 197, 94, 0.22);
+    outline-offset: 3px;
+}

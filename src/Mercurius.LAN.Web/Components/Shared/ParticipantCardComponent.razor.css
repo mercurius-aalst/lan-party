@@ -38,10 +38,6 @@
     background: #22c55e;
 }
 
-.team-avatar {
-    background: #1976d2;
-}
-
 .participant-overview-name {
     font-size: 1rem;
     font-weight: 700;
@@ -52,4 +48,9 @@
     max-width: 100%;
     white-space: normal;
     line-height: 1.25;
+}
+
+.participant-overview-card ::deep(.team-identity-name) {
+    color: #222;
+    text-align: center;
 }

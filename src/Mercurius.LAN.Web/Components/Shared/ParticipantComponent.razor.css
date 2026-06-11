@@ -36,6 +36,15 @@
     color: var(--color-dark-navy);
 }
 
+.participant-name ::deep(.team-identity-display) {
+    color: var(--color-deep-green);
+}
+
+.participant-name ::deep(.team-identity-name) {
+    font-size: inherit;
+    font-weight: inherit;
+}
+
 .participant-profile-link {
     color: var(--color-deep-green);
     font-weight: 800;
