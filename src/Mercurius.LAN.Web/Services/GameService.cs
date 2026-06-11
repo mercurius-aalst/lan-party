@@ -10,27 +10,36 @@ namespace Mercurius.LAN.Web.Services
     public class GameService : IGameService
     {
         private readonly ILANClient _lanClient;
+        private readonly IConfiguration _configuration;
 
-        public GameService(ILANClient lanClient)
+        public GameService(ILANClient lanClient, IConfiguration configuration)
         {
             _lanClient = lanClient;
+            _configuration = configuration;
         }
 
         public Task<List<Game>> GetGamesAsync() => _lanClient.GetGamesAsync();
 
-        public Task<GameExtended?> GetGameByIdAsync(Guid id) => _lanClient.GetGameByIdAsync(id);
+        public async Task<GameExtended?> GetGameByIdAsync(Guid id)
+        {
+            var game = await _lanClient.GetGameByIdAsync(id);
+            if(game is not null)
+                TeamAssetUrlResolver.Resolve(_configuration, game);
 
-        public Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId) =>
-            _lanClient.RegisterUserForGameAsync(id, new RegisterGameUserDTO { UserId = userId });
+            return game;
+        }
 
-        public Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId) =>
-            _lanClient.UnregisterUserFromGameAsync(id, userId);
+        public async Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId) =>
+            ResolveGameAssetUrls(await _lanClient.RegisterUserForGameAsync(id, new RegisterGameUserDTO { UserId = userId }));
 
-        public Task<GameExtended> RegisterTeamForGameAsync(Guid id, Guid teamId) =>
-            _lanClient.RegisterTeamForGameAsync(id, new RegisterGameTeamDTO { TeamId = teamId });
+        public async Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId) =>
+            ResolveGameAssetUrls(await _lanClient.UnregisterUserFromGameAsync(id, userId));
 
-        public Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId) =>
-            _lanClient.UnregisterTeamFromGameAsync(id, teamId);
+        public async Task<GameExtended> RegisterTeamForGameAsync(Guid id, Guid teamId) =>
+            ResolveGameAssetUrls(await _lanClient.RegisterTeamForGameAsync(id, new RegisterGameTeamDTO { TeamId = teamId }));
+
+        public async Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId) =>
+            ResolveGameAssetUrls(await _lanClient.UnregisterTeamFromGameAsync(id, teamId));
 
         public async Task<GameExtended> CreateGameAsync(CreateGameDTO newGame, string? tempFilePath, string? contentType, string? fileName)
         {
@@ -60,7 +69,7 @@ namespace Mercurius.LAN.Web.Services
 
             try
             {
-                return await _lanClient.CreateGameAsync(formData);
+                return ResolveGameAssetUrls(await _lanClient.CreateGameAsync(formData));
             }
             finally
             {
@@ -105,7 +114,7 @@ namespace Mercurius.LAN.Web.Services
 
             try
             {
-                return await _lanClient.UpdateGameAsync(id, formData);
+                return ResolveGameAssetUrls(await _lanClient.UpdateGameAsync(id, formData));
             }
             finally
             {
@@ -122,14 +131,21 @@ namespace Mercurius.LAN.Web.Services
             }
         }
 
-        public Task<GameExtended?> GetGameDetailAsync(Guid id) => _lanClient.GetGameByIdAsync(id);
+        public Task<GameExtended?> GetGameDetailAsync(Guid id) => GetGameByIdAsync(id);
 
         public Task StartGameAsync(Guid id) => _lanClient.StartGameAsync(id);
         public Task CancelGameAsync(Guid id) => _lanClient.CancelGameAsync(id);
         public Task ResetGameAsync(Guid id) => _lanClient.ResetGameAsync(id);
         public Task DeleteGameAsync(Guid id) => _lanClient.DeleteGameAsync(id);
-        public Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors) => _lanClient.ReplaceGameSponsorsAsync(id, sponsors);
+        public async Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors) =>
+            ResolveGameAssetUrls(await _lanClient.ReplaceGameSponsorsAsync(id, sponsors));
         public Task<Match> UpdateMatchScoresAsync(Guid matchId, UpdateMatchDTO updateMatchDto) => _lanClient.UpdateMatchAsync(matchId, updateMatchDto);
         public Task CompleteGameAsync(Guid id) => _lanClient.CompleteGameAsync(id);
+
+        private GameExtended ResolveGameAssetUrls(GameExtended game)
+        {
+            TeamAssetUrlResolver.Resolve(_configuration, game);
+            return game;
+        }
     }
 }

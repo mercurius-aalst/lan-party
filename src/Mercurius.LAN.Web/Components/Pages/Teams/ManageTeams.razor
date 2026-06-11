@@ -1,0 +1,304 @@
+@page "/teams/manage"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+
+<PageTitle>Manage Teams</PageTitle>
+
+@if(_isLoading)
+{
+    <LoadingScreen Message="Loading your teams..." />
+}
+else if(!string.IsNullOrWhiteSpace(_loadError))
+{
+    <StatusPage Eyebrow="Teams"
+                Title="Team management unavailable"
+                Message="@_loadError"
+                PrimaryHref="/teams/manage"
+                PrimaryLabel="Try Again"
+                SecondaryHref="/games"
+                SecondaryLabel="Browse Tournaments" />
+}
+else
+{
+    <section class="team-manage-page">
+        <section class="team-roster-strip brand-page-hero" aria-label="Your teams">
+            <div class="team-roster-copy">
+                <span class="section-eyebrow">Team HQ</span>
+                <h1>Your Teams</h1>
+                <p>Select a squad, create a new one, or jump into captain tools when you need to tune the roster.</p>
+            </div>
+
+            <div class="team-tile-row">
+                <button type="button" class="participant-overview-card team-create-tile" @onclick="OpenCreateTeamDialogAsync">
+                    <span class="participant-avatar add-avatar">
+                        <span class="bi bi-people-fill" aria-hidden="true"></span>
+                    </span>
+                    <span class="participant-overview-name">Create a team</span>
+                </button>
+
+                @foreach(var team in ManageableTeams)
+                {
+                    <div class="@GetTeamCardShellClass(team.Id)">
+                        <ParticipantCardComponent Participant="GetTeamParticipant(team)" OnParticipantSelected="SelectTeamParticipant" />
+                        @if(IsCaptain(team))
+                        {
+                            <span class="team-card-role-badge">Captain</span>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+
+        <section class="team-received-invites-section" id="received-invites">
+            <div class="team-received-invites-header">
+                <div>
+                    <span class="section-eyebrow">Invite Inbox</span>
+                    <h2>Pending Invites</h2>
+                </div>
+                <small>@_summary.ReceivedPendingInvites.Count pending</small>
+            </div>
+            @if(_summary.ReceivedPendingInvites.Count == 0)
+            {
+                <p class="team-empty">No pending invites from other teams.</p>
+            }
+            else
+            {
+                <div class="team-invite-card-list">
+                    @foreach(var invite in _summary.ReceivedPendingInvites)
+                    {
+                        <article class="team-invite-card">
+                            <div>
+                                <TeamIdentityDisplay Name="@invite.TeamName" LogoUrl="@invite.TeamLogoUrl" Href="@BuildTeamProfileHref(invite.TeamName)" Variant="inline" Size="small" />
+                                <small>Expires @invite.ExpiresAt.ToLocalTime().ToString("g")</small>
+                            </div>
+                            <div class="team-invite-actions">
+                                <button type="button" class="team-icon-button team-icon-button--success" @onclick="@(() => RespondInviteAsync(invite.Id, true))" aria-label="Accept invite">
+                                    <span class="bi bi-check-lg" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" class="team-icon-button team-icon-button--danger" @onclick="@(() => RespondInviteAsync(invite.Id, false))" aria-label="Decline invite">
+                                    <span class="bi bi-x-lg" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <div class="team-manage-workspace">
+            <main class="team-detail-surface">
+                @if(SelectedTeam is null)
+                {
+                    <section class="team-detail-empty">
+                        <span class="section-eyebrow">Workspace</span>
+                        <h2>No team selected</h2>
+                        <p>Select a team from the left, create one, or accept an invite to manage roster details.</p>
+                    </section>
+                }
+                else
+                {
+                    var team = SelectedTeam;
+                    var isCaptain = IsCaptain(team);
+                    <section class="team-stage" id="@($"team-{team.Id:N}")">
+                        <nav class="team-tabs" aria-label="Team sections">
+                            <button type="button" class="@GetTabClass(TeamManagementTab.Members)" @onclick="() => SelectTab(TeamManagementTab.Members)">Members</button>
+                            @if(isCaptain)
+                            {
+                                <button type="button" class="@GetTabClass(TeamManagementTab.Management)" @onclick="() => SelectTab(TeamManagementTab.Management)">Management</button>
+                            }
+                        </nav>
+
+                        <div class="team-tab-panel">
+                            @if(_activeTab == TeamManagementTab.Members)
+                            {
+                                <div class="team-panel-toolbar">
+                                    <span class="section-eyebrow">Active users</span>
+                                    @if(isCaptain)
+                                    {
+                                        <button type="button" class="button-primary team-toolbar-action" @onclick="() => OpenInviteDialogAsync(team.Id)">
+                                            <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
+                                            Invite
+                                        </button>
+                                    }
+                                </div>
+
+                                <div class="team-member-grid participants-overview-grid">
+                                    @foreach(var member in team.Members)
+                                    {
+                                        <div class="team-member-card-shell">
+                                            <ParticipantCardComponent Participant="ParticipantViewModel.FromUser(member)" OnParticipantSelected="SelectMemberParticipant" />
+                                            @if(member.Id == team.CaptainUserId)
+                                            {
+                                                <span class="team-card-role-badge">Captain</span>
+                                            }
+                                            else if(isCaptain)
+                                            {
+                                                <button type="button"
+                                                        class="team-member-remove-button"
+                                                        aria-label="@($"Remove {GetMemberName(member)} from {team.Name}")"
+                                                        title="@($"Remove {GetMemberName(member)}")"
+                                                        @onclick="@(() => ConfirmRemoveMemberAsync(team.Id, team.Name, member.Id, GetMemberName(member)))">
+                                                    <span class="bi bi-person-dash" aria-hidden="true"></span>
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+
+                                @if(!isCaptain)
+                                {
+                                    <section class="team-section team-member-actions">
+                                        <div class="team-section-heading">
+                                            <span class="section-eyebrow">Membership</span>
+                                            <h3>Your Seat</h3>
+                                        </div>
+                                        <p>You are a member of this team. Captain-only actions are hidden for this workspace.</p>
+                                        <button type="button" class="button-secondary team-danger-button" @onclick="@(() => ConfirmLeaveAsync(team.Id))">
+                                            <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
+                                            Leave team
+                                        </button>
+                                    </section>
+                                }
+                            }
+                            else if(isCaptain)
+                            {
+                                <div class="team-management-grid">
+                                    <section class="team-section">
+                                        <div class="team-section-heading">
+                                            <span class="section-eyebrow">Ownership</span>
+                                            <h3>Captainship</h3>
+                                        </div>
+                                        <label class="team-form-field">
+                                            <span>New captain</span>
+                                            <select class="team-form-control" value="@GetTransferSelection(team.Id)" @onchange="args => SetTransferSelection(team.Id, args.Value?.ToString())">
+                                                <option value="">Select a member</option>
+                                                @foreach(var member in team.Members.Where(member => member.Id != team.CaptainUserId))
+                                                {
+                                                    <option value="@member.Id">@GetMemberName(member)</option>
+                                                }
+                                            </select>
+                                        </label>
+                                        <button type="button" class="button-secondary team-warning-button" disabled="@(!GetTransferSelection(team.Id).HasValue)" @onclick="@(() => TransferCaptainAsync(team.Id))">
+                                            <span class="bi bi-arrow-left-right" aria-hidden="true"></span>
+                                            Transfer captainship
+                                        </button>
+                                    </section>
+
+                                    <section class="team-section">
+                                        <div class="team-section-heading">
+                                            <span class="section-eyebrow">Identity</span>
+                                            <h3>Logo</h3>
+                                        </div>
+                                        <div class="team-logo-editor">
+                                            <div class="team-logo-preview-shell">
+                                                @if(GetLogoPreview(team.Id) is { } preview)
+                                                {
+                                                    <img src="@preview" alt="Selected logo preview" class="team-logo-preview" />
+                                                }
+                                                else if(!string.IsNullOrWhiteSpace(team.LogoUrl))
+                                                {
+                                                    <img src="@team.LogoUrl" alt="@($"{team.Name} saved logo")" class="team-logo-preview" />
+                                                }
+                                                else
+                                                {
+                                                    <span>@GetInitials(team.Name)</span>
+                                                }
+                                            </div>
+                                            <div class="team-file-picker-group">
+                                                <label class="team-file-picker">
+                                                    <span class="bi bi-image" aria-hidden="true"></span>
+                                                    <span>Choose logo</span>
+                                                    <InputFile OnChange="@((args) => SelectLogoAsync(team.Id, args))" accept="image/png,image/jpeg,image/webp,image/gif" />
+                                                </label>
+                                                <small>@GetLogoFileName(team.Id)</small>
+                                            </div>
+                                        </div>
+                                        <div class="team-logo-actions">
+                                            <button type="button" class="button-primary" disabled="@(!HasSelectedLogo(team.Id))" @onclick="@(() => UploadLogoAsync(team.Id))">
+                                                <span class="bi bi-upload" aria-hidden="true"></span>
+                                                Save logo
+                                            </button>
+                                            <button type="button" class="button-secondary team-danger-button" disabled="@string.IsNullOrWhiteSpace(team.LogoUrl)" @onclick="@(() => RemoveLogoAsync(team.Id))">
+                                                <span class="bi bi-trash3" aria-hidden="true"></span>
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </section>
+
+                                    <section class="team-section">
+                                        <div class="team-section-heading team-section-heading--split">
+                                            <div>
+                                                <span class="section-eyebrow">Pending</span>
+                                                <h3>Invites</h3>
+                                            </div>
+                                            <button type="button" class="button-primary team-section-small-action" @onclick="@(() => OpenInviteDialogAsync(team.Id))">
+                                                <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
+                                                Invite
+                                            </button>
+                                        </div>
+                                        @if(GetSentInvites(team.Id).Count == 0)
+                                        {
+                                            <p class="team-empty team-empty--compact">No pending sent invites.</p>
+                                        }
+                                        else
+                                        {
+                                            <ul class="team-invite-list">
+                                                @foreach(var invite in GetSentInvites(team.Id))
+                                                {
+                                                    <li>
+                                                        <span>@(invite.Username ?? "Invited player")</span>
+                                                        <button type="button" class="team-text-button team-text-button--danger" @onclick="@(() => CancelInviteAsync(team.Id, invite.Id))">
+                                                            <span class="bi bi-x-circle" aria-hidden="true"></span>
+                                                            Cancel
+                                                        </button>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        }
+                                    </section>
+
+                                    <section class="team-section team-danger-zone">
+                                        <div class="team-section-heading">
+                                            <span class="section-eyebrow">Danger Zone</span>
+                                            <h3>Remove Team</h3>
+                                        </div>
+                                        <p>Delete this team and remove it from your managed teams.</p>
+                                        <button type="button" class="button-secondary team-danger-button" @onclick="@(() => ConfirmDeleteTeamAsync(team.Id, team.Name))">
+                                            <span class="bi bi-trash3" aria-hidden="true"></span>
+                                            Delete team
+                                        </button>
+                                    </section>
+                                </div>
+                            }
+                        </div>
+                    </section>
+                }
+            </main>
+        </div>
+
+        <CreateTeamDialog IsOpen="_isCreateTeamDialogOpen" TeamCreated="CreateTeamAsync" Canceled="CloseCreateTeamDialog" />
+        <InviteUserDialog IsOpen="_isInviteDialogOpen" TeamName="@_inviteTeamName" UserSelected="InviteUserAsync" Canceled="CloseInviteDialog" />
+
+        @if(_confirmation is { } confirmation)
+        {
+            <div class="team-modal-overlay" @onclick="CancelConfirmation">
+                <div class="team-modal-dialog team-confirm-dialog" @onclick:stopPropagation>
+                    <button type="button" class="team-modal-close" aria-label="Close confirmation dialog" @onclick="CancelConfirmation">&times;</button>
+                    <div class="team-modal-header">
+                        <span class="section-eyebrow">@confirmation.Eyebrow</span>
+                        <h3>@confirmation.Title</h3>
+                        <p>@confirmation.Message</p>
+                    </div>
+                    <div class="team-dialog-actions">
+                        <button type="button" class="button-secondary" @onclick="CancelConfirmation">Cancel</button>
+                        <button type="button" class="button-primary team-danger-confirm-button" @onclick="ConfirmPendingActionAsync">
+                            @confirmation.ConfirmLabel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </section>
+}

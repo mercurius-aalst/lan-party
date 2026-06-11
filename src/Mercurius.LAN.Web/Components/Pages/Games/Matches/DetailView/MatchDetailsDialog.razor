@@ -15,12 +15,26 @@
                 <span class="section-eyebrow">Match details</span>
                 <div class="match-header">
                     <span class="match-header-name">
-                        @Participant1Name
+                        @if(HeaderParticipant1?.Team is { } team1)
+                        {
+                            <TeamIdentityDisplay Name="@team1.Name" LogoUrl="@team1.LogoUrl" Href="@BuildTeamProfileHref(team1.Name)" Variant="inline" Size="small" />
+                        }
+                        else
+                        {
+                            @Participant1Name
+                        }
                         <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
                     </span>
                     <span class="match-header-vs">vs</span>
                     <span class="match-header-name">
-                        @Participant2Name
+                        @if(HeaderParticipant2?.Team is { } team2)
+                        {
+                            <TeamIdentityDisplay Name="@team2.Name" LogoUrl="@team2.LogoUrl" Href="@BuildTeamProfileHref(team2.Name)" Variant="inline" Size="small" />
+                        }
+                        else
+                        {
+                            @Participant2Name
+                        }
                         <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
                     </span>
                 </div>

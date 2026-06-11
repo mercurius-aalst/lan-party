@@ -80,7 +80,7 @@ else if(Participant?.Team is Models.Participants.Team team)
                 <h4 class="participant-name">
                     @if(HasTeamName(team))
                     {
-                        <a class="participant-profile-link" href="@GetTeamProfileHref(team)">@team.Name</a>
+                        <TeamIdentityDisplay Name="@team.Name" LogoUrl="@team.LogoUrl" Href="@GetTeamProfileHref(team)" Variant="inline" Size="small" />
                     }
                     else
                     {

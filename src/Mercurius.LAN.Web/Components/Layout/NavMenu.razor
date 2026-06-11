@@ -93,22 +93,10 @@
                     @for(var index = 0; index < _searchResults.Count; index++)
                     {
                         var result = _searchResults[index];
-                        <button type="button"
-                                class="@GetSearchResultItemClass(index)"
-                                role="option"
-                                aria-selected="@(_highlightedSearchIndex == index)"
-                                @onclick="() => SelectSearchResultAsync(result)"
-                                @onmouseover="() => SetSearchHighlight(index)">
-                            <span class="@GetSearchResultIconClass(result.Type)" aria-hidden="true"></span>
-                            <span class="nav-search-result-copy">
-                                <span class="nav-search-result-label">@result.DisplayLabel</span>
-                                @if(!string.IsNullOrWhiteSpace(result.SupportingText))
-                                {
-                                    <span class="nav-search-result-support">@result.SupportingText</span>
-                                }
-                            </span>
-                            <span class="nav-search-result-type">@GetSearchResultTypeLabel(result.Type)</span>
-                        </button>
+                        <GlobalSearchResultItem Result="result"
+                                                IsActive="@(_highlightedSearchIndex == index)"
+                                                Selected="SelectSearchResultAsync"
+                                                Hovered="@(() => SetSearchHighlight(index))" />
                     }
                 }
             </div>
@@ -128,7 +116,6 @@
                     @if(_isDropdownVisible)
                     {
                         <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
-                            <NavLink href="/admin/teams" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Teams</NavLink>
                             <NavLink href="/admin/sponsors" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Sponsors</NavLink>
                         </div>
                     }
@@ -138,19 +125,78 @@
 
         <AuthorizeView>
             <Authorized Context="authState">
-                <div class="nav-menu-group" @onclick:stopPropagation="true">
-                    <button type="button"
-                            class="@GetUserButtonClass()"
-                            @onclick="ToggleUserMenu"
-                            aria-expanded="@GetAriaExpanded(_isUserMenuVisible)">
-                        <span class="user-icon bi bi-person-circle"></span>
-                        <span>@GetDisplayName(authState.User)</span>
-                    </button>
+                <div id="@AccountMenuContainerElementId" class="nav-menu-group nav-user-widget" @onclick:stopPropagation="true">
+                    <div class="nav-user-widget-controls">
+                        <button type="button"
+                                class="@GetUserButtonClass()"
+                                @onclick="ToggleUserMenu"
+                                aria-expanded="@GetAriaExpanded(_isUserMenuVisible)"
+                                aria-label="@GetUserMenuAriaLabel(authState.User)">
+                            <span class="user-icon bi bi-person-circle" aria-hidden="true"></span>
+                            <span>@GetDisplayName(authState.User)</span>
+                        </button>
+                        <button type="button"
+                                class="@GetNotificationButtonClass()"
+                                @onclick="ToggleNotificationMenu"
+                                aria-expanded="@GetAriaExpanded(_isNotificationMenuVisible)"
+                                aria-label="@GetNotificationAriaLabel()">
+                            <span class="bi bi-bell-fill" aria-hidden="true"></span>
+                            @if(NotificationCount > 0)
+                            {
+                                <span class="nav-notification-badge">@NotificationCount</span>
+                            }
+                        </button>
+                    </div>
                     @if(_isUserMenuVisible)
                     {
-                        <div class="dropdown-menu-custom mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[12rem]" @onclick:stopPropagation="true">
+                        <div class="dropdown-menu-custom nav-user-menu mt-2 flex min-w-full flex-col gap-1 md:mt-0" @onclick:stopPropagation="true">
                             <NavLink href="/profile" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Profile</NavLink>
+                            <NavLink href="/teams/manage" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Teams</NavLink>
                             <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
+                        </div>
+                    }
+                    @if(_isNotificationMenuVisible)
+                    {
+                        <div class="dropdown-menu-custom nav-notification-dropdown mt-2 flex min-w-full flex-col gap-1 md:mt-0" @onclick:stopPropagation="true">
+                            <div class="nav-notification-menu">
+                                <div class="nav-notification-header">
+                                    <strong>Notifications</strong>
+                                    @if(NotificationCount > 0)
+                                    {
+                                        <button type="button" @onclick="MarkNotificationsReadAsync">Mark read</button>
+                                    }
+                                </div>
+                                @if(NotificationService.Notifications.Count == 0)
+                                {
+                                    <div class="nav-notification-empty">No notifications.</div>
+                                }
+                                else
+                                {
+                                    @foreach(var notification in NotificationService.Notifications)
+                                    {
+                                        <div class="@GetNotificationItemClass(notification)">
+                                            <a href="@notification.Href" @onclick="HandleNavigationClicked">
+                                                <span>@notification.Title</span>
+                                                <small>@notification.Message</small>
+                                            </a>
+                                            <div class="nav-notification-actions">
+                                                @if(notification.InviteId.HasValue)
+                                                {
+                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, true)" aria-label="Accept invitation">
+                                                        <span class="bi bi-check-lg" aria-hidden="true"></span>
+                                                    </button>
+                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, false)" aria-label="Decline invitation">
+                                                        <span class="bi bi-x-lg" aria-hidden="true"></span>
+                                                    </button>
+                                                }
+                                                <button type="button" class="nav-notification-action" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label="Dismiss notification">
+                                                    <span class="bi bi-dash-lg" aria-hidden="true"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
                         </div>
                     }
                 </div>

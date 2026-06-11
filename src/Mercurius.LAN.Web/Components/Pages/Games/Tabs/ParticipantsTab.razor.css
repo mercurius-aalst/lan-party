@@ -148,10 +148,6 @@
     background: var(--color-primary-green);
 }
 
-.team-avatar {
-    background: var(--color-dark-navy);
-}
-
 .participant-overview-name {
     color: var(--color-dark-navy);
     font-size: 0.95rem;

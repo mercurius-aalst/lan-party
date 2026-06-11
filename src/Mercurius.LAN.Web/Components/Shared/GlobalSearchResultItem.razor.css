@@ -1,0 +1,91 @@
+.nav-search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    width: 100%;
+    padding: 0.72rem 0.78rem;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-dark-navy);
+    text-align: left;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.nav-search-result-item:hover,
+.nav-search-result-item--active {
+    border-color: rgba(15, 23, 42, 0.13);
+    background: #eef2f7;
+}
+
+.nav-search-result-item:focus-visible {
+    border-color: rgba(21, 128, 61, 0.28);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    outline: none;
+}
+
+.nav-search-result-item:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+.nav-search-result-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.65rem;
+    height: 1.65rem;
+    border-radius: 999px;
+    font-size: 0.86rem;
+}
+
+.nav-search-result-icon--user {
+    background: rgba(59, 130, 246, 0.13);
+    color: #1d4ed8;
+}
+
+.nav-search-result-icon--team {
+    background: rgba(16, 185, 129, 0.14);
+    color: #047857;
+}
+
+.nav-search-result-icon--game {
+    background: rgba(249, 115, 22, 0.14);
+    color: #c2410c;
+}
+
+.nav-search-result-copy {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+}
+
+.nav-search-result-label {
+    overflow: hidden;
+    font-weight: 700;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nav-search-result-support {
+    margin-top: 0.1rem;
+    color: rgba(15, 23, 42, 0.58);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.nav-search-result-type {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.08);
+    color: rgba(15, 23, 42, 0.66);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}

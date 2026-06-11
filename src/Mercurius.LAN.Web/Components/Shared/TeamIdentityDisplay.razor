@@ -1,0 +1,38 @@
+@if(HasHref)
+{
+    <a class="@ContainerClass" href="@Href" aria-label="@LinkLabel">
+        <span class="@AvatarClass">
+            @if(HasLogo)
+            {
+                <img src="@LogoUrl" alt="@($"{DisplayName} logo")" class="team-identity-logo" />
+            }
+            else
+            {
+                @Initial
+            }
+        </span>
+        @if(ShowName)
+        {
+            <span class="team-identity-name">@DisplayName</span>
+        }
+    </a>
+}
+else
+{
+    <span class="@ContainerClass">
+        <span class="@AvatarClass">
+            @if(HasLogo)
+            {
+                <img src="@LogoUrl" alt="@($"{DisplayName} logo")" class="team-identity-logo" />
+            }
+            else
+            {
+                @Initial
+            }
+        </span>
+        @if(ShowName)
+        {
+            <span class="team-identity-name">@DisplayName</span>
+        }
+    </span>
+}

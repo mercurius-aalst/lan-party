@@ -3,6 +3,7 @@ using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.DTOs.PublicProfiles;
 using Mercurius.LAN.Web.DTOs.Search;
+using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Games;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
@@ -21,6 +22,13 @@ namespace Mercurius.LAN.Web.APIClients
 
         [Get("/lan/search")]
         Task<SearchResponseDTO> SearchAsync(
+            [AliasAs("query")] string query,
+            [AliasAs("cursor")] string? cursor = null,
+            [AliasAs("pageSize")] int? pageSize = null,
+            CancellationToken cancellationToken = default);
+
+        [Get("/lan/users")]
+        Task<UserSearchResponseDTO> SearchUsersAsync(
             [AliasAs("query")] string query,
             [AliasAs("cursor")] string? cursor = null,
             [AliasAs("pageSize")] int? pageSize = null,
@@ -80,23 +88,42 @@ namespace Mercurius.LAN.Web.APIClients
         [Post("/lan/teams")]
         Task<Team> CreateTeamAsync([Body] CreateTeamDTO team);
 
-        [Delete("/lan/teams/{id}/users/{userId}")]
-        Task<Team> RemoveTeamMemberAsync(Guid id, Guid userId);
-
-        [Put("/lan/teams/{id}")]
-        Task<Team> UpdateTeamAsync(Guid id, [Body] UpdateTeamDTO team);
-
         [Delete("/lan/teams/{id}")]
         Task DeleteTeamAsync(Guid id);
 
-        [Post("/lan/teams/{id}/users/invite/{userId}")]
-        Task<TeamInvite> InviteTeamUserAsync(Guid id, Guid userId);
+        [Get("/lan/teams/me/summary")]
+        Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default);
 
-        [Put("/lan/teams/{id}/users/invite/{userId}")]
-        Task<TeamInvite> RespondToTeamInviteAsync(Guid id, Guid userId, [Body] RespondTeamInviteDTO response);
+        [Get("/lan/teams/me/invites")]
+        Task<IReadOnlyList<TeamInviteSummaryDTO>> GetCurrentUserTeamInvitesAsync(CancellationToken cancellationToken = default);
 
-        [Get("/lan/teams/users/{userId}/invites")]
-        Task<IEnumerable<TeamInvite>> GetUserTeamInvitesAsync(Guid userId);
+        [Get("/lan/teams/me/sent-invites")]
+        Task<IReadOnlyList<TeamInviteSummaryDTO>> GetCurrentUserSentTeamInvitesAsync(CancellationToken cancellationToken = default);
+
+        [Post("/lan/teams/{id}/leave")]
+        Task<TeamManagementSummaryDTO> LeaveTeamAsync(Guid id);
+
+        [Delete("/lan/teams/{id}/members/{userId}")]
+        Task<TeamManagementSummaryDTO> RemoveTeamMemberAsync(Guid id, Guid userId);
+
+        [Post("/lan/teams/{id}/invites/{userId}")]
+        Task<TeamInvite> CreateTeamInviteAsync(Guid id, Guid userId);
+
+        [Delete("/lan/teams/{id}/invites/{inviteId}")]
+        Task<TeamInvite> CancelTeamInviteAsync(Guid id, Guid inviteId);
+
+        [Put("/lan/teams/invites/{inviteId}")]
+        Task<TeamInvite> RespondToCurrentUserTeamInviteAsync(Guid inviteId, [Body] RespondTeamInviteDTO response);
+
+        [Put("/lan/teams/{id}/captain")]
+        Task<TeamManagementSummaryDTO> TransferTeamCaptainAsync(Guid id, [Body] TransferCaptainDTO transfer);
+
+        [Multipart]
+        [Post("/lan/teams/{id}/logo")]
+        Task<TeamLogoResponseDTO> UploadTeamLogoAsync(Guid id, [AliasAs("logo")] StreamPart logo);
+
+        [Delete("/lan/teams/{id}/logo")]
+        Task<TeamLogoResponseDTO> RemoveTeamLogoAsync(Guid id);
 
         [Get("/lan/public/users/{username}")]
         Task<PublicUserProfileDTO> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default);

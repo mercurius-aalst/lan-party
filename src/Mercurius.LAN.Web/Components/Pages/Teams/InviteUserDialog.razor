@@ -1,0 +1,172 @@
+@using Mercurius.LAN.Web.DTOs.Search
+@using Mercurius.LAN.Web.Services
+
+@if(IsOpen)
+{
+    <div class="team-modal-overlay" @onclick="CancelAsync">
+        <div class="team-modal-dialog" @onclick:stopPropagation>
+            <button type="button" class="team-modal-close" aria-label="Close invite player dialog" @onclick="CancelAsync">&times;</button>
+            <div class="team-modal-header">
+                <span class="section-eyebrow">Recruit</span>
+                <h3>Invite player</h3>
+                <p>Select a user to invite to @TeamName.</p>
+            </div>
+
+            <div class="team-dialog-form-container">
+                <div class="team-dialog-form">
+                    @if(!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="team-dialog-alert" role="alert">@_error</div>
+                    }
+
+                    <div class="form-group team-search-field">
+                        <label for="invite-search" class="form-label">Search username</label>
+                        <div class="team-search-input-shell">
+                            <span class="bi bi-search" aria-hidden="true"></span>
+                            <input id="invite-search"
+                                   class="form-control"
+                                   value="@_query"
+                                   @oninput="SetQueryAsync"
+                                   autocomplete="off"
+                                   spellcheck="false"
+                                   aria-autocomplete="list"
+                                   aria-expanded="@HasSearchDropdown"
+                                   aria-controls="invite-search-results" />
+                        </div>
+
+                        @if(HasSearchDropdown)
+                        {
+                            <div id="invite-search-results" class="team-search-results" role="listbox" aria-label="User search results">
+                                @if(_isSearching)
+                                {
+                                    <div class="team-search-state" aria-live="polite">
+                                        <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+                                        <span>Searching...</span>
+                                    </div>
+                                }
+                                else if(_results.Count == 0)
+                                {
+                                    <div class="team-search-state" aria-live="polite">
+                                        No matching players found.
+                                    </div>
+                                }
+                                else
+                                {
+                                    @foreach(var result in _results)
+                                    {
+                                        <GlobalSearchResultItem Result="result"
+                                                                Disabled="@(!result.UserId.HasValue)"
+                                                                Selected="SelectCandidateAsync"
+                                                                AdditionalClass="team-search-result" />
+                                    }
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    @if(_selected is { } selected)
+                    {
+                        <div class="team-selected-player">
+                            <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
+                            <span>@selected.DisplayLabel</span>
+                        </div>
+                    }
+
+                    <div class="team-dialog-actions">
+                        <button type="button" class="button-primary" disabled="@(!CanSubmit)" @onclick="SubmitAsync">
+                            <span class="bi bi-send-fill" aria-hidden="true"></span>
+                            Send invite
+                        </button>
+                        <button type="button" class="button-secondary" @onclick="CancelAsync">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Inject] private IUserSearchService UserSearchService { get; set; } = null!;
+
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string TeamName { get; set; } = "this team";
+    [Parameter] public EventCallback<InviteUserDialogResult> UserSelected { get; set; }
+    [Parameter] public EventCallback Canceled { get; set; }
+
+    private string _query = string.Empty;
+    private bool _isSearching;
+    private string? _error;
+    private bool _wasOpen;
+    private readonly List<GlobalSearchResultDTO> _results = [];
+    private GlobalSearchResultDTO? _selected;
+
+    private bool CanSubmit => _selected?.UserId.HasValue == true;
+    private bool HasSearchDropdown => _query.Trim().Length >= 3 && _selected is null && string.IsNullOrWhiteSpace(_error);
+
+    protected override void OnParametersSet()
+    {
+        if(IsOpen && !_wasOpen)
+            Reset();
+
+        _wasOpen = IsOpen;
+    }
+
+    private void Reset()
+    {
+        _query = string.Empty;
+        _selected = null;
+        _results.Clear();
+        _error = null;
+        _isSearching = false;
+    }
+
+    private async Task SetQueryAsync(ChangeEventArgs args)
+    {
+        _query = args.Value?.ToString() ?? string.Empty;
+        _selected = null;
+        _results.Clear();
+        _error = null;
+
+        if(_query.Trim().Length < 3)
+            return;
+
+        _isSearching = true;
+        try
+        {
+            var results = await UserSearchService.SearchAsync(_query);
+            _results.AddRange(results.Take(6));
+        }
+        catch(Exception)
+        {
+            _error = "User search is unavailable right now.";
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private Task SelectCandidateAsync(GlobalSearchResultDTO result)
+    {
+        if(!result.UserId.HasValue)
+            return Task.CompletedTask;
+
+        _selected = result;
+        _query = result.DisplayLabel;
+        _results.Clear();
+        return Task.CompletedTask;
+    }
+
+    private async Task SubmitAsync()
+    {
+        if(_selected?.UserId is not { } userId)
+            return;
+
+        await UserSelected.InvokeAsync(new InviteUserDialogResult(userId, _selected.DisplayLabel));
+    }
+
+    private async Task CancelAsync()
+    {
+        await Canceled.InvokeAsync();
+    }
+}

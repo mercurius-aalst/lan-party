@@ -18,6 +18,8 @@ public partial class MatchDetailsDialog
     [Parameter] public EventCallback OnDataReload { get; set; }
     [Parameter] public string Participant2Name { get; set; } = null!;
     [Parameter] public string Participant1Name { get; set; } = null!;
+    [Parameter] public ParticipantViewModel? Participant1 { get; set; }
+    [Parameter] public ParticipantViewModel? Participant2 { get; set; }
 
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -25,6 +27,8 @@ public partial class MatchDetailsDialog
     private Guid? Participant1Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant1Id : Match.UserParticipant1Id;
     private Guid? Participant2Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant2Id : Match.UserParticipant2Id;
     private Guid? WinnerId => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamWinnerId : Match.UserWinnerId;
+    private ParticipantViewModel? HeaderParticipant1 => Participant1 ?? GetParticipantById(Participant1Id);
+    private ParticipantViewModel? HeaderParticipant2 => Participant2 ?? GetParticipantById(Participant2Id);
     private GameParticipantLookup _participantLookup = GameParticipantLookup.Empty;
 
     protected override void OnParametersSet()
@@ -60,6 +64,11 @@ public partial class MatchDetailsDialog
             return "participant-card loser-card";
         return "participant-card";
     }
+
+    private static string BuildTeamProfileHref(string teamName) =>
+        string.IsNullOrWhiteSpace(teamName)
+            ? string.Empty
+            : $"/teams/{Uri.EscapeDataString(teamName.Trim())}";
 
     private async Task SaveScoresAsync()
     {

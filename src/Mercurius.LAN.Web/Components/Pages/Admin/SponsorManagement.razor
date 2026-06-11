@@ -64,7 +64,7 @@ else
 
                         <div class="form-group">
                             <label for="sponsorLogo">Logo</label>
-                            <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" @bind-Value="_selectedSponsor.Logo" />
+                            <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" LabelText="Choose logo" @bind-Value="_selectedSponsor.Logo" />
                             <ValidationMessage For="@(() => _selectedSponsor.Logo)" />
                         </div>
 

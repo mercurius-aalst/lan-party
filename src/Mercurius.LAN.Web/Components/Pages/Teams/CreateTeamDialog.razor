@@ -1,0 +1,131 @@
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+@if(IsOpen)
+{
+    <div class="team-modal-overlay" @onclick="CancelAsync">
+        <div class="team-modal-dialog" @onclick:stopPropagation>
+            <button type="button" class="team-modal-close" aria-label="Close create team dialog" @onclick="CancelAsync">&times;</button>
+            <div class="team-modal-header">
+                <span class="section-eyebrow">New Squad</span>
+                <h3>Create team</h3>
+                <p>Name your squad and optionally add a logo.</p>
+            </div>
+
+            <div class="team-dialog-form-container">
+                <EditForm Model="_model" OnValidSubmit="SubmitAsync" class="team-dialog-form">
+                    <DataAnnotationsValidator />
+
+                    @if(!string.IsNullOrWhiteSpace(_error))
+                    {
+                        <div class="team-dialog-alert" role="alert">@_error</div>
+                    }
+
+                    <div class="form-group">
+                        <label for="team-name" class="form-label">Team name</label>
+                        <InputText id="team-name" class="form-control" @bind-Value="_model.Name" maxlength="100" />
+                        <ValidationMessage For="@(() => _model.Name)" />
+                    </div>
+
+                    <div class="team-dialog-logo-row">
+                        <div class="team-dialog-logo-preview">
+                            @if(_logo is { } logo)
+                            {
+                                <img src="@logo.PreviewDataUrl" alt="Selected logo preview" />
+                            }
+                            else
+                            {
+                                <span class="bi bi-people-fill" aria-hidden="true"></span>
+                            }
+                        </div>
+                        <div class="team-file-picker-group">
+                            <label class="team-file-picker">
+                                <span class="bi bi-image" aria-hidden="true"></span>
+                                <span>Choose logo</span>
+                                <InputFile OnChange="SelectLogoAsync" accept="image/png,image/jpeg,image/webp,image/gif" />
+                            </label>
+                            <small>@(_logo?.FileName ?? "No file selected")</small>
+                        </div>
+                    </div>
+
+                    <div class="team-dialog-actions">
+                        <button type="submit" class="button-primary">
+                            <span class="bi bi-people-fill" aria-hidden="true"></span>
+                            Create team
+                        </button>
+                        <button type="button" class="button-secondary" @onclick="CancelAsync">Cancel</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private const long MaximumLogoBytes = 2 * 1024 * 1024;
+
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<CreateTeamDialogResult> TeamCreated { get; set; }
+    [Parameter] public EventCallback Canceled { get; set; }
+
+    private readonly CreateTeamFormModel _model = new();
+    private TeamLogoSelection? _logo;
+    private string? _error;
+    private bool _wasOpen;
+
+    protected override void OnParametersSet()
+    {
+        if(IsOpen && !_wasOpen)
+            Reset();
+
+        _wasOpen = IsOpen;
+    }
+
+    private void Reset()
+    {
+        _model.Name = string.Empty;
+        _logo = null;
+        _error = null;
+    }
+
+    private async Task SelectLogoAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+        if(file.Size > MaximumLogoBytes)
+        {
+            _error = "Choose a logo smaller than 2 MB.";
+            _logo = null;
+            return;
+        }
+
+        if(!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+        {
+            _error = "Choose an image file for the team logo.";
+            _logo = null;
+            return;
+        }
+
+        var buffer = new byte[file.Size];
+        await using var stream = file.OpenReadStream(MaximumLogoBytes);
+        await stream.ReadExactlyAsync(buffer);
+        _logo = new TeamLogoSelection(file.Name, file.ContentType, buffer, $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}");
+        _error = null;
+    }
+
+    private async Task SubmitAsync()
+    {
+        await TeamCreated.InvokeAsync(new CreateTeamDialogResult(_model.Name.Trim(), _logo));
+    }
+
+    private async Task CancelAsync()
+    {
+        await Canceled.InvokeAsync();
+    }
+
+    private sealed class CreateTeamFormModel
+    {
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Name { get; set; } = string.Empty;
+    }
+}

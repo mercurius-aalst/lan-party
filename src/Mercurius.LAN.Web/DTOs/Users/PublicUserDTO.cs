@@ -28,6 +28,23 @@ public class PublicUserDTO
         };
     }
 
+    public static PublicUserDTO FromUser(UserProfileDTO user)
+    {
+        return new PublicUserDTO
+        {
+            Id = user.Id,
+            Username = user.Username,
+            DisplayName = string.IsNullOrWhiteSpace(user.DisplayName)
+                ? GetFallbackDisplayName(user.Firstname, user.Lastname, user.Username)
+                : user.DisplayName,
+            Firstname = user.Firstname,
+            Lastname = user.Lastname,
+            DiscordId = user.DiscordId,
+            SteamId = user.SteamId,
+            RiotId = user.RiotId
+        };
+    }
+
     private static string GetFallbackDisplayName(string? firstname, string? lastname, string? username)
     {
         var fullName = string.Join(" ", new[] { firstname, lastname }

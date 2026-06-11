@@ -19,6 +19,18 @@
     padding-left: 0.2em;
 }
 
+.participant-name ::deep(.team-identity-display) {
+    max-width: 100%;
+    color: inherit;
+    font-size: inherit;
+}
+
+.participant-name ::deep(.team-identity-name) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .participant-score {
     font-size: 1.1em;
     color: #388e3c;

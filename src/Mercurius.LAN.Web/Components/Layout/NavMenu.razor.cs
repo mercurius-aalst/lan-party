@@ -14,6 +14,7 @@ public partial class NavMenu : IAsyncDisposable
     private const int SearchDebounceMilliseconds = 300;
     private const int MinimumSearchQueryLength = 3;
     private const string SearchContainerElementId = "global-nav-search-container";
+    private const string AccountMenuContainerElementId = "account-nav-menu-container";
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -25,6 +26,12 @@ public partial class NavMenu : IAsyncDisposable
     private IJSRuntime JSRuntime { get; set; } = null!;
     [Inject]
     private IUserClient UserClient { get; set; } = null!;
+    [Inject]
+    private ITeamNotificationService NotificationService { get; set; } = null!;
+    [Inject]
+    private ITeamRealtimeService TeamRealtimeService { get; set; } = null!;
+    [Inject]
+    private ITeamService TeamService { get; set; } = null!;
 
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
@@ -32,6 +39,7 @@ public partial class NavMenu : IAsyncDisposable
     private bool _isUserMenuVisible = false;
     private bool _isDropdownVisible = false;
     private bool _isInfoMenuVisible = false;
+    private bool _isNotificationMenuVisible = false;
     private string _searchQuery = string.Empty;
     private List<GlobalSearchResultDTO> _searchResults = [];
     private bool _isSearchLoading;
@@ -41,6 +49,7 @@ public partial class NavMenu : IAsyncDisposable
     private long _searchRequestVersion;
     private CancellationTokenSource? _searchCancellationTokenSource;
     private IJSObjectReference? _searchOutsideClickListener;
+    private IJSObjectReference? _accountMenuOutsideClickListener;
     private DotNetObjectReference<NavMenu>? _searchOutsideClickReference;
     private string? _loadedIdentityKey;
     private string? _currentProfileUsername;
@@ -49,10 +58,17 @@ public partial class NavMenu : IAsyncDisposable
     public EventCallback OnNavigationSelected { get; set; }
 
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
-    private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/teams")}";
+    private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/sponsors")}";
     private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
-    private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible;
+    private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible || _isNotificationMenuVisible;
     private bool HasSearchResults => _searchResults.Count > 0;
+    private int NotificationCount => NotificationService.UnreadCount;
+
+    protected override void OnInitialized()
+    {
+        NotificationService.Changed += HandleNotificationsChangedAsync;
+        TeamRealtimeService.TeamStateInvalidated += RefreshNotificationsFromSignalAsync;
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -79,6 +95,8 @@ public partial class NavMenu : IAsyncDisposable
         {
             var profile = await UserClient.GetCurrentUserProfileAsync();
             _currentProfileUsername = profile.User?.Username?.Trim();
+            await NotificationService.RefreshAsync();
+            await TeamRealtimeService.StartAsync();
         }
         catch(Exception)
         {
@@ -98,6 +116,19 @@ public partial class NavMenu : IAsyncDisposable
         else if(!_isSearchDropdownVisible && _searchOutsideClickListener != null)
         {
             await DisposeSearchOutsideClickListenerAsync();
+        }
+
+        if((_isUserMenuVisible || _isNotificationMenuVisible) && _accountMenuOutsideClickListener == null)
+        {
+            _searchOutsideClickReference ??= DotNetObjectReference.Create(this);
+            _accountMenuOutsideClickListener = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "addNavMenuOutsideClickListener",
+                AccountMenuContainerElementId,
+                _searchOutsideClickReference);
+        }
+        else if(!_isUserMenuVisible && !_isNotificationMenuVisible && _accountMenuOutsideClickListener != null)
+        {
+            await DisposeAccountMenuOutsideClickListenerAsync();
         }
     }
 
@@ -120,6 +151,13 @@ public partial class NavMenu : IAsyncDisposable
         var shouldOpen = !_isUserMenuVisible;
         CloseAllTemporarySurfaces();
         _isUserMenuVisible = shouldOpen;
+    }
+
+    private void ToggleNotificationMenu()
+    {
+        var shouldOpen = !_isNotificationMenuVisible;
+        CloseAllTemporarySurfaces();
+        _isNotificationMenuVisible = shouldOpen;
     }
 
     private void HandleOutsideClick()
@@ -152,6 +190,7 @@ public partial class NavMenu : IAsyncDisposable
         _isDropdownVisible = false;
         _isUserMenuVisible = false;
         _isInfoMenuVisible = false;
+        _isNotificationMenuVisible = false;
         CloseSearchDropdown(clearSearchResults, clearSearchQuery);
     }
 
@@ -179,6 +218,7 @@ public partial class NavMenu : IAsyncDisposable
         _isDropdownVisible = false;
         _isUserMenuVisible = false;
         _isInfoMenuVisible = false;
+        _isNotificationMenuVisible = false;
         _isSearchLoading = true;
         _isSearchDropdownVisible = true;
         _searchResults = [];
@@ -223,6 +263,7 @@ public partial class NavMenu : IAsyncDisposable
         _isDropdownVisible = false;
         _isUserMenuVisible = false;
         _isInfoMenuVisible = false;
+        _isNotificationMenuVisible = false;
         _isSearchDropdownVisible = true;
     }
 
@@ -297,6 +338,20 @@ public partial class NavMenu : IAsyncDisposable
         });
     }
 
+    [JSInvokable]
+    public async Task CloseAccountDropdowns()
+    {
+        if(!_isUserMenuVisible && !_isNotificationMenuVisible)
+            return;
+
+        await InvokeAsync(() =>
+        {
+            _isUserMenuVisible = false;
+            _isNotificationMenuVisible = false;
+            StateHasChanged();
+        });
+    }
+
     private void CloseSearchDropdown(bool clearResults, bool clearQuery)
     {
         CancelPendingSearch();
@@ -333,6 +388,12 @@ public partial class NavMenu : IAsyncDisposable
 
     private string GetUserButtonClass() => $"{GetUtilityButtonClass(_isUserMenuVisible)} user-button";
 
+    private string GetNotificationButtonClass()
+    {
+        var classes = "brand-utility-button nav-widget-notification-button";
+        return _isNotificationMenuVisible ? $"{classes} brand-utility-button--open" : classes;
+    }
+
     private string GetSearchContainerClass()
     {
         var classes = "brand-nav-search";
@@ -343,12 +404,6 @@ public partial class NavMenu : IAsyncDisposable
     {
         var classes = "nav-search-input-shell";
         return _isSearchDropdownVisible ? $"{classes} nav-search-input-shell--open" : classes;
-    }
-
-    private string GetSearchResultItemClass(int index)
-    {
-        var classes = "nav-search-result-item";
-        return _highlightedSearchIndex == index ? $"{classes} nav-search-result-item--active" : classes;
     }
 
     private bool IsInfoPage => NavigationManager.ToBaseRelativePath(NavigationManager.Uri).StartsWith("info", StringComparison.OrdinalIgnoreCase);
@@ -370,26 +425,11 @@ public partial class NavMenu : IAsyncDisposable
             : $"/{relativePath}";
     }
 
-    private static string GetSearchResultTypeLabel(GlobalSearchResultType resultType)
+    private static string GetNotificationItemClass(TeamNotificationItem notification)
     {
-        return resultType switch
-        {
-            GlobalSearchResultType.User => "User",
-            GlobalSearchResultType.Team => "Team",
-            GlobalSearchResultType.Game => "Game",
-            _ => "Result"
-        };
-    }
-
-    private static string GetSearchResultIconClass(GlobalSearchResultType resultType)
-    {
-        return resultType switch
-        {
-            GlobalSearchResultType.User => "bi bi-person-fill nav-search-result-icon nav-search-result-icon--user",
-            GlobalSearchResultType.Team => "bi bi-people-fill nav-search-result-icon nav-search-result-icon--team",
-            GlobalSearchResultType.Game => "bi bi-controller nav-search-result-icon nav-search-result-icon--game",
-            _ => "bi bi-search nav-search-result-icon"
-        };
+        return notification.IsRead
+            ? "nav-notification-item"
+            : "nav-notification-item nav-notification-item--unread";
     }
 
     private static string? BuildSearchDestination(GlobalSearchResultDTO result)
@@ -414,6 +454,20 @@ public partial class NavMenu : IAsyncDisposable
             ?? user.FindFirst("name")?.Value
             ?? user.FindFirst("email")?.Value
             ?? "Account";
+    }
+
+    private string GetUserMenuAriaLabel(ClaimsPrincipal user)
+    {
+        var displayName = GetDisplayName(user);
+
+        return $"{displayName} account menu";
+    }
+
+    private string GetNotificationAriaLabel()
+    {
+        return NotificationCount == 0
+            ? "Team notifications"
+            : $"Team notifications with {NotificationCount} unread";
     }
 
     private static string GetIdentityKey(ClaimsPrincipal user)
@@ -449,10 +503,70 @@ public partial class NavMenu : IAsyncDisposable
         }
     }
 
+    private async ValueTask DisposeAccountMenuOutsideClickListenerAsync()
+    {
+        var listener = _accountMenuOutsideClickListener;
+        _accountMenuOutsideClickListener = null;
+
+        if(listener == null)
+            return;
+
+        try
+        {
+            await listener.InvokeVoidAsync("dispose");
+            await listener.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
+        NotificationService.Changed -= HandleNotificationsChangedAsync;
+        TeamRealtimeService.TeamStateInvalidated -= RefreshNotificationsFromSignalAsync;
+        await TeamRealtimeService.DisposeAsync();
         CancelPendingSearch();
         await DisposeSearchOutsideClickListenerAsync();
+        await DisposeAccountMenuOutsideClickListenerAsync();
         _searchOutsideClickReference?.Dispose();
+    }
+
+    private async Task MarkNotificationsReadAsync()
+    {
+        await NotificationService.MarkAllReadAsync();
+    }
+
+    private async Task DismissNotificationAsync(string id)
+    {
+        await NotificationService.DismissAsync(id);
+    }
+
+    private async Task RespondToInviteNotificationAsync(Guid inviteId, bool accept)
+    {
+        try
+        {
+            await TeamService.RespondToInviteAsync(inviteId, accept);
+            await NotificationService.RefreshAsync();
+        }
+        catch(Exception)
+        {
+        }
+    }
+
+    private Task HandleNotificationsChangedAsync()
+    {
+        return InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RefreshNotificationsFromSignalAsync()
+    {
+        try
+        {
+            await NotificationService.RefreshAsync();
+        }
+        catch(Exception)
+        {
+        }
     }
 }

@@ -23,10 +23,20 @@
             {
                 <div class="podium-step @(placement.Place == 1 ? "gold" : placement.Place == 2 ? "silver" : "bronze")">
                     <div class="participant-name">
-                        @foreach(var participantName in GetParticipantNames(placement))
+                        @if(ParticipationMode == ParticipationMode.Team)
                         {
-                            @participantName
-                            <br />
+                            @foreach(var team in placement.Teams)
+                            {
+                                <TeamIdentityDisplay Name="@team.Name" LogoUrl="@team.LogoUrl" Href="@BuildTeamProfileHref(team.Name)" Variant="placement" Size="small" />
+                            }
+                        }
+                        else
+                        {
+                            @foreach(var participantName in GetUserParticipantNames(placement))
+                            {
+                                @participantName
+                                <br />
+                            }
                         }
                     </div>
                     <div class="placement-title">@GetOrdinalSuffix(placement.Place)</div>
@@ -39,9 +49,21 @@
                 <li class="placement-item">
                     <span class="placement-title">@GetOrdinalSuffix(placement.Place) Place:</span>
                     <ul class="participant-list">
-                        @foreach(var participantName in GetParticipantNames(placement))
+                        @if(ParticipationMode == ParticipationMode.Team)
                         {
-                            <li class="participant-item">@participantName</li>
+                            @foreach(var team in placement.Teams)
+                            {
+                                <li class="participant-item participant-item--team">
+                                    <TeamIdentityDisplay Name="@team.Name" LogoUrl="@team.LogoUrl" Href="@BuildTeamProfileHref(team.Name)" Variant="placement" Size="compact" />
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            @foreach(var participantName in GetUserParticipantNames(placement))
+                            {
+                                <li class="participant-item">@participantName</li>
+                            }
                         }
                     </ul>
                 </li>

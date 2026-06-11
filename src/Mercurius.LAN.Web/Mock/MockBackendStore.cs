@@ -68,6 +68,7 @@ internal sealed class MockBackendStore
                     Type = GlobalSearchResultType.User,
                     DisplayLabel = user.Username!,
                     SupportingText = "Player",
+                    UserId = user.Id,
                     Username = user.Username
                 });
 
@@ -179,6 +180,7 @@ internal sealed class MockBackendStore
             {
                 TeamName = team.Name,
                 CaptainUsername = captainUsername,
+                LogoUrl = team.LogoUrl,
                 Members = members,
                 Tournaments = tournaments
             };
@@ -444,6 +446,243 @@ internal sealed class MockBackendStore
 
             AddOrReplaceTeam(team);
             return Clone(team)!;
+        }
+    }
+
+    public CurrentUserTeamSummaryDTO GetCurrentUserTeamSummary(string persona)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var teams = EnsureCurrentUserTeamFixtures(currentUser);
+            var captainedTeams = teams
+                .Where(team => team.CaptainUserId == currentUser.Id)
+                .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(ToManagementSummary)
+                .ToList();
+            var memberTeams = teams
+                .Where(team => team.CaptainUserId != currentUser.Id && team.Members.Any(member => member.Id == currentUser.Id))
+                .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+                .Select(ToManagementSummary)
+                .ToList();
+            var invites = teams
+                .SelectMany(team => team.TeamInvites.Select(invite => (team, invite)))
+                .Where(entry => entry.invite.UserId == currentUser.Id && IsPending(entry.invite))
+                .OrderBy(entry => entry.invite.CreatedAt)
+                .Select(entry => ToInviteSummary(entry.team, entry.invite))
+                .ToList();
+            var sentInvites = teams
+                .Where(team => team.CaptainUserId == currentUser.Id)
+                .SelectMany(team => team.TeamInvites.Select(invite => (team, invite)))
+                .Where(entry => IsPending(entry.invite))
+                .OrderBy(entry => entry.invite.CreatedAt)
+                .Select(entry => ToInviteSummary(entry.team, entry.invite))
+                .ToList();
+
+            return new CurrentUserTeamSummaryDTO
+            {
+                CaptainedTeams = captainedTeams,
+                MemberTeams = memberTeams,
+                ReceivedPendingInvites = invites,
+                SentPendingInvites = sentInvites
+            };
+        }
+    }
+
+    public Team CreateCurrentUserTeam(string persona, CreateTeamDTO dto)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            EnsureCurrentUserTeamFixtures(currentUser);
+
+            if(_document.Teams.Count(team => team.CaptainUserId == currentUser.Id) >= 3)
+                throw new InvalidOperationException("You already captain the maximum number of mock teams.");
+
+            var team = new Team
+            {
+                Id = Guid.NewGuid(),
+                Name = dto.Name.Trim(),
+                CaptainUserId = currentUser.Id,
+                Members = [ToPublicUser(currentUser)],
+                TeamInvites = []
+            };
+
+            AddOrReplaceTeam(team);
+            return Clone(team)!;
+        }
+    }
+
+    public TeamInvite CreateTeamInvite(string persona, Guid teamId, Guid userId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can send invites.");
+
+            if(team.Members.Any(member => member.Id == userId))
+                throw new InvalidOperationException("That player is already a team member.");
+
+            if(team.TeamInvites.Any(invite => invite.UserId == userId && IsPending(invite)))
+                throw new InvalidOperationException("That player already has a pending invite.");
+
+            var invite = new TeamInvite
+            {
+                Id = Guid.NewGuid(),
+                TeamId = team.Id,
+                UserId = userId,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+            team.TeamInvites = team.TeamInvites.Append(invite).ToList();
+            AddOrReplaceTeam(team);
+            return Clone(invite)!;
+        }
+    }
+
+    public TeamInvite CancelTeamInvite(string persona, Guid teamId, Guid inviteId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can cancel invites.");
+
+            var invite = team.TeamInvites.First(candidate => candidate.Id == inviteId);
+            invite.Status = "Cancelled";
+            invite.RespondedAt = DateTime.UtcNow;
+            AddOrReplaceTeam(team);
+            return Clone(invite)!;
+        }
+    }
+
+    public TeamInvite RespondToTeamInvite(string persona, Guid inviteId, bool accept)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = _document.Teams.First(team => team.TeamInvites.Any(invite => invite.Id == inviteId));
+            var invite = team.TeamInvites.First(candidate => candidate.Id == inviteId);
+            if(invite.UserId != currentUser.Id)
+                throw new InvalidOperationException("This invite belongs to another user.");
+
+            invite.Status = accept ? "Accepted" : "Declined";
+            invite.RespondedAt = DateTime.UtcNow;
+            if(accept && team.Members.All(member => member.Id != currentUser.Id))
+                team.Members = team.Members.Append(PublicUserDTO.FromUser(currentUser)).ToList();
+
+            AddOrReplaceTeam(team);
+            return Clone(invite)!;
+        }
+    }
+
+    public TeamManagementSummaryDTO LeaveTeam(string persona, Guid teamId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId == currentUser.Id)
+                throw new InvalidOperationException("Transfer captainship before leaving a team you captain.");
+
+            if(team.Name.Contains("Roster", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Mock roster lock: this team cannot be left during an active tournament.");
+
+            team.Members = team.Members.Where(member => member.Id != currentUser.Id).ToList();
+            AddOrReplaceTeam(team);
+            return ToManagementSummary(team);
+        }
+    }
+
+    public TeamManagementSummaryDTO RemoveTeamMember(string persona, Guid teamId, Guid userId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can remove members.");
+
+            if(team.CaptainUserId == userId)
+                throw new InvalidOperationException("Transfer captainship before removing the captain.");
+
+            if(team.Name.Contains("Roster", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Mock roster lock: this team cannot remove members during an active tournament.");
+
+            if(team.Members.All(member => member.Id != userId))
+                throw new InvalidOperationException("That player is not a member of this team.");
+
+            team.Members = team.Members.Where(member => member.Id != userId).ToList();
+            AddOrReplaceTeam(team);
+            return ToManagementSummary(team);
+        }
+    }
+
+    public TeamManagementSummaryDTO TransferCaptain(string persona, Guid teamId, Guid newCaptainUserId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the current captain can transfer captainship.");
+
+            if(team.Members.All(member => member.Id != newCaptainUserId))
+                throw new InvalidOperationException("Captainship can only be transferred to a current member.");
+
+            team.CaptainUserId = newCaptainUserId;
+            AddOrReplaceTeam(team);
+            return ToManagementSummary(team);
+        }
+    }
+
+    public TeamLogoResponseDTO UploadTeamLogo(string persona, Guid teamId, string contentType, string fileName)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can update the team logo.");
+
+            if(!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Mock validation: choose an image file for the team logo.");
+
+            var extension = Path.GetExtension(fileName);
+            team.LogoUrl = $"/mock-data-local/sponsors/mock-sponsor.svg?team={team.Id:N}{extension}";
+            AddOrReplaceTeam(team);
+            return new TeamLogoResponseDTO { TeamId = team.Id, LogoUrl = team.LogoUrl };
+        }
+    }
+
+    public TeamLogoResponseDTO RemoveTeamLogo(string persona, Guid teamId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can remove the team logo.");
+
+            team.LogoUrl = null;
+            AddOrReplaceTeam(team);
+            return new TeamLogoResponseDTO { TeamId = team.Id, LogoUrl = null };
+        }
+    }
+
+    public void DeleteCurrentUserTeam(string persona, Guid teamId)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var team = GetRequiredTeam(teamId);
+            if(team.CaptainUserId != currentUser.Id)
+                throw new InvalidOperationException("Only the team captain can delete the team.");
+
+            DeleteTeam(teamId);
         }
     }
 
@@ -1081,6 +1320,114 @@ internal sealed class MockBackendStore
         });
     }
 
+    private List<Team> EnsureCurrentUserTeamFixtures(UserProfileDTO currentUser)
+    {
+        var captainedId = Guid.Parse("23111111-1111-1111-1111-111111111120");
+        var memberId = Guid.Parse("23111111-1111-1111-1111-111111111121");
+        var inviteId = Guid.Parse("23111111-1111-1111-1111-111111111122");
+
+        if(_document.Teams.All(team => team.Id != captainedId))
+        {
+            var teammate = _document.Users.First(user => user.Username == "track1");
+            AddOrReplaceTeam(new Team
+            {
+                Id = captainedId,
+                Name = "Mock Captains",
+                CaptainUserId = currentUser.Id,
+                LogoUrl = "/mock-data-local/sponsors/mock-sponsor.svg",
+                Members = [ToPublicUser(currentUser), PublicUserDTO.FromUser(teammate)],
+                TeamInvites =
+                [
+                    new TeamInvite
+                    {
+                        Id = Guid.Parse("24111111-1111-1111-1111-111111111120"),
+                        TeamId = captainedId,
+                        UserId = Guid.Parse("41111111-1111-1111-1111-111111111119"),
+                        Status = "Pending",
+                        CreatedAt = DateTime.UtcNow.AddDays(-1)
+                    }
+                ]
+            });
+        }
+
+        if(_document.Teams.All(team => team.Id != memberId))
+        {
+            var captain = _document.Users.First(user => user.Username == "binary1");
+            AddOrReplaceTeam(new Team
+            {
+                Id = memberId,
+                Name = "Roster Lock",
+                CaptainUserId = captain.Id,
+                Members = [PublicUserDTO.FromUser(captain), ToPublicUser(currentUser)],
+                TeamInvites = []
+            });
+        }
+
+        if(_document.Teams.All(team => team.Id != inviteId))
+        {
+            var captain = _document.Users.First(user => user.Username == "gamma1");
+            AddOrReplaceTeam(new Team
+            {
+                Id = inviteId,
+                Name = "Pending Pixels",
+                CaptainUserId = captain.Id,
+                Members = [PublicUserDTO.FromUser(captain)],
+                TeamInvites =
+                [
+                    new TeamInvite
+                    {
+                        Id = Guid.Parse("24111111-1111-1111-1111-111111111121"),
+                        TeamId = inviteId,
+                        UserId = currentUser.Id,
+                        Status = "Pending",
+                        CreatedAt = DateTime.UtcNow.AddHours(-8)
+                    }
+                ]
+            });
+        }
+
+        return _document.Teams;
+    }
+
+    private TeamManagementSummaryDTO ToManagementSummary(Team team)
+    {
+        var captainUsername = team.Members.FirstOrDefault(member => member.Id == team.CaptainUserId)?.Username
+            ?? _document.Users.FirstOrDefault(user => user.Id == team.CaptainUserId)?.Username;
+
+        return new TeamManagementSummaryDTO
+        {
+            Id = team.Id,
+            Name = team.Name,
+            CaptainUserId = team.CaptainUserId,
+            CaptainUsername = captainUsername,
+            LogoUrl = team.LogoUrl,
+            Members = team.Members.ToList()
+        };
+    }
+
+    private TeamInviteSummaryDTO ToInviteSummary(Team team, TeamInvite invite)
+    {
+        var user = _document.Users.FirstOrDefault(candidate => candidate.Id == invite.UserId);
+
+        return new TeamInviteSummaryDTO
+        {
+            Id = invite.Id,
+            TeamId = team.Id,
+            TeamName = team.Name,
+            TeamLogoUrl = team.LogoUrl,
+            UserId = invite.UserId,
+            Username = user?.Username,
+            Status = invite.Status,
+            CreatedAt = invite.CreatedAt,
+            ExpiresAt = invite.CreatedAt.AddDays(7)
+        };
+    }
+
+    private static bool IsPending(TeamInvite invite)
+    {
+        return string.Equals(invite.Status, "Pending", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static Game ToGame(GameExtended game)
     {
         return new Game
@@ -1125,6 +1472,16 @@ internal sealed class MockBackendStore
         return string.IsNullOrWhiteSpace(fullName)
             ? username ?? "Mock User"
             : fullName;
+    }
+
+    private static PublicUserDTO ToPublicUser(UserProfileDTO user)
+    {
+        return PublicUserDTO.FromUser(user);
+    }
+
+    private static PublicUserDTO ToPublicUser(UserDTO user)
+    {
+        return PublicUserDTO.FromUser(user);
     }
 
     private static UserDTO ToUserDto(UserProfileDTO user)

@@ -71,6 +71,12 @@
     box-shadow: var(--shadow-brand);
 }
 
+.podium-step .participant-name ::deep(.team-identity-display) {
+    justify-content: center;
+    width: 100%;
+    color: var(--color-dark-navy);
+}
+
 .placement-title {
     font-weight: 800;
 }
@@ -99,6 +105,15 @@
 
 .participant-item {
     color: var(--color-muted-text);
+}
+
+.participant-item--team {
+    list-style: none;
+}
+
+.participant-item--team ::deep(.team-identity-display) {
+    color: var(--color-muted-text);
+    font-weight: 700;
 }
 
 @media (max-width: 720px) {
