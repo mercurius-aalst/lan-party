@@ -76,6 +76,10 @@
     font-weight: 600;
 }
 
+.nav-search-result-support--disabled {
+    color: rgba(146, 64, 14, 0.88);
+}
+
 .nav-search-result-type {
     display: inline-flex;
     align-items: center;

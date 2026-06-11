@@ -2,9 +2,7 @@
 
 ## Purpose
 Defines reusable shared styling foundations for sponsor cards, tournament cards, and branded section shells while preserving the current visitor-facing UI during adoption.
-
 ## Requirements
-
 ### Requirement: Shared brand surfaces preserve current presentation during reuse
 The site SHALL provide reusable shared styling foundations for sponsor cards, tournament cards, and branded section shells without introducing intentional user-visible redesigns to the affected pages.
 
@@ -41,3 +39,14 @@ The site SHALL expose recurring branded section-shell styling through shared cla
 - **WHEN** a page adopts the shared branded section-shell styling
 - **THEN** the section uses the same shared border, radius, spacing, and background treatment defined by the shared styling layer
 - **AND** the page can still tune section placement or surrounding layout in scoped CSS
+
+### Requirement: Image upload fields use branded picker affordances
+Image upload fields SHALL use the shared branded native upload picker treatment instead of exposing default browser file controls.
+
+#### Scenario: A page renders an image upload field
+- **WHEN** an admin or authenticated user can upload an image such as a sponsor logo, game image, or team logo
+- **THEN** the upload field MUST show the branded dashed picker surface with an image icon and action label
+- **AND** the native browser file input MUST NOT visually overlap or obscure the branded picker
+- **AND** the selected filename or empty-file state MUST remain visible near the picker
+- **AND** existing upload validation, accepted image types, and form binding behavior MUST remain intact
+

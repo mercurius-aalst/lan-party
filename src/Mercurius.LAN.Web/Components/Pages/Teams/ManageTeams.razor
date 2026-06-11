@@ -279,7 +279,7 @@ else
         </div>
 
         <CreateTeamDialog IsOpen="_isCreateTeamDialogOpen" TeamCreated="CreateTeamAsync" Canceled="CloseCreateTeamDialog" />
-        <InviteUserDialog IsOpen="_isInviteDialogOpen" TeamName="@_inviteTeamName" UserSelected="InviteUserAsync" Canceled="CloseInviteDialog" />
+        <InviteUserDialog IsOpen="_isInviteDialogOpen" TeamName="@_inviteTeamName" DisabledUserIds="GetInviteDisabledUserIds()" UserSelected="InviteUserAsync" Canceled="CloseInviteDialog" />
 
         @if(_confirmation is { } confirmation)
         {

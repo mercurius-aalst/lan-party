@@ -114,20 +114,43 @@ public partial class ManageTeams : IAsyncDisposable
 
     private async Task CreateTeamAsync(CreateTeamDialogResult createResult)
     {
-        _isCreateTeamDialogOpen = false;
-        await MutateAsync(async () =>
+        Team createdTeam;
+        try
         {
-            var createdTeam = await TeamService.CreateTeamAsync(new CreateTeamDTO { Name = createResult.Name.Trim() });
-            if(createResult.Logo is { } logo)
-            {
-                await using var stream = new MemoryStream(logo.Content);
-                await TeamService.UploadLogoAsync(createdTeam.Id, stream, logo.ContentType, logo.FileName);
-            }
+            createdTeam = await TeamService.CreateTeamAsync(new CreateTeamDTO { Name = createResult.Name.Trim() });
+        }
+        catch(Exception exception)
+        {
+            ShowActionToast(GetErrorMessage(exception), TeamActionSeverity.Error);
+            return;
+        }
 
+        _selectedTeamId = createdTeam.Id;
+
+        if(createResult.Logo is null)
+        {
             await RefreshSummaryAsync();
-            _selectedTeamId = createdTeam.Id;
+            _isCreateTeamDialogOpen = false;
             ToastService.ShowSuccess("Team created.");
-        });
+            return;
+        }
+
+        try
+        {
+            await using var stream = new MemoryStream(createResult.Logo.Content);
+            await TeamService.UploadLogoAsync(createdTeam.Id, stream, createResult.Logo.ContentType, createResult.Logo.FileName);
+            await RefreshSummaryAsync();
+            ToastService.ShowSuccess("Team created.");
+        }
+        catch(Exception exception)
+        {
+            await RefreshSummaryAsync();
+            ShowActionToast($"Team created, but the logo could not be saved. {GetErrorMessage(exception)}", TeamActionSeverity.Error);
+        }
+        finally
+        {
+            _isCreateTeamDialogOpen = false;
+        }
     }
 
     private Task OpenInviteDialogAsync(Guid teamId)
@@ -408,6 +431,15 @@ public partial class ManageTeams : IAsyncDisposable
     private IReadOnlyList<TeamInviteSummaryDTO> GetSentInvites(Guid teamId) =>
         _summary.SentPendingInvites.Where(invite => invite.TeamId == teamId).ToList();
 
+    private IReadOnlySet<Guid> GetInviteDisabledUserIds() =>
+        _inviteTeamId.HasValue
+            ? ManageableTeams
+                .FirstOrDefault(team => team.Id == _inviteTeamId.Value)?
+                .Members
+                .Select(member => member.Id)
+                .ToHashSet() ?? new HashSet<Guid>()
+            : new HashSet<Guid>();
+
     private Guid? GetTransferSelection(Guid teamId) =>
         _transferSelections.TryGetValue(teamId, out var value) ? value : null;
 
@@ -453,10 +485,10 @@ public partial class ManageTeams : IAsyncDisposable
     private static string GetErrorMessage(Exception exception) =>
         exception is TeamServiceException ? exception.Message : exception.Message;
 
-    public async ValueTask DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         RealtimeService.TeamStateInvalidated -= RefreshFromSignalAsync;
-        await RealtimeService.DisposeAsync();
+        return ValueTask.CompletedTask;
     }
 
     private enum TeamManagementTab

@@ -180,6 +180,12 @@ The front-end SHALL keep authenticated team management data separate from public
 - **AND** the UI displays only privacy-safe identifiers needed to choose the user
 - **AND** the UI does not render email, Auth0 ID, roles, deletion state, or other private account fields
 
+#### Scenario: Invite search includes existing team members
+- **WHEN** a captain searches for invite recipients and the search results include users who are already members of the selected team
+- **THEN** those existing team members MUST remain visible in the invite search results
+- **AND** those existing team members MUST be disabled for invite selection
+- **AND** the UI SHOULD label those disabled results as already being in the team
+
 #### Scenario: Team member card is selected
 - **WHEN** a user selects a team member card with a public username in team management
 - **THEN** the front-end SHALL navigate to that member's public user profile

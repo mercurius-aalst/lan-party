@@ -525,7 +525,6 @@ public partial class NavMenu : IAsyncDisposable
     {
         NotificationService.Changed -= HandleNotificationsChangedAsync;
         TeamRealtimeService.TeamStateInvalidated -= RefreshNotificationsFromSignalAsync;
-        await TeamRealtimeService.DisposeAsync();
         CancelPendingSearch();
         await DisposeSearchOutsideClickListenerAsync();
         await DisposeAccountMenuOutsideClickListenerAsync();

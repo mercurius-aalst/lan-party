@@ -45,6 +45,7 @@
 - [x] 4.17 Resolve backend-relative team logo paths against the configured backend base address before rendering.
 - [x] 4.18 Keep logo avatar backgrounds transparent so transparent logo pixels reveal the parent surface.
 - [x] 4.19 Add captain-only remove-member behavior for non-captain members with confirmation, backend blocked-action feedback, post-success summary refresh, and stale transfer-selection cleanup.
+- [x] 4.20 Keep existing team members visible but disabled in invite-recipient search results.
 
 ## 5. Navigation And Invite Discoverability
 

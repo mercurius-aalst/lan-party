@@ -54,8 +54,10 @@
                                 {
                                     @foreach(var result in _results)
                                     {
+                                        var isDisabled = IsDisabledCandidate(result);
                                         <GlobalSearchResultItem Result="result"
-                                                                Disabled="@(!result.UserId.HasValue)"
+                                                                Disabled="@isDisabled"
+                                                                DisabledText="@GetDisabledCandidateText(result)"
                                                                 Selected="SelectCandidateAsync"
                                                                 AdditionalClass="team-search-result" />
                                     }
@@ -90,6 +92,7 @@
 
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public string TeamName { get; set; } = "this team";
+    [Parameter] public IReadOnlySet<Guid> DisabledUserIds { get; set; } = new HashSet<Guid>();
     [Parameter] public EventCallback<InviteUserDialogResult> UserSelected { get; set; }
     [Parameter] public EventCallback Canceled { get; set; }
 
@@ -148,7 +151,7 @@
 
     private Task SelectCandidateAsync(GlobalSearchResultDTO result)
     {
-        if(!result.UserId.HasValue)
+        if(IsDisabledCandidate(result))
             return Task.CompletedTask;
 
         _selected = result;
@@ -169,4 +172,12 @@
     {
         await Canceled.InvokeAsync();
     }
+
+    private bool IsDisabledCandidate(GlobalSearchResultDTO result) =>
+        !result.UserId.HasValue || DisabledUserIds.Contains(result.UserId.Value);
+
+    private string? GetDisabledCandidateText(GlobalSearchResultDTO result) =>
+        result.UserId.HasValue && DisabledUserIds.Contains(result.UserId.Value)
+            ? "Already in this team"
+            : null;
 }
