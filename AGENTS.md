@@ -49,6 +49,15 @@ dotnet run --project src/Mercurius.LAN.Web/Mercurius.LAN.Web.csproj
 - `src/Mercurius.LAN.Web/Options/`: configuration option classes.
 - `openspec/`: requirements/specification source. Functional behavior changes require spec coverage.
 
+## Code design constraints
+- Keep implementations straightforward and avoid unnecessary abstractions, wrapper methods, wrapper classes, and indirection that do not add clear readability, testability, performance, or security value.
+- Avoid code duplication, but also avoid unnecessary de-duplication that creates brittle shared abstractions or hides feature-specific behavior.
+- Reuse existing components, services, DTOs, options, and styling patterns where possible, but verify behavior to avoid regression failures.
+- Keep one primary class, record, component model, or DTO per file unless the additional type is a small private nested implementation detail.
+- Apply industry-standard design patterns only where they are appropriate and necessary for code cleanliness, performance, security, or long-term maintainability.
+- Avoid N+1 API calls, repeated render-triggering work, redundant service invocations, and other performance bottlenecks caused by method or component call patterns.
+- Keep dependencies between feature domains minimal. Prefer explicit contracts at boundaries rather than cross-domain coupling or shared mutable state.
+
 ## Integration rules
 - Do not assume backend endpoints exist. Verify against `mercurius-aalst/mercurius-aalst-back-end` before wiring live calls.
 - Treat `ILANClient` as the front-end API contract boundary. Keep request/response names and JSON shapes explicit.
