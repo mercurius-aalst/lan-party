@@ -1,0 +1,189 @@
+@using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.DTOs.Tournaments
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Tournaments
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+<div class="Tournament-overview-container">
+    <div class="overview-header-row">
+        <div>
+            <span class="section-eyebrow">Overview</span>
+            <h2 class="Tournament-overview-header">Tournament overview</h2>
+            <p>Core format, status, scheduling, and registration details for this tournament.</p>
+        </div>
+
+        @if(!_isEditMode && Tournament.Status == TournamentStatus.Scheduled)
+        {
+            <AuthorizeView Roles="admin">
+                <Authorized>
+                    <button type="button" class="btn btn-primary" @onclick="EnableEditMode">Edit</button>
+                </Authorized>
+            </AuthorizeView>
+        }
+    </div>
+
+    @if(!_isEditMode)
+    {
+        <div class="overview-grid">
+            <section class="brand-card overview-card">
+                <h3>Competition setup</h3>
+                <dl class="overview-list">
+                    <div>
+                        <dt>Status</dt>
+                        <dd><span class="Tournament-status @Tournament.Status.GetStatusClass()">@Tournament.Status.GetStatusLabel()</span></dd>
+                    </div>
+                    <div>
+                        <dt>Bracket</dt>
+                        <dd>@Tournament.BracketType.GetLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Mode</dt>
+                        <dd>@Tournament.ParticipationMode.GetLabel()</dd>
+                    </div>
+                    @if(Tournament.ParticipationMode == ParticipationMode.Team && Tournament.TeamSize.HasValue)
+                    {
+                        <div>
+                            <dt>Team size</dt>
+                            <dd>@Tournament.TeamSize players</dd>
+                        </div>
+                    }
+                    <div>
+                        <dt>Format</dt>
+                        <dd>@Tournament.Format.GetLabel()</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <section class="brand-card overview-card">
+                <h3>Schedule & registration</h3>
+                <dl class="overview-list">
+                    <div>
+                        <dt>Start time</dt>
+                        <dd>@GetPlannedStartLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Estimated end</dt>
+                        <dd>@GetEstimatedEndLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Finals</dt>
+                        <dd>@Tournament.FinalsFormat.GetLabel()</dd>
+                    </div>
+                    <div>
+                        <dt>Registration</dt>
+                        <dd>@GetRegistrationStateLabel()</dd>
+                    </div>
+                </dl>
+            </section>
+        </div>
+    }
+    else
+    {
+        <AuthorizeView Roles="admin">
+            <Authorized Context="adminContext">
+                <EditForm EditContext="_editContext" OnValidSubmit="SubmitEditAsync">
+                    <DataAnnotationsValidator />
+                    <div class="brand-card overview-edit-card">
+                        <div class="form-group">
+                            <label for="name">Name</label>
+                            <InputText id="name" class="form-control" @bind-Value="_editTournament.Name" />
+                            <ValidationMessage For="@(() => _editTournament.Name)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bracketType">Bracket Type</label>
+                            <InputSelect id="bracketType" class="form-control" @bind-Value="_editTournament.BracketType">
+                                @foreach(var type in SupportedBracketTypes)
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _editTournament.BracketType)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="participationMode">Participation Mode</label>
+                            <InputSelect id="participationMode" class="form-control" @bind-Value="_editTournament.ParticipationMode">
+                                @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _editTournament.ParticipationMode)" />
+                        </div>
+
+                        @if(_editTournament.ParticipationMode == ParticipationMode.Team)
+                        {
+                            <div class="form-group">
+                                <label for="teamSize">Team size</label>
+                                <InputNumber id="teamSize" class="form-control" @bind-Value="_editTournament.TeamSize" min="1" max="50" />
+                                <small class="form-help">Every team must submit exactly this many players.</small>
+                                <ValidationMessage For="@(() => _editTournament.TeamSize)" />
+                            </div>
+                        }
+
+                        <div class="form-group">
+                            <label for="format">Match Format</label>
+                            <InputSelect id="format" class="form-control" @bind-Value="_editTournament.Format">
+                                @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _editTournament.Format)" />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="finalsFormat">Finals Format</label>
+                            <InputSelect id="finalsFormat" class="form-control" @bind-Value="_editTournament.FinalsFormat">
+                                @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
+                                {
+                                    <option value="@type">@type.GetLabel()</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => _editTournament.FinalsFormat)" />
+                        </div>
+                        <div class="overview-edit-schedule-fields">
+                            <div class="form-group">
+                                <label for="plannedStartTime">Planned start time</label>
+                                <input id="plannedStartTime" type="datetime-local" class="form-control" @bind="_editTournament.PlannedStartTime" @bind:format="yyyy-MM-ddTHH:mm" />
+                                <ValidationMessage For="@(() => _editTournament.PlannedStartTime)" />
+                            </div>
+
+                            <div class="overview-edit-duration-row">
+                                <div class="form-group">
+                                    <label for="averageGameDuration">Average game duration (minutes)</label>
+                                    <InputNumber id="averageGameDuration" class="form-control" @bind-Value="_editTournament.AverageGameDurationMinutes" />
+                                    <ValidationMessage For="@(() => _editTournament.AverageGameDurationMinutes)" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="roundBreakDuration">Round break (minutes)</label>
+                                    <InputNumber id="roundBreakDuration" class="form-control" @bind-Value="_editTournament.RoundBreakDurationMinutes" />
+                                    <ValidationMessage For="@(() => _editTournament.RoundBreakDurationMinutes)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tournamentImage">Tournament Image</label>
+                            <CustomInputFile @ref="_imageInputRef" id="tournamentImage" @bind-Value="_editTournament.Image" />
+                            <ValidationMessage For="@(() => _editTournament.Image)" />
+                        </div>
+
+                        @if(_saveError is not null)
+                        {
+                            <div class="validation-message" role="alert">@_saveError</div>
+                        }
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? "Saving..." : "Save")</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEditMode">Cancel</button>
+                        </div>
+                    </div>
+                </EditForm>
+            </Authorized>
+        </AuthorizeView>
+    }
+</div>

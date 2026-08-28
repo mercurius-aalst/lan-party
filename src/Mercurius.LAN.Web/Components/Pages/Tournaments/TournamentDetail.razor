@@ -1,0 +1,283 @@
+@page "/tournaments/{TournamentId:guid}"
+@using Mercurius.LAN.Web.Components.Pages.Tournaments.Matches.DetailView
+@using Mercurius.LAN.Web.Components.Pages.Tournaments.Tabs
+@using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.Extensions
+@using Mercurius.LAN.Web.Models.Tournaments
+@using Mercurius.LAN.Web.Models.Matches
+@using Mercurius.LAN.Web.Models.Sponsors
+@using Microsoft.AspNetCore.Components.Authorization
+
+@rendermode InteractiveServer
+
+<PageTitle>Tournament Detail</PageTitle>
+@if(_isLoading && _tournament is null)
+{
+    <LoadingScreen Message="Loading tournament..." />
+}
+else if(_notFound)
+{
+    <section class="brand-section">
+        <div class="brand-card tournament-empty-state" role="alert">
+            <h1>Tournament not found</h1>
+            <p>The tournament may have been removed or is no longer available.</p>
+            <a class="button-secondary" href="/tournaments">Back to tournaments</a>
+        </div>
+    </section>
+}
+else if(_loadError is not null && _tournament is null)
+{
+    <section class="brand-section">
+        <div class="brand-card tournament-empty-state" role="alert">
+            <h1>Unable to load tournament</h1>
+            <p>@_loadError</p>
+            <button type="button" class="button-primary" @onclick="RetryLoadAsync">Try again</button>
+        </div>
+    </section>
+}
+else if(_tournament is null)
+{
+    <LoadingScreen Message="Loading tournament..." />
+}
+else
+{
+    <div class="Tournament-detail-page">
+        <nav class="Tournament-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span>/</span>
+            <a href="/tournaments">Tournaments</a>
+            <span>/</span>
+            <span aria-current="page">@_tournament.Name</span>
+        </nav>
+
+        <header class="brand-page-hero Tournament-detail-hero brand-section">
+            <div class="brand-page-hero-copy Tournament-detail-hero-copy">
+                <span class="section-eyebrow">Tournament</span>
+                <h1>@_tournament.Name</h1>
+                <p>@TournamentSummary</p>
+
+                <div class="Tournament-detail-badges">
+                    <span class="badge">@_tournament.ParticipationMode.GetLabel()</span>
+                    <span class="badge">@_tournament.BracketType.GetLabel()</span>
+                    <span class="badge">@_tournament.Format.GetLabel()</span>
+                    <span class="Tournament-status @_tournament.Status.GetStatusClass()">@_tournament.Status.GetStatusLabel()</span>
+                </div>
+
+                <div class="Tournament-detail-hero-actions">
+                    <button type="button"
+                            class="button-primary @(CanRegister(_tournament) ? string.Empty : "Tournament-detail-registration-closed")"
+                            disabled="@(!CanRegister(_tournament))"
+                            @onclick="NavigateToRegister">
+                        @(CanRegister(_tournament) ? "Register Now" : "Registration Closed")
+                    </button>
+                    <a href="@GetPageAnchorUrl("tournament-bracket")" class="button-secondary">View Bracket</a>
+                </div>
+
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <div class="Tournament-admin-actions">
+                            <button type="button" class="btn btn-primary" @onclick="StartTournamentAsync">Start</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelTournamentAsync">Cancel</button>
+                            <button type="button" class="btn btn-secondary" @onclick="FinishTournamentAsync">Finish</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ResetTournamentAsync">Reset</button>
+                            <button type="button" class="btn btn-danger" @onclick="DeleteTournamentAsync">Delete</button>
+                        </div>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+
+            <aside class="Tournament-detail-hero-visual" aria-label="Tournament artwork and featured partner">
+                <div class="Tournament-detail-image-frame">
+                    <img src="@GetImageUrl(_tournament.ImageUrl)" alt="@_tournament.Name" class="Tournament-detail-image" />
+                </div>
+            </aside>
+        </header>
+
+        <div class="Tournament-detail-layout">
+            <div class="Tournament-detail-top">
+                <section id="tournament-overview" class="brand-card Tournament-detail-section Tournament-detail-top-section Tournament-detail-top-section--overview">
+                    <TournamentOverviewTab Tournament="@_tournament" OnTournamentUpdated="HandleTournamentUpdated" />
+                </section>
+
+                <section id="tournament-schedule" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section Tournament-detail-top-section--schedule">
+                    <div class="Tournament-section-header">
+                        <div>
+                            <span class="section-eyebrow">Schedule</span>
+                            <h2>Upcoming matches</h2>
+                        </div>
+                    </div>
+
+                    @if(!ScheduledMatches.Any())
+                    {
+                        <p class="Tournament-empty-copy">@GetScheduleEmptyMessage()</p>
+                    }
+                    else
+                    {
+                        <div class="Tournament-schedule-body">
+                            <div class="Tournament-schedule-filters" aria-label="Schedule filters">
+                                <div class="Tournament-schedule-filter-field">
+                                    <label for="schedule-bracket-filter">Bracket</label>
+                                    <select id="schedule-bracket-filter"
+                                            class="form-select"
+                                            value="@_selectedScheduleBracket"
+                                            @onchange="HandleScheduleBracketChanged">
+                                        @foreach(var bracketFilter in Enum.GetValues<ScheduleBracketFilter>())
+                                        {
+                                            <option value="@bracketFilter">@GetScheduleBracketFilterLabel(bracketFilter)</option>
+                                        }
+                                    </select>
+                                </div>
+
+                                <div class="Tournament-schedule-filter-field">
+                                    <label for="schedule-round-filter">Round</label>
+                                    <select id="schedule-round-filter"
+                                            class="form-select"
+                                            value="@(_selectedScheduleRound?.ToString() ?? string.Empty)"
+                                            @onchange="HandleScheduleRoundChanged">
+                                        <option value="">All rounds</option>
+                                        @foreach(var round in AvailableScheduleRounds)
+                                        {
+                                            <option value="@round">Round @round</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            @if(!FilteredScheduledMatches.Any())
+                            {
+                                <p class="Tournament-empty-copy">No matches match the selected bracket and round filters.</p>
+                            }
+
+                            <div class="Tournament-schedule-list">
+                                @foreach(var match in FilteredScheduledMatches)
+                                {
+                                    <article class="Tournament-schedule-item"
+                                             role="button"
+                                             tabindex="0"
+                                             aria-label="View details for @GetMatchTitle(match)"
+                                             @onclick="() => OpenMatchDetails(match)"
+                                             @onkeydown="args => HandleScheduleItemKeyDown(args, match)">
+                                        <div class="Tournament-schedule-item-main">
+                                            <div class="Tournament-schedule-item-topline">
+                                                <span class="Tournament-schedule-time">@GetMatchTimeRange(match)</span>
+                                                <span class="Tournament-schedule-status @GetScheduleStatusClass(match)">@GetScheduleStatus(match)</span>
+                                            </div>
+                                            <h3>@GetMatchTitle(match)</h3>
+                                            <p>@GetMatchStageSummary(match)</p>
+                                        </div>
+
+                                        <div class="Tournament-schedule-item-meta">
+                                            <span class="badge">@GetRoundLabel(match)</span>
+                                            <span class="badge">@match.Format.GetLabel()</span>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        </div>
+                    }
+                </section>
+
+                @if(FeaturedPartner is not null)
+                {
+                    var partner = FeaturedPartner;
+                    <section class="brand-card Tournament-detail-section Tournament-detail-partner-section Tournament-detail-top-section Tournament-detail-top-section--sponsor">
+                        <a class="brand-sponsor-card Tournament-detail-partner-card" href="@partner.SponsorInfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @partner.SponsorName">
+                            <div class="brand-sponsor-card-logo Tournament-detail-partner-logo">
+                                <img src="@GetSponsorLogoUrl(partner.SponsorLogoUrl)" alt="@partner.SponsorName logo" />
+                            </div>
+                            <div class="brand-sponsor-card-body Tournament-detail-partner-copy">
+                                <span class="sponsor-tier-label">@GetPartnerEyebrow(partner)</span>
+                                <h2>@partner.SponsorName</h2>
+                                @if(!string.IsNullOrWhiteSpace(GetFeaturedPartnerSummary(partner)))
+                                {
+                                    <p>@GetFeaturedPartnerSummary(partner)</p>
+                                }
+                                <span class="sponsor-card-link">Visit website</span>
+                            </div>
+                        </a>
+                    </section>
+                }
+
+                <section id="tournament-participants" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section @(FeaturedPartner is null ? "Tournament-detail-top-section--participants-no-sponsor" : "Tournament-detail-top-section--participants")">
+                    <TournamentParticipantsTab Tournament="@_tournament" OnTournamentUpdated="HandleTournamentUpdated" />
+                </section>
+            </div>
+
+            <section id="tournament-bracket" class="brand-card Tournament-detail-section Tournament-detail-section--full-span">
+                <TournamentMatchesTab OnDataReload="LoadTournamentDataAsync" Tournament="@_tournament" />
+            </section>
+
+            <div class="Tournament-detail-secondary">
+                <section id="tournament-results" class="brand-card Tournament-detail-section">
+                    <TournamentPlacementsTab Placements="@_tournament.Placements" ParticipationMode="@_tournament.ParticipationMode" />
+                </section>
+
+                <AuthorizeView Roles="admin">
+                    <Authorized>
+                        <section class="brand-card Tournament-detail-section Tournament-sponsor-admin-card">
+                            <div class="Tournament-section-header">
+                                <div>
+                                    <span class="section-eyebrow">Admin</span>
+                                    <h2>Tournament partner</h2>
+                                    <p>Select the single sponsor shown on the public page. All public content is pulled directly from the sponsor data.</p>
+                                </div>
+                            </div>
+
+                            @if(!_availableSponsors.Any())
+                            {
+                                <p class="Tournament-empty-copy">Create sponsors first before assigning one to this tournament.</p>
+                            }
+                            else
+                            {
+                                <div class="Tournament-sponsor-admin-form">
+                                    <div class="form-group">
+                                        <label for="tournament-sponsor">Sponsor</label>
+                                        <InputSelect id="tournament-sponsor" class="form-control" @bind-Value="_selectedSponsorId">
+                                            <option value="">No sponsor selected</option>
+                                            @foreach(var sponsor in _availableSponsors)
+                                            {
+                                                <option value="@sponsor.Id">@sponsor.Name</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+
+                                    @if(SelectedSponsor is not null)
+                                    {
+                                        <article class="Tournament-sponsor-admin-preview">
+                                            <span class="section-eyebrow">Preview</span>
+                                            <h3>@SelectedSponsor.Name</h3>
+                                            <p class="Tournament-sponsor-admin-preview-tier">@SelectedSponsor.SponsorTier.GetShortLabel() partner</p>
+                                            @if(!string.IsNullOrWhiteSpace(SelectedSponsor.Description))
+                                            {
+                                                <p>@SelectedSponsor.Description</p>
+                                            }
+                                            <p class="Tournament-sponsor-admin-preview-link">@SelectedSponsor.InfoUrl</p>
+                                        </article>
+                                    }
+                                </div>
+
+                                <div class="Tournament-sponsor-admin-actions">
+                                    @if(_sponsorError is not null)
+                                    {
+                                        <p class="Tournament-empty-copy" role="alert">@_sponsorError</p>
+                                    }
+                                    <button type="button" class="button-primary" disabled="@_isSavingSponsor" @onclick="SaveSponsorPlacementsAsync">@(_isSavingSponsor ? "Saving..." : "Save sponsor")</button>
+                                </div>
+                            }
+                        </section>
+                    </Authorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </div>
+
+    @if(_selectedMatch is not null)
+    {
+        <TournamentMatchDetailsDialog Match="@_selectedMatch"
+                            Tournament="@_tournament"
+                            Participant1Name="@GetMatchParticipantName(_selectedMatch, true)"
+                            Participant2Name="@GetMatchParticipantName(_selectedMatch, false)"
+                            OnClose="CloseMatchDetailsAsync"
+                            OnDataReload="LoadTournamentDataAsync" />
+    }
+}

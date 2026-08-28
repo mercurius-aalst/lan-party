@@ -1,5 +1,5 @@
 using Mercurius.LAN.Web.DTOs.Users;
-using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Participants;
 
 namespace Mercurius.LAN.Web.Components.Shared;

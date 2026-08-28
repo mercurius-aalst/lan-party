@@ -1,0 +1,247 @@
+@rendermode InteractiveServer
+@using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.DTOs.Registrations
+@using Mercurius.LAN.Web.Models.Tournaments
+
+<div class="participants-tab-shell">
+    <div class="participants-tab-header">
+        <div>
+            <span class="section-eyebrow">Participants</span>
+            <h2>Registered @(Tournament.ParticipationMode == ParticipationMode.Team ? "teams" : "players")</h2>
+            <p>@_participants.Count currently registered for this tournament.</p>
+        </div>
+    </div>
+
+    <div class="participants-overview-body">
+        @if(!HasPublicParticipants)
+        {
+            <div class="participants-state-card" role="status">
+                <h3>No participants yet</h3>
+                <p>Registrations will appear here after the backend confirms them.</p>
+            </div>
+        }
+        else
+        {
+            <div class="participants-overview-grid">
+                @foreach(var participant in _participants)
+                {
+                    <ParticipantCardComponent Participant="participant" OnParticipantSelected="DisplayParticipantPopup" />
+                }
+            </div>
+        }
+
+        <section class="registration-panel" aria-labelledby="registration-panel-heading">
+            <div class="registration-panel-header">
+                <div>
+                    <span class="section-eyebrow">Registration</span>
+                    <h3 id="registration-panel-heading">Join this tournament</h3>
+                    <p>@GetRegistrationStateMessage()</p>
+                </div>
+                @if(_isLoadingRegistration)
+                {
+                    <span class="registration-loading" role="status">Checking options...</span>
+                }
+            </div>
+
+            @if(_registrationError is not null)
+            {
+                <p class="registration-message registration-message--error" role="alert">@_registrationError</p>
+            }
+
+            @if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Individual)
+            {
+                <div class="registration-workflow">
+                    @if(_registrationState?.IndividualRegistration is { } individualRegistration)
+                    {
+                        <p class="registration-message registration-message--success">Your registration is @individualRegistration.Status.ToString().ToLowerInvariant().</p>
+                        <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="UnregisterIndividualAsync">Unregister</button>
+                    }
+                    else if(_individualEligibility is null)
+                    {
+                        <p class="registration-message" role="status">Checking your eligibility...</p>
+                    }
+                    else if(!_individualEligibility.Eligible)
+                    {
+                        <p class="registration-message registration-message--warning">You cannot register yet: @GetReasonText(_individualEligibility.ReasonCodes)</p>
+                    }
+                    else
+                    {
+                        <button type="button" class="button-primary" disabled="@_isSubmitting" @onclick="RegisterIndividualAsync">Register as an individual</button>
+                    }
+                </div>
+            }
+            else if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Team)
+            {
+                <div class="registration-workflow registration-workflow--team">
+                    @if(_teamError is not null)
+                    {
+                        <p class="registration-message registration-message--error" role="alert">@_teamError</p>
+                    }
+
+                    @if(_isLoadingTeams)
+                    {
+                        <p class="registration-message" role="status">Loading your captained teams...</p>
+                    }
+                    else if(!CaptainedTeams.Any())
+                    {
+                        <p class="registration-message registration-message--warning">You do not captain a team that can submit a roster. Team membership alone cannot submit a registration.</p>
+                    }
+                    else
+                    {
+                        <div class="registration-form-grid">
+                            <div class="form-group">
+                                <label for="registration-team">Captained team</label>
+                                <select id="registration-team" class="form-control" value="@(_selectedTeamId?.ToString() ?? string.Empty)" @onchange="HandleTeamChangedAsync">
+                                    @foreach(var team in CaptainedTeams)
+                                    {
+                                        <option value="@team.Id">@team.Name</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="registration-roster-summary">
+                                <span class="section-eyebrow">Roster size</span>
+                                <strong>@_selectedRosterUserIds.Count / @RequiredTeamSize</strong>
+                                @if(RequiredTeamSize <= 0)
+                                {
+                                    <span class="registration-message registration-message--warning">The tournament has no valid team-size requirement.</span>
+                                }
+                            </div>
+                        </div>
+
+                        @if(_selectedTeamEligibility is { Eligible: false })
+                        {
+                            <p class="registration-message registration-message--warning">This team cannot register: @GetReasonText(_selectedTeamEligibility.ReasonCodes)</p>
+                        }
+                    else if(SelectedTeam is not null)
+                    {
+                            @if(_registrationState?.CaptainManagedRegistrations.FirstOrDefault(registration => registration.Team?.Id == SelectedTeam.Id) is { } managedRegistration)
+                            {
+                                <p class="registration-message registration-message--success">Your team registration is @managedRegistration.Status.ToString().ToLowerInvariant().</p>
+                            }
+                            else if(_registrationState?.ActiveTeamRegistration?.Team?.Id == SelectedTeam.Id)
+                            {
+                                <p class="registration-message registration-message--success">You are registered on this team.</p>
+                            }
+
+                            <fieldset class="registration-roster-fieldset">
+                                <legend>Select the roster members</legend>
+                                <p class="registration-help">The captain must be included. The backend validates the final roster before submission.</p>
+                                <div class="registration-roster-list">
+                                    @foreach(var member in SelectedTeam.Members)
+                                    {
+                                        <label class="registration-roster-member">
+                                            <input type="checkbox"
+                                                   checked="@_selectedRosterUserIds.Contains(member.Id)"
+                                                   disabled="@(_isSubmitting || (_rosterEligibility?.Candidates.FirstOrDefault(candidate => candidate.UserId == member.Id) is { Eligible: false }))"
+                                                   @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
+                                            <span>@GetUserLabel(member)@(member.Id == SelectedTeam.CaptainUserId ? " (captain)" : string.Empty)</span>
+                                        </label>
+                                    }
+                                </div>
+                            </fieldset>
+
+                            @if(_rosterEligibility is { Eligible: false })
+                            {
+                                <p class="registration-message registration-message--warning">This roster cannot be submitted: @GetReasonText(_rosterEligibility.ReasonCodes)</p>
+                            }
+                            else if(_rosterEligibility is { Eligible: true })
+                            {
+                                <p class="registration-message registration-message--success">The selected roster is eligible.</p>
+                            }
+
+                            <div class="registration-actions">
+                                <button type="button" class="button-primary" disabled="@(!CanSubmitRoster || _isSubmitting)" @onclick="SubmitTeamRosterAsync">Submit team roster</button>
+                                @if(_registrationState?.ActiveTeamRegistration?.Team is not null || _registrationState?.CaptainManagedRegistrations.Any(registration => registration.Team?.Id == SelectedTeam.Id) == true)
+                                {
+                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="UnregisterTeamAsync">Unregister team</button>
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+            else if(_isAuthenticated && Tournament.ParticipationMode == ParticipationMode.Team && !IsRegistrationOpen)
+            {
+                <p class="registration-message registration-message--warning">Registration is closed for this tournament.</p>
+            }
+            else if(!_isAuthenticated)
+            {
+                <p class="registration-message">Sign in to access registration and eligibility actions.</p>
+            }
+
+            @if(_registrationState?.PendingRosterConfirmation is { } pending)
+            {
+                <div class="registration-confirmation" role="status">
+                    <div>
+                        <span class="section-eyebrow">Roster confirmation</span>
+                        <p>Your place for <strong>@GetUserLabel(pending.User)</strong> is waiting for your confirmation.</p>
+                    </div>
+                    <button type="button" class="button-primary" disabled="@_isSubmitting" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
+                </div>
+            }
+        </section>
+
+        @if(_isAdmin)
+        {
+            <section class="registration-panel registration-panel--admin" aria-labelledby="admin-registration-heading">
+                <div class="registration-panel-header">
+                    <div>
+                        <span class="section-eyebrow">Admin</span>
+                        <h3 id="admin-registration-heading">Registration administration</h3>
+                        <p>Administrators can remove a registration. New registrations and roster confirmations remain user- or captain-owned.</p>
+                    </div>
+                    @if(_isLoadingAdmin)
+                    {
+                        <span class="registration-loading" role="status">Loading registrations...</span>
+                    }
+                </div>
+
+                @if(_adminError is not null)
+                {
+                    <p class="registration-message registration-message--error" role="alert">@_adminError</p>
+                }
+                else if(!_isLoadingAdmin && _adminRegistrations.Count == 0)
+                {
+                    <p class="registration-message">No registrations are available to administer.</p>
+                }
+                else
+                {
+                    <div class="form-group">
+                        <label for="admin-removal-reason">Removal reason (optional)</label>
+                        <textarea id="admin-removal-reason" class="form-control" rows="2" @bind="_adminRemovalReason"></textarea>
+                    </div>
+                    <div class="admin-registration-list">
+                        @foreach(var registration in _adminRegistrations)
+                        {
+                            var registrationLabel = registration.Kind == TournamentRegistrationKind.Team
+                                ? registration.Team?.Name ?? "Unknown team"
+                                : GetUserLabel(registration.User);
+                            <div class="admin-registration-row">
+                                <div>
+                                    <strong>@registrationLabel</strong>
+                                    <span>@registration.Kind · @registration.Status</span>
+                                </div>
+                                <button type="button" class="button-secondary" disabled="@(_pendingAdminRemovalRegistrationId.HasValue)" @onclick="() => RemoveAdminRegistrationAsync(registration)">Remove</button>
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        }
+    </div>
+
+    @if(_selectedParticipant is not null)
+    {
+        <div class="participants-modal-overlay" @onclick="HidePopup">
+            <div class="participants-modal-dialog participants-modal-dialog--detail" @onclick:stopPropagation>
+                <button type="button" class="participants-modal-close" aria-label="Close participant details" @onclick="HidePopup">&times;</button>
+                <div class="participants-modal-header">
+                    <span class="section-eyebrow">Participant</span>
+                    <h3>@_selectedParticipant.DisplayName</h3>
+                    <p>@GetParticipantModalSummary()</p>
+                </div>
+                <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" />
+            </div>
+        </div>
+    }
+</div>

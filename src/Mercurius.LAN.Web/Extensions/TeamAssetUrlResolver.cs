@@ -1,6 +1,6 @@
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.DTOs.PublicProfiles;
-using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Participants;
 
 namespace Mercurius.LAN.Web.Extensions;
@@ -47,12 +47,12 @@ public static class TeamAssetUrlResolver
             Resolve(configuration, invite);
     }
 
-    public static void Resolve(IConfiguration configuration, GameExtended game)
+    public static void Resolve(IConfiguration configuration, TournamentExtended tournament)
     {
-        foreach(var team in game.Teams)
+        foreach(var team in tournament.Teams)
             Resolve(configuration, team);
 
-        foreach(var placement in game.Placements)
+        foreach(var placement in tournament.Placements)
         {
             foreach(var team in placement.Teams)
                 Resolve(configuration, team);
