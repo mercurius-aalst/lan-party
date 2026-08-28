@@ -281,6 +281,172 @@
     border-radius: 10px;
 }
 
+.registration-roster-member.is-selected {
+    border-color: rgba(34, 197, 94, 0.45);
+    background: rgba(34, 197, 94, 0.06);
+}
+
+.registration-roster-member--ineligible {
+    border-color: rgba(180, 83, 9, 0.35);
+    background: rgba(255, 247, 237, 0.7);
+}
+
+.registration-roster-member-copy {
+    display: grid;
+    min-width: 0;
+    gap: 0.15rem;
+}
+
+.registration-roster-member-copy strong {
+    overflow-wrap: anywhere;
+}
+
+.registration-candidate-reason {
+    color: #9a3412;
+    font-size: 0.78rem;
+    line-height: 1.3;
+}
+
+.registration-stepper {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.registration-step-content {
+    display: grid;
+    gap: 0.9rem;
+    padding: 0.75rem 0;
+}
+
+.registration-team-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.65rem;
+}
+
+.registration-team-option {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    background: var(--color-white);
+    color: var(--color-dark-navy);
+    text-align: left;
+    transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.registration-team-option > span {
+    display: grid;
+    min-width: 0;
+    gap: 0.2rem;
+}
+
+.registration-team-option small {
+    color: var(--color-muted-text, #64748b);
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.registration-team-option:hover:not(:disabled),
+.registration-team-option.is-selected {
+    border-color: rgba(34, 197, 94, 0.55);
+    background: rgba(34, 197, 94, 0.08);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.registration-team-option:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+}
+
+.registration-team-status {
+    max-width: 13rem;
+    text-align: right;
+}
+
+.registration-team-status--success {
+    color: var(--color-deep-green, #166534) !important;
+}
+
+.registration-team-status--error {
+    color: var(--color-danger, #b91c1c) !important;
+}
+
+.registration-stepper-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    width: 100%;
+    padding-top: 0.75rem;
+}
+
+.registration-stepper-actions > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+}
+
+.button-link {
+    border: 0;
+    background: transparent;
+    color: var(--color-deep-green, #166534);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.15rem;
+}
+
+.button-link:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.registration-review-list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+}
+
+.registration-review-list > div {
+    display: grid;
+    gap: 0.15rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.registration-review-list dt {
+    color: var(--color-muted-text, #64748b);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.registration-review-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.registration-review-roster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.registration-review-member {
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.03);
+    font-size: 0.82rem;
+}
+
 .registration-message--error {
     color: var(--color-danger, #b91c1c);
 }
@@ -324,5 +490,28 @@
 
     .registration-form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .registration-team-options {
+        grid-template-columns: 1fr;
+    }
+
+    .registration-team-option {
+        flex-direction: column;
+    }
+
+    .registration-team-status {
+        max-width: none;
+        text-align: left;
+    }
+
+    .registration-stepper-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .registration-stepper-actions > div,
+    .registration-stepper-actions button {
+        width: 100%;
     }
 }
