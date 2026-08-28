@@ -1,8 +1,8 @@
 using Mercurius.LAN.Web.Models.Sponsors;
 
-namespace Mercurius.LAN.Web.DTOs.Games;
+namespace Mercurius.LAN.Web.DTOs.Tournaments;
 
-public class GameSponsorPlacementInputDTO
+public class TournamentSponsorPlacementInputDTO
 {
     public int SponsorId { get; set; }
     public SponsorContext Context { get; set; }

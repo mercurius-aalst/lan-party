@@ -1,4 +1,4 @@
-namespace Mercurius.LAN.Web.Models.Games;
+namespace Mercurius.LAN.Web.Models.Tournaments;
 
 public enum ParticipationMode
 {

@@ -1,4 +1,4 @@
-using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Tournaments;
 
 namespace Mercurius.LAN.Web.Models.Matches
 {
@@ -10,12 +10,12 @@ namespace Mercurius.LAN.Web.Models.Matches
         public DateTime? EstimatedStartTime { get; set; }
         public DateTime? EstimatedEndTime { get; set; }
         public BracketType BracketType { get; set; }
-        public GameFormat Format { get; set; }
+        public TournamentFormat Format { get; set; }
         public ParticipationMode ParticipationMode { get; set; }
         public int RoundNumber { get; set; }
         public int MatchNumber { get; set; }
         public bool IsLowerBracketMatch { get; set; }
-        public Guid GameId { get; set; }
+        public Guid TournamentId { get; set; }
         public Guid? UserParticipant1Id { get; set; }
         public Guid? UserParticipant2Id { get; set; }
         public Guid? TeamParticipant1Id { get; set; }
