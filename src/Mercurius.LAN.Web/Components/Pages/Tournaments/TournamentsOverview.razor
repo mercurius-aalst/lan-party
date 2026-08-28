@@ -28,7 +28,7 @@ else
                 <div class="brand-page-hero-copy tournaments-browse-copy">
                     <span class="section-eyebrow">Find your tournament. Plan your weekend.</span>
                     <h1>Tournaments</h1>
-                    <p>Search the full line-up, compare formats, and narrow the field fast without wading through a separate landing block first.</p>
+                    <p>Search the tournaments loaded on this page, compare formats, and narrow the field fast without wading through a separate landing block first.</p>
                 </div>
                 <div class="tournaments-browse-links flex flex-wrap gap-4">
                     <a href="/tournaments#process" class="button-secondary">How It Works</a>
@@ -37,8 +37,8 @@ else
 
             <div class="tournaments-browse-controls">
                 <div class="tournaments-control-field tournaments-control-field--search">
-                            <label for="tournaments-search">Search tournaments</label>
-                    <input id="tournaments-search" type="text" class="tournaments-search-input" placeholder="Search by tournament title..." @bind="_searchTerm" @bind:event="oninput" />
+                            <label for="tournaments-search">Search this page</label>
+                    <input id="tournaments-search" type="text" class="tournaments-search-input" placeholder="Search loaded tournaments..." @bind="_searchTerm" @bind:event="oninput" />
                 </div>
 
                 <div class="tournaments-control-field tournaments-control-field--sort">
@@ -100,7 +100,7 @@ else
             {
                 <div class="brand-card tournaments-empty-state">
                     <h3>No tournaments match the current filters.</h3>
-                    <p>Adjust the search, status, or mode filters to see the full line-up again.</p>
+                    <p>Adjust the search, status, or mode filters to see more tournaments on this page.</p>
                 </div>
             }
 
@@ -213,5 +213,4 @@ else
         </section>
     }
 }
-
 

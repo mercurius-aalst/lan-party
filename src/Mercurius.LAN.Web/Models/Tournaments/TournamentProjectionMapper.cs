@@ -13,12 +13,12 @@ public static class TournamentProjectionMapper
     public static void PopulateParticipantProjection(TournamentExtended tournament)
     {
         var registrations = tournament.Registrations?.ToList() ?? [];
-        if(registrations.Count == 0)
-            return;
-
-        tournament.Users = registrations
-            .Where(registration => registration.Kind == TournamentRegistrationKind.Individual)
+        var activeRegistrations = registrations
             .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
+            .ToList();
+
+        tournament.Users = activeRegistrations
+            .Where(registration => registration.Kind == TournamentRegistrationKind.Individual)
             .Select(registration => registration.User)
             .Where(user => user is not null)
             .Select(user => user!)
@@ -26,18 +26,18 @@ public static class TournamentProjectionMapper
             .Select(group => group.First())
             .ToList();
 
-        tournament.Teams = registrations
+        tournament.Teams = activeRegistrations
             .Where(registration => registration.Kind == TournamentRegistrationKind.Team)
-            .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
-            .Select(registration => registration.Team)
-            .Where(team => team is not null)
-            .Select(team => ToTeam(team!))
+            .Where(registration => registration.Team is not null)
+            .Select(registration => ToTeam(registration.Team!, registration.RosterMembers))
             .GroupBy(team => team.Id)
             .Select(group => group.First())
             .ToList();
     }
 
-    private static Team ToTeam(PublicTournamentTeamDTO team)
+    private static Team ToTeam(
+        PublicTournamentTeamDTO team,
+        IEnumerable<PublicTournamentRosterMemberDTO> rosterMembers)
     {
         return new Team
         {
@@ -45,7 +45,12 @@ public static class TournamentProjectionMapper
             Name = team.Name,
             CaptainUserId = team.CaptainUserId,
             LogoUrl = team.LogoUrl,
-            Members = team.Members
+            Members = rosterMembers
+                .Select(rosterMember => rosterMember.User)
+                .Where(user => user is not null)
+                .GroupBy(user => user!.Id)
+                .Select(group => group.First()!)
+                .ToList()
         };
     }
 }

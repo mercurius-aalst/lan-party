@@ -14,7 +14,7 @@ using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Tournaments;
 
-public partial class TournamentDetail
+public partial class TournamentDetail : IDisposable
 {
     private enum ScheduleBracketFilter
     {
@@ -45,6 +45,11 @@ public partial class TournamentDetail
     private ScheduleBracketFilter _selectedScheduleBracket = ScheduleBracketFilter.All;
     private int? _selectedScheduleRound;
     private TournamentParticipantLookup _participantLookup = TournamentParticipantLookup.Empty;
+    private CancellationTokenSource? _loadCancellation;
+    private Guid? _loadedTournamentId;
+    private long _loadGeneration;
+    private long _actionGeneration;
+    private bool _isDisposed;
 
     private IReadOnlyList<Match> ScheduledMatches =>
         _tournament?.Matches
@@ -108,22 +113,49 @@ public partial class TournamentDetail
     private string ScheduleCountLabel =>
         $"{FilteredScheduledMatches.Count} match{(FilteredScheduledMatches.Count == 1 ? string.Empty : "es")}";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnParametersSetAsync()
     {
-        if(firstRender)
-        {
-            await LoadTournamentDataAsync();
-        }
+        if(_loadedTournamentId == TournamentId)
+            return Task.CompletedTask;
+
+        _loadedTournamentId = TournamentId;
+        ResetForTournamentChange();
+        return LoadTournamentDataAsync(TournamentId);
     }
 
-    private async Task LoadTournamentDataAsync()
+    private void ResetForTournamentChange()
     {
+        _tournament = null;
+        _selectedMatch = null;
+        _selectedSponsorId = null;
+        _participantLookup = TournamentParticipantLookup.Empty;
+        _selectedScheduleBracket = ScheduleBracketFilter.All;
+        _selectedScheduleRound = null;
+        _loadError = null;
+        _notFound = false;
+        _sponsorError = null;
+        ++_actionGeneration;
+        _isActionRunning = false;
+        _isSavingSponsor = false;
+    }
+
+    private async Task LoadTournamentDataAsync(Guid tournamentId)
+    {
+        _loadCancellation?.Cancel();
+        var loadCancellation = new CancellationTokenSource();
+        _loadCancellation = loadCancellation;
+        var loadGeneration = ++_loadGeneration;
+
         _isLoading = true;
         _loadError = null;
         _notFound = false;
         try
         {
-            _tournament = await TournamentService.GetTournamentByIdAsync(TournamentId);
+            var tournament = await TournamentService.GetTournamentByIdAsync(tournamentId, loadCancellation.Token);
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
+            _tournament = tournament;
             if(_tournament is null)
             {
                 _notFound = true;
@@ -137,29 +169,49 @@ public partial class TournamentDetail
             {
                 try
                 {
-                    _availableSponsors = (await SponsorService.GetSponsorsAsync())
+                    var sponsors = await SponsorService.GetSponsorsAsync();
+                    if(!IsCurrentLoad(tournamentId, loadGeneration))
+                        return;
+
+                    _availableSponsors = sponsors
                         .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
                         .ThenBy(sponsor => sponsor.Name)
                         .ToList();
                 }
                 catch(Exception)
                 {
+                    if(!IsCurrentLoad(tournamentId, loadGeneration))
+                        return;
+
                     // Sponsor administration is supplementary; keep the tournament detail usable.
                     _availableSponsors = [];
                 }
             }
         }
+        catch(OperationCanceledException) when(loadCancellation.IsCancellationRequested)
+        {
+            // A newer tournament parameter or retry superseded this request.
+        }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
         {
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
             _notFound = true;
             _tournament = null;
         }
         catch(UnauthorizedAccessException)
         {
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
             _loadError = "Sign in to load this tournament.";
         }
         catch(ApiException exception)
         {
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
             _loadError = string.IsNullOrWhiteSpace(exception.Content)
                 ? "Could not load this tournament right now."
                 : exception.Content;
@@ -167,95 +219,173 @@ public partial class TournamentDetail
         }
         catch(Exception)
         {
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
             _loadError = "Could not load this tournament right now.";
             ToastService.ShowError(_loadError);
         }
         finally
         {
-            _isLoading = false;
-            await InvokeAsync(StateHasChanged);
+            if(IsCurrentLoad(tournamentId, loadGeneration))
+            {
+                _loadCancellation = null;
+                _isLoading = false;
+                await InvokeAsync(StateHasChanged);
+            }
+
+            loadCancellation.Dispose();
         }
     }
 
-    private Task RetryLoadAsync() => LoadTournamentDataAsync();
+    private Task RetryLoadAsync() => LoadTournamentDataAsync(TournamentId);
+
+    private Task LoadTournamentDataAsync() => LoadTournamentDataAsync(TournamentId);
+
+    private bool IsCurrentLoad(Guid tournamentId, long loadGeneration) =>
+        !_isDisposed &&
+        loadGeneration == _loadGeneration &&
+        tournamentId == TournamentId;
+
+    private bool IsCurrentAction(Guid tournamentId, long actionGeneration) =>
+        !_isDisposed &&
+        actionGeneration == _actionGeneration &&
+        tournamentId == TournamentId;
 
     private Task HandleTournamentUpdated(TournamentExtended updatedTournament)
     {
+        if(updatedTournament.Id != TournamentId)
+            return Task.CompletedTask;
+
         _tournament = updatedTournament;
         _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
         SyncSelectedSponsor();
         return InvokeAsync(StateHasChanged);
     }
 
-    private Task FinishTournamentAsync() =>
-        ExecuteTournamentActionAsync(() => TournamentService.SetTournamentLifecycleStateAsync(TournamentId, TournamentStatus.Completed), "Tournament successfully finished.");
+    private Task FinishTournamentAsync()
+    {
+        var tournamentId = TournamentId;
+        return ExecuteTournamentActionAsync(
+            tournamentId,
+            () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Completed),
+            "Tournament successfully finished.");
+    }
 
-    private Task StartTournamentAsync() =>
-        ExecuteTournamentActionAsync(() => TournamentService.SetTournamentLifecycleStateAsync(TournamentId, TournamentStatus.InProgress), "Tournament successfully started.");
+    private Task StartTournamentAsync()
+    {
+        var tournamentId = TournamentId;
+        return ExecuteTournamentActionAsync(
+            tournamentId,
+            () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.InProgress),
+            "Tournament successfully started.");
+    }
 
-    private Task CancelTournamentAsync() =>
-        ExecuteTournamentActionAsync(() => TournamentService.SetTournamentLifecycleStateAsync(TournamentId, TournamentStatus.Canceled), "Tournament successfully canceled.");
+    private Task CancelTournamentAsync()
+    {
+        var tournamentId = TournamentId;
+        return ExecuteTournamentActionAsync(
+            tournamentId,
+            () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Canceled),
+            "Tournament successfully canceled.");
+    }
 
-    private Task ResetTournamentAsync() =>
-        ExecuteTournamentActionAsync(() => TournamentService.SetTournamentLifecycleStateAsync(TournamentId, TournamentStatus.Scheduled), "Tournament successfully reset.");
+    private Task ResetTournamentAsync()
+    {
+        var tournamentId = TournamentId;
+        return ExecuteTournamentActionAsync(
+            tournamentId,
+            () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Scheduled),
+            "Tournament successfully reset.");
+    }
 
     private async Task DeleteTournamentAsync()
     {
         if(_isActionRunning)
             return;
 
+        var tournamentId = TournamentId;
+        var tournamentName = _tournament?.Name ?? "Tournament";
+        var actionGeneration = ++_actionGeneration;
         _isActionRunning = true;
         try
         {
-            await TournamentService.DeleteTournamentAsync(TournamentId);
-            ToastService.ShowSuccess($"{_tournament?.Name ?? "Tournament"} successfully deleted.");
+            await TournamentService.DeleteTournamentAsync(tournamentId);
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
+            ToastService.ShowSuccess($"{tournamentName} successfully deleted.");
             Navigation.NavigateTo("/tournaments");
         }
         catch(ApiException ex)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError(string.IsNullOrWhiteSpace(ex.Content) ? "The tournament could not be deleted." : ex.Content);
         }
         catch(UnauthorizedAccessException)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError("You are not authorized to delete this tournament.");
         }
         catch(Exception)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError("The tournament could not be deleted right now.");
         }
         finally
         {
-            _isActionRunning = false;
+            if(IsCurrentAction(tournamentId, actionGeneration))
+                _isActionRunning = false;
         }
     }
 
-    private async Task ExecuteTournamentActionAsync(Func<Task> tournamentAction, string successMessage)
+    private async Task ExecuteTournamentActionAsync(Guid tournamentId, Func<Task> tournamentAction, string successMessage)
     {
         if(_isActionRunning)
             return;
 
+        var actionGeneration = ++_actionGeneration;
         _isActionRunning = true;
         try
         {
             await tournamentAction();
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowSuccess(successMessage);
-            await LoadTournamentDataAsync();
+            await LoadTournamentDataAsync(tournamentId);
         }
         catch(ApiException ex)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError(string.IsNullOrWhiteSpace(ex.Content) ? "The tournament action could not be completed." : ex.Content);
         }
         catch(UnauthorizedAccessException)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError("You are not authorized to change this tournament.");
         }
         catch(Exception)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             ToastService.ShowError("The tournament action could not be completed right now.");
         }
         finally
         {
-            _isActionRunning = false;
+            if(IsCurrentAction(tournamentId, actionGeneration))
+                _isActionRunning = false;
         }
     }
 
@@ -465,6 +595,8 @@ public partial class TournamentDetail
         if(_tournament == null || _isSavingSponsor)
             return;
 
+        var tournamentId = _tournament.Id;
+        var actionGeneration = ++_actionGeneration;
         _isSavingSponsor = true;
         _sponsorError = null;
         try
@@ -481,10 +613,13 @@ public partial class TournamentDetail
                 }
                 : [];
 
-            var updatedTournament = await TournamentService.ReplaceTournamentSponsorsAsync(_tournament.Id, new ReplaceTournamentSponsorsDTO
+            var updatedTournament = await TournamentService.ReplaceTournamentSponsorsAsync(tournamentId, new ReplaceTournamentSponsorsDTO
             {
                 SponsorPlacements = sponsorPlacements
             });
+
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
 
             _tournament = updatedTournament;
             _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
@@ -494,6 +629,9 @@ public partial class TournamentDetail
         }
         catch(ApiException ex)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             _sponsorError = string.IsNullOrWhiteSpace(ex.Content)
                 ? "The tournament sponsor could not be updated."
                 : ex.Content;
@@ -501,22 +639,39 @@ public partial class TournamentDetail
         }
         catch(UnauthorizedAccessException)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             _sponsorError = "You are not authorized to update this tournament sponsor.";
             ToastService.ShowError(_sponsorError);
         }
         catch(Exception)
         {
+            if(!IsCurrentAction(tournamentId, actionGeneration))
+                return;
+
             _sponsorError = "The tournament sponsor could not be updated right now.";
             ToastService.ShowError(_sponsorError);
         }
         finally
         {
-            _isSavingSponsor = false;
+            if(IsCurrentAction(tournamentId, actionGeneration))
+                _isSavingSponsor = false;
         }
     }
 
     private void SyncSelectedSponsor()
     {
         _selectedSponsorId = _tournament?.SponsorPlacement?.SponsorId;
+    }
+
+    public void Dispose()
+    {
+        _isDisposed = true;
+        ++_loadGeneration;
+        ++_actionGeneration;
+        var loadCancellation = _loadCancellation;
+        _loadCancellation = null;
+        loadCancellation?.Cancel();
     }
 }

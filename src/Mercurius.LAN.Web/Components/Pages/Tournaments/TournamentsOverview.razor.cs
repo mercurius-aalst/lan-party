@@ -57,6 +57,7 @@ public partial class TournamentsOverview
     private string? _loadError;
     private int _page = 1;
     private const int PageSize = 24;
+    private const int PageRequestSize = PageSize + 1;
     private bool _hasNextPage;
     private TournamentSortOption _sortOption;
     private OverviewStatusFilter _statusFilter = OverviewStatusFilter.All;
@@ -102,14 +103,15 @@ public partial class TournamentsOverview
         _loadError = null;
         try
         {
-            var tournamentsTask = TournamentService.GetTournamentsAsync(_page, PageSize);
+            var tournamentsTask = TournamentService.GetTournamentsAsync(_page, PageRequestSize);
             var sponsorsTask = _sponsors.Count == 0
                 ? SponsorService.GetSponsorsAsync()
                 : Task.FromResult<IEnumerable<Sponsor>>(_sponsors);
 
             await Task.WhenAll(tournamentsTask, sponsorsTask);
-            _tournaments = tournamentsTask.Result;
-            _hasNextPage = _tournaments.Count == PageSize;
+            var fetchedTournaments = tournamentsTask.Result;
+            _hasNextPage = fetchedTournaments.Count > PageSize;
+            _tournaments = fetchedTournaments.Take(PageSize).ToList();
             _sponsors = sponsorsTask.Result
                 .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
                 .ThenBy(sponsor => sponsor.Name)
