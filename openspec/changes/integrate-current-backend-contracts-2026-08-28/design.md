@@ -41,10 +41,11 @@ source of truth.
 
 ### 1. Mirror the versioned back-end contract at the Refit boundary
 
-`ILANClient` and `IUserClient` will use relative `lan/...` attributes (without a leading slash)
-with the configured base address normalized to `/v1/` (including its trailing slash), so all
-requests resolve to `/v1/lan/...`. Methods will use the exact current route verbs and resource
-names. The clients will not preserve removed game routes or invent an HTTP compatibility fallback.
+`ILANClient` and `IUserClient` will use rooted `/v1/lan/...` attributes because Refit requires a
+leading slash in route templates. The configured base address is normalized to the API host root,
+and the version prefix is owned by the route templates, so URI resolution emits exactly one
+`/v1/lan/...` segment. Methods will use the exact current route verbs and resource names. The
+clients will not preserve removed game routes or invent an HTTP compatibility fallback.
 Transport and domain aggregate types MUST use `Tournament*` names; no route-free aliases are
 permitted in the completed change.
 

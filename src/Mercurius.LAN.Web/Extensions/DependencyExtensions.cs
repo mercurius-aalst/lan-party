@@ -90,8 +90,8 @@ public static class DependencyExtensions
 
         services.AddTransient<AccessTokenHandler>();
 
-        var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress")!;
-        var baseAddress = $"{configuredBaseAddress.TrimEnd('/')}/v1";
+        var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress");
+        var baseAddress = BuildApiBaseAddress(configuredBaseAddress);
 
         services.AddRefitClient<ILANClient>(refitSettings)
             .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
@@ -116,6 +116,18 @@ public static class DependencyExtensions
         return services;
     }
 
+    internal static string BuildApiBaseAddress(string? configuredBaseAddress)
+    {
+        if(string.IsNullOrWhiteSpace(configuredBaseAddress))
+            throw new InvalidOperationException("Missing required MercuriusAPI:BaseAddress configuration.");
+
+        var normalizedAddress = configuredBaseAddress.TrimEnd('/');
+        if(normalizedAddress.EndsWith("/v1", StringComparison.OrdinalIgnoreCase))
+            normalizedAddress = normalizedAddress[..^3];
+
+        return $"{normalizedAddress}/";
+    }
+
     public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddScoped<IContactEmailService, SmtpContactEmailService>();
@@ -123,7 +135,7 @@ public static class DependencyExtensions
         if(IsMockBackendEnabled(configuration))
         {
             services.AddSingleton<MockBackendStore>();
-            services.AddScoped<IGameService, MockGameService>();
+            services.AddScoped<ITournamentService, MockTournamentService>();
             services.AddScoped<ITeamService, MockTeamService>();
             services.AddScoped<ISponsorService, MockSponsorService>();
             services.AddScoped<IGlobalSearchService, MockGlobalSearchService>();
@@ -136,7 +148,7 @@ public static class DependencyExtensions
             return services;
         }
 
-        services.AddScoped<IGameService, GameService>();
+        services.AddScoped<ITournamentService, TournamentService>();
         services.AddScoped<ITeamService, TeamService>();
         services.AddScoped<ISponsorService, SponsorService>();
         services.AddScoped<IGlobalSearchService, GlobalSearchService>();

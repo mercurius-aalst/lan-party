@@ -8,7 +8,9 @@ using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
+using Mercurius.LAN.Web.Models.Tournaments;
 using Refit;
+using Xunit;
 
 namespace Mercurius.LAN.Web.ContractTests;
 
@@ -20,11 +22,11 @@ public sealed class ApiContractTests
     };
 
     [Theory]
-    [InlineData("https://api.example.test", "https://api.example.test/v1/")]
-    [InlineData("https://api.example.test/", "https://api.example.test/v1/")]
-    [InlineData("https://api.example.test/v1", "https://api.example.test/v1/")]
-    [InlineData("https://api.example.test/v1/", "https://api.example.test/v1/")]
-    public void BuildApiBaseAddress_AddsVersionExactlyOnce(string configuredAddress, string expectedAddress)
+    [InlineData("https://api.example.test", "https://api.example.test/")]
+    [InlineData("https://api.example.test/", "https://api.example.test/")]
+    [InlineData("https://api.example.test/v1", "https://api.example.test/")]
+    [InlineData("https://api.example.test/v1/", "https://api.example.test/")]
+    public void BuildApiBaseAddress_NormalizesToApiRoot(string configuredAddress, string expectedAddress)
     {
         Assert.Equal(expectedAddress, DependencyExtensions.BuildApiBaseAddress(configuredAddress));
     }
@@ -43,7 +45,7 @@ public sealed class ApiContractTests
         Assert.NotNull(handler.Request);
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal($"/v1/lan/teams/{teamId}/invites", handler.Request.RequestUri!.AbsolutePath);
-        using var body = JsonDocument.Parse(await handler.Request.Content!.ReadAsStringAsync());
+        using var body = JsonDocument.Parse(handler.RequestBody!);
         Assert.Equal(userId.ToString(), body.RootElement.GetProperty("userId").GetString());
     }
 
@@ -61,7 +63,7 @@ public sealed class ApiContractTests
 
         Assert.Equal(HttpMethod.Put, lifecycleHandler.Request!.Method);
         Assert.Equal($"/v1/lan/tournaments/{tournamentId}/lifecycle-state", lifecycleHandler.Request.RequestUri!.AbsolutePath);
-        using var lifecycleBody = JsonDocument.Parse(await lifecycleHandler.Request.Content!.ReadAsStringAsync());
+        using var lifecycleBody = JsonDocument.Parse(lifecycleHandler.RequestBody!);
         Assert.Equal("InProgress", lifecycleBody.RootElement.GetProperty("state").GetString());
 
         var profileHandler = new RecordingHandler("{\"isComplete\":true,\"user\":null,\"email\":null,\"emailVerified\":false}");
@@ -77,7 +79,7 @@ public sealed class ApiContractTests
 
         Assert.Equal(HttpMethod.Put, profileHandler.Request!.Method);
         Assert.Equal("/v1/lan/users/me", profileHandler.Request.RequestUri!.AbsolutePath);
-        using var profileBody = JsonDocument.Parse(await profileHandler.Request.Content!.ReadAsStringAsync());
+        using var profileBody = JsonDocument.Parse(profileHandler.RequestBody!);
         Assert.Equal("testuser", profileBody.RootElement.GetProperty("username").GetString());
     }
 
@@ -97,7 +99,7 @@ public sealed class ApiContractTests
 
         Assert.Equal(HttpMethod.Post, handler.Request!.Method);
         Assert.Equal($"/v1/lan/tournaments/{tournamentId}/registrations/teams/{teamId}/roster/eligibility", handler.Request.RequestUri!.AbsolutePath);
-        using var rosterBody = JsonDocument.Parse(await handler.Request.Content!.ReadAsStringAsync());
+        using var rosterBody = JsonDocument.Parse(handler.RequestBody!);
         Assert.Equal(teamId.ToString(), rosterBody.RootElement.GetProperty("teamId").GetString());
 
         var matchId = Guid.Parse("77777777-7777-7777-7777-777777777777");
@@ -129,7 +131,7 @@ public sealed class ApiContractTests
     {
         return new HttpClient(handler)
         {
-            BaseAddress = new Uri("https://api.example.test/v1/")
+            BaseAddress = new Uri("https://api.example.test/")
         };
     }
 
@@ -142,16 +144,22 @@ public sealed class ApiContractTests
     {
         public HttpRequestMessage? Request { get; private set; }
 
+        public string? RequestBody { get; private set; }
+
         public string ResponseBody { get; set; } = responseBody;
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             Request = request;
-            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            RequestBody = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
             {
                 RequestMessage = request,
                 Content = new StringContent(ResponseBody, Encoding.UTF8, "application/json")
-            });
+            };
         }
     }
 }

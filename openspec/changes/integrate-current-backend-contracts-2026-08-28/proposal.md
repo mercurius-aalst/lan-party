@@ -12,8 +12,9 @@ will fail at routing or deserialization boundaries even though mock mode continu
   the back-end's canonical `tournaments`/`tournamentId` resources. The FE transport and domain
   model surface MUST use `Tournament*` names; only backend-defined field terminology such as
   `AverageGameDurationMinutes` is retained.
-- Keep the shared `/v1` base-address strategy and make every live client call resolve to the
-  back-end's versioned route groups.
+- Keep one versioned route strategy: rooted Refit templates own `/v1`, while the configured live
+  client base address is normalized to the API host root so every call resolves to the back-end's
+  versioned route groups exactly once.
 - Replace legacy tournament lifecycle and participant mutations with the current lifecycle-state
   and tournament-registration resources, including eligibility, roster confirmation, and admin
   removal operations.

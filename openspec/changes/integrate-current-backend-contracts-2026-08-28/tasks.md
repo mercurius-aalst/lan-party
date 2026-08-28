@@ -2,7 +2,7 @@
 
 - [x] 1.1 Record the backend contract baseline at commit `e17d2b9` and verify the versioned `/v1/lan` route map against `mercurius-aalst-back-end`; treat the sibling repository as read-only for this change.
 - [x] 1.2 Update `src/Mercurius.LAN.Web/APIClients/ILANClient.cs` and `IUserClient.cs` to use the canonical tournament, match, team, public profile, search, sponsor, and identity routes with the exact current verbs and request bodies; the contracts MUST expose `Tournament*` aggregate types and MUST NOT expose legacy `Game*` aliases.
-- [x] 1.3 Verify `src/Mercurius.LAN.Web/Extensions/DependencyExtensions.cs`, `Program.cs`, and API options append or configure `/v1` exactly once, preserve Auth0 bearer handling, and keep mock routing behind the same service contracts.
+- [x] 1.3 Verify `src/Mercurius.LAN.Web/Extensions/DependencyExtensions.cs`, `Program.cs`, and API options normalize the host base and apply rooted `/v1/lan/...` routes exactly once, preserve Auth0 bearer handling, and keep the team-events hub at `/v1/lan/team-events` without duplication.
 
 ## 2. Align transport DTOs and domain mappings
 
