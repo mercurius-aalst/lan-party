@@ -6,7 +6,10 @@ namespace Mercurius.LAN.Web.Services;
 
 public interface ITeamService
 {
-    Task<List<Team>> GetTeamsAsync();
+    Task<TeamPage> GetTeamsAsync(
+        int page = 1,
+        int pageSize = TeamPage.DefaultPageSize,
+        CancellationToken cancellationToken = default);
     Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default);
     Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default);
     Task<Team> CreateTeamAsync(CreateTeamDTO team);

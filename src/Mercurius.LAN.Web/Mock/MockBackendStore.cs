@@ -952,11 +952,28 @@ internal sealed class MockBackendStore
             .ToList();
     }
 
-    public List<Team> GetTeams()
+    public List<Team> GetTeams(int page, int pageSize)
     {
         lock(_syncRoot)
         {
-            return Clone(_document.Teams)!;
+            if(page < 1)
+                throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than zero.");
+
+            if(pageSize < 1)
+                throw new ArgumentOutOfRangeException(nameof(pageSize), "Page size must be greater than zero.");
+
+            var offset = ((long)page - 1) * pageSize;
+            if(offset > int.MaxValue)
+                return [];
+
+            var teams = _document.Teams
+                .OrderBy(team => team.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(team => team.Id)
+                .Skip((int)offset)
+                .Take(pageSize)
+                .ToList();
+
+            return Clone(teams)!;
         }
     }
 

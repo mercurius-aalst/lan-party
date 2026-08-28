@@ -19,18 +19,44 @@ public class TeamService : ITeamService
         _configuration = configuration;
     }
 
-    public async Task<List<Team>> GetTeamsAsync()
+    public async Task<TeamPage> GetTeamsAsync(
+        int page = 1,
+        int pageSize = TeamPage.DefaultPageSize,
+        CancellationToken cancellationToken = default)
     {
+        ValidatePageArguments(page, pageSize);
+
         try
         {
-            var teams = await _lanClient.GetTeamsAsync();
-            teams.ForEach(team => TeamAssetUrlResolver.Resolve(_configuration, team));
-            return teams;
+            var requestPageSize = pageSize < TeamPage.MaximumPageSize
+                ? pageSize + 1
+                : pageSize;
+            var teams = await _lanClient.GetTeamsAsync(page, requestPageSize, cancellationToken);
+            var hasMore = teams.Count > pageSize;
+
+            if(pageSize == TeamPage.MaximumPageSize && teams.Count == pageSize && page < int.MaxValue)
+            {
+                var nextPage = await _lanClient.GetTeamsAsync(page + 1, pageSize, cancellationToken);
+                hasMore = nextPage.Count > 0;
+            }
+
+            var visibleTeams = teams.Take(pageSize).ToList();
+            visibleTeams.ForEach(team => TeamAssetUrlResolver.Resolve(_configuration, team));
+            return new TeamPage(visibleTeams, page, pageSize, hasMore);
         }
         catch(ApiException exception)
         {
             throw CreateServiceException("Load teams", exception);
         }
+    }
+
+    private static void ValidatePageArguments(int page, int pageSize)
+    {
+        if(page < 1)
+            throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than zero.");
+
+        if(pageSize is < 1 or > TeamPage.MaximumPageSize)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), $"Page size must be between 1 and {TeamPage.MaximumPageSize}.");
     }
 
     public async Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default)

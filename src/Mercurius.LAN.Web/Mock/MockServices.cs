@@ -196,7 +196,30 @@ internal sealed class MockTeamService : ITeamService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Task<List<Team>> GetTeamsAsync() => Task.FromResult(_store.GetTeams());
+    public Task<TeamPage> GetTeamsAsync(
+        int page = 1,
+        int pageSize = TeamPage.DefaultPageSize,
+        CancellationToken cancellationToken = default)
+    {
+        if(page < 1)
+            throw new ArgumentOutOfRangeException(nameof(page), "Page must be greater than zero.");
+
+        if(pageSize is < 1 or > TeamPage.MaximumPageSize)
+            throw new ArgumentOutOfRangeException(nameof(pageSize), $"Page size must be between 1 and {TeamPage.MaximumPageSize}.");
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var requestPageSize = pageSize < TeamPage.MaximumPageSize
+            ? pageSize + 1
+            : pageSize;
+        var teams = _store.GetTeams(page, requestPageSize);
+        var hasMore = teams.Count > pageSize;
+
+        if(pageSize == TeamPage.MaximumPageSize && teams.Count == pageSize && page < int.MaxValue)
+            hasMore = _store.GetTeams(page + 1, pageSize).Count > 0;
+
+        return Task.FromResult(new TeamPage(teams.Take(pageSize).ToList(), page, pageSize, hasMore));
+    }
 
     public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetPublicTeamByName(teamName));
