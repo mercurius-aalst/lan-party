@@ -26,6 +26,7 @@ public partial class Profile
     private bool _isSendingPasswordReset;
     private bool _isDeleting;
     private bool _canDelete => string.Equals(_deleteConfirmation, "DELETE", StringComparison.Ordinal);
+    private string? _loadError;
 
     [Inject] private IUserClient UserClient { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -33,6 +34,7 @@ public partial class Profile
 
     protected override async Task OnInitializedAsync()
     {
+        _loadError = null;
         try
         {
             var currentProfile = await UserClient.GetCurrentUserProfileAsync();
@@ -51,6 +53,18 @@ public partial class Profile
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
         {
             NavigationManager.NavigateTo("/account/logout", true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            NavigationManager.NavigateTo("/complete-profile?returnUrl=/profile");
+        }
+        catch(ApiException exception)
+        {
+            _loadError = await GetApiErrorAsync(exception, "Your profile could not be loaded right now.");
+        }
+        catch(UnauthorizedAccessException)
+        {
+            NavigationManager.NavigateTo("/account/login?returnUrl=/profile", true);
         }
     }
 
@@ -80,6 +94,18 @@ public partial class Profile
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict)
         {
             ToastService.ShowError(await GetApiErrorAsync(exception));
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            NavigationManager.NavigateTo("/account/login?returnUrl=/profile", true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
+        {
+            NavigationManager.NavigateTo("/account/logout", true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            NavigationManager.NavigateTo("/complete-profile?returnUrl=/profile");
         }
         finally
         {
@@ -189,9 +215,16 @@ public partial class Profile
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
     }
 
-    private static async Task<string> GetApiErrorAsync(ApiException exception)
+    private static async Task<string> GetApiErrorAsync(ApiException exception, string fallback = "Request failed.")
     {
-        var content = await exception.GetContentAsAsync<string>();
-        return string.IsNullOrWhiteSpace(content) ? "Request failed." : content;
+        try
+        {
+            var content = await exception.GetContentAsAsync<string>();
+            return string.IsNullOrWhiteSpace(content) ? fallback : content;
+        }
+        catch
+        {
+            return string.IsNullOrWhiteSpace(exception.Content) ? fallback : exception.Content.Trim('"');
+        }
     }
 }

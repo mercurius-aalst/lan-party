@@ -8,5 +8,5 @@ public class GlobalSearchResultDTO
     public Guid? UserId { get; set; }
     public string? Username { get; set; }
     public string? TeamName { get; set; }
-    public Guid? GameId { get; set; }
+    public Guid? TournamentId { get; set; }
 }

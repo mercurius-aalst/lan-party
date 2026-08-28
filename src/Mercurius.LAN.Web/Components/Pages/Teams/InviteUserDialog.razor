@@ -102,6 +102,8 @@
     private bool _wasOpen;
     private readonly List<GlobalSearchResultDTO> _results = [];
     private GlobalSearchResultDTO? _selected;
+    private CancellationTokenSource? _searchCancellationTokenSource;
+    private long _searchRequestVersion;
 
     private bool CanSubmit => _selected?.UserId.HasValue == true;
     private bool HasSearchDropdown => _query.Trim().Length >= 3 && _selected is null && string.IsNullOrWhiteSpace(_error);
@@ -116,6 +118,7 @@
 
     private void Reset()
     {
+        CancelPendingSearch();
         _query = string.Empty;
         _selected = null;
         _results.Clear();
@@ -129,24 +132,53 @@
         _selected = null;
         _results.Clear();
         _error = null;
+        CancelPendingSearch();
 
-        if(_query.Trim().Length < 3)
+        var trimmedQuery = _query.Trim();
+        if(trimmedQuery.Length < 3)
+        {
+            _isSearching = false;
             return;
+        }
 
         _isSearching = true;
+        var requestVersion = ++_searchRequestVersion;
+        _searchCancellationTokenSource = new CancellationTokenSource();
+        var cancellationToken = _searchCancellationTokenSource.Token;
         try
         {
-            var results = await UserSearchService.SearchAsync(_query);
+            var results = await UserSearchService.SearchAsync(trimmedQuery, cancellationToken);
+            if(cancellationToken.IsCancellationRequested || requestVersion != _searchRequestVersion)
+                return;
+
             _results.AddRange(results.Take(6));
+        }
+        catch(OperationCanceledException)
+        {
         }
         catch(Exception)
         {
+            if(cancellationToken.IsCancellationRequested || requestVersion != _searchRequestVersion)
+                return;
+
             _error = "User search is unavailable right now.";
         }
         finally
         {
-            _isSearching = false;
+            if(requestVersion == _searchRequestVersion)
+                _isSearching = false;
         }
+    }
+
+    private void CancelPendingSearch()
+    {
+        _searchRequestVersion++;
+        if(_searchCancellationTokenSource is null)
+            return;
+
+        _searchCancellationTokenSource.Cancel();
+        _searchCancellationTokenSource.Dispose();
+        _searchCancellationTokenSource = null;
     }
 
     private Task SelectCandidateAsync(GlobalSearchResultDTO result)

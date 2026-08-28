@@ -12,13 +12,12 @@ public class GlobalSearchService : IGlobalSearchService
         _lanClient = lanClient;
     }
 
-    public async Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    public async Task<SearchResponseDTO> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
         var trimmedQuery = query.Trim();
         if(trimmedQuery.Length < 3)
-            return [];
+            return new SearchResponseDTO();
 
-        var response = await _lanClient.SearchAsync(trimmedQuery, cancellationToken: cancellationToken);
-        return response.Results;
+        return await _lanClient.SearchAsync(trimmedQuery, cancellationToken: cancellationToken);
     }
 }

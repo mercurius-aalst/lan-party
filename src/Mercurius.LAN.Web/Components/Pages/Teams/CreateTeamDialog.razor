@@ -62,7 +62,7 @@
 }
 
 @code {
-    private const long MaximumLogoBytes = 2 * 1024 * 1024;
+    private const long MaximumLogoBytes = 5 * 1024 * 1024;
 
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public EventCallback<CreateTeamDialogResult> TeamCreated { get; set; }
@@ -93,7 +93,7 @@
         var file = args.File;
         if(file.Size > MaximumLogoBytes)
         {
-            _error = "Choose a logo smaller than 2 MB.";
+            _error = "Choose a logo no larger than 5 MB.";
             _logo = null;
             return;
         }

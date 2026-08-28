@@ -46,6 +46,8 @@ public partial class NavMenu : IAsyncDisposable
     private bool _hasSearchError;
     private bool _isSearchDropdownVisible;
     private int _highlightedSearchIndex = -1;
+    private string? _searchNextCursor;
+    private bool _searchHasMore;
     private long _searchRequestVersion;
     private CancellationTokenSource? _searchCancellationTokenSource;
     private IJSObjectReference? _searchOutsideClickListener;
@@ -230,12 +232,14 @@ public partial class NavMenu : IAsyncDisposable
         try
         {
             await Task.Delay(SearchDebounceMilliseconds, cancellationToken);
-            var results = await GlobalSearchService.SearchAsync(trimmedQuery, cancellationToken);
+            var response = await GlobalSearchService.SearchAsync(trimmedQuery, cancellationToken);
 
             if(cancellationToken.IsCancellationRequested || requestVersion != _searchRequestVersion)
                 return;
 
-            _searchResults = results.ToList();
+            _searchResults = response.Results.ToList();
+            _searchNextCursor = response.NextCursor;
+            _searchHasMore = response.HasMore;
             _isSearchLoading = false;
             _hasSearchError = false;
             _isSearchDropdownVisible = true;
@@ -359,6 +363,8 @@ public partial class NavMenu : IAsyncDisposable
         _isSearchLoading = false;
         _hasSearchError = false;
         _highlightedSearchIndex = -1;
+        _searchNextCursor = null;
+        _searchHasMore = false;
 
         if(clearResults)
             _searchResults = [];
@@ -440,8 +446,8 @@ public partial class NavMenu : IAsyncDisposable
                 $"/users/{Uri.EscapeDataString(result.Username)}",
             GlobalSearchResultType.Team when !string.IsNullOrWhiteSpace(result.TeamName) =>
                 $"/teams/{Uri.EscapeDataString(result.TeamName)}",
-            GlobalSearchResultType.Game when result.GameId.HasValue =>
-                $"/games/{result.GameId.Value}",
+            GlobalSearchResultType.Tournament when result.TournamentId.HasValue =>
+                $"/tournaments/{result.TournamentId.Value}",
             _ => null
         };
     }

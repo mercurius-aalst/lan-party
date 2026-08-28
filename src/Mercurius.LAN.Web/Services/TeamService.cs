@@ -75,9 +75,16 @@ public class TeamService : ITeamService
     {
         try
         {
-            var createdTeam = await _lanClient.CreateTeamAsync(team);
-            TeamAssetUrlResolver.Resolve(_configuration, createdTeam);
-            return createdTeam;
+            var summary = await _lanClient.CreateTeamAsync(team);
+            TeamAssetUrlResolver.Resolve(_configuration, summary);
+            return new Team
+            {
+                Id = summary.Id,
+                Name = summary.Name,
+                CaptainUserId = summary.CaptainUserId,
+                LogoUrl = summary.LogoUrl,
+                Members = summary.Members
+            };
         }
         catch(ApiException exception)
         {
@@ -89,7 +96,7 @@ public class TeamService : ITeamService
     {
         try
         {
-            return await _lanClient.CreateTeamInviteAsync(teamId, userId);
+            return await _lanClient.CreateTeamInviteAsync(teamId, new CreateTeamInviteRequestDTO { UserId = userId });
         }
         catch(ApiException exception)
         {

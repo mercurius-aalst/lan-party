@@ -43,6 +43,11 @@
         {
             NavigationManager.NavigateTo("/account/logout", forceLoad: true);
         }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            var returnUrl = GetCurrentRelativeUrl();
+            NavigationManager.NavigateTo($"/complete-profile?returnUrl={Uri.EscapeDataString(returnUrl)}");
+        }
         catch(UnauthorizedAccessException)
         {
             var returnUrl = GetCurrentRelativeUrl();

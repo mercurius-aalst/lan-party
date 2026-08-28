@@ -1,82 +1,187 @@
 using Mercurius.LAN.Web.APIClients;
-using Mercurius.LAN.Web.DTOs.Games;
+using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.DTOs.Sponsors;
 using Mercurius.LAN.Web.DTOs.Users;
-using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Http;
+using ModelTournamentStatus = Mercurius.LAN.Web.Models.Tournaments.TournamentStatus;
 
 namespace Mercurius.LAN.Web.Mock;
 
-internal sealed class MockGameService : IGameService
+internal sealed class MockTournamentService : ITournamentService
 {
     private readonly MockBackendStore _store;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public MockGameService(MockBackendStore store)
+    public MockTournamentService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
     {
         _store = store;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public Task<List<Game>> GetGamesAsync() => Task.FromResult(_store.GetGames());
+    public Task<List<Tournament>> GetTournamentsAsync(
+        int? page = null,
+        int? pageSize = null,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetTournaments(page, pageSize));
 
-    public Task<GameExtended?> GetGameByIdAsync(Guid id) => Task.FromResult(_store.GetGame(id));
+    public Task<TournamentExtended?> GetTournamentByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetTournament(id));
 
-    public Task<GameExtended> CreateGameAsync(CreateGameDTO newGame, string? tempFilePath, string? contentType, string? fileName) =>
-        Task.FromResult(_store.CreateGame(newGame));
+    public Task<TournamentExtended?> GetTournamentDetailAsync(
+        Guid id,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetTournament(id));
 
-    public Task<GameExtended> UpdateGameAsync(Guid id, UpdateGameDTO updatedGame, string? tempFilePath, string? contentType, string? fileName) =>
-        Task.FromResult(_store.UpdateGame(id, updatedGame));
+    public Task<TournamentExtended> CreateTournamentAsync(
+        CreateTournamentDTO newTournament,
+        string? tempFilePath,
+        string? contentType,
+        string? fileName,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.CreateTournament(newTournament));
 
-    public Task<GameExtended?> GetGameDetailAsync(Guid id) => Task.FromResult(_store.GetGame(id));
+    public Task<TournamentExtended> UpdateTournamentAsync(
+        Guid id,
+        UpdateTournamentDTO updatedTournament,
+        string? tempFilePath,
+        string? contentType,
+        string? fileName,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.UpdateTournament(id, updatedTournament));
 
-    public Task StartGameAsync(Guid id)
+    public Task SetTournamentLifecycleStateAsync(
+        Guid id,
+        ModelTournamentStatus state,
+        CancellationToken cancellationToken = default)
     {
-        _store.StartGame(id);
+        _store.SetTournamentLifecycleState(id, state);
         return Task.CompletedTask;
     }
 
-    public Task CancelGameAsync(Guid id)
+    public Task DeleteTournamentAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        _store.CancelGame(id);
+        _store.DeleteTournament(id);
         return Task.CompletedTask;
     }
 
-    public Task ResetGameAsync(Guid id)
+    public Task<TournamentExtended> ReplaceTournamentSponsorsAsync(
+        Guid id,
+        ReplaceTournamentSponsorsDTO sponsors,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ReplaceTournamentSponsors(id, sponsors));
+
+    public Task<Match> GetMatchByIdAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetMatch(matchId));
+
+    public Task<Match> UpdateMatchScoresAsync(
+        Guid matchId,
+        UpdateMatchDTO updateMatchDTO,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.UpdateMatch(matchId, updateMatchDTO));
+
+    public Task<CurrentUserTournamentRegistrationStateDTO> GetCurrentUserTournamentRegistrationStateAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetCurrentUserTournamentRegistrationState(GetCurrentPersona(), tournamentId));
+
+    public Task<EligibilityResponseDTO> CheckIndividualTournamentRegistrationEligibilityAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.CheckIndividualTournamentRegistrationEligibility(GetCurrentPersona(), tournamentId));
+
+    public Task<EligibilityResponseDTO> CheckTeamTournamentRegistrationEligibilityAsync(
+        Guid tournamentId,
+        Guid teamId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.CheckTeamTournamentRegistrationEligibility(GetCurrentPersona(), tournamentId, teamId));
+
+    public Task<RosterCandidateEligibilityResponseDTO> CheckTeamRosterEligibilityAsync(
+        Guid tournamentId,
+        Guid teamId,
+        SubmitTeamRosterDTO roster,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.CheckTeamRosterEligibility(GetCurrentPersona(), tournamentId, teamId, roster));
+
+    public Task<TournamentRegistrationDTO> RegisterCurrentUserForTournamentAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.RegisterCurrentUserForTournament(GetCurrentPersona(), tournamentId));
+
+    public Task DeleteCurrentUserTournamentRegistrationAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default)
     {
-        _store.ResetGame(id);
+        _store.DeleteCurrentUserTournamentRegistration(GetCurrentPersona(), tournamentId);
         return Task.CompletedTask;
     }
 
-    public Task DeleteGameAsync(Guid id)
+    public Task<TournamentRegistrationDTO> SubmitTeamTournamentRosterAsync(
+        Guid tournamentId,
+        Guid teamId,
+        SubmitTeamRosterDTO roster,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.SubmitTeamTournamentRoster(GetCurrentPersona(), tournamentId, teamId, roster));
+
+    public Task DeleteTeamTournamentRegistrationAsync(
+        Guid tournamentId,
+        Guid teamId,
+        CancellationToken cancellationToken = default)
     {
-        _store.DeleteGame(id);
+        _store.DeleteTeamTournamentRegistration(GetCurrentPersona(), tournamentId, teamId);
         return Task.CompletedTask;
     }
 
-    public Task<GameExtended> ReplaceGameSponsorsAsync(Guid id, ReplaceGameSponsorsDTO sponsors) =>
-        Task.FromResult(_store.ReplaceGameSponsors(id, sponsors));
+    public Task<TournamentRegistrationDTO> ConfirmTournamentRosterMemberAsync(
+        Guid tournamentId,
+        Guid rosterMemberId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ConfirmTournamentRosterMember(GetCurrentPersona(), tournamentId, rosterMemberId));
 
-    public Task<GameExtended> RegisterUserForGameAsync(Guid id, Guid userId) => Task.FromResult(_store.RegisterUser(id, userId));
+    public Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
+        Guid tournamentId,
+        int? page = null,
+        int? pageSize = null,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetAdminTournamentRegistrations(tournamentId, page, pageSize));
 
-    public Task<GameExtended> UnregisterUserFromGameAsync(Guid id, Guid userId) => Task.FromResult(_store.UnregisterUser(id, userId));
-
-    public Task<GameExtended> RegisterTeamForGameAsync(Guid id, Guid teamId) => Task.FromResult(_store.RegisterTeam(id, teamId));
-
-    public Task<GameExtended> UnregisterTeamFromGameAsync(Guid id, Guid teamId) => Task.FromResult(_store.UnregisterTeam(id, teamId));
-
-    public Task<Match> UpdateMatchScoresAsync(Guid matchId, UpdateMatchDTO updateMatchDTO) => Task.FromResult(_store.UpdateMatch(matchId, updateMatchDTO));
-
-    public Task CompleteGameAsync(Guid id)
+    public Task RemoveTournamentUserRegistrationAsAdminAsync(
+        Guid tournamentId,
+        Guid userId,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
     {
-        _store.CompleteGame(id);
+        _store.RemoveTournamentUserRegistrationAsAdmin(tournamentId, userId, reason);
         return Task.CompletedTask;
+    }
+
+    public Task RemoveTournamentTeamRegistrationAsAdminAsync(
+        Guid tournamentId,
+        Guid teamId,
+        string? reason = null,
+        CancellationToken cancellationToken = default)
+    {
+        _store.RemoveTournamentTeamRegistrationAsAdmin(tournamentId, teamId, reason);
+        return Task.CompletedTask;
+    }
+
+    private string GetCurrentPersona()
+    {
+        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
+        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
     }
 }
 
@@ -99,7 +204,18 @@ internal sealed class MockTeamService : ITeamService
     public Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetCurrentUserTeamSummary(GetCurrentPersona()));
 
-    public Task<Team> CreateTeamAsync(CreateTeamDTO team) => Task.FromResult(_store.CreateCurrentUserTeam(GetCurrentPersona(), team));
+    public Task<Team> CreateTeamAsync(CreateTeamDTO team)
+    {
+        var summary = _store.CreateCurrentUserTeam(GetCurrentPersona(), team);
+        return Task.FromResult(new Team
+        {
+            Id = summary.Id,
+            Name = summary.Name,
+            CaptainUserId = summary.CaptainUserId,
+            LogoUrl = summary.LogoUrl,
+            Members = summary.Members
+        });
+    }
 
     public Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId) => Task.FromResult(_store.CreateTeamInvite(GetCurrentPersona(), teamId, userId));
 
@@ -140,10 +256,25 @@ internal sealed class MockGlobalSearchService : IGlobalSearchService
         _store = store;
     }
 
-    public Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    public Task<SearchResponseDTO> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<GlobalSearchResultDTO> results = _store.SearchGlobal(query);
-        return Task.FromResult(results);
+        var results = _store.SearchGlobal(query)
+            .Select(result => result.Type == GlobalSearchResultType.User
+                ? new GlobalSearchResultDTO
+                {
+                    Type = result.Type,
+                    DisplayLabel = result.DisplayLabel,
+                    SupportingText = result.SupportingText,
+                    Username = result.Username
+                }
+                : result)
+            .ToList();
+        return Task.FromResult(new SearchResponseDTO
+        {
+            Results = results,
+            NextCursor = null,
+            HasMore = false
+        });
     }
 }
 

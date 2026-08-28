@@ -4,5 +4,5 @@ namespace Mercurius.LAN.Web.Services;
 
 public interface IGlobalSearchService
 {
-    Task<IReadOnlyList<GlobalSearchResultDTO>> SearchAsync(string query, CancellationToken cancellationToken = default);
+    Task<SearchResponseDTO> SearchAsync(string query, CancellationToken cancellationToken = default);
 }
