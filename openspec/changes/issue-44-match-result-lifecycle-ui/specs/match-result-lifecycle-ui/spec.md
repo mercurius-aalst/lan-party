@@ -42,7 +42,7 @@ The UI MUST allow an eligible participant/captain to submit a valid score only w
 
 ### Requirement: Forfeit and administrative actions
 
-The UI MUST require explicit confirmation before a participant or administrator forfeits, and before an administrator reverses a result. It MUST show actions only when the fresh protected action projection grants the corresponding capability, show admin resolution/force/reversal only to admins, and explain why an action is blocked when tournament state, assignment, or linked downstream matches disallow it. Team matches MUST identify captain-only actions.
+The UI MUST require explicit confirmation before a participant or administrator forfeits, and before an administrator reverses a result. It MUST show actions only when the fresh protected action projection grants the corresponding capability, show admin resolution/force/reversal only to admins, and explain why an action is blocked when tournament state or linked downstream matches disallow it. An administrator assignment MAY scope private report visibility but MUST NOT suppress an eligible global-admin action. Team matches MUST identify captain-only actions.
 
 #### Scenario: Participant forfeits
 
@@ -75,7 +75,7 @@ The UI MUST show loading immediately when a match refresh or mutation begins, di
 
 - **WHEN** the protected action refresh is unauthorized or forbidden
 - **THEN** the UI MUST fetch and render the public match projection
-- **AND** it MUST keep all mutations disabled while showing a distinct sign-in or assigned-administrator explanation
+- **AND** it MUST keep all mutations disabled while showing a distinct sign-in or permission explanation
 
 ### Requirement: Mock/live parity
 

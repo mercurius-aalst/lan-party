@@ -99,7 +99,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         MatchLifecycleState.AwaitingScore => "Both sides have confirmed the end. The assigned side may submit the score.",
         MatchLifecycleState.ScoreConfirmation => "The first score report is saved. The opponent has five minutes to agree or report a correction.",
         MatchLifecycleState.Disputed => "The reports do not match. Each side has one correction opportunity before administrator resolution.",
-        MatchLifecycleState.AdminResolutionRequired => "The correction window expired. An assigned tournament administrator must resolve this result.",
+        MatchLifecycleState.AdminResolutionRequired => "The correction window expired. An authorized tournament administrator must resolve this result.",
         MatchLifecycleState.Completed => "The result is official and has advanced the bracket.",
         MatchLifecycleState.Forfeited => "The result is official after a side forfeited.",
         MatchLifecycleState.Reversed => "The result was reversed. The match can be played again when both sides are assigned.",
@@ -204,7 +204,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private static string GetAdminBlockedReason(string? reason) => reason switch
     {
-        "admin_not_assigned" => "Only the assigned tournament administrator can resolve this match.",
         "tournament_not_in_progress" => "This tournament is no longer in progress.",
         "match_not_completed" => "This match does not have an official result to reverse.",
         "match_already_completed" => "This match already has an official result.",
@@ -549,8 +548,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     {
         if(capability == null)
             return "The authoritative match state is no longer available. Retry and try again.";
-        if(!state.CanResolve && state.ResolveBlockedReason == "admin_not_assigned")
-            return "Only the assigned tournament administrator can resolve this match.";
         if(!state.CanResolve && state.ResolveBlockedReason == "tournament_not_in_progress")
             return "This tournament is no longer in progress.";
         if(!state.CanForceForfeit && state.ForceForfeitBlockedReason == "tournament_not_in_progress")
@@ -572,8 +569,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 return "Sign in to manage this match.";
             if(apiException.StatusCode == HttpStatusCode.Forbidden)
             {
-                if(GetServerCode(apiException.Content) == "admin_not_assigned")
-                    return "Only the assigned tournament administrator can resolve this match.";
                 return "You are not authorized to perform this match action.";
             }
             if(apiException.StatusCode == HttpStatusCode.Conflict)
