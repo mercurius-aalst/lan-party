@@ -21,6 +21,59 @@ public sealed class TournamentRegistrationWorkflowStateTests
                 isCurrentRoute));
     }
 
+    [Theory]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(false, false, false)]
+    public void DirtyRosterDraftIsKeptWhenItsTeamIsNoLongerSelected(
+        bool hasDraftTeam,
+        bool selectedTeamIsSame,
+        bool expected)
+    {
+        Guid? draftTeamId = hasDraftTeam
+            ? Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")
+            : null;
+        Guid? selectedTeamId = hasDraftTeam && selectedTeamIsSame
+            ? draftTeamId
+            : hasDraftTeam
+                ? Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")
+                : null;
+
+        Assert.Equal(
+            expected,
+            TournamentParticipantsTab.ShouldPreserveRosterDraftAfterRefresh(
+                draftTeamId,
+                selectedTeamId));
+    }
+
+    [Fact]
+    public void RefreshStartedBeforeLeavingAndReturningToTournamentIsRejected()
+    {
+        var tournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+        Assert.False(TournamentParticipantsTab.IsRefreshCurrent(
+            tournamentId,
+            tournamentId,
+            expectedRouteVersion: 4,
+            currentRouteVersion: 6,
+            expectedRegistrationGeneration: 12,
+            currentRegistrationGeneration: 14));
+    }
+
+    [Fact]
+    public void RefreshWithMatchingTournamentRouteAndGenerationIsCurrent()
+    {
+        var tournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+
+        Assert.True(TournamentParticipantsTab.IsRefreshCurrent(
+            tournamentId,
+            tournamentId,
+            expectedRouteVersion: 4,
+            currentRouteVersion: 4,
+            expectedRegistrationGeneration: 12,
+            currentRegistrationGeneration: 12));
+    }
+
     [Fact]
     public void CandidateDiscoveryBatchesFiftyOneMembersWithoutExceedingBackendLimit()
     {

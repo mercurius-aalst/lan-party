@@ -57,3 +57,5 @@
        mock parity without exposing pending data through public participant projections.
 - [x] 4.6 Add regression coverage for saved-but-unrefreshed mutation state, 51-member candidate
        discovery batching, and captain-transfer reconciliation including TeamSize=1.
+- [x] 4.7 Guard public/authenticated refresh commits with tournament route and registration
+       generation snapshots, and preserve/warn on dirty drafts when their selected team disappears.
