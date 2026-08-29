@@ -25,6 +25,9 @@
       retry actions for team-summary, team-eligibility, and roster-eligibility failures.
 - [x] 2.9 Refresh both public and authenticated projections after realtime invalidation, preserve or
       warn about dirty roster drafts, and provide manual refresh coverage for backend event gaps.
+- [x] 2.10 Consume the authenticated current-team registration context for pending and active
+       roster states, retain active-field compatibility fallback, and show non-captain roster status
+       without self-unregister controls.
 
 ## 3. Privacy and parity
 
@@ -46,3 +49,5 @@
       pending-confirmation revalidation, and mock fixture transitions. The existing test project has
       no component-rendering harness, so route-dialog and retry rendering coverage remains covered by
       guarded component code plus the successful build.
+- [x] 4.5 Validate same-tournament parameter changes and current-team registration deserialization/
+      mock parity without exposing pending data through public participant projections.

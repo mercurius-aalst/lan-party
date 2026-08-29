@@ -312,6 +312,43 @@
     border: 1px solid var(--color-border);
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.9);
+    --mud-palette-primary: var(--color-primary-green);
+    --mud-palette-primary-hover: var(--color-deep-green);
+    --mud-palette-primary-text: var(--color-white);
+    --mud-palette-text-primary: var(--color-dark-navy);
+    --mud-palette-text-secondary: var(--color-muted-text);
+    --mud-palette-text-disabled: var(--color-muted-text);
+    --mud-palette-lines-default: var(--color-border);
+    --mud-palette-lines-inputs: var(--color-border);
+    --mud-palette-action-default-hover: rgba(34, 197, 94, 0.08);
+}
+
+.registration-stepper ::deep(.mud-stepper-nav) {
+    flex-wrap: wrap;
+    row-gap: 0.25rem;
+}
+
+.registration-stepper ::deep(.mud-step .mud-step-label-content) {
+    color: var(--color-muted-text);
+}
+
+.registration-stepper ::deep(.mud-step.active .mud-step-label-content) {
+    color: var(--color-dark-navy);
+}
+
+.registration-stepper ::deep(.mud-step .mud-step-label-icon) {
+    background-color: var(--color-border);
+    color: var(--color-muted-text);
+}
+
+.registration-stepper ::deep(.mud-step.active .mud-step-label-icon),
+.registration-stepper ::deep(.mud-step.completed .mud-step-label-icon) {
+    background-color: var(--color-primary-green);
+    color: var(--color-white);
+}
+
+.registration-stepper ::deep(.mud-stepper-nav-connector-line) {
+    border-color: var(--color-border);
 }
 
 .registration-step-content {

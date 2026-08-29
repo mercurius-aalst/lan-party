@@ -127,6 +127,29 @@ public sealed class MockRegistrationParityTests
     }
 
     [Fact]
+    public void CurrentTeamRegistrationContextIncludesPendingTeamWithoutLeakingItPublicly()
+    {
+        using var fixture = CreateFixture(teamSize: 2);
+
+        var registration = fixture.Store.SubmitTeamTournamentRoster(
+            "user",
+            TournamentId,
+            TeamId,
+            new SubmitTeamRosterDTO { TeamId = TeamId, UserIds = [CaptainId, MemberId] });
+
+        var memberState = fixture.Store.GetCurrentUserTournamentRegistrationState("admin", TournamentId);
+        var currentTeam = memberState.CurrentTeamRegistration;
+        Assert.NotNull(currentTeam);
+
+        Assert.Equal(registration.Id, currentTeam.Id);
+        Assert.Equal(TournamentRegistrationStatus.PendingConfirmation, currentTeam.Status);
+        Assert.Equal(TeamId, currentTeam.Team!.Id);
+        Assert.True(memberState.CanConfirmRoster);
+        Assert.Null(memberState.ActiveTeamRegistration);
+        Assert.Empty(fixture.Store.GetTournament(TournamentId)!.Registrations);
+    }
+
+    [Fact]
     public void DefaultMockPersonaHasACompleteCaptainTeamAndPendingMember()
     {
         using var fixture = CreateFixture(teamSize: 2, captainUsername: "mockuser", memberUsername: "mockadmin");

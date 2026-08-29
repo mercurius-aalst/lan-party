@@ -403,6 +403,14 @@ internal sealed class MockBackendStore
                 registration.Kind == TournamentRegistrationKind.Team &&
                 registration.Status == TournamentRegistrationStatus.Active &&
                 registration.RosterMembers.Any(member => member.User.Id == currentUser.Id));
+            var currentTeam = registrations
+                .Where(registration =>
+                    registration.Kind == TournamentRegistrationKind.Team &&
+                    registration.RosterMembers.Any(member => member.User.Id == currentUser.Id))
+                .OrderByDescending(registration => registration.Status == TournamentRegistrationStatus.Active)
+                .ThenByDescending(registration => registration.UpdatedAtUtc)
+                .ThenBy(registration => registration.Id)
+                .FirstOrDefault();
             var captainRegistrations = registrations
                 .Where(registration =>
                     registration.Kind == TournamentRegistrationKind.Team &&
@@ -419,9 +427,10 @@ internal sealed class MockBackendStore
                 TournamentId = tournamentId,
                 IndividualRegistration = Clone(individual),
                 PendingRosterConfirmation = Clone(pendingRoster),
+                CurrentTeamRegistration = Clone(currentTeam),
                 ActiveTeamRegistration = Clone(activeTeam),
                 CaptainManagedRegistrations = captainRegistrations,
-                CanRegisterIndividual = individualEligible.Eligible && activeTeam == null && pendingRoster == null,
+                CanRegisterIndividual = individualEligible.Eligible && currentTeam == null && pendingRoster == null,
                 CanConfirmRoster = pendingRoster != null,
                 CanUnregister = individual != null || activeTeam != null || captainRegistrations.Count > 0
             };

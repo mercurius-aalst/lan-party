@@ -127,6 +127,27 @@ public sealed class ApiContractTests
         Assert.Equal(TournamentRegistrationKind.Individual, tournament.Registrations.Single().Kind);
     }
 
+    [Fact]
+    public async Task CurrentUserRegistrationState_DeserializesCurrentTeamRegistrationContext()
+    {
+        var tournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var teamId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var registrationId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        var handler = new RecordingHandler($"{{\"tournamentId\":\"{tournamentId}\",\"currentTeamRegistration\":{{\"id\":\"{registrationId}\",\"tournamentId\":\"{tournamentId}\",\"kind\":\"Team\",\"status\":\"PendingConfirmation\",\"team\":{{\"id\":\"{teamId}\",\"name\":\"Context Crew\",\"captainUserId\":\"{teamId}\",\"members\":[]}},\"rosterMembers\":[]}},\"activeTeamRegistration\":null,\"captainManagedRegistrations\":[],\"canRegisterIndividual\":false,\"canConfirmRoster\":false,\"canUnregister\":false}}");
+        using var httpClient = CreateHttpClient(handler);
+        var client = RestService.For<ILANClient>(httpClient, CreateRefitSettings());
+
+        var state = await client.GetCurrentUserTournamentRegistrationStateAsync(tournamentId);
+
+        Assert.Equal($"/v1/lan/tournaments/{tournamentId}/registrations/me", handler.Request!.RequestUri!.AbsolutePath);
+        var currentTeam = state.CurrentTeamRegistration;
+        Assert.NotNull(currentTeam);
+        Assert.Equal(registrationId, currentTeam.Id);
+        Assert.Equal(TournamentRegistrationStatus.PendingConfirmation, currentTeam.Status);
+        Assert.Equal(teamId, currentTeam.Team!.Id);
+        Assert.Null(state.ActiveTeamRegistration);
+    }
+
     private static HttpClient CreateHttpClient(RecordingHandler handler)
     {
         return new HttpClient(handler)

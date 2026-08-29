@@ -69,6 +69,8 @@ public partial class TournamentParticipantsTab : IDisposable
     private long _registrationLoadGeneration;
     private long _routeVersion;
     private Guid _loadedTournamentId;
+    private string _loadedRegistrationFingerprint = string.Empty;
+    private string? _registrationWarning;
     private MudStepper? _teamRegistrationStepper;
 
     private IReadOnlyList<TeamManagementSummaryDTO> CaptainedTeams =>
@@ -100,6 +102,9 @@ public partial class TournamentParticipantsTab : IDisposable
             ? null
             : (_registrationState?.CaptainManagedRegistrations ?? [])
                 .FirstOrDefault(registration => registration.Team?.Id == SelectedTeam.Id);
+
+    private TournamentRegistrationDTO? CurrentTeamRegistration =>
+        _registrationState?.CurrentTeamRegistration ?? _registrationState?.ActiveTeamRegistration;
 
     private bool HasCaptainManagedRegistration => CaptainManagedRegistration is not null;
 
@@ -175,13 +180,18 @@ public partial class TournamentParticipantsTab : IDisposable
 
     protected override void OnParametersSet()
     {
-        if(_loadedTournamentId != Tournament.Id)
+        var registrationFingerprint = GetRegistrationFingerprint(Tournament);
+        if(_loadedTournamentId != Tournament.Id || _loadedRegistrationFingerprint != registrationFingerprint)
         {
+            var discardedDraft = _hasDirtyRosterDraft;
             _loadedTournamentId = Tournament.Id;
+            _loadedRegistrationFingerprint = registrationFingerprint;
             _routeVersion++;
             _hasLoadedForTournament = false;
             _registrationLoadGeneration++;
             ResetRegistrationContext();
+            if(discardedDraft)
+                _registrationWarning = "Tournament registration settings changed, so your unsaved roster draft was cleared. Review the current roster before saving.";
         }
 
         _participants.Clear();
@@ -230,6 +240,9 @@ public partial class TournamentParticipantsTab : IDisposable
             }
         }
     }
+
+    private static string GetRegistrationFingerprint(TournamentExtended tournament) =>
+        $"{tournament.Id:N}|{tournament.ParticipationMode}|{tournament.TeamSize?.ToString() ?? "none"}|{tournament.Status}|{tournament.PlannedStartTime.Ticks}|{tournament.StartTime.Ticks}|{tournament.EndTime.Ticks}";
 
     private async Task LoadRegistrationContextAsync(bool preserveRosterDraft = false)
     {
@@ -1240,6 +1253,7 @@ public partial class TournamentParticipantsTab : IDisposable
             throw new InvalidOperationException("The tournament could not be found while refreshing registration state.");
 
         Tournament = updatedTournament;
+        _loadedRegistrationFingerprint = GetRegistrationFingerprint(updatedTournament);
         _participants.Clear();
         _participants.AddRange(BuildParticipants(updatedTournament));
         await OnTournamentUpdated.InvokeAsync(updatedTournament);
@@ -1321,10 +1335,17 @@ public partial class TournamentParticipantsTab : IDisposable
         if(HasCaptainManagedRegistration)
             return "Review or edit your captain-managed team registration.";
 
-        return _registrationState?.ActiveTeamRegistration?.Team is { } team
+        return CurrentTeamRegistration?.Team is { } team
             ? $"You are registered on {team.Name}; roster changes belong to its captain."
             : "Team captains can submit an eligible roster. Every selected non-captain must confirm.";
     }
+
+    private static string GetCurrentTeamRegistrationStatusText(TournamentRegistrationStatus status) => status switch
+    {
+        TournamentRegistrationStatus.PendingConfirmation => "Your team is waiting for all selected members to confirm.",
+        TournamentRegistrationStatus.Active => "Your team registration is active.",
+        _ => $"Your team registration is {status.ToString().ToLowerInvariant()}."
+    };
 
     private static string GetUserLabel(PublicUserDTO? user)
     {
@@ -1389,6 +1410,7 @@ public partial class TournamentParticipantsTab : IDisposable
         _rosterCandidatesById.Clear();
         _adminRegistrations.Clear();
         _registrationError = null;
+        _registrationWarning = null;
         _adminError = null;
         _teamError = null;
         _isAuthenticated = false;

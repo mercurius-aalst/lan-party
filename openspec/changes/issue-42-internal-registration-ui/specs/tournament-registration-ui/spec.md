@@ -131,6 +131,16 @@ captain-owned actions from member-owned state.
 - **THEN** the page MUST NOT show a self-unregister action
 - **AND** the page MUST explain that roster changes are managed by the captain or an administrator
 
+#### Scenario: Confirmed member remains visible on a pending team roster
+
+- **WHEN** the authenticated member has confirmed their roster place while another selected member
+  remains pending
+- **THEN** the page MUST use the authenticated current-team registration context to show the team,
+  pending roster status, and current confirmation states
+- **AND** the page MUST NOT show a self-unregister action for the confirmed member
+- **AND** the public participant projection MUST remain unchanged until the backend marks the team
+  registration active
+
 #### Scenario: Captain unregisters a team
 
 - **WHEN** a captain chooses to unregister a team before tournament start

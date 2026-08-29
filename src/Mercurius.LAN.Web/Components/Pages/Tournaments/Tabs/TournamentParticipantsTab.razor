@@ -55,6 +55,11 @@
                 </div>
             }
 
+            @if(_registrationWarning is not null)
+            {
+                <p class="registration-message registration-message--warning" role="status">@_registrationWarning</p>
+            }
+
             @if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Individual)
             {
                 <div class="registration-workflow">
@@ -119,11 +124,17 @@
                     }
                     else if(!CaptainedTeams.Any())
                     {
-                        @if(_registrationState?.ActiveTeamRegistration is { Team: not null } activeTeam && !HasCaptainManagedRegistration)
+                        @if(CurrentTeamRegistration is { Team: not null } currentTeam && !HasCaptainManagedRegistration)
                         {
                             <div class="registration-message registration-message--warning" role="status">
-                                <strong>You are registered on @activeTeam.Team.Name.</strong>
-                                <p>Roster changes and unregistering are managed by the team captain or an administrator. Confirmed members cannot remove themselves.</p>
+                                <strong>You are registered on @currentTeam.Team.Name.</strong>
+                                <p>@GetCurrentTeamRegistrationStatusText(currentTeam.Status) Roster changes and unregistering are managed by the team captain or an administrator. You cannot remove yourself from this team.</p>
+                                <div class="registration-review-roster" aria-label="Current team roster confirmation state">
+                                    @foreach(var member in currentTeam.RosterMembers)
+                                    {
+                                        <span class="registration-review-member">@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)</span>
+                                    }
+                                </div>
                             </div>
                         }
                         else
@@ -133,11 +144,17 @@
                     }
                     else
                     {
-                        @if(_registrationState?.ActiveTeamRegistration is { Team: not null } activeTeam && !HasCaptainManagedRegistration)
+                        @if(CurrentTeamRegistration is { Team: not null } currentTeam && !HasCaptainManagedRegistration)
                         {
                             <div class="registration-message registration-message--warning" role="status">
-                                <strong>You are registered on @activeTeam.Team.Name.</strong>
-                                <p>Roster changes and unregistering are managed by the team captain or an administrator. You can still manage any other team you captain.</p>
+                                <strong>You are registered on @currentTeam.Team.Name.</strong>
+                                <p>@GetCurrentTeamRegistrationStatusText(currentTeam.Status) Roster changes and unregistering are managed by the team captain or an administrator. You cannot remove yourself from this team, but you can still manage any other team you captain.</p>
+                                <div class="registration-review-roster" aria-label="Current team roster confirmation state">
+                                    @foreach(var member in currentTeam.RosterMembers)
+                                    {
+                                        <span class="registration-review-member">@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)</span>
+                                    }
+                                </div>
                             </div>
                         }
                         <MudStepper @ref="_teamRegistrationStepper"
@@ -393,11 +410,12 @@
 
             @if(_registrationState?.PendingRosterConfirmation is { } pending)
             {
+                var currentTeam = CurrentTeamRegistration?.Team;
                 <div class="registration-confirmation" role="status">
                     <div>
                         <span class="section-eyebrow">Roster confirmation</span>
-                        <p>Your place for <strong>@GetUserLabel(pending.User)</strong> in <strong>@Tournament.Name</strong> is waiting for your confirmation.</p>
-                        <small class="registration-help">The current API does not include the team name in this pending state. Confirming is still subject to the backend's latest roster and tournament checks.</small>
+                        <p>Your place for <strong>@GetUserLabel(pending.User)</strong>@(currentTeam is null ? string.Empty : $" on {currentTeam.Name}") in <strong>@Tournament.Name</strong> is waiting for your confirmation.</p>
+                        <small class="registration-help">Confirming is still subject to the backend's latest roster and tournament checks.</small>
                     </div>
                     <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
                 </div>
