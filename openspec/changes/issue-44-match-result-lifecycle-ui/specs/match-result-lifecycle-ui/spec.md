@@ -40,6 +40,12 @@ The UI MUST allow an eligible participant/captain to submit a valid score only w
 - **THEN** the UI MUST show both authoritative reports from the protected action projection
 - **AND** an unrelated authenticated viewer MUST see neither private report
 
+#### Scenario: Assigned administrator reviews dispute reports
+
+- **WHEN** the assigned tournament administrator opens a disputed or admin-resolution-required match before it is resolved
+- **THEN** the UI MUST show both private reports with explicit participant labels
+- **AND** an unassigned global administrator MUST retain eligible administrative actions even when private reports are withheld
+
 ### Requirement: Forfeit and administrative actions
 
 The UI MUST require explicit confirmation before a participant or administrator forfeits, and before an administrator reverses a result. It MUST show actions only when the fresh protected action projection grants the corresponding capability, show admin resolution/force/reversal only to admins, and explain why an action is blocked when tournament state or linked downstream matches disallow it. An administrator assignment MAY scope private report visibility but MUST NOT suppress an eligible global-admin action. Team matches MUST identify captain-only actions.

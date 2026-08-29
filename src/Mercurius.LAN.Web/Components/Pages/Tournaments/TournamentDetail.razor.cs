@@ -162,6 +162,7 @@ public partial class TournamentDetail : IDisposable
                 return;
             }
 
+            _selectedMatch = ReconcileSelectedMatch(_selectedMatch, _tournament);
             _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
             SyncSelectedSponsor();
 
@@ -575,6 +576,11 @@ public partial class TournamentDetail : IDisposable
     {
         _selectedMatch = match;
     }
+
+    internal static Match? ReconcileSelectedMatch(Match? selectedMatch, TournamentExtended tournament) =>
+        selectedMatch is null
+            ? null
+            : tournament.Matches.FirstOrDefault(match => match.Id == selectedMatch.Id);
 
     private void HandleScheduleItemKeyDown(KeyboardEventArgs args, Match match)
     {

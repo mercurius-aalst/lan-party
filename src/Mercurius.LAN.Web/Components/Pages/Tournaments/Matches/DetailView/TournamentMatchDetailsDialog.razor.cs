@@ -25,6 +25,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     [Inject] private ITournamentService TournamentService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
     private Guid? Participant1Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant1Id : Match.UserParticipant1Id;
     private Guid? Participant2Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant2Id : Match.UserParticipant2Id;
@@ -45,8 +46,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private MatchParticipantSide? _adminForfeitConfirmationSide;
     private bool _reverseConfirmationRequested;
     private string? _errorMessage;
-    private int _participant1Score;
-    private int _participant2Score;
+    private int? _participant1Score;
+    private int? _participant2Score;
+    private bool HasScoreInputs => _participant1Score.HasValue && _participant2Score.HasValue;
     private CancellationTokenSource? _deadlineRefreshCancellation;
     private DateTime? _deadlineRefreshTriggeredFor;
     private Task? _deadlineRefreshTask;
@@ -96,7 +98,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private string GetStatusDescription() => Match.LifecycleState switch
     {
         MatchLifecycleState.AwaitingEndedConfirmation => "Both sides must confirm that the match has ended.",
-        MatchLifecycleState.AwaitingScore => "Both sides have confirmed the end. The assigned side may submit the score.",
+        MatchLifecycleState.AwaitingScore => "Both sides have confirmed the end. Either eligible participant or captain may submit the score.",
         MatchLifecycleState.ScoreConfirmation => "The first score report is saved. The opponent has five minutes to agree or report a correction.",
         MatchLifecycleState.Disputed => "The reports do not match. Each side has one correction opportunity before administrator resolution.",
         MatchLifecycleState.AdminResolutionRequired => "The correction window expired. An authorized tournament administrator must resolve this result.",
@@ -195,9 +197,53 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private int? PrivateReport2 => _actionState?.Participant1ReportedScore2 ?? _actionState?.Participant2ReportedScore2;
 
+    internal static (int? Participant1Score, int? Participant2Score) GetInitialScores(MatchActionStateDTO state)
+    {
+        var actorReport = state.AuthorizedParticipant switch
+        {
+            MatchParticipantSide.Participant1 => GetCompleteReport(
+                state.Participant1ReportedScore1,
+                state.Participant1ReportedScore2),
+            MatchParticipantSide.Participant2 => GetCompleteReport(
+                state.Participant2ReportedScore1,
+                state.Participant2ReportedScore2),
+            _ => null
+        };
+        if(actorReport is { } report)
+            return report;
+
+        var officialResult = GetCompleteReport(
+            state.Match.Participant1Score,
+            state.Match.Participant2Score);
+        return officialResult is { } result
+            ? (result.Item1, result.Item2)
+            : ((int?)null, (int?)null);
+    }
+
+    internal static bool ShouldRenderAdminReports(MatchActionStateDTO state) =>
+        (state.Participant1ReportedScore1.HasValue ||
+         state.Participant1ReportedScore2.HasValue ||
+         state.Participant2ReportedScore1.HasValue ||
+         state.Participant2ReportedScore2.HasValue);
+
+    private static (int, int)? GetCompleteReport(int? participant1Score, int? participant2Score) =>
+        participant1Score is { } score1 && participant2Score is { } score2
+            ? (score1, score2)
+            : null;
+
     private string ActionSubjectLabel => Match.ParticipationMode == ParticipationMode.Team
         ? "Your captain actions"
         : "Your player actions";
+
+    private string SignInHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
+
+    private string GetCurrentRelativeUrl()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        return string.IsNullOrWhiteSpace(relativePath)
+            ? "/"
+            : $"/{relativePath}";
+    }
 
     private string GetParticipantName(MatchParticipantSide side) =>
         side == MatchParticipantSide.Participant1 ? Participant1Name : Participant2Name;
@@ -240,8 +286,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             Match = state.Match;
             _actionState = state;
             _hasFreshActionState = true;
-            _participant1Score = state.Participant1ReportedScore1 ?? Match.Participant1Score ?? 0;
-            _participant2Score = state.Participant2ReportedScore1 ?? Match.Participant2Score ?? 0;
+            (_participant1Score, _participant2Score) = GetInitialScores(state);
             _hasLoaded = true;
             StartDeadlineRefresh();
             return true;
@@ -260,8 +305,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 Match = publicMatch;
                 _actionState = null;
                 _hasFreshActionState = false;
-                _participant1Score = publicMatch.Participant1Score ?? 0;
-                _participant2Score = publicMatch.Participant2Score ?? 0;
+                _participant1Score = publicMatch.Participant1Score;
+                _participant2Score = publicMatch.Participant2Score;
                 _requiresAuthentication = exception.StatusCode == HttpStatusCode.Unauthorized;
                 _authorizationDenied = exception.StatusCode == HttpStatusCode.Forbidden;
                 _hasLoaded = true;
@@ -388,7 +433,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private async Task SubmitScoreAsync()
     {
-        if(_actionState?.CanSubmitScore != true)
+        if(_actionState?.CanSubmitScore != true ||
+           _participant1Score is not { } participant1Score ||
+           _participant2Score is not { } participant2Score)
             return;
 
         var matchId = Match.Id;
@@ -397,8 +444,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 matchId,
                 new SubmitMatchScoreDTO
                 {
-                    Participant1Score = _participant1Score,
-                    Participant2Score = _participant2Score
+                    Participant1Score = participant1Score,
+                    Participant2Score = participant2Score
                 }),
             "Your score report was saved.",
             state => state.CanSubmitScore);
@@ -445,7 +492,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private async Task ResolveAsync()
     {
-        if(_actionState?.CanResolve != true)
+        if(_actionState?.CanResolve != true ||
+           _participant1Score is not { } participant1Score ||
+           _participant2Score is not { } participant2Score)
             return;
 
         var matchId = Match.Id;
@@ -454,8 +503,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 matchId,
                 new ResolveMatchDTO
                 {
-                    Participant1Score = _participant1Score,
-                    Participant2Score = _participant2Score
+                    Participant1Score = participant1Score,
+                    Participant2Score = participant2Score
                 }),
             "The match was resolved and the result is official.",
             state => state.CanResolve);

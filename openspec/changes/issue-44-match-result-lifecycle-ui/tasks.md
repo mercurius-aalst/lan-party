@@ -11,5 +11,6 @@
 
 - [x] Add DTO/mock transition and lifecycle state regression coverage.
 - [x] Cover public fallback, private dispute reports, explicit admin capabilities, and downstream reversal parity in mock/contract tests.
-- [ ] Add client state coverage for action gating, deadlines, stale refresh, and error presentation. Limitation: the existing contract-test project has no component test harness; the component guards are validated by compilation and the DTO/mock transition tests above.
+- [x] Add contract coverage for action gating, coherent score prefill, same-ID refresh reconciliation, and protected administrator reports.
+- [ ] Add full component state coverage for deadlines, stale refresh, and error presentation. Limitation: the existing contract-test project has no component test harness; component guards outside the covered helpers are validated by compilation and the DTO/mock transition tests above.
 - [x] Run OpenSpec validation, restore, build, and focused/full tests; rebuild Tailwind only if the source entry changes.

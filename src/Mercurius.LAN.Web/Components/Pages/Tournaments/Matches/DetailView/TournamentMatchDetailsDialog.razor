@@ -50,7 +50,7 @@
                 </div>
             </div>
 
-            <section class="match-lifecycle-panel" aria-live="polite">
+            <section class="match-lifecycle-panel">
                 <div>
                     <span class="section-eyebrow">Authoritative result state</span>
                     <h3>@GetStatusLabel()</h3>
@@ -61,7 +61,7 @@
                     <div class="match-deadline" aria-label="Score window deadline">
                         <span>Deadline</span>
                         <strong>@GetDeadlineLabel()</strong>
-                        <small>@GetDeadlineRemainingLabel()</small>
+                        <small aria-live="off">@GetDeadlineRemainingLabel()</small>
                     </div>
                 }
             </section>
@@ -136,7 +136,7 @@
             {
                 <div class="match-state-message" role="note">
                     <p>Sign in to confirm your side, report a score, or forfeit. Match results remain publicly viewable.</p>
-                    <a class="button-secondary" href="/account/login">Sign in</a>
+                    <a class="button-secondary" href="@SignInHref">Sign in</a>
                 </div>
             }
             else if(_authorizationDenied)
@@ -186,7 +186,7 @@
                                     <input id="participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
                                 </div>
                             </div>
-                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="SubmitScoreAsync">Submit score report</button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !HasScoreInputs)" @onclick="SubmitScoreAsync">Submit score report</button>
                         </div>
                     }
                     @if(_actionState.CanForfeit)
@@ -224,9 +224,20 @@
                         <span class="section-eyebrow">Administrator controls</span>
                         @if(IsAdminResolutionState())
                         {
+                            @if(ShouldRenderAdminReports(_actionState))
+                            {
+                                <div class="match-reports" aria-label="Private score reports">
+                                    <span>Participant 1 report: @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
+                                    <span>Participant 2 report: @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
+                                </div>
+                            }
                             @if(_actionState.CanResolve)
                             {
                                 <p>Resolve the dispute with the verified decisive score. The selected result becomes official.</p>
+                                @if(!HasScoreInputs)
+                                {
+                                    <p class="match-admin-blocked-reason">Enter both participant scores before resolving this match.</p>
+                                }
                             }
                             else
                             {
@@ -244,7 +255,7 @@
                                     <input id="admin-participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
                                 </div>
                             </div>
-                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !_actionState.CanResolve)" @onclick="ResolveAsync">Resolve result</button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !_actionState.CanResolve || !HasScoreInputs)" @onclick="ResolveAsync">Resolve result</button>
                             }
                         }
                         @if(_actionState.CanForceForfeit)
