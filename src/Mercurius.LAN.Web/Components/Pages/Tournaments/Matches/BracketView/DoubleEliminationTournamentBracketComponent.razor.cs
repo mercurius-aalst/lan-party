@@ -17,7 +17,7 @@ public partial class DoubleEliminationTournamentBracketComponent
     private readonly record struct BracketViewOption(BracketView View, string Label, string Meta);
 
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
-    [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnDataReload { get; set; }
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 

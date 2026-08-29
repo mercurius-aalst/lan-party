@@ -94,6 +94,39 @@ public sealed class MatchLifecycleUiStateTests
         Assert.Null(TournamentDetail.ReconcileSelectedMatch(selectedMatch, new TournamentExtended()));
     }
 
+    [Fact]
+    public void ChildRefresh_IsPreservedWhenParentReloadFails()
+    {
+        var matchId = Guid.NewGuid();
+        var staleSelectedMatch = new Match
+        {
+            Id = matchId,
+            LifecycleState = MatchLifecycleState.Disputed,
+            ResultVersion = 2
+        };
+        var refreshedMatch = new Match
+        {
+            Id = matchId,
+            LifecycleState = MatchLifecycleState.Completed,
+            ResultVersion = 3
+        };
+
+        var tournament = new TournamentExtended { Matches = [staleSelectedMatch] };
+
+        // The parent applies this projection before its tournament reload. A failed
+        // reload must leave both the schedule/bracket row and dialog bound to the child
+        // refresh, not the old same-ID object.
+        var preserved = TournamentDetail.ApplyRefreshedMatchProjection(
+            tournament,
+            staleSelectedMatch,
+            refreshedMatch);
+
+        Assert.Same(refreshedMatch, preserved);
+        Assert.Same(refreshedMatch, tournament.Matches.Single());
+        Assert.Equal(MatchLifecycleState.Completed, preserved!.LifecycleState);
+        Assert.Equal(3, preserved.ResultVersion);
+    }
+
     private static MatchActionStateDTO CreateActionState(MatchParticipantSide? authorizedParticipant = null) => new()
     {
         Match = new Match { Id = Guid.NewGuid() },

@@ -674,6 +674,9 @@ internal sealed class MockBackendStore
         TournamentExtended tournament,
         Match match)
     {
+        if(string.Equals(persona, "anonymous", StringComparison.OrdinalIgnoreCase))
+            return null;
+
         var profile = GetCurrentProfile(persona).User;
         if(profile == null)
             return null;

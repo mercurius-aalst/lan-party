@@ -17,7 +17,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     [Parameter] public Match Match { get; set; } = null!;
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback OnClose { get; set; }
-    [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnDataReload { get; set; }
     [Parameter] public string Participant2Name { get; set; } = null!;
     [Parameter] public string Participant1Name { get; set; } = null!;
     [Parameter] public ParticipantViewModel? Participant1 { get; set; }
@@ -52,14 +52,25 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private CancellationTokenSource? _deadlineRefreshCancellation;
     private DateTime? _deadlineRefreshTriggeredFor;
     private Task? _deadlineRefreshTask;
+    private Match? _freshMatchProjection;
 
     protected override async Task OnParametersSetAsync()
     {
         _participantLookup = TournamentParticipantLookup.FromTournament(Tournament);
         if(_loadedMatchId == Match.Id)
+        {
+            if(_freshMatchProjection is { } freshMatch &&
+               freshMatch.Id == Match.Id &&
+               Match.ResultVersion < freshMatch.ResultVersion)
+                Match = freshMatch;
+            else if(_freshMatchProjection is null || Match.ResultVersion >= _freshMatchProjection.ResultVersion)
+                _freshMatchProjection = Match;
+
             return;
+        }
 
         _loadedMatchId = Match.Id;
+        _freshMatchProjection = null;
         _hasLoaded = false;
         _actionState = null;
         _errorMessage = null;
@@ -256,6 +267,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         "match_not_ready" => "Both match sides must be assigned before an administrator can record a forfeit.",
         "match_not_forfeitable" => "This match cannot be forfeited in its current state.",
         "match_not_disputed" => "This match does not currently require administrator resolution.",
+        "match_requires_admin_resolution" => "This match already requires administrator resolution.",
         "match_reversal_blocked" => "This result cannot be reversed because a linked downstream match has already been played or resolved.",
         "downstream_graph_too_large" => "This result cannot be reversed until the linked bracket is reviewed by an administrator.",
         "admin_required" => "An authorized tournament administrator is required for this action.",
@@ -284,6 +296,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 return false;
 
             Match = state.Match;
+            _freshMatchProjection = Match;
             _actionState = state;
             _hasFreshActionState = true;
             (_participant1Score, _participant2Score) = GetInitialScores(state);
@@ -303,6 +316,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     return false;
 
                 Match = publicMatch;
+                _freshMatchProjection = Match;
                 _actionState = null;
                 _hasFreshActionState = false;
                 _participant1Score = publicMatch.Participant1Score;
@@ -565,7 +579,19 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(refreshed && !_requiresAuthentication)
             {
                 ToastService.ShowSuccess(successMessage);
-                await OnDataReload.InvokeAsync();
+                try
+                {
+                    await OnDataReload.InvokeAsync(Match);
+                }
+                catch(Exception exception)
+                {
+                    // The command and protected match refresh succeeded. Keep that fresh
+                    // projection visible even when the surrounding tournament reload fails.
+                    _errorMessage = GetErrorMessage(
+                        exception,
+                        "Saved, but the tournament display could not be refreshed. Retry to verify the bracket.");
+                    ToastService.ShowWarning(_errorMessage);
+                }
             }
             else
             {
@@ -607,6 +633,12 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
         if(!state.CanReverse && state.ReverseBlockedReason == "downstream_graph_too_large")
             return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
+        if(!state.CanResolve && state.ResolveBlockedReason == "match_requires_admin_resolution")
+            return "This match already requires administrator resolution.";
+        if(!state.CanForceForfeit && state.ForceForfeitBlockedReason == "match_requires_admin_resolution")
+            return "This match already requires administrator resolution.";
+        if(!state.CanReverse && state.ReverseBlockedReason == "match_requires_admin_resolution")
+            return "This match already requires administrator resolution.";
         return "The match changed while you were working. Refresh the authoritative state and try again.";
     }
 
@@ -627,6 +659,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
                 if(serverCode == "downstream_graph_too_large")
                     return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
+                if(serverCode == "match_requires_admin_resolution")
+                    return "This match already requires administrator resolution.";
                 return GetServerMessage(apiException.Content)
                     ?? "The match changed while you were working. Refresh the authoritative state and try again.";
             }

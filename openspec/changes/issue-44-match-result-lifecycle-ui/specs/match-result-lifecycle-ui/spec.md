@@ -77,6 +77,12 @@ The UI MUST show loading immediately when a match refresh or mutation begins, di
 - **THEN** the UI MUST communicate that the result was saved but the displayed state may be stale
 - **AND** it MUST provide a retry action
 
+#### Scenario: Tournament reload fails after a fresh child match refresh
+
+- **WHEN** a match dialog refreshes the authoritative match successfully but the containing schedule or bracket reload fails
+- **THEN** the parent MUST retain and propagate the fresh same-ID match projection
+- **AND** the dialog MUST NOT replace its fresh action state with the stale parent parameter
+
 #### Scenario: Protected refresh is forbidden
 
 - **WHEN** the protected action refresh is unauthorized or forbidden

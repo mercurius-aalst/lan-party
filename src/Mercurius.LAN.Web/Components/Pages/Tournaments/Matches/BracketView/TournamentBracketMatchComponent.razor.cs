@@ -10,7 +10,7 @@ public partial class TournamentBracketMatchComponent
     [Parameter] public Match Match { get; set; } = null!;
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public (int left, int y)? Position { get; set; }
-    [Parameter] public EventCallback OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnDataReload { get; set; }
     [Parameter] public string ExtraCssClasses { get; set; } = string.Empty;
 
     private Guid? Participant1Id => Match.ParticipationMode == ParticipationMode.Team ? Match.TeamParticipant1Id : Match.UserParticipant1Id;
@@ -43,9 +43,17 @@ public partial class TournamentBracketMatchComponent
         _showDialog = true;
     }
 
+    private async Task HandleMatchDataReloadAsync(Match refreshedMatch)
+    {
+        if(Match.Id == refreshedMatch.Id)
+            Match = refreshedMatch;
+
+        await OnDataReload.InvokeAsync(refreshedMatch);
+    }
+
     private async Task CloseDetailsDialogAsync()
     {
         _showDialog = false;
-        await OnDataReload.InvokeAsync();
+        await OnDataReload.InvokeAsync(Match);
     }
 }

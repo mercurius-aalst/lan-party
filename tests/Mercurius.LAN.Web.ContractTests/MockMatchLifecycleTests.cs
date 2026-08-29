@@ -87,6 +87,32 @@ public sealed class MockMatchLifecycleTests
         Assert.DoesNotContain(participant2Id, new[] { loserNext.TeamParticipant1Id, loserNext.TeamParticipant2Id });
     }
 
+    [Fact]
+    public void MockAnonymousMatchStateUsesPublicProjectionWithoutPrivateReports()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var state = store.GetMatchActionState("anonymous", FeaturedGrandFinalId);
+
+        Assert.Null(state.AuthorizedParticipant);
+        Assert.Null(state.Participant1ReportedScore1);
+        Assert.Null(state.Participant1ReportedScore2);
+        Assert.Null(state.Participant2ReportedScore1);
+        Assert.Null(state.Participant2ReportedScore2);
+
+        var publicMatch = store.GetMatch(FeaturedGrandFinalId);
+        Assert.Equal(state.Match.Participant1Score, publicMatch.Participant1Score);
+        Assert.Equal(state.Match.Participant2Score, publicMatch.Participant2Score);
+        Assert.Null(publicMatch.Participant1ReportedScore1);
+        Assert.Null(publicMatch.Participant2ReportedScore1);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
