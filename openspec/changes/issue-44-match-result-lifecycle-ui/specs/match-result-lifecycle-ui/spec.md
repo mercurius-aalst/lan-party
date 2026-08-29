@@ -34,9 +34,15 @@ The UI MUST allow an eligible participant/captain to submit a valid score only w
 - **THEN** normal score actions MUST be disabled
 - **AND** admins MUST see a resolve action while other users see a clear explanation
 
+#### Scenario: Protected action projection exposes both dispute reports
+
+- **WHEN** an eligible participant or team captain opens a disputed match
+- **THEN** the UI MUST show both authoritative reports from the protected action projection
+- **AND** an unrelated authenticated viewer MUST see neither private report
+
 ### Requirement: Forfeit and administrative actions
 
-The UI MUST require explicit confirmation before a participant forfeits. It MUST show forfeit only to an eligible side, show admin resolution/force/reversal only to admins, and explain why reversal is blocked when linked downstream matches have results. Team matches MUST identify captain-only actions.
+The UI MUST require explicit confirmation before a participant or administrator forfeits, and before an administrator reverses a result. It MUST show actions only when the fresh protected action projection grants the corresponding capability, show admin resolution/force/reversal only to admins, and explain why an action is blocked when tournament state, assignment, or linked downstream matches disallow it. Team matches MUST identify captain-only actions.
 
 #### Scenario: Participant forfeits
 
@@ -64,6 +70,12 @@ The UI MUST show loading immediately when a match refresh or mutation begins, di
 - **WHEN** a lifecycle command succeeds but the subsequent match refresh fails
 - **THEN** the UI MUST communicate that the result was saved but the displayed state may be stale
 - **AND** it MUST provide a retry action
+
+#### Scenario: Protected refresh is forbidden
+
+- **WHEN** the protected action refresh is unauthorized or forbidden
+- **THEN** the UI MUST fetch and render the public match projection
+- **AND** it MUST keep all mutations disabled while showing a distinct sign-in or assigned-administrator explanation
 
 ### Requirement: Mock/live parity
 

@@ -10,6 +10,7 @@ namespace Mercurius.LAN.Web.ContractTests;
 
 public sealed class MockMatchLifecycleTests
 {
+    private static readonly Guid FeaturedTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
     private static readonly Guid FeaturedGrandFinalId = Guid.Parse("31111111-1111-1111-1111-111111111115");
 
     [Fact]
@@ -26,6 +27,9 @@ public sealed class MockMatchLifecycleTests
         var initial = store.GetMatchActionState("admin", FeaturedGrandFinalId);
         Assert.Equal(MatchLifecycleState.AwaitingEndedConfirmation, initial.Match.LifecycleState);
         Assert.False(initial.CanForfeit);
+        Assert.True(initial.CanForceForfeit);
+        Assert.False(initial.CanResolve);
+        Assert.Equal("match_not_disputed", initial.ResolveBlockedReason);
 
         var forfeited = store.ForfeitMatch(
             "admin",
@@ -42,6 +46,45 @@ public sealed class MockMatchLifecycleTests
         Assert.Null(reversed.ResultKind);
         Assert.Null(reversed.Participant1Score);
         Assert.Null(reversed.Participant2Score);
+        Assert.False(store.GetMatchActionState("admin", FeaturedGrandFinalId).CanReverse);
+    }
+
+    [Fact]
+    public void MockReverseClearsWinnerAndLoserFromBothDownstreamPaths()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        store.SetTournamentLifecycleState(FeaturedTournamentId, Mercurius.LAN.Web.Models.Tournaments.TournamentStatus.Scheduled);
+        store.SetTournamentLifecycleState(FeaturedTournamentId, Mercurius.LAN.Web.Models.Tournaments.TournamentStatus.InProgress);
+        var before = store.GetTournament(FeaturedTournamentId)!;
+        var source = before.Matches.Single(match => match.Id == Guid.Parse("31111111-1111-1111-1111-111111111001"));
+        var winnerNextId = source.WinnerNextMatchId ?? throw new InvalidOperationException("Fixture winner path is missing.");
+        var loserNextId = source.LoserNextMatchId ?? throw new InvalidOperationException("Fixture loser path is missing.");
+        var participant1Id = source.TeamParticipant1Id;
+        var participant2Id = source.TeamParticipant2Id;
+
+        store.ForfeitMatch(
+            "admin",
+            source.Id,
+            new ForfeitMatchDTO { Participant = MatchParticipantSide.Participant1 });
+        var actionState = store.GetMatchActionState("admin", source.Id);
+        Assert.True(actionState.CanReverse);
+
+        store.ReverseMatch("admin", source.Id);
+        var after = store.GetTournament(FeaturedTournamentId)!;
+        var winnerNext = after.Matches.Single(match => match.Id == winnerNextId);
+        var loserNext = after.Matches.Single(match => match.Id == loserNextId);
+
+        Assert.DoesNotContain(participant1Id, new[] { winnerNext.TeamParticipant1Id, winnerNext.TeamParticipant2Id });
+        Assert.DoesNotContain(participant2Id, new[] { winnerNext.TeamParticipant1Id, winnerNext.TeamParticipant2Id });
+        Assert.DoesNotContain(participant1Id, new[] { loserNext.TeamParticipant1Id, loserNext.TeamParticipant2Id });
+        Assert.DoesNotContain(participant2Id, new[] { loserNext.TeamParticipant1Id, loserNext.TeamParticipant2Id });
     }
 
     private static string FindRepositoryRoot()

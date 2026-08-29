@@ -99,7 +99,7 @@
                         </div>
                     }
                     <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
-                    @if(_actionState is not null)
+                    @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
                             <span>Match ended</span>
@@ -122,7 +122,7 @@
                         </div>
                     }
                     <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
-                    @if(_actionState is not null)
+                    @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
                             <span>Match ended</span>
@@ -139,7 +139,13 @@
                     <a class="button-secondary" href="/account/login">Sign in</a>
                 </div>
             }
-            else if(_actionState?.AuthorizedParticipant.HasValue == true)
+            else if(_authorizationDenied)
+            {
+                <div class="match-state-message" role="note">
+                    <p>This match is read-only for your account. Only an assigned participant, team captain, or authorized tournament administrator can manage the result.</p>
+                </div>
+            }
+            else if(_hasFreshActionState && _actionState?.AuthorizedParticipant.HasValue == true)
             {
                 <section class="match-action-panel" aria-label="Your match actions">
                     <span class="section-eyebrow">@ActionSubjectLabel</span>
@@ -203,7 +209,7 @@
                     }
                 </section>
             }
-            else if(_actionState is not null)
+            else if(_hasFreshActionState && _actionState is not null)
             {
                 <div class="match-state-message" role="note">
                     <p>This match is read-only for your account. Only the assigned player or team captain can submit result actions.</p>
@@ -212,11 +218,22 @@
 
             <AuthorizeView Roles="admin">
                 <Authorized>
+                    @if(_hasFreshActionState && _actionState is not null)
+                    {
                     <section class="match-action-panel match-action-panel--admin" aria-label="Administrator match actions">
                         <span class="section-eyebrow">Administrator controls</span>
                         @if(IsAdminResolutionState())
                         {
-                            <p>Resolve the dispute with the verified decisive score. The selected result becomes official.</p>
+                            @if(_actionState.CanResolve)
+                            {
+                                <p>Resolve the dispute with the verified decisive score. The selected result becomes official.</p>
+                            }
+                            else
+                            {
+                                <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ResolveBlockedReason)</p>
+                            }
+                            @if(_actionState.CanResolve)
+                            {
                             <div class="score-inputs">
                                 <div class="match-score-field">
                                     <label for="admin-participant1-score">@Participant1Name</label>
@@ -227,21 +244,56 @@
                                     <input id="admin-participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
                                 </div>
                             </div>
-                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="ResolveAsync">Resolve result</button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !_actionState.CanResolve)" @onclick="ResolveAsync">Resolve result</button>
+                            }
                         }
-                        @if(_actionState is not null && Match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited or MatchLifecycleState.AdminResolutionRequired or MatchLifecycleState.Reversed))
+                        @if(_actionState.CanForceForfeit)
                         {
                             <div class="match-admin-forfeit-actions">
                                 <span>Record a forfeit</span>
-                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => ForfeitSideAsAdminAsync(MatchParticipantSide.Participant1))">Forfeit @Participant1Name</button>
-                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => ForfeitSideAsAdminAsync(MatchParticipantSide.Participant2))">Forfeit @Participant2Name</button>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant1))">Forfeit @Participant1Name</button>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant2))">Forfeit @Participant2Name</button>
                             </div>
                         }
-                        @if(Match.LifecycleState is MatchLifecycleState.Completed or MatchLifecycleState.Forfeited)
+                        @if(_adminForfeitConfirmationSide is MatchParticipantSide adminForfeitSide)
                         {
-                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoading)" @onclick="ReverseAsync">Reverse official result</button>
+                            <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm administrator forfeit" aria-modal="true">
+                                <strong>Forfeit @GetParticipantName(adminForfeitSide)?</strong>
+                                <p>This records an official result for the selected side and cannot be undone through participant actions.</p>
+                                <div class="match-modal-actions">
+                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _adminForfeitConfirmationSide = null)">Cancel</button>
+                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="(() => ForfeitSideAsAdminAsync(adminForfeitSide))">Confirm forfeit</button>
+                                </div>
+                            </div>
+                        }
+                        @if(_actionState.CanForceForfeit == false && !string.IsNullOrWhiteSpace(_actionState.ForceForfeitBlockedReason) && Match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited))
+                        {
+                            <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ForceForfeitBlockedReason)</p>
+                        }
+                        @if(_actionState.CanReverse)
+                        {
+                            @if(!_reverseConfirmationRequested)
+                            {
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _reverseConfirmationRequested = true)">Reverse official result</button>
+                            }
+                            else
+                            {
+                                <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm reversal" aria-modal="true">
+                                    <strong>Reverse this official result?</strong>
+                                    <p>This clears downstream assignments and cannot be undone without a new result.</p>
+                                    <div class="match-modal-actions">
+                                        <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _reverseConfirmationRequested = false)">Cancel</button>
+                                        <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ReverseAsync">Confirm reversal</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if(!string.IsNullOrWhiteSpace(_actionState.ReverseBlockedReason))
+                        {
+                            <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ReverseBlockedReason)</p>
                         }
                     </section>
+                    }
                 </Authorized>
             </AuthorizeView>
 

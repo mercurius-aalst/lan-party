@@ -279,6 +279,14 @@
     gap: 0.65rem;
 }
 
+.match-admin-blocked-reason {
+    padding: 0.65rem 0.8rem;
+    border-left: 3px solid var(--color-deep-green);
+    background: rgba(220, 252, 231, 0.55);
+    color: var(--color-dark-navy) !important;
+    font-weight: 700;
+}
+
 .button-danger {
     border-color: rgba(185, 28, 28, 0.28);
     background: #fff;

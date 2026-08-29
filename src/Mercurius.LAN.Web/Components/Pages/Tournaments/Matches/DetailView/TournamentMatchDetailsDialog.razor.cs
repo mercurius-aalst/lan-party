@@ -39,7 +39,11 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private bool _isLoading = true;
     private bool _isSubmitting;
     private bool _requiresAuthentication;
+    private bool _authorizationDenied;
+    private bool _hasFreshActionState;
     private bool _forfeitConfirmationRequested;
+    private MatchParticipantSide? _adminForfeitConfirmationSide;
+    private bool _reverseConfirmationRequested;
     private string? _errorMessage;
     private int _participant1Score;
     private int _participant2Score;
@@ -58,7 +62,11 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         _actionState = null;
         _errorMessage = null;
         _requiresAuthentication = false;
+        _authorizationDenied = false;
+        _hasFreshActionState = false;
         _forfeitConfirmationRequested = false;
+        _adminForfeitConfirmationSide = null;
+        _reverseConfirmationRequested = false;
         StopDeadlineRefresh();
         await RefreshAsync(Match.Id);
     }
@@ -157,7 +165,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private bool IsAdminResolutionState() =>
         Match.LifecycleState is MatchLifecycleState.Disputed or MatchLifecycleState.AdminResolutionRequired;
 
-    private bool ShowPrivateReports => _actionState is not null;
+    private bool ShowPrivateReports => _hasFreshActionState && _actionState is not null;
 
     private int? OwnReport1 => _actionState?.AuthorizedParticipant == MatchParticipantSide.Participant1
         ? _actionState.Participant1ReportedScore1
@@ -191,6 +199,22 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         ? "Your captain actions"
         : "Your player actions";
 
+    private string GetParticipantName(MatchParticipantSide side) =>
+        side == MatchParticipantSide.Participant1 ? Participant1Name : Participant2Name;
+
+    private static string GetAdminBlockedReason(string? reason) => reason switch
+    {
+        "admin_not_assigned" => "Only the assigned tournament administrator can resolve this match.",
+        "tournament_not_in_progress" => "This tournament is no longer in progress.",
+        "match_not_completed" => "This match does not have an official result to reverse.",
+        "match_already_completed" => "This match already has an official result.",
+        "match_not_ready" => "Both match sides must be assigned before an administrator can record a forfeit.",
+        "match_not_forfeitable" => "This match cannot be forfeited in its current state.",
+        "match_not_disputed" => "This match does not currently require administrator resolution.",
+        "admin_required" => "An authorized tournament administrator is required for this action.",
+        _ => "This administrator action is unavailable in the authoritative match state."
+    };
+
     private static string FormatReport(int? participant1Score, int? participant2Score) =>
         participant1Score.HasValue && participant2Score.HasValue
             ? $"{participant1Score}-{participant2Score}"
@@ -200,8 +224,10 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     {
         var generation = ++_refreshGeneration;
         _isLoading = true;
+        _hasFreshActionState = false;
         _errorMessage = null;
         _requiresAuthentication = false;
+        _authorizationDenied = false;
         await InvokeAsync(StateHasChanged);
 
         try
@@ -212,6 +238,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
             Match = state.Match;
             _actionState = state;
+            _hasFreshActionState = true;
             _participant1Score = state.Participant1ReportedScore1 ?? Match.Participant1Score ?? 0;
             _participant2Score = state.Participant2ReportedScore1 ?? Match.Participant2Score ?? 0;
             _hasLoaded = true;
@@ -223,17 +250,42 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(generation != _refreshGeneration || Match.Id != expectedMatchId)
                 return false;
 
-            _actionState = null;
-            _requiresAuthentication = true;
-            _hasLoaded = true;
-            StopDeadlineRefresh();
-            return true;
+            try
+            {
+                var publicMatch = await TournamentService.GetMatchByIdAsync(expectedMatchId);
+                if(generation != _refreshGeneration || Match.Id != expectedMatchId)
+                    return false;
+
+                Match = publicMatch;
+                _actionState = null;
+                _hasFreshActionState = false;
+                _requiresAuthentication = exception.StatusCode == HttpStatusCode.Unauthorized;
+                _authorizationDenied = exception.StatusCode == HttpStatusCode.Forbidden;
+                _hasLoaded = true;
+                StopDeadlineRefresh();
+                return true;
+            }
+            catch(Exception fallbackException)
+            {
+                if(generation == _refreshGeneration && Match.Id == expectedMatchId)
+                {
+                    _errorMessage = GetErrorMessage(
+                        fallbackException,
+                        "The public match state is unavailable. Retry to continue.");
+                    _hasFreshActionState = false;
+                    _hasLoaded = true;
+                    StopDeadlineRefresh();
+                }
+
+                return false;
+            }
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
         {
             if(generation == _refreshGeneration && Match.Id == expectedMatchId)
             {
                 _errorMessage = "This match is no longer available.";
+                _hasFreshActionState = false;
                 _hasLoaded = true;
             }
             return false;
@@ -243,6 +295,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(generation == _refreshGeneration && Match.Id == expectedMatchId)
             {
                 _errorMessage = GetErrorMessage(exception, "The authoritative match state is unavailable.");
+                _hasFreshActionState = false;
                 _hasLoaded = true;
             }
             return false;
@@ -322,9 +375,11 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private async Task ConfirmEndedAsync()
     {
+        var matchId = Match.Id;
         await RunMutationAsync(
-            () => TournamentService.ConfirmMatchEndedAsync(Match.Id),
-            "Your match-end confirmation was saved.");
+            () => TournamentService.ConfirmMatchEndedAsync(matchId),
+            "Your match-end confirmation was saved.",
+            state => state.CanConfirmEnded);
     }
 
     private async Task SubmitScoreAsync()
@@ -332,15 +387,17 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         if(_actionState?.CanSubmitScore != true)
             return;
 
+        var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.SubmitMatchScoreAsync(
-                Match.Id,
+                matchId,
                 new SubmitMatchScoreDTO
                 {
                     Participant1Score = _participant1Score,
                     Participant2Score = _participant2Score
                 }),
-            "Your score report was saved.");
+            "Your score report was saved.",
+            state => state.CanSubmitScore);
     }
 
     private async Task ForfeitOwnSideAsync()
@@ -348,53 +405,104 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         if(_actionState?.AuthorizedParticipant is not MatchParticipantSide side)
             return;
 
+        if(!_hasFreshActionState || _actionState?.CanForfeit != true ||
+           _forfeitConfirmationRequested == false)
+            return;
+
+        var matchId = Match.Id;
         await RunMutationAsync(
-            () => TournamentService.ForfeitMatchAsync(Match.Id, new ForfeitMatchDTO { Participant = side }),
-            "The forfeit was saved.");
+            () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
+            "The forfeit was saved.",
+            state => state.CanForfeit);
         _forfeitConfirmationRequested = false;
+    }
+
+    private Task RequestAdminForfeitAsync(MatchParticipantSide side)
+    {
+        if(!_hasFreshActionState || _actionState?.CanForceForfeit != true || _isSubmitting || _isLoading)
+            return Task.CompletedTask;
+
+        _adminForfeitConfirmationSide = side;
+        return InvokeAsync(StateHasChanged);
     }
 
     private async Task ForfeitSideAsAdminAsync(MatchParticipantSide side)
     {
+        if(_adminForfeitConfirmationSide != side || _actionState?.CanForceForfeit != true)
+            return;
+
+        var matchId = Match.Id;
         await RunMutationAsync(
-            () => TournamentService.ForfeitMatchAsync(Match.Id, new ForfeitMatchDTO { Participant = side }),
-            "The administrator forfeit was saved.");
+            () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
+            "The administrator forfeit was saved.",
+            state => state.CanForceForfeit);
+        _adminForfeitConfirmationSide = null;
     }
 
     private async Task ResolveAsync()
     {
+        if(_actionState?.CanResolve != true)
+            return;
+
+        var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.ResolveMatchAsync(
-                Match.Id,
+                matchId,
                 new ResolveMatchDTO
                 {
                     Participant1Score = _participant1Score,
                     Participant2Score = _participant2Score
                 }),
-            "The match was resolved and the result is official.");
+            "The match was resolved and the result is official.",
+            state => state.CanResolve);
     }
 
     private async Task ReverseAsync()
     {
+        if(_actionState?.CanReverse != true)
+            return;
+
+        var matchId = Match.Id;
         await RunMutationAsync(
-            () => TournamentService.ReverseMatchAsync(Match.Id),
-            "The match result was reversed.");
+            () => TournamentService.ReverseMatchAsync(matchId),
+            "The match result was reversed.",
+            state => state.CanReverse);
     }
 
-    private async Task RunMutationAsync(Func<Task<Match>> mutation, string successMessage)
+    private async Task RunMutationAsync(
+        Func<Task<Match>> mutation,
+        string successMessage,
+        Func<MatchActionStateDTO, bool> capability)
     {
-        if(_isSubmitting || _isLoading || !_hasLoaded)
+        if(_isSubmitting || _isLoading || !_hasLoaded || !_hasFreshActionState || _actionState is null ||
+           !capability(_actionState))
             return;
 
         var expectedMatchId = Match.Id;
         var expectedRefreshGeneration = _refreshGeneration;
         _isSubmitting = true;
+        _isLoading = true;
         _errorMessage = null;
         _forfeitConfirmationRequested = false;
+        _adminForfeitConfirmationSide = null;
+        _reverseConfirmationRequested = false;
         await InvokeAsync(StateHasChanged);
 
         try
         {
+            var latestState = await TournamentService.GetMatchActionStateAsync(expectedMatchId);
+            if(expectedMatchId != Match.Id || expectedRefreshGeneration != _refreshGeneration)
+                return;
+
+            Match = latestState.Match;
+            _actionState = latestState;
+            _hasFreshActionState = true;
+            if(!capability(latestState))
+            {
+                _errorMessage = GetBlockedReason(latestState, capability);
+                return;
+            }
+
             var result = await mutation();
             if(expectedMatchId != Match.Id || expectedRefreshGeneration != _refreshGeneration)
                 return;
@@ -415,6 +523,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         {
             if(expectedMatchId == Match.Id)
             {
+                _hasFreshActionState = false;
                 _errorMessage = GetErrorMessage(exception, "The match action could not be saved. Refresh and try again.");
                 ToastService.ShowError(_errorMessage);
             }
@@ -423,8 +532,27 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         {
             if(expectedMatchId == Match.Id)
                 _isSubmitting = false;
+            if(expectedMatchId == Match.Id)
+                _isLoading = false;
             await InvokeAsync(StateHasChanged);
         }
+    }
+
+    private static string GetBlockedReason(
+        MatchActionStateDTO state,
+        Func<MatchActionStateDTO, bool> capability)
+    {
+        if(capability == null)
+            return "The authoritative match state is no longer available. Retry and try again.";
+        if(!state.CanResolve && state.ResolveBlockedReason == "admin_not_assigned")
+            return "Only the assigned tournament administrator can resolve this match.";
+        if(!state.CanResolve && state.ResolveBlockedReason == "tournament_not_in_progress")
+            return "This tournament is no longer in progress.";
+        if(!state.CanForceForfeit && state.ForceForfeitBlockedReason == "tournament_not_in_progress")
+            return "This tournament is no longer in progress.";
+        if(!state.CanReverse && state.ReverseBlockedReason == "tournament_not_in_progress")
+            return "This tournament is no longer in progress.";
+        return "The match changed while you were working. Refresh the authoritative state and try again.";
     }
 
     private static string GetErrorMessage(Exception exception, string fallback)
@@ -434,7 +562,11 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(apiException.StatusCode == HttpStatusCode.Unauthorized)
                 return "Sign in to manage this match.";
             if(apiException.StatusCode == HttpStatusCode.Forbidden)
+            {
+                if(GetServerCode(apiException.Content) == "admin_not_assigned")
+                    return "Only the assigned tournament administrator can resolve this match.";
                 return "You are not authorized to perform this match action.";
+            }
             if(apiException.StatusCode == HttpStatusCode.Conflict)
                 return GetServerMessage(apiException.Content)
                     ?? "The match changed while you were working. Refresh the authoritative state and try again.";
@@ -470,6 +602,26 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         }
 
         return content.Trim().Trim('"');
+    }
+
+    private static string? GetServerCode(string? content)
+    {
+        if(string.IsNullOrWhiteSpace(content))
+            return null;
+
+        try
+        {
+            using var document = JsonDocument.Parse(content);
+            return document.RootElement.ValueKind == JsonValueKind.Object &&
+                   document.RootElement.TryGetProperty("code", out var code) &&
+                   code.ValueKind == JsonValueKind.String
+                ? code.GetString()
+                : null;
+        }
+        catch(JsonException)
+        {
+            return null;
+        }
     }
 
     public async ValueTask DisposeAsync()
