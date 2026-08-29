@@ -83,6 +83,26 @@ public class TeamService : ITeamService
         }
     }
 
+    public async Task<PublicProfileMatchSummariesDTO?> GetPublicTeamMatchSummariesAsync(string teamName, CancellationToken cancellationToken = default)
+    {
+        var trimmedTeamName = teamName.Trim();
+        if(string.IsNullOrWhiteSpace(trimmedTeamName))
+            return null;
+
+        try
+        {
+            return await _lanClient.GetPublicTeamMatchSummariesAsync(trimmedTeamName, cancellationToken);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+        catch(ApiException exception)
+        {
+            throw CreateServiceException("Load public team match summaries", exception);
+        }
+    }
+
     public async Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default)
     {
         try

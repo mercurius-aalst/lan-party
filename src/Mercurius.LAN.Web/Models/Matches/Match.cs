@@ -46,6 +46,7 @@ namespace Mercurius.LAN.Web.Models.Matches
     public int Participant2CorrectionCount { get; set; }
     public int? ForfeitedParticipantNumber { get; set; }
     public MatchResultKind? ResultKind { get; set; }
+    public DateTime? ResultRecordedAtUtc { get; set; }
     public int ResultVersion { get; set; }
 }
 }

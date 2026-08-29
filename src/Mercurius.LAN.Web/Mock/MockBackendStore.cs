@@ -27,6 +27,11 @@ internal sealed class MockBackendStore
         Converters = { new JsonStringEnumConverter() }
     };
     private static readonly Guid FeaturedDoubleEliminationTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
+    private static readonly Guid IndividualProfileFixtureTournamentId = Guid.Parse("91111111-1111-1111-1111-111111111111");
+    private static readonly Guid IndividualProfileFixturePlayerId = Guid.Parse("91111111-1111-1111-1111-111111111112");
+    private static readonly Guid IndividualProfileFixtureOpponentId = Guid.Parse("91111111-1111-1111-1111-111111111113");
+    private static readonly Guid IndividualProfileFixturePreviousMatchId = Guid.Parse("92111111-1111-1111-1111-111111111111");
+    private static readonly Guid IndividualProfileFixtureUpcomingMatchId = Guid.Parse("92111111-1111-1111-1111-111111111112");
     private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
     private const int MaxDownstreamMatches = 512;
@@ -41,6 +46,7 @@ internal sealed class MockBackendStore
         _dataFilePath = Path.Combine(environment.ContentRootPath, options.Value.DataFilePath);
         _document = LoadDocument(_dataFilePath);
         SeedFeaturedDoubleEliminationFixture();
+        SeedIndividualProfileFixture();
         InitializeRegistrationDetails();
     }
 
@@ -181,7 +187,15 @@ internal sealed class MockBackendStore
                 ?? _document.Users.FirstOrDefault(member => member.Id == team.CaptainUserId)?.Username;
 
             var tournaments = _document.Tournaments
-                .Where(tournament => tournament.Teams.Any(candidate => candidate.Id == team.Id))
+                .Where(tournament => tournament.Status != TournamentStatus.Canceled)
+                .Where(tournament =>
+                {
+                    EnsureRegistrationProjection(tournament);
+                    return tournament.Registrations.Any(registration =>
+                        registration.Kind == TournamentRegistrationKind.Team &&
+                        registration.Status == TournamentRegistrationStatus.Active &&
+                        registration.Team?.Id == team.Id);
+                })
                 .OrderBy(tournament => tournament.StartTime)
                 .ThenBy(tournament => tournament.Name)
                 .Select(tournament => new PublicTeamTournamentDTO
@@ -201,6 +215,288 @@ internal sealed class MockBackendStore
             };
         }
     }
+
+    public PublicProfileMatchSummariesDTO? GetPublicUserMatchSummaries(string username)
+    {
+        lock(_syncRoot)
+        {
+            var normalizedUsername = username.Trim();
+            if(string.IsNullOrWhiteSpace(normalizedUsername))
+                return null;
+
+            var user = _document.Users.FirstOrDefault(candidate =>
+                !candidate.IsDeleted &&
+                string.Equals(candidate.Username, normalizedUsername, StringComparison.OrdinalIgnoreCase));
+
+            if(user is null ||
+               string.IsNullOrWhiteSpace(user.Username) ||
+               string.IsNullOrWhiteSpace(user.Firstname) ||
+               string.IsNullOrWhiteSpace(user.Lastname))
+                return null;
+
+            return BuildPublicProfileMatchSummaries(user.Id, new HashSet<Guid>());
+        }
+    }
+
+    public PublicProfileMatchSummariesDTO? GetPublicTeamMatchSummaries(string teamName)
+    {
+        lock(_syncRoot)
+        {
+            var normalizedTeamName = teamName.Trim();
+            if(string.IsNullOrWhiteSpace(normalizedTeamName))
+                return null;
+
+            var team = _document.Teams.FirstOrDefault(candidate =>
+                string.Equals(candidate.Name, normalizedTeamName, StringComparison.OrdinalIgnoreCase));
+
+            return team is null
+                ? null
+                : BuildPublicProfileMatchSummaries(null, new HashSet<Guid> { team.Id });
+        }
+    }
+
+    private PublicProfileMatchSummariesDTO BuildPublicProfileMatchSummaries(Guid? userId, IReadOnlySet<Guid> teamIds)
+    {
+        var nowUtc = DateTime.UtcNow;
+        var previous = new List<MockProfileMatchCandidate>();
+        var upcoming = new List<MockProfileMatchCandidate>();
+
+        foreach(var tournament in _document.Tournaments)
+        {
+            if(tournament.Status == TournamentStatus.Canceled)
+                continue;
+
+            EnsureRegistrationProjection(tournament);
+            var activeRegistrations = GetRegistrationDetails(tournament)
+                .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
+                .ToList();
+            var subjectRegistrations = activeRegistrations
+                .Where(registration => IsSubjectRegistration(registration, userId, teamIds))
+                .ToList();
+
+            if(subjectRegistrations.Count == 0)
+                continue;
+
+            var snapshots = activeRegistrations
+                .Select(ToRegistrationSnapshot)
+                .Where(snapshot => snapshot.ParticipantId.HasValue)
+                .GroupBy(snapshot => snapshot.ParticipantId!.Value)
+                .ToDictionary(group => group.Key, group => group.First());
+
+            foreach(var match in tournament.Matches)
+            {
+                if(!TryCreateMatchCandidate(tournament, match, subjectRegistrations, out var candidate))
+                    continue;
+
+                if(IsPreviousMatch(candidate))
+                {
+                    previous.Add(candidate with { OpponentDisplayName = GetOpponentDisplayName(candidate, snapshots) });
+                }
+                else if(IsUpcomingMatch(candidate, nowUtc))
+                {
+                    upcoming.Add(candidate with { OpponentDisplayName = GetOpponentDisplayName(candidate, snapshots) });
+                }
+            }
+        }
+
+        var previousSummaries = previous
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.OpponentDisplayName))
+            .GroupBy(candidate => candidate.TournamentId)
+            .Select(group => group
+                .OrderByDescending(candidate => PreviousSortTime(candidate))
+                .ThenByDescending(candidate => candidate.RoundNumber)
+                .ThenByDescending(candidate => candidate.MatchNumber)
+                .ThenByDescending(candidate => candidate.MatchId)
+                .First())
+            .Select(candidate => ToPublicProfileMatchSummary(candidate, isPrevious: true))
+            .OrderBy(summary => summary.TournamentName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(summary => summary.TournamentName, StringComparer.Ordinal)
+            .ThenBy(summary => summary.TournamentId)
+            .ToList();
+
+        var upcomingSummaries = upcoming
+            .Where(candidate =>
+                !HasAssignedOpponent(candidate) ||
+                !string.IsNullOrWhiteSpace(candidate.OpponentDisplayName))
+            .GroupBy(candidate => candidate.TournamentId)
+            .Select(group => group
+                .OrderBy(candidate => UpcomingSortTime(candidate).HasValue ? 0 : 1)
+                .ThenBy(candidate => UpcomingSortTime(candidate))
+                .ThenBy(candidate => candidate.RoundNumber)
+                .ThenBy(candidate => candidate.MatchNumber)
+                .ThenBy(candidate => candidate.MatchId)
+                .First())
+            .Select(candidate => ToPublicProfileMatchSummary(candidate, isPrevious: false))
+            .OrderBy(summary => summary.TournamentName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(summary => summary.TournamentName, StringComparer.Ordinal)
+            .ThenBy(summary => summary.TournamentId)
+            .ToList();
+
+        return new PublicProfileMatchSummariesDTO
+        {
+            PreviousMatches = previousSummaries,
+            UpcomingMatches = upcomingSummaries
+        };
+    }
+
+    private static bool IsSubjectRegistration(
+        TournamentRegistrationDTO registration,
+        Guid? userId,
+        IReadOnlySet<Guid> teamIds)
+    {
+        if(registration.Kind == TournamentRegistrationKind.Individual)
+            return userId.HasValue && registration.User?.Id == userId.Value;
+
+        if(registration.Team?.Id is not { } teamId)
+            return false;
+
+        return userId is null
+            ? teamIds.Contains(teamId)
+            : registration.Team.CaptainUserId == userId.Value ||
+              registration.RosterMembers.Any(member =>
+                  member.User.Id == userId.Value &&
+                  member.ConfirmationStatus != RosterMemberConfirmationStatus.Pending);
+    }
+
+    private static bool TryCreateMatchCandidate(
+        TournamentExtended tournament,
+        Match match,
+        IReadOnlyCollection<TournamentRegistrationDTO> subjectRegistrations,
+        out MockProfileMatchCandidate candidate)
+    {
+        candidate = default!;
+        if(match.Id == Guid.Empty || tournament.Id == Guid.Empty)
+            return false;
+
+        var individual = match.ParticipationMode == ParticipationMode.Individual;
+        var participant1Id = individual ? match.UserParticipant1Id : match.TeamParticipant1Id;
+        var participant2Id = individual ? match.UserParticipant2Id : match.TeamParticipant2Id;
+        var subjectIds = subjectRegistrations
+            .Select(registration => registration.Kind == TournamentRegistrationKind.Individual
+                ? registration.User?.Id
+                : registration.Team?.Id)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .ToHashSet();
+
+        var subjectIsParticipant1 = participant1Id.HasValue && subjectIds.Contains(participant1Id.Value);
+        var subjectIsParticipant2 = participant2Id.HasValue && subjectIds.Contains(participant2Id.Value);
+        if((subjectIsParticipant1 && subjectIsParticipant2) || (!subjectIsParticipant1 && !subjectIsParticipant2))
+            return false;
+
+        candidate = new MockProfileMatchCandidate
+        {
+            MatchId = match.Id,
+            TournamentId = tournament.Id,
+            TournamentName = tournament.Name,
+            ParticipationMode = match.ParticipationMode,
+            Participant1Id = participant1Id,
+            Participant2Id = participant2Id,
+            SubjectIsParticipant1 = subjectIsParticipant1,
+            Participant1IsBYE = match.Participant1IsBYE,
+            Participant2IsBYE = match.Participant2IsBYE,
+            StartTime = match.StartTime,
+            EndTime = match.EndTime,
+            EstimatedStartTime = match.EstimatedStartTime,
+            EstimatedEndTime = match.EstimatedEndTime,
+            ResultRecordedAtUtc = match.ResultRecordedAtUtc,
+            LifecycleState = match.LifecycleState,
+            ResultKind = match.ResultKind,
+            Participant1Score = match.Participant1Score,
+            Participant2Score = match.Participant2Score,
+            RoundNumber = match.RoundNumber,
+            MatchNumber = match.MatchNumber,
+            IsLowerBracketMatch = match.IsLowerBracketMatch
+        };
+
+        return true;
+    }
+
+    private static bool IsPreviousMatch(MockProfileMatchCandidate candidate) =>
+        (candidate.LifecycleState == MatchLifecycleState.Completed ||
+         candidate.LifecycleState == MatchLifecycleState.Forfeited) &&
+        (candidate.LifecycleState == MatchLifecycleState.Forfeited ||
+         (candidate.Participant1Score.HasValue && candidate.Participant2Score.HasValue)) &&
+        candidate.Participant1Id.HasValue &&
+        candidate.Participant2Id.HasValue &&
+        candidate.Participant1Id != candidate.Participant2Id &&
+        !candidate.Participant1IsBYE &&
+        !candidate.Participant2IsBYE;
+
+    private static bool IsUpcomingMatch(MockProfileMatchCandidate candidate, DateTime nowUtc)
+    {
+        if(candidate.LifecycleState != MatchLifecycleState.AwaitingEndedConfirmation ||
+           candidate.Participant1IsBYE ||
+           candidate.Participant2IsBYE ||
+           (candidate.Participant1Id.HasValue && candidate.Participant2Id.HasValue && candidate.Participant1Id == candidate.Participant2Id))
+            return false;
+
+        var sortTime = UpcomingSortTime(candidate);
+        return !sortTime.HasValue || sortTime.Value > nowUtc;
+    }
+
+    private static DateTime? PreviousSortTime(MockProfileMatchCandidate candidate) =>
+        Normalize(candidate.ResultRecordedAtUtc) ??
+        Normalize(candidate.EndTime) ??
+        Normalize(candidate.StartTime);
+
+    private static DateTime? UpcomingSortTime(MockProfileMatchCandidate candidate) =>
+        Normalize(candidate.EstimatedStartTime) ?? Normalize(candidate.StartTime);
+
+    private static MockRegistrationSnapshot ToRegistrationSnapshot(TournamentRegistrationDTO registration) =>
+        new(
+            registration.Kind == TournamentRegistrationKind.Individual ? registration.User?.Id : registration.Team?.Id,
+            registration.Kind == TournamentRegistrationKind.Individual
+                ? registration.User?.Username ?? registration.User?.DisplayName
+                : registration.Team?.Name);
+
+    private static string? GetOpponentDisplayName(
+        MockProfileMatchCandidate candidate,
+        IReadOnlyDictionary<Guid, MockRegistrationSnapshot> snapshots)
+    {
+        var opponentId = candidate.SubjectIsParticipant1
+            ? candidate.Participant2Id
+            : candidate.Participant1Id;
+        return opponentId is { } id && snapshots.TryGetValue(id, out var snapshot)
+            ? snapshot.DisplayName
+            : null;
+    }
+
+    private static bool HasAssignedOpponent(MockProfileMatchCandidate candidate) =>
+        candidate.SubjectIsParticipant1
+            ? candidate.Participant2Id.HasValue
+            : candidate.Participant1Id.HasValue;
+
+    private static PublicProfileMatchSummaryDTO ToPublicProfileMatchSummary(
+        MockProfileMatchCandidate candidate,
+        bool isPrevious) =>
+        new()
+        {
+            MatchId = candidate.MatchId,
+            TournamentId = candidate.TournamentId,
+            TournamentName = candidate.TournamentName,
+            OpponentDisplayName = candidate.OpponentDisplayName,
+            OpponentIsTbd = string.IsNullOrWhiteSpace(candidate.OpponentDisplayName),
+            EstimatedStartTime = Normalize(candidate.EstimatedStartTime),
+            EstimatedEndTime = Normalize(candidate.EstimatedEndTime),
+            ScheduledStartTime = Normalize(candidate.StartTime),
+            StartedAtUtc = isPrevious ? Normalize(candidate.StartTime) : null,
+            CompletedAtUtc = isPrevious ? Normalize(candidate.EndTime) : null,
+            LifecycleState = candidate.LifecycleState,
+            ResultKind = candidate.ResultKind,
+            ParticipantScore = candidate.SubjectIsParticipant1 ? candidate.Participant1Score : candidate.Participant2Score,
+            OpponentScore = candidate.SubjectIsParticipant1 ? candidate.Participant2Score : candidate.Participant1Score,
+            RoundNumber = candidate.RoundNumber,
+            MatchNumber = candidate.MatchNumber,
+            IsLowerBracketMatch = candidate.IsLowerBracketMatch
+        };
+
+    private static DateTime? Normalize(DateTime value) =>
+        value == DateTime.MinValue
+            ? null
+            : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+
+    private static DateTime? Normalize(DateTime? value) => value is null ? null : Normalize(value.Value);
 
     public TournamentExtended? GetTournament(Guid id)
     {
@@ -2220,12 +2516,111 @@ internal sealed class MockBackendStore
         tournament.Users = [];
         tournament.Teams = Clone(teams)!;
         tournament.Matches = BuildFeaturedDoubleEliminationMatches(tournament.Id, teams);
+        AddMockUpcomingFixture(tournament);
+        tournament.Registrations = [];
         EnsureRegistrationProjection(tournament);
 
         foreach(var team in teams)
         {
             AddOrReplaceTeam(team);
         }
+    }
+
+    private void SeedIndividualProfileFixture()
+    {
+        if(_document.Tournaments.Any(tournament => tournament.Id == IndividualProfileFixtureTournamentId))
+            return;
+
+        var player = new PublicUserDTO
+        {
+            Id = IndividualProfileFixturePlayerId,
+            Username = "solo1",
+            Firstname = "Sofia",
+            Lastname = "Solo",
+            DisplayName = "solo1"
+        };
+        var opponent = new PublicUserDTO
+        {
+            Id = IndividualProfileFixtureOpponentId,
+            Username = "solo2",
+            Firstname = "Omar",
+            Lastname = "Opponent",
+            DisplayName = "solo2"
+        };
+
+        UpsertUserPublicFields(player);
+        UpsertUserPublicFields(opponent);
+
+        var nowUtc = DateTime.UtcNow;
+        var previousStart = nowUtc.AddDays(-2);
+        var upcomingStart = nowUtc.AddDays(2);
+        var tournament = new TournamentExtended
+        {
+            Id = IndividualProfileFixtureTournamentId,
+            Name = "Trackmania Showcase",
+            StartTime = previousStart,
+            EndTime = upcomingStart.AddHours(1),
+            PlannedStartTime = previousStart,
+            AverageGameDurationMinutes = 30,
+            RoundBreakDurationMinutes = 10,
+            EstimatedEndTime = upcomingStart.AddHours(1),
+            Status = TournamentStatus.InProgress,
+            BracketType = BracketType.SingleElimination,
+            Format = TournamentFormat.BestOf3,
+            FinalsFormat = TournamentFormat.BestOf3,
+            ParticipationMode = ParticipationMode.Individual,
+            Users = [player, opponent],
+            Teams = [],
+            Matches =
+            [
+                new Match
+                {
+                    Id = IndividualProfileFixturePreviousMatchId,
+                    StartTime = previousStart,
+                    EndTime = previousStart.AddMinutes(45),
+                    EstimatedStartTime = previousStart,
+                    EstimatedEndTime = previousStart.AddMinutes(45),
+                    BracketType = BracketType.SingleElimination,
+                    Format = TournamentFormat.BestOf3,
+                    ParticipationMode = ParticipationMode.Individual,
+                    RoundNumber = 1,
+                    MatchNumber = 1,
+                    TournamentId = IndividualProfileFixtureTournamentId,
+                    UserParticipant1Id = IndividualProfileFixturePlayerId,
+                    UserParticipant2Id = IndividualProfileFixtureOpponentId,
+                    UserWinnerId = IndividualProfileFixturePlayerId,
+                    UserLoserId = IndividualProfileFixtureOpponentId,
+                    Participant1Score = 2,
+                    Participant2Score = 1,
+                    LifecycleState = MatchLifecycleState.Completed,
+                    ResultKind = MatchResultKind.Score,
+                    ResultRecordedAtUtc = previousStart.AddMinutes(45),
+                    ResultVersion = 1
+                },
+                new Match
+                {
+                    Id = IndividualProfileFixtureUpcomingMatchId,
+                    StartTime = upcomingStart,
+                    EndTime = upcomingStart.AddMinutes(45),
+                    EstimatedStartTime = upcomingStart,
+                    EstimatedEndTime = upcomingStart.AddMinutes(45),
+                    BracketType = BracketType.SingleElimination,
+                    Format = TournamentFormat.BestOf3,
+                    ParticipationMode = ParticipationMode.Individual,
+                    RoundNumber = 2,
+                    MatchNumber = 1,
+                    TournamentId = IndividualProfileFixtureTournamentId,
+                    UserParticipant1Id = IndividualProfileFixturePlayerId,
+                    UserParticipant2Id = IndividualProfileFixtureOpponentId,
+                    Participant1Score = null,
+                    Participant2Score = null,
+                    LifecycleState = MatchLifecycleState.AwaitingEndedConfirmation
+                }
+            ]
+        };
+
+        EnsureRegistrationProjection(tournament);
+        _document.Tournaments.Add(tournament);
     }
 
     private static List<Team> BuildFeaturedDoubleEliminationTeams()
@@ -2377,6 +2772,19 @@ internal sealed class MockBackendStore
             BuildFeaturedMatch(lbRound6MatchId, tournamentId, startTime.AddMinutes(720), 6, 1, true, teamIds["Gamma Grid"], teamIds["Binary Bandits"], 3, 2, teamIds["Gamma Grid"], teamIds["Binary Bandits"], grandFinalMatchId, null, TournamentFormat.BestOf5),
             BuildFeaturedMatch(grandFinalMatchId, tournamentId, startTime.AddMinutes(810), 7, 1, false, teamIds["Team Alpha"], teamIds["Gamma Grid"], null, null, null, null, null, null, TournamentFormat.BestOf5)
         ];
+    }
+
+    private static void AddMockUpcomingFixture(TournamentExtended tournament)
+    {
+        var upcomingMatch = tournament.Matches.LastOrDefault();
+        if(upcomingMatch is null)
+            return;
+
+        var upcomingStart = DateTime.UtcNow.AddDays(2);
+        upcomingMatch.StartTime = upcomingStart;
+        upcomingMatch.EndTime = upcomingStart.AddMinutes(75);
+        upcomingMatch.EstimatedStartTime = upcomingStart;
+        upcomingMatch.EstimatedEndTime = upcomingStart.AddMinutes(75);
     }
 
     private static Match BuildFeaturedMatch(
@@ -2805,6 +3213,34 @@ internal sealed class MockBackendStore
             UpdatedAtUtc = user.UpdatedAtUtc
         };
     }
+
+    private sealed record MockProfileMatchCandidate
+    {
+        public Guid MatchId { get; init; }
+        public Guid TournamentId { get; init; }
+        public string TournamentName { get; init; } = string.Empty;
+        public ParticipationMode ParticipationMode { get; init; }
+        public Guid? Participant1Id { get; init; }
+        public Guid? Participant2Id { get; init; }
+        public bool SubjectIsParticipant1 { get; init; }
+        public bool Participant1IsBYE { get; init; }
+        public bool Participant2IsBYE { get; init; }
+        public DateTime StartTime { get; init; }
+        public DateTime EndTime { get; init; }
+        public DateTime? EstimatedStartTime { get; init; }
+        public DateTime? EstimatedEndTime { get; init; }
+        public DateTime? ResultRecordedAtUtc { get; init; }
+        public MatchLifecycleState LifecycleState { get; init; }
+        public MatchResultKind? ResultKind { get; init; }
+        public int? Participant1Score { get; init; }
+        public int? Participant2Score { get; init; }
+        public int RoundNumber { get; init; }
+        public int MatchNumber { get; init; }
+        public bool IsLowerBracketMatch { get; init; }
+        public string? OpponentDisplayName { get; init; }
+    }
+
+    private sealed record MockRegistrationSnapshot(Guid? ParticipantId, string? DisplayName);
 
     private static T? Clone<T>(T? value)
     {

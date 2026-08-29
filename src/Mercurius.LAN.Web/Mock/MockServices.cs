@@ -321,6 +321,9 @@ internal sealed class MockTeamService : ITeamService
     public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetPublicTeamByName(teamName));
 
+    public Task<PublicProfileMatchSummariesDTO?> GetPublicTeamMatchSummariesAsync(string teamName, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetPublicTeamMatchSummaries(teamName));
+
     public async Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default)
     {
         var persona = await GetCurrentPersonaAsync();
@@ -476,6 +479,11 @@ internal sealed class MockPublicProfileService : IPublicProfileService
     public Task<PublicUserProfileDTO?> GetPublicUserByUsernameAsync(string username, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(_store.GetPublicUserByUsername(username));
+    }
+
+    public Task<PublicProfileMatchSummariesDTO?> GetPublicUserMatchSummariesAsync(string username, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult(_store.GetPublicUserMatchSummaries(username));
     }
 }
 

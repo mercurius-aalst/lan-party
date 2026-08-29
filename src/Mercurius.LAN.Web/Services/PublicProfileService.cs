@@ -29,4 +29,20 @@ public class PublicProfileService : IPublicProfileService
             return null;
         }
     }
+
+    public async Task<PublicProfileMatchSummariesDTO?> GetPublicUserMatchSummariesAsync(string username, CancellationToken cancellationToken = default)
+    {
+        var trimmedUsername = username.Trim();
+        if(string.IsNullOrWhiteSpace(trimmedUsername))
+            return null;
+
+        try
+        {
+            return await _lanClient.GetPublicUserMatchSummariesAsync(trimmedUsername, cancellationToken);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+    }
 }

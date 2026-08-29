@@ -1,0 +1,83 @@
+## Purpose
+
+Define privacy-safe previous and upcoming match summaries for public player and team profiles.
+
+## ADDED Requirements
+
+### Requirement: Public profile match-summary endpoints
+
+The API MUST expose anonymous match-summary reads at
+`GET /v1/lan/public/users/{username}/match-summaries` and
+`GET /v1/lan/public/teams/{teamName}/match-summaries`.
+
+#### Scenario: Public player summaries
+- **WHEN** an anonymous client requests summaries for a complete, non-deleted player profile
+- **THEN** the response MUST contain at most one previous and at most one upcoming match for each
+  tournament in which that player has an active individual registration or an active team
+  registration whose confirmed roster or captain snapshot includes that player
+
+#### Scenario: Public team summaries
+- **WHEN** an anonymous client requests summaries for an existing, non-deleted team profile
+- **THEN** the response MUST contain at most one previous and at most one upcoming match for each
+  tournament in which that team has an active team registration
+
+#### Scenario: Missing public profile
+- **WHEN** the requested username or team name is missing, incomplete, or deleted
+- **THEN** the endpoint MUST return 404 and MUST NOT disclose profile or match data
+
+### Requirement: Match summary selection and state
+
+The API MUST select summaries using the participant's active registration and MUST apply the
+authoritative match lifecycle state.
+
+#### Scenario: Most recent previous match
+- **WHEN** a participant has multiple qualifying matches in one tournament
+- **THEN** `previousMatches` MUST contain only the most recently completed match, where completed
+  includes an official score result or forfeit, ordered by result/completion time descending and
+  deterministic round, match, and match-id tie-breakers
+
+#### Scenario: Next upcoming match
+- **WHEN** a participant has multiple unplayed matches in one tournament
+- **THEN** `upcomingMatches` MUST contain only the earliest unplayed non-BYE match, ordered by
+  estimated/scheduled start ascending with deterministic round, match, and match-id tie-breakers
+
+#### Scenario: Lifecycle exclusions
+- **WHEN** a match belongs to a canceled tournament, is reversed, is already in progress, or is in
+  an unresolved/disputed/admin-resolution state
+- **THEN** the match MUST NOT be returned as a previous or upcoming summary
+
+#### Scenario: BYE and unresolved opponent
+- **WHEN** a candidate match has a BYE slot
+- **THEN** it MUST be excluded from profile summaries because it is not a playable opponent
+- **WHEN** an upcoming candidate has the profile participant assigned but its opposing slot is not
+  assigned
+- **THEN** the summary MUST be returned with a public TBD opponent indication
+
+### Requirement: Public summary contract
+
+Each summary MUST expose only the fields needed to display and navigate the match: tournament ID
+and name, match ID, opponent display name or TBD indication, public lifecycle/result state,
+participant-relative scores when available, estimated and scheduled times when available, and safe
+round/bracket metadata. `EstimatedStartTime` MUST take precedence over `ScheduledStartTime` for
+upcoming ordering; a missing or `DateTime.MinValue` time MUST be represented as absent rather than
+serialized as a sentinel. It MUST NOT expose email, Auth0 identifiers, private reports, admin
+assignment, deletion state, or other private account metadata.
+
+#### Scenario: Stable navigation data
+- **WHEN** a summary is returned
+- **THEN** it MUST include a non-empty tournament ID and match ID suitable for stable navigation
+
+#### Scenario: Empty category
+- **WHEN** a valid profile has no qualifying previous or upcoming match
+- **THEN** the corresponding response array MUST be empty rather than omitted or synthesized
+
+### Requirement: Efficient deterministic reads
+
+The API MUST perform participant membership and previous/upcoming selection through bounded,
+set-based persistence queries. It MUST NOT load all matches for a profile and filter them in
+memory, and MUST NOT issue one query per tournament, match, or opponent.
+
+#### Scenario: Many tournaments
+- **WHEN** a profile participates in many tournaments
+- **THEN** the summary read MUST use a constant bounded number of set-based queries with stable
+  tournament and match ordering

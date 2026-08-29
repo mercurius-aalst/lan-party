@@ -166,6 +166,47 @@ public sealed class MockMatchLifecycleTests
     }
 
     [Fact]
+    public void MockPublicProfilesExposeBoundedLifecycleAwareMatchSummaries()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var userSummaries = store.GetPublicUserMatchSummaries("alpha1");
+        Assert.NotNull(userSummaries);
+        Assert.Single(userSummaries!.PreviousMatches);
+        Assert.Single(userSummaries.UpcomingMatches);
+        Assert.Equal("Gamma Grid", userSummaries.UpcomingMatches[0].OpponentDisplayName);
+        Assert.Equal(MatchLifecycleState.AwaitingEndedConfirmation, userSummaries.UpcomingMatches[0].LifecycleState);
+        Assert.NotNull(userSummaries.PreviousMatches[0].ParticipantScore);
+
+        var teamSummaries = store.GetPublicTeamMatchSummaries("Team Alpha");
+        Assert.NotNull(teamSummaries);
+        Assert.Single(teamSummaries!.PreviousMatches);
+        Assert.Single(teamSummaries.UpcomingMatches);
+        Assert.Equal(userSummaries.UpcomingMatches[0].MatchId, teamSummaries.UpcomingMatches[0].MatchId);
+
+        var emptySummaries = store.GetPublicUserMatchSummaries("track1");
+        Assert.NotNull(emptySummaries);
+        Assert.Empty(emptySummaries!.PreviousMatches);
+        Assert.Empty(emptySummaries.UpcomingMatches);
+
+        var individualSummaries = store.GetPublicUserMatchSummaries("solo1");
+        Assert.NotNull(individualSummaries);
+        Assert.Single(individualSummaries!.PreviousMatches);
+        Assert.Single(individualSummaries.UpcomingMatches);
+        Assert.Equal("solo2", individualSummaries.UpcomingMatches[0].OpponentDisplayName);
+        Assert.Equal(2, individualSummaries.PreviousMatches[0].ParticipantScore);
+        Assert.Equal(1, individualSummaries.PreviousMatches[0].OpponentScore);
+
+        Assert.Null(store.GetPublicUserMatchSummaries("missing-user"));
+    }
+
+    [Fact]
     public async Task MockServicesUseAuthenticationStateWhenInteractiveCircuitHasNoHttpContext()
     {
         var repositoryRoot = FindRepositoryRoot();
