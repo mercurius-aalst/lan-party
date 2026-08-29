@@ -379,7 +379,12 @@ internal sealed class MockBackendStore
 
             var side = FindMockParticipantSide(persona, tournament, match);
             var isAdmin = string.Equals(persona, "admin", StringComparison.OrdinalIgnoreCase);
-            var canViewPrivateReports = side.HasValue || isAdmin;
+            var currentUserId = isAdmin ? GetCurrentProfile(persona).User?.Id : null;
+            var canViewPrivateReports = CanViewPrivateReports(
+                persona,
+                tournament.AssignedAdminUserId,
+                currentUserId,
+                side.HasValue);
             var canAct = tournament.Status == TournamentStatus.InProgress && side.HasValue;
             var hasBothParticipants = GetMockParticipantId(match, MatchParticipantSide.Participant1).HasValue &&
                 GetMockParticipantId(match, MatchParticipantSide.Participant2).HasValue;
@@ -653,9 +658,19 @@ internal sealed class MockBackendStore
         if(clone == null)
             return null;
 
+        clone.AssignedAdminUserId = null;
         clone.Matches = clone.Matches.Select(ClonePublicMatch).ToList();
         return clone;
     }
+
+    internal static bool CanViewPrivateReports(
+        string persona,
+        Guid? assignedAdminUserId,
+        Guid? currentUserId,
+        bool isParticipant) =>
+        isParticipant ||
+        (string.Equals(persona, "admin", StringComparison.OrdinalIgnoreCase) &&
+         (!assignedAdminUserId.HasValue || assignedAdminUserId == currentUserId));
 
     private static void EnsureMockTournamentInProgress(TournamentExtended tournament)
     {
@@ -2200,6 +2215,7 @@ internal sealed class MockBackendStore
         tournament.FinalsFormat = TournamentFormat.BestOf5;
         tournament.ParticipationMode = ParticipationMode.Team;
         tournament.TeamSize = 5;
+        tournament.AssignedAdminUserId = Guid.Parse("41111111-1111-1111-1111-111111111121");
         tournament.Placements = [];
         tournament.Users = [];
         tournament.Teams = Clone(teams)!;

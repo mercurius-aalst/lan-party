@@ -160,6 +160,42 @@ public sealed class MatchLifecycleUiStateTests
         Assert.Equal(1, selected.Participant2Score);
     }
 
+    [Theory]
+    [InlineData(BracketType.SingleElimination)]
+    [InlineData(BracketType.DoubleElimination)]
+    public void BracketRefreshThenClose_PreservesFreshProjectionWhenParentReloadFails(BracketType bracketType)
+    {
+        var matchId = Guid.NewGuid();
+        var staleMatch = new Match
+        {
+            Id = matchId,
+            BracketType = bracketType,
+            LifecycleState = MatchLifecycleState.ScoreConfirmation,
+            ResultVersion = 4
+        };
+        var refreshedMatch = new Match
+        {
+            Id = matchId,
+            BracketType = bracketType,
+            LifecycleState = MatchLifecycleState.Completed,
+            ResultVersion = 5,
+            Participant1Score = 2,
+            Participant2Score = 1
+        };
+        var tournament = new TournamentExtended { BracketType = bracketType, Matches = [staleMatch] };
+
+        // The dialog sends this projection through the bracket wrapper before close.
+        // A failed parent reload must not reintroduce the wrapper's stale instance.
+        var selected = TournamentDetail.ApplyRefreshedMatchProjection(
+            tournament,
+            staleMatch,
+            refreshedMatch);
+
+        Assert.Same(refreshedMatch, selected);
+        Assert.Same(refreshedMatch, tournament.Matches.Single());
+        Assert.Equal(MatchLifecycleState.Completed, tournament.Matches.Single().LifecycleState);
+    }
+
     private static MatchActionStateDTO CreateActionState(MatchParticipantSide? authorizedParticipant = null) => new()
     {
         Match = new Match { Id = Guid.NewGuid() },

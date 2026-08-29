@@ -18,6 +18,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback OnClose { get; set; }
     [Parameter] public EventCallback<Match> OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnMatchRefreshed { get; set; }
     [Parameter] public string Participant2Name { get; set; } = null!;
     [Parameter] public string Participant1Name { get; set; } = null!;
     [Parameter] public ParticipantViewModel? Participant1 { get; set; }
@@ -302,6 +303,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             (_participant1Score, _participant2Score) = GetInitialScores(state);
             _hasLoaded = true;
             StartDeadlineRefresh();
+            await NotifyMatchRefreshedAsync();
             return true;
         }
         catch(ApiException exception) when(exception.StatusCode is HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden)
@@ -325,6 +327,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 _authorizationDenied = exception.StatusCode == HttpStatusCode.Forbidden;
                 _hasLoaded = true;
                 StartDeadlineRefresh();
+                await NotifyMatchRefreshedAsync();
                 return true;
             }
             catch(Exception fallbackException)
@@ -369,6 +372,23 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 _isLoading = false;
                 await InvokeAsync(StateHasChanged);
             }
+        }
+    }
+
+    private async Task NotifyMatchRefreshedAsync()
+    {
+        if(!OnMatchRefreshed.HasDelegate)
+            return;
+
+        try
+        {
+            await OnMatchRefreshed.InvokeAsync(Match);
+        }
+        catch(Exception exception)
+        {
+            ToastService.ShowWarning(GetErrorMessage(
+                exception,
+                "The latest match state could not be shared with the bracket."));
         }
     }
 
@@ -565,6 +585,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             _freshMatchProjection = Match;
             _actionState = latestState;
             _hasFreshActionState = true;
+            await NotifyMatchRefreshedAsync();
             if(!capability(latestState))
             {
                 _errorMessage = GetBlockedReason(latestState, capability);
@@ -577,6 +598,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
             Match = result;
             _freshMatchProjection = Match;
+            await NotifyMatchRefreshedAsync();
             var refreshed = await RefreshAsync(expectedMatchId);
             if(refreshed)
             {

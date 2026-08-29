@@ -2,10 +2,12 @@ using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Options;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using System.Security.Claims;
 using Xunit;
 
 namespace Mercurius.LAN.Web.ContractTests;
@@ -113,6 +115,8 @@ public sealed class MockMatchLifecycleTests
         Assert.Equal(state.Match.Participant2Score, publicMatch.Participant2Score);
         Assert.Null(publicMatch.Participant1ReportedScore1);
         Assert.Null(publicMatch.Participant2ReportedScore1);
+
+        Assert.Null(store.GetTournament(FeaturedTournamentId)!.AssignedAdminUserId);
     }
 
     [Fact]
@@ -148,6 +152,56 @@ public sealed class MockMatchLifecycleTests
         Assert.Null(unauthenticatedState.Participant2ReportedScore1);
     }
 
+    [Fact]
+    public void MockPrivateReportsMatchLiveAssignedAdminVisibilityRules()
+    {
+        var adminId = Guid.Parse("41111111-1111-1111-1111-111111111121");
+        var otherAdminId = Guid.NewGuid();
+
+        Assert.True(MockBackendStore.CanViewPrivateReports("admin", adminId, adminId, false));
+        Assert.False(MockBackendStore.CanViewPrivateReports("admin", adminId, otherAdminId, false));
+        Assert.True(MockBackendStore.CanViewPrivateReports("admin", null, otherAdminId, false));
+        Assert.True(MockBackendStore.CanViewPrivateReports("user", adminId, otherAdminId, true));
+        Assert.False(MockBackendStore.CanViewPrivateReports("user", adminId, otherAdminId, false));
+    }
+
+    [Fact]
+    public async Task MockServicesUseAuthenticationStateWhenInteractiveCircuitHasNoHttpContext()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+        var adminPrincipal = DependencyExtensions.BuildMockPrincipal("admin", store);
+        var authenticationStateProvider = new FixedAuthenticationStateProvider(adminPrincipal);
+        var accessor = new HttpContextAccessor();
+
+        var tournamentService = new MockTournamentService(store, accessor, authenticationStateProvider);
+        var actionState = await tournamentService.GetMatchActionStateAsync(FeaturedGrandFinalId);
+
+        Assert.True(actionState.CanForceForfeit);
+
+        var userPrincipal = DependencyExtensions.BuildMockPrincipal("user", store);
+        var userClient = new MockUserClient(
+            store,
+            accessor,
+            new FixedAuthenticationStateProvider(userPrincipal));
+        var profile = await userClient.GetCurrentUserProfileAsync();
+
+        Assert.Equal("mockuser", profile.User?.Username);
+
+        var teamService = new MockTeamService(
+            store,
+            accessor,
+            new FixedAuthenticationStateProvider(userPrincipal));
+        var teamSummary = await teamService.GetCurrentUserTeamSummaryAsync();
+
+        Assert.Contains(profile.User!.Id, teamSummary.CaptainedTeams.Select(team => team.CaptainUserId));
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -167,5 +221,13 @@ public sealed class MockMatchLifecycleTests
         public string ApplicationName { get; set; } = "Mercurius.LAN.Web.ContractTests";
         public string ContentRootPath { get; set; } = contentRootPath;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class FixedAuthenticationStateProvider(ClaimsPrincipal principal) : AuthenticationStateProvider
+    {
+        private readonly AuthenticationState _state = new(principal);
+
+        public override Task<AuthenticationState> GetAuthenticationStateAsync() =>
+            Task.FromResult(_state);
     }
 }

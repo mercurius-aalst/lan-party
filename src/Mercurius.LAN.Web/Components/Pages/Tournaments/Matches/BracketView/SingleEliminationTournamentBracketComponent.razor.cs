@@ -9,6 +9,7 @@ public partial class SingleEliminationTournamentBracketComponent
 {
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback<Match> OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnMatchRefreshed { get; set; }
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 

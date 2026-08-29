@@ -8,6 +8,7 @@ public partial class TournamentMatchesTab
 {
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback<Match> OnDataReload { get; set; }
+    [Parameter] public EventCallback<Match> OnMatchRefreshed { get; set; }
 
     private string GetBracketSummary()
     {

@@ -575,14 +575,28 @@ public partial class TournamentDetail : IDisposable
 
     private async Task HandleMatchDataReloadAsync(Match refreshedMatch)
     {
-        if(_tournament is null || !_tournament.Matches.Any(match => match.Id == refreshedMatch.Id))
+        if(!TryApplyRefreshedMatchProjection(refreshedMatch))
             return;
 
         // Apply the child refresh before asking the parent to reload. If that reload
         // fails, both the schedule and either bracket view still render the fresh
         // match instead of passing their old same-ID instance back to the dialog.
-        _selectedMatch = ApplyRefreshedMatchProjection(_tournament, _selectedMatch, refreshedMatch);
         await LoadTournamentDataAsync(TournamentId);
+    }
+
+    private Task HandleMatchRefreshedAsync(Match refreshedMatch)
+    {
+        TryApplyRefreshedMatchProjection(refreshedMatch);
+        return Task.CompletedTask;
+    }
+
+    private bool TryApplyRefreshedMatchProjection(Match refreshedMatch)
+    {
+        if(_tournament is null || !_tournament.Matches.Any(match => match.Id == refreshedMatch.Id))
+            return false;
+
+        _selectedMatch = ApplyRefreshedMatchProjection(_tournament, _selectedMatch, refreshedMatch);
+        return true;
     }
 
     private void ReconcileSelectedMatchProjection()

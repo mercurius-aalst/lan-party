@@ -76,7 +76,7 @@
                     {
                         var match = matches[i];
                         var pos = matchPositions[(r, i)];
-                        <TournamentBracketMatchComponent OnDataReload="OnDataReload" Match="match" Tournament="Tournament" Position="pos"></TournamentBracketMatchComponent>
+                        <TournamentBracketMatchComponent OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" Match="match" Tournament="Tournament" Position="pos"></TournamentBracketMatchComponent>
                     }
                 }
             </div>

@@ -23,10 +23,10 @@
         @switch(Tournament.BracketType)
         {
             case BracketType.DoubleElimination:
-                <DoubleEliminationTournamentBracketComponent OnDataReload="OnDataReload" Tournament="@Tournament" />
+                <DoubleEliminationTournamentBracketComponent OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" Tournament="@Tournament" />
                 break;
             case BracketType.SingleElimination:
-                <SingleEliminationTournamentBracketComponent OnDataReload="OnDataReload" Tournament="@Tournament" />
+                <SingleEliminationTournamentBracketComponent OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" Tournament="@Tournament" />
                 break;
             default:
                 <p>Bracket type not supported.</p>

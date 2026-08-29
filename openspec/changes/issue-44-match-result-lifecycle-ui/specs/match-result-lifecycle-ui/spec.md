@@ -95,6 +95,12 @@ The UI MUST show loading immediately when a match refresh or mutation begins, di
 - **THEN** the UI MUST propagate the fresh public match projection to the containing schedule and bracket
 - **AND** it MUST keep protected actions disabled while showing the public-state limitation
 
+#### Scenario: Bracket refresh reaches the wrapper before close
+
+- **WHEN** a single- or double-elimination bracket dialog successfully refreshes a match and is then closed while the parent reload fails
+- **THEN** the bracket wrapper and parent MUST retain the refreshed same-ID match projection
+- **AND** they MUST NOT submit or render the wrapper's stale pre-refresh match
+
 ### Requirement: Mock/live parity
 
 The mock service MUST expose the same lifecycle DTOs, command methods, validation outcomes, and state transitions as the live client for happy paths, duplicate actions, disputes, deadlines, forfeits, admin resolution, and reversal guards.
@@ -110,3 +116,9 @@ The mock service MUST expose the same lifecycle DTOs, command methods, validatio
 - **WHEN** an anonymous mock login or unauthenticated request asks for match action state
 - **THEN** the mock service MUST resolve the request as anonymous rather than the default participant persona
 - **AND** it MUST return the public match projection without private reports or lifecycle mutation capabilities
+
+#### Scenario: Interactive mock services retain the authenticated persona
+
+- **WHEN** an authenticated mock user or administrator invokes a service from an interactive circuit without an ambient HTTP context
+- **THEN** the mock service MUST resolve the persona from the circuit authentication state
+- **AND** it MUST preserve the corresponding profile, action, and private-report authorization behavior

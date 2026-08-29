@@ -204,7 +204,7 @@ else
             </div>
 
             <section id="tournament-bracket" class="brand-card Tournament-detail-section Tournament-detail-section--full-span">
-                <TournamentMatchesTab OnDataReload="HandleMatchDataReloadAsync" Tournament="@_tournament" />
+                <TournamentMatchesTab OnDataReload="HandleMatchDataReloadAsync" OnMatchRefreshed="HandleMatchRefreshedAsync" Tournament="@_tournament" />
             </section>
 
             <div class="Tournament-detail-secondary">
@@ -278,6 +278,7 @@ else
                             Participant1Name="@GetMatchParticipantName(_selectedMatch, true)"
                             Participant2Name="@GetMatchParticipantName(_selectedMatch, false)"
                             OnClose="CloseMatchDetailsAsync"
-                            OnDataReload="HandleMatchDataReloadAsync" />
+                            OnDataReload="HandleMatchDataReloadAsync"
+                            OnMatchRefreshed="HandleMatchRefreshedAsync" />
     }
 }
