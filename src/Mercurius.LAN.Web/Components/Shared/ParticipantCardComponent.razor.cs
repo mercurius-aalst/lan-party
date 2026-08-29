@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Mercurius.LAN.Web.Components.Shared;
 
@@ -15,10 +16,15 @@ public partial class ParticipantCardComponent
 
     private bool IsTeamParticipant => Participant.Team is not null;
 
-    private void ShowParticipantPopup(ParticipantViewModel participant)
+    private Task ShowParticipantPopup(ParticipantViewModel participant)
     {
-        OnParticipantSelected.InvokeAsync(participant);
+        return OnParticipantSelected.InvokeAsync(participant);
     }
+
+    private Task HandleKeyDown(KeyboardEventArgs args) =>
+        args.Key is "Enter" or " "
+            ? ShowParticipantPopup(Participant)
+            : Task.CompletedTask;
 
     private string GetParticipantInitial() =>
         string.IsNullOrWhiteSpace(Participant.DisplayName)

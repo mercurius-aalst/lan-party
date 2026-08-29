@@ -14,6 +14,7 @@ public sealed class MockRegistrationParityTests
 {
     private static readonly Guid TournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static readonly Guid TeamId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+    private static readonly Guid DefaultRegistrationTeamId = Guid.Parse("21111111-1111-1111-1111-111111111120");
     private static readonly Guid CaptainId = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
     private static readonly Guid MemberId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
 
@@ -126,6 +127,34 @@ public sealed class MockRegistrationParityTests
     }
 
     [Fact]
+    public void DefaultMockPersonaHasACompleteCaptainTeamAndPendingMember()
+    {
+        using var fixture = CreateFixture(teamSize: 2, captainUsername: "mockuser", memberUsername: "mockadmin");
+
+        var teamSummary = fixture.Store.GetCurrentUserTeamSummary("user");
+        var summaryTeam = teamSummary.CaptainedTeams.Single(team => team.Id == DefaultRegistrationTeamId);
+        Assert.Equal(2, summaryTeam.Members.Count);
+
+        var captainTeam = fixture.Store.GetTournament(TournamentId)!.Teams
+            .Single(team => team.Id == DefaultRegistrationTeamId);
+        Assert.Equal("Mock Registration Crew", captainTeam.Name);
+        Assert.Equal(2, captainTeam.Members.Count());
+
+        var registration = fixture.Store.SubmitTeamTournamentRoster(
+            "user",
+            TournamentId,
+            DefaultRegistrationTeamId,
+            new SubmitTeamRosterDTO
+            {
+                TeamId = DefaultRegistrationTeamId,
+                UserIds = [CaptainId, MemberId]
+            });
+
+        Assert.Equal(TournamentRegistrationStatus.PendingConfirmation, registration.Status);
+        Assert.True(fixture.Store.GetCurrentUserTournamentRegistrationState("admin", TournamentId).CanConfirmRoster);
+    }
+
+    [Fact]
     public void ClosedTournamentReturnsScheduleReasonAndBlocksMutations()
     {
         using var fixture = CreateFixture(teamSize: 1, status: TournamentStatus.InProgress);
@@ -141,23 +170,31 @@ public sealed class MockRegistrationParityTests
         Assert.Equal("tournament_not_scheduled", exception.Message);
     }
 
-    private static Fixture CreateFixture(int teamSize, TournamentStatus status = TournamentStatus.Scheduled)
+    private static Fixture CreateFixture(
+        int teamSize,
+        TournamentStatus status = TournamentStatus.Scheduled,
+        string captainUsername = "captain",
+        string memberUsername = "member")
     {
         var root = Path.Combine(Path.GetTempPath(), "mercurius-lan-registration-tests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
-        File.WriteAllText(Path.Combine(root, "backend.json"), BuildFixtureJson(teamSize, status));
+        File.WriteAllText(Path.Combine(root, "backend.json"), BuildFixtureJson(teamSize, status, captainUsername, memberUsername));
 
         var environment = new TestHostEnvironment(root);
         var options = Microsoft.Extensions.Options.Options.Create(new MockBackendOptions { DataFilePath = "backend.json" });
         return new Fixture(root, new MockBackendStore(environment, options));
     }
 
-    private static string BuildFixtureJson(int teamSize, TournamentStatus status)
+    private static string BuildFixtureJson(
+        int teamSize,
+        TournamentStatus status,
+        string captainUsername,
+        string memberUsername)
     {
         var captain = new
         {
             id = CaptainId,
-            username = "captain",
+            username = captainUsername,
             firstname = "Casey",
             lastname = "Captain",
             email = "captain@example.test",
@@ -173,7 +210,7 @@ public sealed class MockRegistrationParityTests
         var member = new
         {
             id = MemberId,
-            username = "member",
+            username = memberUsername,
             firstname = "Mina",
             lastname = "Member",
             email = "member@example.test",

@@ -17,6 +17,14 @@
       invalid team-size submissions before calling the backend.
 - [x] 2.5 Refresh the public tournament and current-user state after successful mutations and keep
       recoverable backend errors visible without optimistic state.
+- [x] 2.6 Revalidate the captured tournament route immediately before every mutation and abort a
+      stale confirmation/dialog action when navigation or parameters changed.
+- [x] 2.7 Validate the selected exact roster separately from candidate-reason discovery, including
+      oversized teams and existing registrations with removed members.
+- [x] 2.8 Show immediate loading states, disable stale registration actions during refresh, and add
+      retry actions for team-summary, team-eligibility, and roster-eligibility failures.
+- [x] 2.9 Refresh both public and authenticated projections after realtime invalidation, preserve or
+      warn about dirty roster drafts, and provide manual refresh coverage for backend event gaps.
 
 ## 3. Privacy and parity
 
@@ -26,9 +34,15 @@
       empty, unauthorized, not-found, and API-error states.
 - [x] 3.3 Keep mock behavior aligned with the live interaction states and remove any active copy that
       directs tournament registration to Google Forms or another external form.
+- [x] 3.4 Seed a default mock captain team with the configured roster size and a pending member
+      persona so the internal workflow is exercisable locally.
 
 ## 4. Validation
 
 - [x] 4.1 Run the relevant contract tests and build the Blazor project from the PR #53 baseline.
 - [x] 4.2 Run `openspec validate issue-42-internal-registration-ui` and complete this checklist.
 - [x] 4.3 Do not claim browser/manual smoke coverage; document it as intentionally skipped.
+- [x] 4.4 Add focused regression coverage for exact roster validation, schedule and ownership gates,
+      pending-confirmation revalidation, and mock fixture transitions. The existing test project has
+      no component-rendering harness, so route-dialog and retry rendering coverage remains covered by
+      guarded component code plus the successful build.

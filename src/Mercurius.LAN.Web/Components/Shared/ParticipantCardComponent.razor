@@ -1,11 +1,19 @@
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div class="participant-overview-card" @onmouseover="() => _showDeleteIcon = true" @onmouseout="() => _showDeleteIcon = false" @onclick="() => ShowParticipantPopup(Participant)">
+<div class="participant-overview-card"
+     role="button"
+     tabindex="0"
+     aria-haspopup="dialog"
+     aria-label="View participant details for @Participant.DisplayName"
+     @onmouseover="() => _showDeleteIcon = true"
+     @onmouseout="() => _showDeleteIcon = false"
+     @onclick="() => ShowParticipantPopup(Participant)"
+     @onkeydown="HandleKeyDown">
     @if(_showDeleteIcon && AllowDeleteFunction)
     {
         <AuthorizeView Roles="admin">
             <Authorized>
-                <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
+                <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
                     <i class="bi bi-trash"></i>
                 </button>
             </Authorized>

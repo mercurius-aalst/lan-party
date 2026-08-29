@@ -48,6 +48,14 @@ registration through explicit confirmation and backend-authoritative refresh.
 - **THEN** the page MUST show the backend error or a recoverable explanation
 - **AND** the page MUST retain the last confirmed registration state
 
+#### Scenario: A mutation becomes stale after navigation
+
+- **WHEN** a user confirms a registration, unregister, roster submission, roster confirmation, or
+  administrative removal action and the tournament route changes while confirmation or latest-state
+  revalidation is in progress
+- **THEN** the page MUST abort the action
+- **AND** the page MUST NOT send the mutation for either the old or the newly displayed tournament
+
 #### Scenario: Mutation succeeds but the follow-up refresh fails
 
 - **WHEN** a registration mutation succeeds but the subsequent tournament or current-user refresh
@@ -77,6 +85,14 @@ selection, roster selection, and review/submit.
 - **AND** the captain MUST remain selected
 - **AND** ineligible members MUST be disabled or clearly marked with their backend reason
 - **AND** the captain MUST NOT progress to review until the local roster constraints pass
+
+#### Scenario: Candidate discovery does not invalidate the selected roster
+
+- **WHEN** a team has more members than the configured team size
+- **THEN** roster eligibility MUST validate only the exact selected roster for progression and submit
+- **AND** eligibility reasons for unselected candidates MUST be shown independently
+- **AND** an existing registration containing a former team member MUST expose that member as
+  removable or clearly explain the repair path
 
 #### Scenario: Captain reviews and submits
 
@@ -121,6 +137,12 @@ captain-owned actions from member-owned state.
 - **THEN** the page MUST ask for explicit confirmation
 - **AND** a successful no-content mutation MUST remove the pending or active team state after refresh
 
+#### Scenario: Registration data is unavailable
+
+- **WHEN** team summary, team eligibility, or roster eligibility cannot be loaded
+- **THEN** the page MUST distinguish the unavailable state from an in-progress loading state
+- **AND** the affected workflow MUST provide a retry action
+
 ### Requirement: Eligibility and state feedback are accessible and privacy-safe
 
 The registration surface MUST show loading, empty, unauthorized, unavailable, and mutation-error
@@ -150,3 +172,17 @@ states while keeping public participant data separate from authenticated registr
 - **WHEN** mock backend mode is enabled
 - **THEN** internal registration actions MUST use the same state semantics as live mode
 - **AND** mock data MUST not require an external registration URL
+
+#### Scenario: Realtime invalidation refreshes both projections
+
+- **WHEN** a supported team or roster realtime event invalidates registration state
+- **THEN** the page MUST refresh the public tournament projection and authenticated registration
+  context
+- **AND** an unsaved roster draft MUST be preserved or explicitly warned about before it is replaced
+
+#### Scenario: Backend event gap remains recoverable
+
+- **WHEN** a backend mutation does not publish a roster invalidation event
+- **THEN** the page MUST provide an explicit refresh action for the authenticated registration
+  context
+- **AND** the UI MUST NOT claim that realtime synchronization is guaranteed for that mutation

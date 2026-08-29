@@ -23,6 +23,11 @@ external registration URL has already been removed from the live tournament mode
   the last confirmed state after errors.
 - Preserve anonymous, live, and mock behavior with loading, empty, unauthorized, unavailable, and
   recoverable error states.
+- Treat route identity and the backend's latest state as prerequisites immediately before every
+  mutation, including after a confirmation dialog has been open.
+- Validate the selected exact roster separately from per-candidate eligibility, provide retryable
+  loading/error states, and refresh public/current-user projections after realtime invalidation
+  without silently discarding an unsaved roster draft.
 
 ## Baseline Coverage From PR #53
 
@@ -46,4 +51,6 @@ authority, and labels the pending context limitation instead of inventing data o
 - Do not expose pending roster data or private account fields in public participant surfaces.
 - Do not invent team context for pending confirmations that is not present in the current backend
   DTO; show the available tournament/member context and identify the contract limitation.
+- Do not claim realtime invalidation is complete for backend mutations that currently publish no
+  roster-confirmation event; provide an explicit refresh path and document the event gap.
 - Do not run browser/manual smoke testing as part of this implementation unless explicitly requested.

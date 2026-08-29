@@ -41,13 +41,17 @@
                 {
                     <span class="registration-loading" role="status">Checking options...</span>
                 }
+                @if(_isAuthenticated && IsRegistrationOpen)
+                {
+                    <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)" @onclick="RetryRegistrationContextAsync">Refresh registration state</button>
+                }
             </div>
 
             @if(_registrationError is not null)
             {
                 <div class="registration-message registration-message--error" role="alert">
                     <p>@_registrationError</p>
-                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="RetryRegistrationContextAsync">Try again</button>
+                    <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRegistrationContextAsync">Try again</button>
                 </div>
             }
 
@@ -59,7 +63,7 @@
                         <p class="registration-message registration-message--success">Your registration is @individualRegistration.Status.ToString().ToLowerInvariant().</p>
                         @if(_registrationState.CanUnregister)
                         {
-                            <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="UnregisterIndividualAsync">Unregister</button>
+                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="UnregisterIndividualAsync">Unregister</button>
                         }
                     }
                     else if(_individualEligibility is null)
@@ -72,7 +76,7 @@
                     }
                     else if(_registrationState?.CanRegisterIndividual == true)
                     {
-                        <button type="button" class="button-primary" disabled="@_isSubmitting" @onclick="RegisterIndividualAsync">Register as an individual</button>
+                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">Register as an individual</button>
                     }
                     else
                     {
@@ -85,12 +89,33 @@
                 <div class="registration-workflow registration-workflow--team">
                     @if(_teamError is not null)
                     {
-                        <p class="registration-message registration-message--error" role="alert">@_teamError</p>
+                        <div class="registration-message registration-message--error" role="alert">
+                            <p>@_teamError</p>
+                            @if(_teamSummaryUnavailable || _teamEligibilityUnavailable)
+                            {
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryTeamRegistrationAsync">Retry team checks</button>
+                            }
+                            @if(_rosterEligibilityUnavailable)
+                            {
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="RetryRosterEligibilityAsync">Retry roster check</button>
+                            }
+                            @if(!_teamSummaryUnavailable && !_teamEligibilityUnavailable && !_rosterEligibilityUnavailable)
+                            {
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRegistrationContextAsync">Refresh registration state</button>
+                            }
+                        </div>
                     }
 
                     @if(_isLoadingTeams)
                     {
                         <p class="registration-message" role="status">Loading your captained teams...</p>
+                    }
+                    else if(_teamSummaryUnavailable)
+                    {
+                        <div class="registration-message registration-message--error" role="alert">
+                            <p>Your team summary is unavailable, so team registration cannot be loaded yet.</p>
+                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryTeamRegistrationAsync">Retry team summary</button>
+                        </div>
                     }
                     else if(!CaptainedTeams.Any())
                     {
@@ -136,7 +161,7 @@
                                                     role="option"
                                                     aria-selected="@(team.Id == _selectedTeamId)"
                                                     aria-describedby="@(teamEligibility is { Eligible: false } ? teamReasonId : null)"
-                                                    disabled="@(!teamSelectable || _isSubmitting)"
+                                                    disabled="@(!teamSelectable || _isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)"
                                                     @onclick="() => SelectTeamAsync(team.Id)">
                                                 <span>
                                                     <strong>@team.Name</strong>
@@ -166,10 +191,14 @@
                                     {
                                         <p class="registration-message registration-message--warning">Select an eligible team to continue.</p>
                                     }
-                                    else if(!CanAdvanceFromTeamSelection)
-                                    {
-                                        <p class="registration-message registration-message--warning">This team cannot be used for this tournament: @GetReasonText(_selectedTeamEligibility?.ReasonCodes ?? [])</p>
-                                    }
+                                        else if(!CanAdvanceFromTeamSelection)
+                                        {
+                                            <p class="registration-message registration-message--warning">This team cannot be used for this tournament: @GetReasonText(_selectedTeamEligibility?.ReasonCodes ?? [])</p>
+                                        }
+                                        @if(_teamEligibilityUnavailable && !_isLoadingTeams)
+                                        {
+                                            <p class="registration-message registration-message--error" role="alert">Team eligibility is unavailable. Retry the team checks before continuing.</p>
+                                        }
                                 </div>
                                 </MudStep>
 
@@ -207,23 +236,34 @@
                                             <legend>Roster members</legend>
                                             <p class="registration-help">The captain must remain selected. A checked member with a blocking reason can be removed, but cannot be added back until eligible.</p>
                                             <div class="registration-roster-list">
-                                                @foreach(var member in SelectedTeam.Members)
+                                                @foreach(var member in EditableRosterCandidates)
                                                 {
                                                     var candidate = GetRosterCandidate(member.Id);
                                                     var reasonId = $"roster-reason-{member.Id:N}";
                                                     var selected = _selectedRosterUserIds.Contains(member.Id);
+                                                    var isCurrentTeamMember = IsCurrentTeamMember(member.Id);
+                                                    var isCaptain = member.Id == SelectedTeam.CaptainUserId;
                                                     var blocked = candidate is { Eligible: false } && !IsExistingRosterConflictAllowed(member.Id, candidate);
                                                     <label class="registration-roster-member @(blocked ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
                                                         <input type="checkbox"
                                                                checked="@selected"
-                                                               disabled="@(_isSubmitting || member.Id == SelectedTeam.CaptainUserId || (!selected && blocked))"
-                                                               aria-describedby="@(candidate is { Eligible: false } ? reasonId : null)"
+                                                               disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || isCaptain || (!selected && blocked))"
+                                                               aria-describedby="@((!isCurrentTeamMember || candidate is { Eligible: false }) ? reasonId : null)"
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
-                                                            <strong>@GetUserLabel(member)</strong>@(member.Id == SelectedTeam.CaptainUserId ? " (captain)" : string.Empty)
-                                                            @if(candidate is { Eligible: false })
+                                                            <strong>@GetUserLabel(member)</strong>@(isCaptain ? " (captain)" : string.Empty)
+                                                            @if(!isCurrentTeamMember || candidate is { Eligible: false })
                                                             {
-                                                                <small id="@reasonId" class="registration-candidate-reason">@GetReasonText(candidate.ReasonCodes)</small>
+                                                                <small id="@reasonId" class="registration-candidate-reason">
+                                                                    @if(!isCurrentTeamMember)
+                                                                    {
+                                                                        <span>Former team member; remove before saving this roster.</span>
+                                                                    }
+                                                                    @if(candidate is { Eligible: false })
+                                                                    {
+                                                                        <span>@GetReasonText(candidate.ReasonCodes)</span>
+                                                                    }
+                                                                </small>
                                                             }
                                                             else if(_isLoadingRoster)
                                                             {
@@ -235,7 +275,18 @@
                                             </div>
                                         </fieldset>
 
-                                        @if(RequiredTeamSize <= 0)
+                                        @if(_isLoadingRoster)
+                                        {
+                                            <p class="registration-message" role="status">Checking the selected roster with the backend...</p>
+                                        }
+                                        else if(_rosterEligibilityUnavailable)
+                                        {
+                                            <div class="registration-message registration-message--error" role="alert">
+                                                <p>Selected roster eligibility is unavailable. The roster cannot be submitted until it is checked.</p>
+                                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRosterEligibilityAsync">Retry roster check</button>
+                                            </div>
+                                        }
+                                        else if(RequiredTeamSize <= 0)
                                         {
                                             <p class="registration-message registration-message--warning">The tournament has no valid team-size requirement.</p>
                                         }
@@ -267,7 +318,7 @@
                                             </div>
                                             <div>
                                                 <dt>Selected roster</dt>
-                                                <dd>@string.Join(", ", SelectedTeam.Members.Where(member => _selectedRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
+                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => _selectedRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
                                             </div>
                                             <div>
                                                 <dt>Confirmation</dt>
@@ -296,18 +347,18 @@
                                     <div>
                                         @if(_activeTeamStep > 0)
                                         {
-                                            <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="PreviousTeamStepAsync">Back</button>
+                                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="PreviousTeamStepAsync">Back</button>
                                         }
                                         @if(_activeTeamStep < 2)
                                         {
-                                            <button type="button" class="button-primary" disabled="@(!CanAdvanceTeamStep || _isSubmitting)" @onclick="NextTeamStepAsync">Next</button>
+                                            <button type="button" class="button-primary" disabled="@(!CanAdvanceTeamStep || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="NextTeamStepAsync">Next</button>
                                         }
                                         else
                                         {
-                                            <button type="button" class="button-primary" disabled="@(!CanSubmitRoster || _isSubmitting)" @onclick="SubmitTeamRosterAsync">@(HasCaptainManagedRegistration ? "Save roster changes" : "Confirm team registration")</button>
+                                            <button type="button" class="button-primary" disabled="@(!CanSubmitRoster || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="SubmitTeamRosterAsync">@(HasCaptainManagedRegistration ? "Save roster changes" : "Confirm team registration")</button>
                                         }
                                     </div>
-                                    <button type="button" class="button-link" disabled="@_isSubmitting" @onclick="ResetTeamStepper">Start over</button>
+                                    <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">Start over</button>
                                 </div>
                             </ActionContent>
                         </MudStepper>
@@ -315,7 +366,7 @@
                         @if(CanUnregisterSelectedTeam)
                         {
                             <div class="registration-actions">
-                                <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="UnregisterTeamAsync">Unregister team</button>
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="UnregisterTeamAsync">Unregister team</button>
                             </div>
                         }
                     }
@@ -348,7 +399,7 @@
                         <p>Your place for <strong>@GetUserLabel(pending.User)</strong> in <strong>@Tournament.Name</strong> is waiting for your confirmation.</p>
                         <small class="registration-help">The current API does not include the team name in this pending state. Confirming is still subject to the backend's latest roster and tournament checks.</small>
                     </div>
-                    <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting)" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
+                    <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
                 </div>
             }
         </section>
@@ -393,7 +444,7 @@
                                     <strong>@registrationLabel</strong>
                                     <span>@registration.Kind · @registration.Status</span>
                                 </div>
-                                <button type="button" class="button-secondary" disabled="@(_pendingAdminRemovalRegistrationId.HasValue)" @onclick="() => RemoveAdminRegistrationAsync(registration)">Remove</button>
+                                <button type="button" class="button-secondary" disabled="@(_pendingAdminRemovalRegistrationId.HasValue || _isLoadingRegistration)" @onclick="() => RemoveAdminRegistrationAsync(registration)">Remove</button>
                             </div>
                         }
                     </div>
@@ -405,12 +456,18 @@
     @if(_selectedParticipant is not null)
     {
         <div class="participants-modal-overlay" @onclick="HidePopup">
-            <div class="participants-modal-dialog participants-modal-dialog--detail" @onclick:stopPropagation>
+            <div class="participants-modal-dialog participants-modal-dialog--detail"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="participant-details-title"
+                 aria-describedby="participant-details-summary"
+                 tabindex="-1"
+                 @onclick:stopPropagation>
                 <button type="button" class="participants-modal-close" aria-label="Close participant details" @onclick="HidePopup">&times;</button>
                 <div class="participants-modal-header">
                     <span class="section-eyebrow">Participant</span>
-                    <h3>@_selectedParticipant.DisplayName</h3>
-                    <p>@GetParticipantModalSummary()</p>
+                    <h3 id="participant-details-title">@_selectedParticipant.DisplayName</h3>
+                    <p id="participant-details-summary">@GetParticipantModalSummary()</p>
                 </div>
                 <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" />
             </div>

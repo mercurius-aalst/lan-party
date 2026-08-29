@@ -27,6 +27,7 @@ internal sealed class MockBackendStore
         Converters = { new JsonStringEnumConverter() }
     };
     private static readonly Guid FeaturedDoubleEliminationTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
+    private static readonly Guid DefaultRegistrationFixtureTeamId = Guid.Parse("21111111-1111-1111-1111-111111111120");
     private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
 
@@ -40,6 +41,7 @@ internal sealed class MockBackendStore
         _dataFilePath = Path.Combine(environment.ContentRootPath, options.Value.DataFilePath);
         _document = LoadDocument(_dataFilePath);
         SeedFeaturedDoubleEliminationFixture();
+        SeedDefaultRegistrationFixture();
         InitializeRegistrationDetails();
     }
 
@@ -1585,6 +1587,61 @@ internal sealed class MockBackendStore
         }
     }
 
+    private void SeedDefaultRegistrationFixture()
+    {
+        var tournament = _document.Tournaments
+            .Where(candidate =>
+                candidate.Status == TournamentStatus.Scheduled &&
+                candidate.ParticipationMode == ParticipationMode.Team &&
+                candidate.TeamSize is > 0)
+            .OrderBy(candidate => candidate.PlannedStartTime)
+            .FirstOrDefault();
+        var captain = _document.Users.FirstOrDefault(user =>
+            !user.IsDeleted &&
+            string.Equals(user.Username, "mockuser", StringComparison.OrdinalIgnoreCase));
+        if(tournament is null || captain is null || tournament.TeamSize is not > 0)
+            return;
+
+        var existingTeam = _document.Teams.FirstOrDefault(team => team.Id == DefaultRegistrationFixtureTeamId);
+        var requiredTeammateCount = tournament.TeamSize.Value - 1;
+        var pendingMember = _document.Users.FirstOrDefault(user =>
+            !user.IsDeleted &&
+            string.Equals(user.Username, "mockadmin", StringComparison.OrdinalIgnoreCase) &&
+            user.Id != captain.Id);
+        var teammates = _document.Users
+            .Where(user => !user.IsDeleted && user.Id != captain.Id && user.Id != pendingMember?.Id)
+            .Take(Math.Max(requiredTeammateCount - (pendingMember is null ? 0 : 1), 0))
+            .Prepend(pendingMember)
+            .Where(user => user is not null)
+            .Cast<UserDTO>()
+            .Take(requiredTeammateCount)
+            .ToList();
+        if(teammates.Count != requiredTeammateCount)
+            return;
+
+        var team = existingTeam ?? new Team
+        {
+            Id = DefaultRegistrationFixtureTeamId,
+            Name = "Mock Registration Crew",
+            TeamInvites = []
+        };
+        team.Name = "Mock Registration Crew";
+        team.CaptainUserId = captain.Id;
+        team.Members = new[] { PublicUserDTO.FromUser(captain) }
+            .Concat(teammates.Select(PublicUserDTO.FromUser))
+            .ToList();
+        team.TeamInvites = [];
+        AddOrReplaceTeam(team);
+
+        var tournamentTeams = tournament.Teams.ToList();
+        var tournamentTeamIndex = tournamentTeams.FindIndex(candidate => candidate.Id == team.Id);
+        if(tournamentTeamIndex >= 0)
+            tournamentTeams[tournamentTeamIndex] = Clone(team)!;
+        else
+            tournamentTeams.Add(Clone(team)!);
+        tournament.Teams = tournamentTeams;
+    }
+
     private static List<Team> BuildFeaturedDoubleEliminationTeams()
     {
         return
@@ -1976,10 +2033,14 @@ internal sealed class MockBackendStore
         var captainedId = Guid.Parse("23111111-1111-1111-1111-111111111120");
         var memberId = Guid.Parse("23111111-1111-1111-1111-111111111121");
         var inviteId = Guid.Parse("23111111-1111-1111-1111-111111111122");
+        var fallbackUsers = _document.Users
+            .Where(user => !user.IsDeleted && user.Id != currentUser.Id)
+            .ToList();
+        var teammate = _document.Users.FirstOrDefault(user => user.Username == "track1")
+            ?? fallbackUsers.FirstOrDefault();
 
-        if(_document.Teams.All(team => team.Id != captainedId))
+        if(_document.Teams.All(team => team.Id != captainedId) && teammate is not null)
         {
-            var teammate = _document.Users.First(user => user.Username == "track1");
             AddOrReplaceTeam(new Team
             {
                 Id = captainedId,
@@ -2001,28 +2062,31 @@ internal sealed class MockBackendStore
             });
         }
 
-        if(_document.Teams.All(team => team.Id != memberId))
+        var fallbackCaptain = _document.Users.FirstOrDefault(user => user.Username == "binary1")
+            ?? fallbackUsers.FirstOrDefault(user => user.Id != teammate?.Id)
+            ?? teammate;
+        if(_document.Teams.All(team => team.Id != memberId) && fallbackCaptain is not null)
         {
-            var captain = _document.Users.First(user => user.Username == "binary1");
             AddOrReplaceTeam(new Team
             {
                 Id = memberId,
                 Name = "Roster Lock",
-                CaptainUserId = captain.Id,
-                Members = [PublicUserDTO.FromUser(captain), ToPublicUser(currentUser)],
+                CaptainUserId = fallbackCaptain.Id,
+                Members = [PublicUserDTO.FromUser(fallbackCaptain), ToPublicUser(currentUser)],
                 TeamInvites = []
             });
         }
 
-        if(_document.Teams.All(team => team.Id != inviteId))
+        var inviteCaptain = _document.Users.FirstOrDefault(user => user.Username == "gamma1")
+            ?? fallbackCaptain;
+        if(_document.Teams.All(team => team.Id != inviteId) && inviteCaptain is not null)
         {
-            var captain = _document.Users.First(user => user.Username == "gamma1");
             AddOrReplaceTeam(new Team
             {
                 Id = inviteId,
                 Name = "Pending Pixels",
-                CaptainUserId = captain.Id,
-                Members = [PublicUserDTO.FromUser(captain)],
+                CaptainUserId = inviteCaptain.Id,
+                Members = [PublicUserDTO.FromUser(inviteCaptain)],
                 TeamInvites =
                 [
                     new TeamInvite
