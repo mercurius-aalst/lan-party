@@ -154,6 +154,39 @@ public interface ILANClient
         Guid matchId,
         CancellationToken cancellationToken = default);
 
+    [Get("/v1/lan/matches/{matchId}/me")]
+    Task<MatchActionStateDTO> GetMatchActionStateAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default);
+
+    [Post("/v1/lan/matches/{matchId}/confirm-ended")]
+    Task<Match> ConfirmMatchEndedAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default);
+
+    [Put("/v1/lan/matches/{matchId}/score")]
+    Task<Match> SubmitMatchScoreAsync(
+        Guid matchId,
+        [Body] SubmitMatchScoreDTO request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/v1/lan/matches/{matchId}/forfeit")]
+    Task<Match> ForfeitMatchAsync(
+        Guid matchId,
+        [Body] ForfeitMatchDTO request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/v1/lan/matches/{matchId}/resolve")]
+    Task<Match> ResolveMatchAsync(
+        Guid matchId,
+        [Body] ResolveMatchDTO request,
+        CancellationToken cancellationToken = default);
+
+    [Post("/v1/lan/matches/{matchId}/reverse")]
+    Task<Match> ReverseMatchAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default);
+
     [Put("/v1/lan/matches/{matchId}")]
     Task<Match> UpdateMatchAsync(
         Guid matchId,

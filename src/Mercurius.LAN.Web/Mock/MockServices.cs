@@ -87,6 +87,39 @@ internal sealed class MockTournamentService : ITournamentService
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetMatch(matchId));
 
+    public Task<MatchActionStateDTO> GetMatchActionStateAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetMatchActionState(GetCurrentPersona(), matchId));
+
+    public Task<Match> ConfirmMatchEndedAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ConfirmMatchEnded(GetCurrentPersona(), matchId));
+
+    public Task<Match> SubmitMatchScoreAsync(
+        Guid matchId,
+        SubmitMatchScoreDTO request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.SubmitMatchScore(GetCurrentPersona(), matchId, request));
+
+    public Task<Match> ForfeitMatchAsync(
+        Guid matchId,
+        ForfeitMatchDTO request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ForfeitMatch(GetCurrentPersona(), matchId, request));
+
+    public Task<Match> ResolveMatchAsync(
+        Guid matchId,
+        ResolveMatchDTO request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ResolveMatch(GetCurrentPersona(), matchId, request));
+
+    public Task<Match> ReverseMatchAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.ReverseMatch(GetCurrentPersona(), matchId));
+
     public Task<Match> UpdateMatchScoresAsync(
         Guid matchId,
         UpdateMatchDTO updateMatchDTO,

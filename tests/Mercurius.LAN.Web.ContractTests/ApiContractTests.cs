@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Tournaments;
@@ -108,6 +109,39 @@ public sealed class ApiContractTests
 
         Assert.Equal(HttpMethod.Get, handler.Request!.Method);
         Assert.Equal($"/v1/lan/matches/{matchId}", handler.Request.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task MatchLifecycleRoutes_UseExplicitParticipantAndAdminActions()
+    {
+        var matchId = Guid.Parse("77777777-7777-7777-7777-777777777777");
+        var handler = new RecordingHandler($"{{\"match\":{{\"id\":\"{matchId}\",\"lifecycleState\":\"AwaitingScore\"}},\"authorizedParticipant\":\"Participant1\",\"canConfirmEnded\":false,\"canSubmitScore\":true,\"canForfeit\":true}}");
+        using var httpClient = CreateHttpClient(handler);
+        var client = RestService.For<ILANClient>(httpClient, CreateRefitSettings());
+
+        await client.GetMatchActionStateAsync(matchId);
+        Assert.Equal(HttpMethod.Get, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/me", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ConfirmMatchEndedAsync(matchId);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/confirm-ended", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.SubmitMatchScoreAsync(matchId, new SubmitMatchScoreDTO { Participant1Score = 2, Participant2Score = 1 });
+        Assert.Equal(HttpMethod.Put, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/score", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = MatchParticipantSide.Participant1 });
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/forfeit", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ResolveMatchAsync(matchId, new ResolveMatchDTO { Participant1Score = 2, Participant2Score = 0 });
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/resolve", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ReverseMatchAsync(matchId);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/reverse", handler.Request.RequestUri!.AbsolutePath);
     }
 
     [Fact]

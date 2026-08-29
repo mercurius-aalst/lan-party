@@ -8,12 +8,12 @@
 
 <CascadingValue Value="Match">
     <div class="match-modal-overlay" @onclick="OnClose">
-        <div class="match-modal-dialog" @onclick:stopPropagation>
+        <div class="match-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="match-dialog-title" @onclick:stopPropagation>
             <button type="button" class="match-modal-close" aria-label="Close match details" @onclick="OnClose">&times;</button>
 
             <div class="match-modal-header">
                 <span class="section-eyebrow">Match details</span>
-                <div class="match-header">
+                <h2 id="match-dialog-title" class="match-header">
                     <span class="match-header-name">
                         @if(HeaderParticipant1?.Team is { } team1)
                         {
@@ -23,7 +23,7 @@
                         {
                             @Participant1Name
                         }
-                        <span class="match-header-score">[@(Match.Participant1Score ?? 0)]</span>
+                        <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "—")]</span>
                     </span>
                     <span class="match-header-vs">vs</span>
                     <span class="match-header-name">
@@ -35,9 +35,9 @@
                         {
                             @Participant2Name
                         }
-                        <span class="match-header-score">[@(Match.Participant2Score ?? 0)]</span>
+                        <span class="match-header-score">[@(Match.Participant2Score?.ToString() ?? "—")]</span>
                     </span>
-                </div>
+                </h2>
                 <div class="match-summary-badges">
                     <span class="badge">@GetStageLabel()</span>
                     <span class="badge">@GetRoundLabel()</span>
@@ -50,69 +50,205 @@
                 </div>
             </div>
 
-            <AuthorizeView Roles="admin">
-                <Authorized>
-                    <div class="match-score-editor">
-                        <div class="match-score-editor-copy">
-                            <span class="section-eyebrow">Admin</span>
-                            <h3>Update scoreline</h3>
-                        </div>
-                        <div class="score-inputs">
-                            <div class="match-score-field">
-                                <label for="participant1-score">@Participant1Name</label>
-                                <input id="participant1-score" type="number" class="form-control score-input" @bind="Match.Participant1Score" />
-                            </div>
-                            <div class="match-score-field">
-                                <label for="participant2-score">@Participant2Name</label>
-                                <input id="participant2-score" type="number" class="form-control score-input" @bind="Match.Participant2Score" />
-                            </div>
-                        </div>
+            <section class="match-lifecycle-panel" aria-live="polite">
+                <div>
+                    <span class="section-eyebrow">Authoritative result state</span>
+                    <h3>@GetStatusLabel()</h3>
+                    <p>@GetStatusDescription()</p>
+                </div>
+                @if(!string.IsNullOrWhiteSpace(GetDeadlineLabel()))
+                {
+                    <div class="match-deadline" aria-label="Score window deadline">
+                        <span>Deadline</span>
+                        <strong>@GetDeadlineLabel()</strong>
+                        <small>@GetDeadlineRemainingLabel()</small>
                     </div>
-                </Authorized>
-            </AuthorizeView>
+                }
+            </section>
+
+            @if(_isLoading && !_hasLoaded)
+            {
+                <div class="match-state-message" role="status">Loading the latest match state...</div>
+            }
+            else if(_errorMessage is not null)
+            {
+                <div class="match-state-message match-state-message--error" role="alert">
+                    <p>@_errorMessage</p>
+                    <button type="button" class="button-secondary" disabled="@_isLoading" @onclick="RetryAsync">Retry</button>
+                </div>
+            }
+
+            @if(_isLoading && _hasLoaded)
+            {
+                <div class="match-refresh-message" role="status">Refreshing the authoritative state...</div>
+            }
 
             <div class="participants-grid">
                 <section class="@GetCardClass(Participant1Id)">
                     @if(IsWinner(Participant1Id) || (WinnerId != null && Participant1Id != null))
                     {
                         <div class="match-participant-panel-header">
-                        @if(IsWinner(Participant1Id))
-                        {
-                            <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
-                        }
-                        else if(WinnerId != null && Participant1Id != null)
-                        {
-                            <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
-                        }
+                            @if(IsWinner(Participant1Id))
+                            {
+                                <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                            }
+                            else
+                            {
+                                <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                            }
                         </div>
                     }
                     <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
+                    @if(_actionState is not null)
+                    {
+                        <div class="match-confirmation-status">
+                            <span>Match ended</span>
+                            <strong>@(Match.Participant1Ended ? "Confirmed" : "Waiting")</strong>
+                        </div>
+                    }
                 </section>
                 <section class="@GetCardClass(Participant2Id)">
                     @if(IsWinner(Participant2Id) || (WinnerId != null && Participant2Id != null))
                     {
                         <div class="match-participant-panel-header">
-                        @if(IsWinner(Participant2Id))
-                        {
-                            <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
-                        }
-                        else if(WinnerId != null && Participant2Id != null)
-                        {
-                            <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
-                        }
+                            @if(IsWinner(Participant2Id))
+                            {
+                                <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                            }
+                            else
+                            {
+                                <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                            }
                         </div>
                     }
                     <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
+                    @if(_actionState is not null)
+                    {
+                        <div class="match-confirmation-status">
+                            <span>Match ended</span>
+                            <strong>@(Match.Participant2Ended ? "Confirmed" : "Waiting")</strong>
+                        </div>
+                    }
                 </section>
             </div>
 
+            @if(_requiresAuthentication)
+            {
+                <div class="match-state-message" role="note">
+                    <p>Sign in to confirm your side, report a score, or forfeit. Match results remain publicly viewable.</p>
+                    <a class="button-secondary" href="/account/login">Sign in</a>
+                </div>
+            }
+            else if(_actionState?.AuthorizedParticipant.HasValue == true)
+            {
+                <section class="match-action-panel" aria-label="Your match actions">
+                    <span class="section-eyebrow">@ActionSubjectLabel</span>
+                    @if(_actionState.CanConfirmEnded)
+                    {
+                        <p>Confirm that the match has ended to unlock score reporting.</p>
+                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="ConfirmEndedAsync">Confirm match ended</button>
+                    }
+                    @if(ShowPrivateReports && (PrivateReport1.HasValue || PrivateReport2.HasValue))
+                    {
+                        <div class="match-reports" aria-label="Private score reports">
+                            @if(_actionState.AuthorizedParticipant.HasValue)
+                            {
+                                <span>Your report: @FormatReport(OwnReport1, OwnReport2)</span>
+                                <span>Opponent report: @FormatReport(OpponentReport1, OpponentReport2)</span>
+                            }
+                            else
+                            {
+                                <span>Participant 1 report: @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
+                                <span>Participant 2 report: @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
+                            }
+                        </div>
+                    }
+                    @if(_actionState.CanSubmitScore)
+                    {
+                        <div class="match-score-editor">
+                            <div class="match-score-editor-copy">
+                                <h3>Report the final score</h3>
+                                <p>Use the exact decisive score for this match format.</p>
+                            </div>
+                            <div class="score-inputs">
+                                <div class="match-score-field">
+                                    <label for="participant1-score">@Participant1Name</label>
+                                    <input id="participant1-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant1Score" />
+                                </div>
+                                <div class="match-score-field">
+                                    <label for="participant2-score">@Participant2Name</label>
+                                    <input id="participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
+                                </div>
+                            </div>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="SubmitScoreAsync">Submit score report</button>
+                        </div>
+                    }
+                    @if(_actionState.CanForfeit)
+                    {
+                        @if(!_forfeitConfirmationRequested)
+                        {
+                            <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _forfeitConfirmationRequested = true)">Forfeit your side</button>
+                        }
+                        else
+                        {
+                            <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm match forfeit" aria-modal="true">
+                                <strong>Forfeit this match?</strong>
+                                <p>This is recorded as an official result and cannot be undone by you.</p>
+                                <div class="match-modal-actions">
+                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _forfeitConfirmationRequested = false)">Keep playing</button>
+                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ForfeitOwnSideAsync">Confirm forfeit</button>
+                                </div>
+                            </div>
+                        }
+                    }
+                </section>
+            }
+            else if(_actionState is not null)
+            {
+                <div class="match-state-message" role="note">
+                    <p>This match is read-only for your account. Only the assigned player or team captain can submit result actions.</p>
+                </div>
+            }
+
             <AuthorizeView Roles="admin">
                 <Authorized>
-                    <div class="match-modal-actions">
-                        <button type="button" class="button-primary" @onclick="SaveScoresAsync">Save scores</button>
-                    </div>
+                    <section class="match-action-panel match-action-panel--admin" aria-label="Administrator match actions">
+                        <span class="section-eyebrow">Administrator controls</span>
+                        @if(IsAdminResolutionState())
+                        {
+                            <p>Resolve the dispute with the verified decisive score. The selected result becomes official.</p>
+                            <div class="score-inputs">
+                                <div class="match-score-field">
+                                    <label for="admin-participant1-score">@Participant1Name</label>
+                                    <input id="admin-participant1-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant1Score" />
+                                </div>
+                                <div class="match-score-field">
+                                    <label for="admin-participant2-score">@Participant2Name</label>
+                                    <input id="admin-participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
+                                </div>
+                            </div>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="ResolveAsync">Resolve result</button>
+                        }
+                        @if(_actionState is not null && Match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited or MatchLifecycleState.AdminResolutionRequired or MatchLifecycleState.Reversed))
+                        {
+                            <div class="match-admin-forfeit-actions">
+                                <span>Record a forfeit</span>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => ForfeitSideAsAdminAsync(MatchParticipantSide.Participant1))">Forfeit @Participant1Name</button>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => ForfeitSideAsAdminAsync(MatchParticipantSide.Participant2))">Forfeit @Participant2Name</button>
+                            </div>
+                        }
+                        @if(Match.LifecycleState is MatchLifecycleState.Completed or MatchLifecycleState.Forfeited)
+                        {
+                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoading)" @onclick="ReverseAsync">Reverse official result</button>
+                        }
+                    </section>
                 </Authorized>
             </AuthorizeView>
+
+            @if(_isSubmitting)
+            {
+                <div class="match-refresh-message" role="status">Saving and reloading the authoritative result...</div>
+            }
         </div>
     </div>
 </CascadingValue>

@@ -1,0 +1,4 @@
+schema: spec-driven
+
+change-id: issue-44-match-result-lifecycle-ui
+summary: Replace administrative-only match score editing with a player result lifecycle UI.
