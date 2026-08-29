@@ -91,8 +91,18 @@ selection, roster selection, and review/submit.
 - **WHEN** a team has more members than the configured team size
 - **THEN** roster eligibility MUST validate only the exact selected roster for progression and submit
 - **AND** eligibility reasons for unselected candidates MUST be shown independently
+- **AND** candidate-reason requests MUST be bounded to the backend maximum of 50 user ids per
+  request and merged without dropping or duplicating candidates
 - **AND** an existing registration containing a former team member MUST expose that member as
   removable or clearly explain the repair path
+
+#### Scenario: Candidate discovery handles an oversized team projection
+
+- **WHEN** the current team projection contains more than 50 possible roster candidates
+- **THEN** the page MUST split candidate-reason discovery into backend-safe requests of at most 50
+  user ids each
+- **AND** the selected exact roster MUST still be validated separately and remain eligible to
+  advance when it satisfies the configured team size
 
 #### Scenario: Captain reviews and submits
 
@@ -107,6 +117,15 @@ selection, roster selection, and review/submit.
 - **THEN** the page MUST load its current roster into the Stepper
 - **AND** the captain MUST be able to submit an edited roster when backend rules allow it
 - **AND** the UI MUST not block editing solely because the team is already registered
+
+#### Scenario: Captain edits after captain transfer
+
+- **WHEN** the saved roster identifies a former captain but the current team captain is a different
+  member
+- **THEN** the page MUST include the current captain in the selected roster before validation
+- **AND** when the exact team size requires a removal, the former captain SHOULD be removed first
+  while remaining roster candidates stay removable
+- **AND** the page MUST explain the adjustment and require the captain to review it before saving
 
 ### Requirement: Roster confirmation and ownership state are clear
 

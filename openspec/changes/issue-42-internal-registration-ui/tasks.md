@@ -28,6 +28,10 @@
 - [x] 2.10 Consume the authenticated current-team registration context for pending and active
        roster states, retain active-field compatibility fallback, and show non-captain roster status
        without self-unregister controls.
+- [x] 2.11 Bound per-candidate roster eligibility discovery to 50 user ids per backend request and
+       merge chunk results deterministically, including former roster members.
+- [x] 2.12 Reconcile an existing roster after captain transfer by selecting the current captain,
+       removing the former captain when exact size requires it, and warning the captain to review.
 
 ## 3. Privacy and parity
 
@@ -50,4 +54,6 @@
       no component-rendering harness, so route-dialog and retry rendering coverage remains covered by
       guarded component code plus the successful build.
 - [x] 4.5 Validate same-tournament parameter changes and current-team registration deserialization/
-      mock parity without exposing pending data through public participant projections.
+       mock parity without exposing pending data through public participant projections.
+- [x] 4.6 Add regression coverage for saved-but-unrefreshed mutation state, 51-member candidate
+       discovery batching, and captain-transfer reconciliation including TeamSize=1.
