@@ -1,6 +1,8 @@
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Options;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -111,6 +113,39 @@ public sealed class MockMatchLifecycleTests
         Assert.Equal(state.Match.Participant2Score, publicMatch.Participant2Score);
         Assert.Null(publicMatch.Participant1ReportedScore1);
         Assert.Null(publicMatch.Participant2ReportedScore1);
+    }
+
+    [Fact]
+    public async Task MockAnonymousLoginAndUnauthenticatedRequestsStayAnonymousInTournamentService()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var anonymousPrincipal = DependencyExtensions.BuildMockPrincipal("anonymous", store);
+        Assert.False(anonymousPrincipal.Identity?.IsAuthenticated);
+        Assert.Equal("anonymous", anonymousPrincipal.FindFirst("mock_persona")?.Value);
+
+        var loginContext = new DefaultHttpContext { User = anonymousPrincipal };
+        var loginService = new MockTournamentService(store, new HttpContextAccessor { HttpContext = loginContext });
+        var loginState = await loginService.GetMatchActionStateAsync(FeaturedGrandFinalId);
+
+        var unauthenticatedContext = new DefaultHttpContext();
+        var unauthenticatedService = new MockTournamentService(
+            store,
+            new HttpContextAccessor { HttpContext = unauthenticatedContext });
+        var unauthenticatedState = await unauthenticatedService.GetMatchActionStateAsync(FeaturedGrandFinalId);
+
+        Assert.Null(loginState.AuthorizedParticipant);
+        Assert.Null(loginState.Participant1ReportedScore1);
+        Assert.Null(loginState.Participant2ReportedScore1);
+        Assert.Null(unauthenticatedState.AuthorizedParticipant);
+        Assert.Null(unauthenticatedState.Participant1ReportedScore1);
+        Assert.Null(unauthenticatedState.Participant2ReportedScore1);
     }
 
     private static string FindRepositoryRoot()

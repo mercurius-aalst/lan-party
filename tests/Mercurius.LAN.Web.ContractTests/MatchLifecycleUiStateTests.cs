@@ -127,6 +127,39 @@ public sealed class MatchLifecycleUiStateTests
         Assert.Equal(3, preserved.ResultVersion);
     }
 
+    [Fact]
+    public void PublicFallbackRefresh_IsPropagatedAsTheFreshParentProjection()
+    {
+        var matchId = Guid.NewGuid();
+        var staleSelectedMatch = new Match
+        {
+            Id = matchId,
+            LifecycleState = MatchLifecycleState.ScoreConfirmation,
+            ResultVersion = 4,
+            Participant1Score = 1,
+            Participant2Score = 0
+        };
+        var publicMatch = new Match
+        {
+            Id = matchId,
+            LifecycleState = MatchLifecycleState.Completed,
+            ResultVersion = 5,
+            Participant1Score = 2,
+            Participant2Score = 1
+        };
+        var tournament = new TournamentExtended { Matches = [staleSelectedMatch] };
+
+        var selected = TournamentDetail.ApplyRefreshedMatchProjection(
+            tournament,
+            staleSelectedMatch,
+            publicMatch);
+
+        Assert.Same(publicMatch, selected);
+        Assert.Same(publicMatch, tournament.Matches.Single());
+        Assert.Equal(2, selected!.Participant1Score);
+        Assert.Equal(1, selected.Participant2Score);
+    }
+
     private static MatchActionStateDTO CreateActionState(MatchParticipantSide? authorizedParticipant = null) => new()
     {
         Match = new Match { Id = Guid.NewGuid() },

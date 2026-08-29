@@ -213,8 +213,11 @@ internal sealed class MockTournamentService : ITournamentService
 
     private string GetCurrentPersona()
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }
 
@@ -298,8 +301,11 @@ internal sealed class MockTeamService : ITeamService
 
     private string GetCurrentPersona()
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }
 
@@ -464,7 +470,10 @@ internal sealed class MockUserClient : IUserClient
 
     private string GetCurrentPersona()
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }

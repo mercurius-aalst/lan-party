@@ -562,6 +562,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 return;
 
             Match = latestState.Match;
+            _freshMatchProjection = Match;
             _actionState = latestState;
             _hasFreshActionState = true;
             if(!capability(latestState))
@@ -575,10 +576,15 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 return;
 
             Match = result;
+            _freshMatchProjection = Match;
             var refreshed = await RefreshAsync(expectedMatchId);
-            if(refreshed && !_requiresAuthentication)
+            if(refreshed)
             {
-                ToastService.ShowSuccess(successMessage);
+                if(_requiresAuthentication)
+                    ToastService.ShowWarning("Saved, but only the public match state could be refreshed. Sign in to manage this match.");
+                else
+                    ToastService.ShowSuccess(successMessage);
+
                 try
                 {
                     await OnDataReload.InvokeAsync(Match);

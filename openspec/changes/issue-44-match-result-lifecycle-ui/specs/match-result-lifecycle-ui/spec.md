@@ -89,6 +89,12 @@ The UI MUST show loading immediately when a match refresh or mutation begins, di
 - **THEN** the UI MUST fetch and render the public match projection
 - **AND** it MUST keep all mutations disabled while showing a distinct sign-in or permission explanation
 
+#### Scenario: Public fallback refresh succeeds
+
+- **WHEN** a lifecycle command is followed by a protected refresh that returns unauthorized but the public match refresh succeeds
+- **THEN** the UI MUST propagate the fresh public match projection to the containing schedule and bracket
+- **AND** it MUST keep protected actions disabled while showing the public-state limitation
+
 ### Requirement: Mock/live parity
 
 The mock service MUST expose the same lifecycle DTOs, command methods, validation outcomes, and state transitions as the live client for happy paths, duplicate actions, disputes, deadlines, forfeits, admin resolution, and reversal guards.
@@ -98,3 +104,9 @@ The mock service MUST expose the same lifecycle DTOs, command methods, validatio
 - **WHEN** a participant or administrator uses the mock match service
 - **THEN** the mock MUST apply the same confirmation, score, dispute, forfeit, resolution, deadline, and reversal guards exposed by the live contract
 - **AND** the mock MUST return explicit lifecycle state instead of inferring completion from a winner or score alone
+
+#### Scenario: Anonymous mock requests remain public
+
+- **WHEN** an anonymous mock login or unauthenticated request asks for match action state
+- **THEN** the mock service MUST resolve the request as anonymous rather than the default participant persona
+- **AND** it MUST return the public match projection without private reports or lifecycle mutation capabilities
