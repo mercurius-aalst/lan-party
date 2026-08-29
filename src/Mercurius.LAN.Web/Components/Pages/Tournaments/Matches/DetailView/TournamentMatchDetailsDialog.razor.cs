@@ -211,6 +211,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         "match_not_ready" => "Both match sides must be assigned before an administrator can record a forfeit.",
         "match_not_forfeitable" => "This match cannot be forfeited in its current state.",
         "match_not_disputed" => "This match does not currently require administrator resolution.",
+        "match_reversal_blocked" => "This result cannot be reversed because a linked downstream match has already been played or resolved.",
+        "downstream_graph_too_large" => "This result cannot be reversed until the linked bracket is reviewed by an administrator.",
         "admin_required" => "An authorized tournament administrator is required for this action.",
         _ => "This administrator action is unavailable in the authoritative match state."
     };
@@ -259,10 +261,12 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 Match = publicMatch;
                 _actionState = null;
                 _hasFreshActionState = false;
+                _participant1Score = publicMatch.Participant1Score ?? 0;
+                _participant2Score = publicMatch.Participant2Score ?? 0;
                 _requiresAuthentication = exception.StatusCode == HttpStatusCode.Unauthorized;
                 _authorizationDenied = exception.StatusCode == HttpStatusCode.Forbidden;
                 _hasLoaded = true;
-                StopDeadlineRefresh();
+                StartDeadlineRefresh();
                 return true;
             }
             catch(Exception fallbackException)
@@ -312,7 +316,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private void StartDeadlineRefresh()
     {
-        StopDeadlineRefresh();
+        StopDeadlineRefresh(resetTrigger: false);
         if(!_hasLoaded || !GetDeadlineUtc().HasValue)
             return;
 
@@ -320,13 +324,14 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         _deadlineRefreshTask = RefreshDeadlineAsync(_deadlineRefreshCancellation.Token);
     }
 
-    private void StopDeadlineRefresh()
+    private void StopDeadlineRefresh(bool resetTrigger = true)
     {
         _deadlineRefreshCancellation?.Cancel();
         _deadlineRefreshCancellation?.Dispose();
         _deadlineRefreshCancellation = null;
         _deadlineRefreshTask = null;
-        _deadlineRefreshTriggeredFor = null;
+        if(resetTrigger)
+            _deadlineRefreshTriggeredFor = null;
     }
 
     private async Task RefreshDeadlineAsync(CancellationToken cancellationToken)
@@ -552,6 +557,10 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             return "This tournament is no longer in progress.";
         if(!state.CanReverse && state.ReverseBlockedReason == "tournament_not_in_progress")
             return "This tournament is no longer in progress.";
+        if(!state.CanReverse && state.ReverseBlockedReason == "match_reversal_blocked")
+            return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
+        if(!state.CanReverse && state.ReverseBlockedReason == "downstream_graph_too_large")
+            return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
         return "The match changed while you were working. Refresh the authoritative state and try again.";
     }
 
@@ -568,8 +577,15 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 return "You are not authorized to perform this match action.";
             }
             if(apiException.StatusCode == HttpStatusCode.Conflict)
+            {
+                var serverCode = GetServerCode(apiException.Content);
+                if(serverCode == "match_reversal_blocked")
+                    return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
+                if(serverCode == "downstream_graph_too_large")
+                    return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
                 return GetServerMessage(apiException.Content)
                     ?? "The match changed while you were working. Refresh the authoritative state and try again.";
+            }
             if(!string.IsNullOrWhiteSpace(apiException.Content))
                 return GetServerMessage(apiException.Content) ?? apiException.Content!;
         }

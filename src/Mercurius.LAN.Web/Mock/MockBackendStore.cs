@@ -29,6 +29,7 @@ internal sealed class MockBackendStore
     private static readonly Guid FeaturedDoubleEliminationTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
     private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
+    private const int MaxDownstreamMatches = 512;
 
     private readonly object _syncRoot = new();
     private readonly string _dataFilePath;
@@ -304,6 +305,7 @@ internal sealed class MockBackendStore
 
             if(state == TournamentStatus.Scheduled)
             {
+                InferMockParticipantProvenance(tournament);
                 tournament.Placements = [];
                 foreach(var match in tournament.Matches)
                 {
@@ -345,7 +347,7 @@ internal sealed class MockBackendStore
         }
     }
 
-    public Match UpdateMatch(Guid matchId, UpdateMatchDTO dto)
+    public Match UpdateMatch(string persona, Guid matchId, UpdateMatchDTO dto)
     {
         lock(_syncRoot)
         {
@@ -353,6 +355,14 @@ internal sealed class MockBackendStore
                 ?? throw new InvalidOperationException($"Mock match '{matchId}' was not found.");
 
             var match = tournament.Matches.First(existing => existing.Id == matchId);
+            EnsureMockTournamentInProgress(tournament);
+            if(!string.Equals(persona, "admin", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Only a tournament administrator may resolve this match.");
+            ApplyMockDeadline(tournament, match);
+            if(match.LifecycleState is not (MatchLifecycleState.Disputed or MatchLifecycleState.AdminResolutionRequired))
+                throw new InvalidOperationException("This match does not require administrator resolution.");
+            if(!HasBothMockParticipants(match) || match.Participant1IsBYE || match.Participant2IsBYE)
+                throw new InvalidOperationException("Both non-BYE participants must be assigned before resolving this match.");
             ValidateMockScore(match, dto.Participant1Score, dto.Participant2Score);
             CompleteMockScore(tournament, match, dto.Participant1Score, dto.Participant2Score, MatchResultKind.AdminResolution);
 
@@ -371,26 +381,46 @@ internal sealed class MockBackendStore
             var isAdmin = string.Equals(persona, "admin", StringComparison.OrdinalIgnoreCase);
             var canViewPrivateReports = side.HasValue || isAdmin;
             var canAct = tournament.Status == TournamentStatus.InProgress && side.HasValue;
+            var hasBothParticipants = GetMockParticipantId(match, MatchParticipantSide.Participant1).HasValue &&
+                GetMockParticipantId(match, MatchParticipantSide.Participant2).HasValue;
+            var hasByeParticipant = match.Participant1IsBYE || match.Participant2IsBYE;
             var canConfirm = canAct && match.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation &&
-                !HasMockEnded(match, side!.Value);
+                hasBothParticipants && !hasByeParticipant && !HasMockEnded(match, side!.Value);
             var scoreStateAllowsSubmission = side.HasValue &&
                 (match.LifecycleState == MatchLifecycleState.AwaitingScore ||
                  (match.LifecycleState == MatchLifecycleState.ScoreConfirmation && !HasMockSubmittedScore(match, side.Value)) ||
                  (match.LifecycleState == MatchLifecycleState.Disputed && GetMockCorrectionCount(match, side.Value) < 1));
-            var canSubmit = canAct && match.Participant1Ended && match.Participant2Ended &&
+            var canSubmit = canAct && hasBothParticipants && !hasByeParticipant && match.Participant1Ended && match.Participant2Ended &&
                 scoreStateAllowsSubmission;
             var canForfeit = canAct && match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited or MatchLifecycleState.AdminResolutionRequired);
-            var hasBothParticipants = GetMockParticipantId(match, MatchParticipantSide.Participant1).HasValue &&
-                GetMockParticipantId(match, MatchParticipantSide.Participant2).HasValue;
+            canForfeit &= hasBothParticipants && !hasByeParticipant;
             var canResolve = isAdmin &&
                 tournament.Status == TournamentStatus.InProgress &&
                 match.LifecycleState is MatchLifecycleState.Disputed or MatchLifecycleState.AdminResolutionRequired;
             var canForceForfeit = isAdmin &&
                 tournament.Status == TournamentStatus.InProgress &&
                 hasBothParticipants &&
+                !hasByeParticipant &&
                 match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited or MatchLifecycleState.AdminResolutionRequired);
-            var canReverse = isAdmin && tournament.Status == TournamentStatus.InProgress &&
-                match.LifecycleState is MatchLifecycleState.Completed or MatchLifecycleState.Forfeited;
+            var canReverse = false;
+            string? reverseBlockedReason;
+            if(!isAdmin)
+                reverseBlockedReason = "admin_required";
+            else if(tournament.Status != TournamentStatus.InProgress)
+                reverseBlockedReason = "tournament_not_in_progress";
+            else if(match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited))
+                reverseBlockedReason = "match_not_completed";
+            else
+            {
+                var downstream = GetMockDownstreamMatches(tournament, match);
+                if(downstream is null)
+                    reverseBlockedReason = "downstream_graph_too_large";
+                else
+                {
+                    canReverse = downstream.All(downstreamMatch => !HasMockPlayedResult(downstreamMatch));
+                    reverseBlockedReason = canReverse ? null : "match_reversal_blocked";
+                }
+            }
 
             return new MatchActionStateDTO
             {
@@ -411,9 +441,7 @@ internal sealed class MockBackendStore
                     : !hasBothParticipants ? "match_not_ready" : "match_not_forfeitable"
                     : "admin_required",
                 CanReverse = canReverse,
-                ReverseBlockedReason = canReverse ? null : isAdmin
-                    ? tournament.Status != TournamentStatus.InProgress ? "tournament_not_in_progress" : "match_not_completed"
-                    : "admin_required",
+                ReverseBlockedReason = canReverse ? null : reverseBlockedReason,
                 Participant1ReportedScore1 = canViewPrivateReports ? match.Participant1ReportedScore1 : null,
                 Participant1ReportedScore2 = canViewPrivateReports ? match.Participant1ReportedScore2 : null,
                 Participant2ReportedScore1 = canViewPrivateReports ? match.Participant2ReportedScore1 : null,
@@ -433,6 +461,8 @@ internal sealed class MockBackendStore
                 ?? throw new InvalidOperationException("Only an assigned participant may confirm this match.");
 
             EnsureMockParticipantNumber(side);
+            if(!HasBothMockParticipants(match) || match.Participant1IsBYE || match.Participant2IsBYE)
+                throw new InvalidOperationException("A BYE match cannot accept participant actions.");
             if(match.LifecycleState != MatchLifecycleState.AwaitingEndedConfirmation)
                 throw new InvalidOperationException("This match is no longer waiting for an end confirmation.");
             if(HasMockEnded(match, side))
@@ -460,6 +490,8 @@ internal sealed class MockBackendStore
             ApplyMockDeadline(tournament, match);
             var side = FindMockParticipantSide(persona, tournament, match)
                 ?? throw new InvalidOperationException("Only an assigned participant may submit a score.");
+            if(!HasBothMockParticipants(match) || match.Participant1IsBYE || match.Participant2IsBYE)
+                throw new InvalidOperationException("Both non-BYE participants must be assigned before submitting a score.");
 
             ValidateMockScore(match, request.Participant1Score, request.Participant2Score);
             if(!match.Participant1Ended || !match.Participant2Ended)
@@ -488,6 +520,7 @@ internal sealed class MockBackendStore
                     CompleteMockScore(tournament, match, request.Participant1Score, request.Participant2Score);
                 else
                 {
+                    match.ScoreConfirmationDeadlineUtc = null;
                     match.LifecycleState = MatchLifecycleState.Disputed;
                     match.CorrectionDeadlineUtc = DateTime.UtcNow.AddMinutes(5);
                 }
@@ -505,6 +538,8 @@ internal sealed class MockBackendStore
             var (tournament, match) = GetMatchContext(matchId);
             EnsureMockTournamentInProgress(tournament);
             ApplyMockDeadline(tournament, match);
+            if(!HasBothMockParticipants(match) || match.Participant1IsBYE || match.Participant2IsBYE)
+                throw new InvalidOperationException("A match must have two assigned non-BYE participants before it can be forfeited.");
             var isAdmin = string.Equals(persona, "admin", StringComparison.OrdinalIgnoreCase);
             var participant = request.Participant ?? (isAdmin ? null : FindMockParticipantSide(persona, tournament, match));
             if(!participant.HasValue)
@@ -557,32 +592,13 @@ internal sealed class MockBackendStore
             if(match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited))
                 throw new InvalidOperationException("Only a completed or forfeited match may be reversed.");
 
-            var downstream = new Queue<Guid>();
-            if(match.WinnerNextMatchId.HasValue)
-                downstream.Enqueue(match.WinnerNextMatchId.Value);
-            if(match.LoserNextMatchId.HasValue)
-                downstream.Enqueue(match.LoserNextMatchId.Value);
-            var visited = new HashSet<Guid>();
-            while(downstream.TryDequeue(out var downstreamId))
-            {
-                if(!visited.Add(downstreamId))
-                    continue;
-                var next = tournament.Matches.FirstOrDefault(candidate => candidate.Id == downstreamId);
-                if(next == null)
-                    continue;
-                if(HasMockPlayedResult(next))
-                    throw new InvalidOperationException("match_reversal_blocked: a downstream match already has a result.");
-                if(next.WinnerNextMatchId.HasValue)
-                    downstream.Enqueue(next.WinnerNextMatchId.Value);
-                if(next.LoserNextMatchId.HasValue)
-                    downstream.Enqueue(next.LoserNextMatchId.Value);
-            }
+            var downstream = GetMockDownstreamMatches(tournament, match)
+                ?? throw new InvalidOperationException("downstream_graph_too_large: the linked bracket is too large to reverse safely.");
+            if(downstream.Any(HasMockPlayedResult))
+                throw new InvalidOperationException("match_reversal_blocked: a downstream match already has a result.");
 
-            foreach(var next in tournament.Matches.Where(candidate => visited.Contains(candidate.Id)))
-            {
-                ClearMockParticipant(next, GetMockWinnerId(match));
-                ClearMockParticipant(next, GetMockLoserId(match));
-            }
+            foreach(var next in downstream)
+                ClearMockParticipantsFromSource(next, match.Id);
 
             match.Participant1Score = null;
             match.Participant2Score = null;
@@ -784,34 +800,91 @@ internal sealed class MockBackendStore
             ? side == MatchParticipantSide.Participant1 ? match.TeamParticipant1Id : match.TeamParticipant2Id
             : side == MatchParticipantSide.Participant1 ? match.UserParticipant1Id : match.UserParticipant2Id;
 
-    private static void ClearMockParticipant(Match match, Guid? participantId)
+    private static bool HasBothMockParticipants(Match match) =>
+        GetMockParticipantId(match, MatchParticipantSide.Participant1).HasValue &&
+        GetMockParticipantId(match, MatchParticipantSide.Participant2).HasValue;
+
+    private static void ClearMockParticipantsFromSource(Match match, Guid sourceMatchId)
     {
-        if(!participantId.HasValue)
+        if(match.Participant1SourceMatchId == sourceMatchId)
+        {
+            ClearMockParticipantSlot(match, MatchParticipantSide.Participant1);
+            match.Participant1SourceMatchId = null;
+            match.Participant1IsBYE = false;
+            match.ResultVersion++;
+        }
+
+        if(match.Participant2SourceMatchId == sourceMatchId)
+        {
+            ClearMockParticipantSlot(match, MatchParticipantSide.Participant2);
+            match.Participant2SourceMatchId = null;
+            match.Participant2IsBYE = false;
+            match.ResultVersion++;
+        }
+    }
+
+    private static void InferMockParticipantProvenance(TournamentExtended tournament)
+    {
+        foreach(var source in tournament.Matches)
+        {
+            if(GetMockWinnerId(source) is Guid winnerId && source.WinnerNextMatchId is Guid winnerNextId)
+                MarkMockParticipantOrigin(tournament, winnerNextId, winnerId, source.Id);
+            if(GetMockLoserId(source) is Guid loserId && source.LoserNextMatchId is Guid loserNextId)
+                MarkMockParticipantOrigin(tournament, loserNextId, loserId, source.Id);
+        }
+    }
+
+    private static void MarkMockParticipantOrigin(
+        TournamentExtended tournament,
+        Guid targetMatchId,
+        Guid participantId,
+        Guid sourceMatchId)
+    {
+        var target = tournament.Matches.FirstOrDefault(match => match.Id == targetMatchId);
+        if(target is null)
             return;
 
-        if(match.TeamParticipant1Id == participantId)
-            match.TeamParticipant1Id = null;
-        if(match.TeamParticipant2Id == participantId)
-            match.TeamParticipant2Id = null;
-        if(match.UserParticipant1Id == participantId)
+        if(GetMockParticipantId(target, MatchParticipantSide.Participant1) == participantId &&
+           (target.Participant1SourceMatchId is null || target.Participant1SourceMatchId == sourceMatchId))
+            target.Participant1SourceMatchId = sourceMatchId;
+        else if(GetMockParticipantId(target, MatchParticipantSide.Participant2) == participantId &&
+                (target.Participant2SourceMatchId is null || target.Participant2SourceMatchId == sourceMatchId))
+            target.Participant2SourceMatchId = sourceMatchId;
+    }
+
+    private static void ClearMockParticipantSlot(Match match, MatchParticipantSide side)
+    {
+        if(match.ParticipationMode == ParticipationMode.Team)
+        {
+            if(side == MatchParticipantSide.Participant1)
+                match.TeamParticipant1Id = null;
+            else
+                match.TeamParticipant2Id = null;
+        }
+        else if(side == MatchParticipantSide.Participant1)
+        {
             match.UserParticipant1Id = null;
-        if(match.UserParticipant2Id == participantId)
+        }
+        else
+        {
             match.UserParticipant2Id = null;
+        }
     }
 
     private static void PropagateMockResult(TournamentExtended tournament, Match match)
     {
         if(GetMockWinnerId(match) is Guid winnerId && match.WinnerNextMatchId is Guid winnerNextId)
-            AssignMockNextParticipant(tournament, winnerNextId, winnerId, match.ParticipationMode);
+            AssignMockNextParticipant(tournament, winnerNextId, winnerId, match.ParticipationMode, match.Id);
         if(GetMockLoserId(match) is Guid loserId && match.LoserNextMatchId is Guid loserNextId)
-            AssignMockNextParticipant(tournament, loserNextId, loserId, match.ParticipationMode);
+            AssignMockNextParticipant(tournament, loserNextId, loserId, match.ParticipationMode, match.Id);
     }
 
     private static void AssignMockNextParticipant(
         TournamentExtended tournament,
         Guid nextMatchId,
         Guid participantId,
-        ParticipationMode mode)
+        ParticipationMode mode,
+        Guid sourceMatchId)
     {
         var next = tournament.Matches.FirstOrDefault(candidate => candidate.Id == nextMatchId);
         if(next == null)
@@ -820,27 +893,81 @@ internal sealed class MockBackendStore
         if(mode == ParticipationMode.Team)
         {
             if(next.TeamParticipant1Id == null)
+            {
                 next.TeamParticipant1Id = participantId;
+                next.Participant1SourceMatchId = sourceMatchId;
+                next.ResultVersion++;
+            }
             else if(next.TeamParticipant2Id == null)
+            {
                 next.TeamParticipant2Id = participantId;
+                next.Participant2SourceMatchId = sourceMatchId;
+                next.ResultVersion++;
+            }
         }
         else if(next.UserParticipant1Id == null)
         {
             next.UserParticipant1Id = participantId;
+            next.Participant1SourceMatchId = sourceMatchId;
+            next.ResultVersion++;
         }
         else if(next.UserParticipant2Id == null)
         {
             next.UserParticipant2Id = participantId;
+            next.Participant2SourceMatchId = sourceMatchId;
+            next.ResultVersion++;
         }
     }
 
     private static bool HasMockPlayedResult(Match match) =>
         match.LifecycleState is MatchLifecycleState.Completed or MatchLifecycleState.Forfeited ||
         match.Participant1Score.HasValue || match.Participant2Score.HasValue ||
-        match.TeamWinnerId.HasValue || match.UserWinnerId.HasValue;
+        match.TeamWinnerId.HasValue || match.UserWinnerId.HasValue ||
+        match.TeamLoserId.HasValue || match.UserLoserId.HasValue ||
+        match.Participant1Ended || match.Participant2Ended ||
+        match.Participant1ReportedScore1.HasValue || match.Participant2ReportedScore1.HasValue ||
+        HasActualMockStartOrEnd(match);
+
+    private static bool HasActualMockStartOrEnd(Match match) =>
+        (match.StartTime != default && (!match.EstimatedStartTime.HasValue || match.StartTime != match.EstimatedStartTime.Value)) ||
+        (match.EndTime != default && (!match.EstimatedEndTime.HasValue || match.EndTime != match.EstimatedEndTime.Value));
+
+    private static List<Match>? GetMockDownstreamMatches(TournamentExtended tournament, Match source)
+    {
+        var queue = new Queue<Guid>();
+        if(source.WinnerNextMatchId.HasValue)
+            queue.Enqueue(source.WinnerNextMatchId.Value);
+        if(source.LoserNextMatchId.HasValue)
+            queue.Enqueue(source.LoserNextMatchId.Value);
+
+        var visited = new HashSet<Guid> { source.Id };
+        var result = new List<Match>();
+        while(queue.TryDequeue(out var matchId))
+        {
+            if(!visited.Add(matchId))
+                continue;
+            if(visited.Count > MaxDownstreamMatches + 1)
+                return null;
+
+            var downstream = tournament.Matches.FirstOrDefault(candidate => candidate.Id == matchId);
+            if(downstream is null)
+                continue;
+
+            result.Add(downstream);
+            if(downstream.WinnerNextMatchId.HasValue)
+                queue.Enqueue(downstream.WinnerNextMatchId.Value);
+            if(downstream.LoserNextMatchId.HasValue)
+                queue.Enqueue(downstream.LoserNextMatchId.Value);
+        }
+
+        return result;
+    }
 
     private static void ApplyMockDeadline(TournamentExtended tournament, Match match)
     {
+        if(tournament.Status != TournamentStatus.InProgress)
+            return;
+
         var now = DateTime.UtcNow;
         if(match.LifecycleState == MatchLifecycleState.ScoreConfirmation &&
            match.ScoreConfirmationDeadlineUtc.HasValue && now >= match.ScoreConfirmationDeadlineUtc.Value)
@@ -853,6 +980,7 @@ internal sealed class MockBackendStore
                     return;
                 }
 
+                match.ScoreConfirmationDeadlineUtc = null;
                 match.LifecycleState = MatchLifecycleState.Disputed;
                 match.CorrectionDeadlineUtc = now.AddMinutes(5);
             }

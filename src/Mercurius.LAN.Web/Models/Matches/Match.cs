@@ -31,6 +31,8 @@ namespace Mercurius.LAN.Web.Models.Matches
         public int? Participant2Score { get; set; }
     public Guid? WinnerNextMatchId { get; set; }
     public Guid? LoserNextMatchId { get; set; }
+    public Guid? Participant1SourceMatchId { get; set; }
+    public Guid? Participant2SourceMatchId { get; set; }
     public MatchLifecycleState LifecycleState { get; set; }
     public bool Participant1Ended { get; set; }
     public bool Participant2Ended { get; set; }

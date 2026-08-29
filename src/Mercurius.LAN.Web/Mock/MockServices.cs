@@ -124,7 +124,7 @@ internal sealed class MockTournamentService : ITournamentService
         Guid matchId,
         UpdateMatchDTO updateMatchDTO,
         CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.UpdateMatch(matchId, updateMatchDTO));
+        Task.FromResult(_store.UpdateMatch(GetCurrentPersona(), matchId, updateMatchDTO));
 
     public Task<CurrentUserTournamentRegistrationStateDTO> GetCurrentUserTournamentRegistrationStateAsync(
         Guid tournamentId,
