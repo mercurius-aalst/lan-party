@@ -1,0 +1,319 @@
+using System.Reflection;
+using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.Models.Participants;
+using Mercurius.LAN.Web.Components.Pages.Teams;
+using Mercurius.LAN.Web.Components.Pages.Users;
+using Mercurius.LAN.Web.Services;
+using Xunit;
+
+namespace Mercurius.LAN.Web.ContractTests;
+
+public sealed class PublicProfilePageStateTests
+{
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("%20")]
+    [InlineData("%20%20")]
+    public async Task PublicUserProfile_BlankRouteStopsLoadingWithoutRequestingData(string route)
+    {
+        var service = new StubPublicProfileService(delayFirstCall: false);
+        var page = new TestPublicUserProfile();
+        SetInjectedService(page, nameof(PublicUserProfile), "PublicProfileService", service);
+        SetParameter(page, nameof(PublicUserProfile.Username), route);
+
+        await page.LoadAsync();
+
+        Assert.Empty(service.RequestedUsernames);
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_hasError"));
+        Assert.Null(ReadField(page, nameof(PublicUserProfile), "_profile"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("%20")]
+    [InlineData("%20%20")]
+    public async Task PublicTeamProfile_BlankRouteStopsLoadingWithoutRequestingData(string route)
+    {
+        var service = new StubTeamService(delayFirstCall: false);
+        var page = new TestPublicTeamProfile();
+        SetInjectedService(page, nameof(PublicTeamProfile), "TeamService", service);
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), route);
+
+        await page.LoadAsync();
+
+        Assert.Empty(service.RequestedTeamNames);
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_hasError"));
+        Assert.Null(ReadField(page, nameof(PublicTeamProfile), "_team"));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PublicUserProfile_IgnoresSupersededSuccessOrError(bool failFirstCall)
+    {
+        var service = new StubPublicProfileService(delayFirstCall: true);
+        var page = new TestPublicUserProfile();
+        SetInjectedService(page, nameof(PublicUserProfile), "PublicProfileService", service);
+        SetParameter(page, nameof(PublicUserProfile.Username), "A");
+
+        var firstLoad = page.LoadAsync();
+        await service.FirstCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicUserProfile.Username), "B");
+        await page.LoadAsync();
+
+        if(failFirstCall)
+            service.FirstCallResult.SetException(new InvalidOperationException("stale failure"));
+        else
+            service.FirstCallResult.SetResult(new PublicUserProfileDTO
+            {
+                Username = "A",
+                Firstname = "Stale",
+                Lastname = "Profile"
+            });
+
+        await firstLoad;
+
+        Assert.Equal(["A", "B"], service.RequestedUsernames);
+        Assert.Null(ReadField(page, nameof(PublicUserProfile), "_profile"));
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_hasError"));
+        page.Dispose();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task PublicTeamProfile_IgnoresSupersededSuccessOrError(bool failFirstCall)
+    {
+        var service = new StubTeamService(delayFirstCall: true);
+        var page = new TestPublicTeamProfile();
+        SetInjectedService(page, nameof(PublicTeamProfile), "TeamService", service);
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "A");
+
+        var firstLoad = page.LoadAsync();
+        await service.FirstCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "B");
+        await page.LoadAsync();
+
+        if(failFirstCall)
+            service.FirstCallResult.SetException(new InvalidOperationException("stale failure"));
+        else
+            service.FirstCallResult.SetResult(new PublicTeamProfileDTO { TeamName = "A" });
+
+        await firstLoad;
+
+        Assert.Equal(["A", "B"], service.RequestedTeamNames);
+        Assert.Null(ReadField(page, nameof(PublicTeamProfile), "_team"));
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_hasError"));
+        page.Dispose();
+    }
+
+    [Fact]
+    public async Task PublicUserProfile_DisposeSuppressesPendingLoad()
+    {
+        var service = new StubPublicProfileService(delayFirstCall: true);
+        var page = new TestPublicUserProfile();
+        SetInjectedService(page, nameof(PublicUserProfile), "PublicProfileService", service);
+        SetParameter(page, nameof(PublicUserProfile.Username), "A");
+
+        var load = page.LoadAsync();
+        await service.FirstCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        page.Dispose();
+        service.FirstCallResult.SetException(new InvalidOperationException("disposed failure"));
+        await load;
+
+        Assert.True(ReadBoolean(page, nameof(PublicUserProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_hasError"));
+        Assert.Null(ReadField(page, nameof(PublicUserProfile), "_profile"));
+    }
+
+    [Fact]
+    public async Task PublicTeamProfile_DisposeSuppressesPendingLoad()
+    {
+        var service = new StubTeamService(delayFirstCall: true);
+        var page = new TestPublicTeamProfile();
+        SetInjectedService(page, nameof(PublicTeamProfile), "TeamService", service);
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "A");
+
+        var load = page.LoadAsync();
+        await service.FirstCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        page.Dispose();
+        service.FirstCallResult.SetException(new InvalidOperationException("disposed failure"));
+        await load;
+
+        Assert.True(ReadBoolean(page, nameof(PublicTeamProfile), "_isLoading"));
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_hasError"));
+        Assert.Null(ReadField(page, nameof(PublicTeamProfile), "_team"));
+    }
+
+    private static void SetInjectedService(object page, string pageTypeName, string propertyName, object service)
+    {
+        var pageType = page.GetType().BaseType ?? throw new InvalidOperationException("Test page base type was not found.");
+        if(!string.Equals(pageType.Name, pageTypeName, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Unexpected test page type '{pageType.Name}'.");
+
+        var property = pageType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Injected property '{propertyName}' was not found.");
+        property.SetValue(page, service);
+    }
+
+    private static bool ReadBoolean(object page, string pageTypeName, string fieldName) =>
+        (bool)(ReadField(page, pageTypeName, fieldName) ?? false);
+
+    private static void SetParameter(object page, string propertyName, object? value)
+    {
+        var pageType = page.GetType().BaseType ?? throw new InvalidOperationException("Test page base type was not found.");
+        var property = pageType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public)
+            ?? throw new InvalidOperationException($"Component parameter '{propertyName}' was not found.");
+        property.SetValue(page, value);
+    }
+
+    private static object? ReadField(object page, string pageTypeName, string fieldName)
+    {
+        var pageType = page.GetType().BaseType ?? throw new InvalidOperationException("Test page base type was not found.");
+        if(!string.Equals(pageType.Name, pageTypeName, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Unexpected test page type '{pageType.Name}'.");
+
+        var field = pageType.GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Private field '{fieldName}' was not found.");
+        return field.GetValue(page);
+    }
+
+    private sealed class TestPublicUserProfile : PublicUserProfile
+    {
+        public Task LoadAsync() => base.OnParametersSetAsync();
+    }
+
+    private sealed class TestPublicTeamProfile : PublicTeamProfile
+    {
+        public Task LoadAsync() => base.OnParametersSetAsync();
+    }
+
+    private sealed class StubPublicProfileService(bool delayFirstCall) : IPublicProfileService
+    {
+        private readonly object _syncRoot = new();
+        private readonly List<string> _requestedUsernames = [];
+        private int _callCount;
+
+        public TaskCompletionSource<bool> FirstCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicUserProfileDTO?> FirstCallResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public IReadOnlyList<string> RequestedUsernames
+        {
+            get
+            {
+                lock(_syncRoot)
+                    return _requestedUsernames.ToArray();
+            }
+        }
+
+        public Task<PublicUserProfileDTO?> GetPublicUserByUsernameAsync(
+            string username,
+            CancellationToken cancellationToken = default)
+        {
+            lock(_syncRoot)
+                _requestedUsernames.Add(username);
+
+            if(Interlocked.Increment(ref _callCount) == 1 && delayFirstCall)
+            {
+                FirstCallStarted.TrySetResult(true);
+                return FirstCallResult.Task;
+            }
+
+            return Task.FromResult<PublicUserProfileDTO?>(null);
+        }
+
+        public Task<PublicProfileMatchSummariesDTO?> GetPublicUserMatchSummariesAsync(
+            string username,
+            CancellationToken cancellationToken = default) =>
+            Task.FromException<PublicProfileMatchSummariesDTO?>(
+                new InvalidOperationException("Match summaries must not be requested by this state test."));
+    }
+
+    private sealed class StubTeamService(bool delayFirstCall) : ITeamService
+    {
+        private readonly object _syncRoot = new();
+        private readonly List<string> _requestedTeamNames = [];
+        private int _callCount;
+
+        public TaskCompletionSource<bool> FirstCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicTeamProfileDTO?> FirstCallResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public IReadOnlyList<string> RequestedTeamNames
+        {
+            get
+            {
+                lock(_syncRoot)
+                    return _requestedTeamNames.ToArray();
+            }
+        }
+
+        public Task<TeamPage> GetTeamsAsync(
+            int page = 1,
+            int pageSize = TeamPage.DefaultPageSize,
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(
+            string teamName,
+            CancellationToken cancellationToken = default)
+        {
+            lock(_syncRoot)
+                _requestedTeamNames.Add(teamName);
+
+            if(Interlocked.Increment(ref _callCount) == 1 && delayFirstCall)
+            {
+                FirstCallStarted.TrySetResult(true);
+                return FirstCallResult.Task;
+            }
+
+            return Task.FromResult<PublicTeamProfileDTO?>(null);
+        }
+
+        public Task<PublicProfileMatchSummariesDTO?> GetPublicTeamMatchSummariesAsync(
+            string teamName,
+            CancellationToken cancellationToken = default) =>
+            Task.FromException<PublicProfileMatchSummariesDTO?>(
+                new InvalidOperationException("Match summaries must not be requested by this state test."));
+
+        public Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(
+            CancellationToken cancellationToken = default) =>
+            throw new NotSupportedException();
+
+        public Task<Team> CreateTeamAsync(CreateTeamDTO team) => throw new NotSupportedException();
+
+        public Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId) => throw new NotSupportedException();
+
+        public Task<TeamInvite> CancelInviteAsync(Guid teamId, Guid inviteId) => throw new NotSupportedException();
+
+        public Task<TeamInvite> RespondToInviteAsync(Guid inviteId, bool accept) => throw new NotSupportedException();
+
+        public Task<TeamManagementSummaryDTO> LeaveTeamAsync(Guid teamId) => throw new NotSupportedException();
+
+        public Task<TeamManagementSummaryDTO> RemoveMemberAsync(Guid teamId, Guid userId) => throw new NotSupportedException();
+
+        public Task<TeamManagementSummaryDTO> TransferCaptainAsync(Guid teamId, Guid newCaptainUserId) => throw new NotSupportedException();
+
+        public Task<TeamLogoResponseDTO> UploadLogoAsync(Guid teamId, Stream logoStream, string contentType, string fileName) => throw new NotSupportedException();
+
+        public Task<TeamLogoResponseDTO> RemoveLogoAsync(Guid teamId) => throw new NotSupportedException();
+
+        public Task DeleteTeamAsync(Guid teamId) => throw new NotSupportedException();
+    }
+}

@@ -46,7 +46,10 @@ public partial class PublicTeamProfile
         try
         {
             if(string.IsNullOrWhiteSpace(decodedTeamName))
+            {
+                _isLoading = false;
                 return;
+            }
 
             try
             {

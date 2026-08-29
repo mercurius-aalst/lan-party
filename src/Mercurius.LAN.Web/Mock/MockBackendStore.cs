@@ -39,6 +39,7 @@ internal sealed class MockBackendStore
     private readonly object _syncRoot = new();
     private readonly string _dataFilePath;
     private readonly Dictionary<Guid, List<TournamentRegistrationDTO>> _registrationDetails = [];
+    private readonly HashSet<Guid> _deletedTeamIds = [];
     private MockBackendDocument _document;
 
     public MockBackendStore(IHostEnvironment environment, IOptions<MockBackendOptions> options)
@@ -167,6 +168,7 @@ internal sealed class MockBackendStore
                 return null;
 
             var team = _document.Teams.FirstOrDefault(candidate =>
+                !_deletedTeamIds.Contains(candidate.Id) &&
                 string.Equals(candidate.Name, normalizedTeamName, StringComparison.OrdinalIgnoreCase));
 
             if(team == null)
@@ -247,6 +249,7 @@ internal sealed class MockBackendStore
                 return null;
 
             var team = _document.Teams.FirstOrDefault(candidate =>
+                !_deletedTeamIds.Contains(candidate.Id) &&
                 string.Equals(candidate.Name, normalizedTeamName, StringComparison.OrdinalIgnoreCase));
 
             return team is null
@@ -257,7 +260,6 @@ internal sealed class MockBackendStore
 
     private PublicProfileMatchSummariesDTO BuildPublicProfileMatchSummaries(Guid? userId, IReadOnlySet<Guid> teamIds)
     {
-        var nowUtc = DateTime.UtcNow;
         var previous = new List<MockProfileMatchCandidate>();
         var upcoming = new List<MockProfileMatchCandidate>();
 
@@ -292,7 +294,7 @@ internal sealed class MockBackendStore
                 {
                     previous.Add(candidate with { OpponentDisplayName = GetOpponentDisplayName(candidate, snapshots) });
                 }
-                else if(IsUpcomingMatch(candidate, nowUtc))
+                else if(IsUpcomingMatch(candidate))
                 {
                     upcoming.Add(candidate with { OpponentDisplayName = GetOpponentDisplayName(candidate, snapshots) });
                 }
@@ -423,16 +425,16 @@ internal sealed class MockBackendStore
         !candidate.Participant1IsBYE &&
         !candidate.Participant2IsBYE;
 
-    private static bool IsUpcomingMatch(MockProfileMatchCandidate candidate, DateTime nowUtc)
+    private static bool IsUpcomingMatch(MockProfileMatchCandidate candidate)
     {
         if(candidate.LifecycleState != MatchLifecycleState.AwaitingEndedConfirmation ||
+           candidate.StartTime != default ||
            candidate.Participant1IsBYE ||
            candidate.Participant2IsBYE ||
            (candidate.Participant1Id.HasValue && candidate.Participant2Id.HasValue && candidate.Participant1Id == candidate.Participant2Id))
             return false;
 
-        var sortTime = UpcomingSortTime(candidate);
-        return !sortTime.HasValue || sortTime.Value > nowUtc;
+        return true;
     }
 
     private static DateTime? PreviousSortTime(MockProfileMatchCandidate candidate) =>
@@ -441,7 +443,7 @@ internal sealed class MockBackendStore
         Normalize(candidate.StartTime);
 
     private static DateTime? UpcomingSortTime(MockProfileMatchCandidate candidate) =>
-        Normalize(candidate.EstimatedStartTime) ?? Normalize(candidate.StartTime);
+        Normalize(candidate.EstimatedStartTime);
 
     private static MockRegistrationSnapshot ToRegistrationSnapshot(TournamentRegistrationDTO registration) =>
         new(
@@ -479,7 +481,7 @@ internal sealed class MockBackendStore
             OpponentIsTbd = string.IsNullOrWhiteSpace(candidate.OpponentDisplayName),
             EstimatedStartTime = Normalize(candidate.EstimatedStartTime),
             EstimatedEndTime = Normalize(candidate.EstimatedEndTime),
-            ScheduledStartTime = Normalize(candidate.StartTime),
+            ScheduledStartTime = null,
             StartedAtUtc = isPrevious ? Normalize(candidate.StartTime) : null,
             CompletedAtUtc = isPrevious ? Normalize(candidate.EndTime) : null,
             LifecycleState = candidate.LifecycleState,
@@ -2220,6 +2222,7 @@ internal sealed class MockBackendStore
     {
         lock(_syncRoot)
         {
+            _deletedTeamIds.Add(id);
             _document.Teams.RemoveAll(team => team.Id == id);
 
             foreach(var tournament in _document.Tournaments)
@@ -2600,8 +2603,6 @@ internal sealed class MockBackendStore
                 new Match
                 {
                     Id = IndividualProfileFixtureUpcomingMatchId,
-                    StartTime = upcomingStart,
-                    EndTime = upcomingStart.AddMinutes(45),
                     EstimatedStartTime = upcomingStart,
                     EstimatedEndTime = upcomingStart.AddMinutes(45),
                     BracketType = BracketType.SingleElimination,
@@ -2781,8 +2782,8 @@ internal sealed class MockBackendStore
             return;
 
         var upcomingStart = DateTime.UtcNow.AddDays(2);
-        upcomingMatch.StartTime = upcomingStart;
-        upcomingMatch.EndTime = upcomingStart.AddMinutes(75);
+        upcomingMatch.StartTime = default;
+        upcomingMatch.EndTime = default;
         upcomingMatch.EstimatedStartTime = upcomingStart;
         upcomingMatch.EstimatedEndTime = upcomingStart.AddMinutes(75);
     }

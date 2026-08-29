@@ -34,10 +34,10 @@
                 {
                     <li>
                         <a class="public-profile-match-summary-card" href="@BuildTournamentHref(previous)">
-                            <span class="public-profile-match-summary-card-topline">
+                            <div class="public-profile-match-summary-card-topline">
                                 <h3>@previous.TournamentName</h3>
                                 <span class="public-profile-match-summary-arrow bi bi-arrow-up-right" aria-hidden="true"></span>
-                            </span>
+                            </div>
                             <span class="public-profile-match-summary-opponent">vs @GetOpponentLabel(previous)</span>
                             <span class="public-profile-match-summary-result">@GetResultLabel(previous)</span>
                             <span class="public-profile-match-summary-meta">
@@ -64,10 +64,10 @@
                 {
                     <li>
                         <a class="public-profile-match-summary-card" href="@BuildTournamentHref(upcoming)">
-                            <span class="public-profile-match-summary-card-topline">
+                            <div class="public-profile-match-summary-card-topline">
                                 <h3>@upcoming.TournamentName</h3>
                                 <span class="public-profile-match-summary-arrow bi bi-arrow-up-right" aria-hidden="true"></span>
-                            </span>
+                            </div>
                             <span class="public-profile-match-summary-opponent">vs @GetOpponentLabel(upcoming)</span>
                             <span class="public-profile-match-summary-result">@GetUpcomingStateLabel(upcoming)</span>
                             <span class="public-profile-match-summary-meta">

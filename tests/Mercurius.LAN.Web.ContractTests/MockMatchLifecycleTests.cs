@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.DTOs.Participants.Teams;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Options;
@@ -204,6 +205,41 @@ public sealed class MockMatchLifecycleTests
         Assert.Equal(1, individualSummaries.PreviousMatches[0].OpponentScore);
 
         Assert.Null(store.GetPublicUserMatchSummaries("missing-user"));
+    }
+
+    [Fact]
+    public void MockDeletedTeamIsNotPublicAndAReusedNameDoesNotInheritHistory()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var originalTeam = Assert.Single(store.GetTeams(1, 100).Where(team => team.Name == "Team Alpha"));
+        Assert.NotNull(store.GetPublicTeamByName("Team Alpha"));
+        Assert.NotNull(store.GetPublicTeamMatchSummaries("Team Alpha"));
+
+        store.DeleteTeam(originalTeam.Id);
+
+        Assert.Null(store.GetPublicTeamByName("Team Alpha"));
+        Assert.Null(store.GetPublicTeamMatchSummaries("Team Alpha"));
+
+        var captain = store.GetPublicUserByUsername("alpha1");
+        Assert.NotNull(captain);
+        var replacement = store.CreateTeam(new CreateTeamDTO
+        {
+            Name = "Team Alpha",
+            CaptainUserId = Guid.Parse("41111111-1111-1111-1111-111111111111")
+        });
+
+        Assert.NotNull(store.GetPublicTeamByName("Team Alpha"));
+        var replacementSummaries = store.GetPublicTeamMatchSummaries(replacement.Name);
+        Assert.NotNull(replacementSummaries);
+        Assert.Empty(replacementSummaries!.PreviousMatches);
+        Assert.Empty(replacementSummaries.UpcomingMatches);
     }
 
     [Fact]

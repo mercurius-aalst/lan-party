@@ -38,10 +38,17 @@ public partial class PublicProfileMatchSummaries
         };
     }
 
-    private static string GetUpcomingStateLabel(PublicProfileMatchSummaryDTO summary) =>
-        summary.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation
+    private static string GetUpcomingStateLabel(PublicProfileMatchSummaryDTO summary)
+    {
+        if(summary.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation &&
+           summary.EstimatedStartTime is { } estimatedStart &&
+           estimatedStart.ToUniversalTime() <= DateTime.UtcNow)
+            return "Awaiting start · estimate passed";
+
+        return summary.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation
             ? "Scheduled match"
             : "Upcoming match";
+    }
 
     private static string GetRoundLabel(PublicProfileMatchSummaryDTO summary)
     {

@@ -51,7 +51,10 @@ public partial class PublicUserProfile
         try
         {
             if(string.IsNullOrWhiteSpace(decodedUsername))
+            {
+                _isLoading = false;
                 return;
+            }
 
             try
             {
