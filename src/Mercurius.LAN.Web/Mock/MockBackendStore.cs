@@ -641,6 +641,7 @@ internal sealed class MockBackendStore
         {
             _document.Tournaments.RemoveAll(tournament => tournament.Id == tournamentId);
             _registrationDetails.Remove(tournamentId);
+            _publicRegistrationSnapshots.Remove(tournamentId);
         }
     }
 
