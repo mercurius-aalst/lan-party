@@ -90,6 +90,8 @@ selection, roster selection, and review/submit.
 - **AND** the captain MUST NOT progress to review until the local roster constraints pass
 - **AND** a roster made oversized by a captain transfer MUST remain invalid until the captain
   explicitly removes a member
+- **AND** a selected draft member who is no longer in the current team projection MUST remain
+  listed as removable until the draft is repaired or cleared
 
 #### Scenario: Candidate discovery does not invalidate the selected roster
 
@@ -100,6 +102,8 @@ selection, roster selection, and review/submit.
   maximum of 50 user ids per request and merged without dropping or duplicating candidates
 - **AND** an existing registration containing a former team member MUST expose that member as
   removable or clearly explain the repair path
+- **AND** eligibility-only candidates returned by the backend MUST remain available for removal
+  when they are part of the selected draft
 
 #### Scenario: Candidate discovery handles an oversized team projection
 
@@ -216,6 +220,11 @@ states while keeping public participant data separate from authenticated registr
 - **AND** an unsaved roster draft MUST be preserved while its selected team remains available
 - **AND** if that team disappears, the page MUST warn the captain and clear the stale draft instead
   of restoring it if the team later reappears
+- **AND** the invalidation handler MUST dispatch all component state work through the renderer
+  context
+- **AND** bursts of invalidations MUST be coalesced so only one registration refresh runs at a time
+- **AND** a superseded refresh MUST NOT change loading, submission, or error state or emit a stale
+  toast
 
 #### Scenario: Backend event gap remains recoverable
 

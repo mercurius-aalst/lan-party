@@ -68,6 +68,7 @@ public partial class TournamentParticipantsTab : IDisposable
     private bool _hasLoadedForTournament;
     private bool _isDisposed;
     private bool _hasDirtyRosterDraft;
+    private readonly TeamStateInvalidationGate _teamStateInvalidationGate = new();
     private int _activeTeamStep;
     private long _requestGeneration;
     private Guid _loadedTournamentId;
@@ -93,6 +94,24 @@ public partial class TournamentParticipantsTab : IDisposable
             {
                 if(member.User is not null && candidateIds.Add(member.User.Id))
                     candidates.Add(member.User);
+            }
+
+            foreach(var candidateId in MergeEditableRosterCandidateIds(
+                        candidates.Select(member => member.Id),
+                        _selectedRosterUserIds,
+                        _rosterCandidatesById.Keys))
+            {
+                if(candidateIds.Add(candidateId))
+                {
+                    var candidateUser = _rosterCandidatesById.TryGetValue(candidateId, out var eligibilityCandidate)
+                        ? eligibilityCandidate.User
+                        : null;
+                    candidates.Add(candidateUser ?? new PublicUserDTO
+                    {
+                        Id = candidateId,
+                        DisplayName = "Former roster member"
+                    });
+                }
             }
 
             if(SelectedTeam is { } team && team.CaptainUserId != Guid.Empty && candidateIds.Add(team.CaptainUserId))
@@ -257,11 +276,14 @@ public partial class TournamentParticipantsTab : IDisposable
     private static string GetRegistrationFingerprint(TournamentExtended tournament) =>
         $"{tournament.Id:N}|{tournament.ParticipationMode}|{tournament.TeamSize?.ToString() ?? "none"}|{tournament.Status}|{tournament.PlannedStartTime.Ticks}|{tournament.StartTime.Ticks}|{tournament.EndTime.Ticks}";
 
-    private async Task<bool> LoadRegistrationContextAsync(bool preserveRosterDraft = false)
+    private async Task<bool> LoadRegistrationContextAsync(
+        bool preserveRosterDraft = false,
+        bool preserveSubmitting = false,
+        long? requestGenerationOverride = null)
     {
         var currentUserStateLoaded = false;
         var tournamentId = Tournament.Id;
-        var generation = ++_requestGeneration;
+        var generation = requestGenerationOverride ?? ++_requestGeneration;
         var draftTeamId = preserveRosterDraft && _hasDirtyRosterDraft ? _selectedTeamId : null;
         var draftRosterUserIds = draftTeamId.HasValue ? _selectedRosterUserIds.ToHashSet() : null;
         var draftStep = draftTeamId.HasValue ? _activeTeamStep : 0;
@@ -269,6 +291,12 @@ public partial class TournamentParticipantsTab : IDisposable
             _hasDirtyRosterDraft = false;
 
         _isLoadingRegistration = true;
+        _isLoadingTeams = false;
+        _isLoadingRoster = false;
+        _isLoadingAdmin = false;
+        _isSubmitting = preserveSubmitting;
+        if(!preserveSubmitting)
+            _pendingAdminRemovalRegistrationId = null;
         _registrationError = null;
         _adminError = null;
         _teamError = null;
@@ -362,6 +390,11 @@ public partial class TournamentParticipantsTab : IDisposable
                         "The team from your unsaved roster draft is no longer available, so the draft was cleared. Select an available team and build the roster again.";
                 }
                 _isLoadingRegistration = false;
+                if(preserveSubmitting)
+                {
+                    _isSubmitting = false;
+                    _pendingAdminRemovalRegistrationId = null;
+                }
                 await InvokeAsync(StateHasChanged);
             }
         }
@@ -425,7 +458,8 @@ public partial class TournamentParticipantsTab : IDisposable
             catch(Exception)
             {
                 // Registration remains usable through the explicit refresh and mutation paths.
-                _teamError ??= "Live team updates are unavailable; registration state still refreshes after actions.";
+                if(IsCurrentRequest(tournamentId, generation))
+                    _teamError ??= "Live team updates are unavailable; registration state still refreshes after actions.";
             }
 
             if(!IsCurrentRequest(tournamentId, generation))
@@ -722,7 +756,8 @@ public partial class TournamentParticipantsTab : IDisposable
         if(!await ConfirmMutationAsync(
                "Confirm individual registration",
                $"Register your account for {Tournament.Name}?",
-               "Register"))
+               "Register",
+               requestGeneration))
             return;
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
@@ -756,7 +791,8 @@ public partial class TournamentParticipantsTab : IDisposable
         if(!await ConfirmMutationAsync(
                "Confirm individual unregister",
                $"Remove your registration from {Tournament.Name}?",
-               "Unregister"))
+               "Unregister",
+               requestGeneration))
             return;
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
@@ -835,7 +871,8 @@ public partial class TournamentParticipantsTab : IDisposable
         if(!await ConfirmMutationAsync(
                "Confirm team unregister",
                $"Remove {SelectedTeam.Name} from {Tournament.Name}? Pending roster confirmations will be removed too.",
-               "Unregister team"))
+               "Unregister team",
+               requestGeneration))
             return;
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
@@ -885,14 +922,20 @@ public partial class TournamentParticipantsTab : IDisposable
             }
             catch(Exception exception) when(IsUnauthorized(exception))
             {
-                _registrationError = "You are not authorized to change this registration.";
-                ToastService.ShowError(_registrationError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _registrationError = "You are not authorized to change this registration.";
+                    ToastService.ShowError(_registrationError);
+                }
                 return;
             }
             catch(Exception exception)
             {
-                _registrationError = GetErrorMessage(exception, "The registration could not be changed right now.");
-                ToastService.ShowError(_registrationError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _registrationError = GetErrorMessage(exception, "The registration could not be changed right now.");
+                    ToastService.ShowError(_registrationError);
+                }
                 return;
             }
 
@@ -900,25 +943,37 @@ public partial class TournamentParticipantsTab : IDisposable
             {
                 var currentUserStateLoaded = await RefreshTournamentAsync(
                     tournamentId,
-                    expectedRequestGeneration: requestGeneration);
+                    expectedRequestGeneration: requestGeneration,
+                    preserveSubmitting: true);
+
                 if(ShouldReportSavedMutationRefreshFailure(
                        currentUserStateLoaded,
                        IsCurrentTournament(tournamentId)))
                 {
-                    _registrationError =
-                        "The registration was saved, but the displayed registration state could not be refreshed. Try again.";
-                    ToastService.ShowWarning(_registrationError);
+                    if(IsCurrentRequest(tournamentId, requestGeneration))
+                    {
+                        _registrationError =
+                            "The registration was saved, but the displayed registration state could not be refreshed. Try again.";
+                        ToastService.ShowWarning(_registrationError);
+                    }
                 }
             }
             catch(Exception exception)
             {
-                _registrationError = $"The registration was saved, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
-                ToastService.ShowWarning(_registrationError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _registrationError = $"The registration was saved, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
+                    ToastService.ShowWarning(_registrationError);
+                }
             }
         }
         finally
         {
-            _isSubmitting = false;
+            if(IsCurrentRequest(tournamentId, requestGeneration))
+            {
+                _isSubmitting = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
@@ -956,40 +1011,60 @@ public partial class TournamentParticipantsTab : IDisposable
                 }
                 else
                 {
-                    _adminError = "This registration does not contain enough identity data to remove it.";
+                    if(IsCurrentRequest(tournamentId, requestGeneration))
+                        _adminError = "This registration does not contain enough identity data to remove it.";
                     return;
                 }
 
-                _adminRemovalReason = string.Empty;
-                ToastService.ShowSuccess("The registration was removed.");
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _adminRemovalReason = string.Empty;
+                    ToastService.ShowSuccess("The registration was removed.");
+                }
             }
             catch(Exception exception) when(IsUnauthorized(exception))
             {
-                _adminError = "You are not authorized to remove this registration.";
-                ToastService.ShowError(_adminError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _adminError = "You are not authorized to remove this registration.";
+                    ToastService.ShowError(_adminError);
+                }
                 return;
             }
             catch(Exception exception)
             {
-                _adminError = GetErrorMessage(exception, "The registration could not be removed right now.");
-                ToastService.ShowError(_adminError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _adminError = GetErrorMessage(exception, "The registration could not be removed right now.");
+                    ToastService.ShowError(_adminError);
+                }
                 return;
             }
 
             try
             {
-                await RefreshTournamentAsync(tournamentId, expectedRequestGeneration: requestGeneration);
+                await RefreshTournamentAsync(
+                    tournamentId,
+                    expectedRequestGeneration: requestGeneration,
+                    preserveSubmitting: true);
             }
             catch(Exception exception)
             {
-                _adminError = $"The registration was removed, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
-                ToastService.ShowWarning(_adminError);
+                if(IsCurrentRequest(tournamentId, requestGeneration))
+                {
+                    _adminError = $"The registration was removed, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
+                    ToastService.ShowWarning(_adminError);
+                }
             }
         }
         finally
         {
-            _pendingAdminRemovalRegistrationId = null;
-            _isSubmitting = false;
+            if(IsCurrentRequest(tournamentId, requestGeneration))
+            {
+                _pendingAdminRemovalRegistrationId = null;
+                _isSubmitting = false;
+                await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
@@ -1046,6 +1121,7 @@ public partial class TournamentParticipantsTab : IDisposable
         if(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)
             return;
 
+        var requestGeneration = _requestGeneration;
         if(_activeTeamStep == 0)
         {
             if(!CanAdvanceFromTeamSelection)
@@ -1060,14 +1136,17 @@ public partial class TournamentParticipantsTab : IDisposable
             }
 
             var request = BuildRosterRequest();
-            var generation = ++_requestGeneration;
-            if(SelectedTeam is null || !await RevalidateRosterBeforeSubmitAsync(SelectedTeam.Id, request, generation))
+            requestGeneration = ++_requestGeneration;
+            if(SelectedTeam is null || !await RevalidateRosterBeforeSubmitAsync(SelectedTeam.Id, request, requestGeneration))
                 return;
         }
         else
         {
             return;
         }
+
+        if(!IsCurrentRequest(Tournament.Id, requestGeneration))
+            return;
 
         _activeTeamStep++;
     }
@@ -1223,7 +1302,11 @@ public partial class TournamentParticipantsTab : IDisposable
         await RefreshRosterEligibilityAsync(tournamentId, generation, includeCandidateReasons: true);
     }
 
-    private async Task<bool> ConfirmMutationAsync(string title, string message, string actionText)
+    private async Task<bool> ConfirmMutationAsync(
+        string title,
+        string message,
+        string actionText,
+        long requestGeneration)
     {
         if(_isSubmitting || _isDisposed)
             return false;
@@ -1241,15 +1324,28 @@ public partial class TournamentParticipantsTab : IDisposable
         }
         finally
         {
-            _isSubmitting = false;
-            if(!_isDisposed)
+            if(IsCurrentRequest(Tournament.Id, requestGeneration))
+            {
+                _isSubmitting = false;
                 await InvokeAsync(StateHasChanged);
+            }
         }
     }
 
     private async Task HandleTeamStateInvalidatedAsync()
     {
-        if(_isDisposed || !_isAuthenticated || _isSubmitting || Tournament.ParticipationMode != ParticipationMode.Team)
+        if(_isDisposed)
+            return;
+
+        await InvokeAsync(() => _teamStateInvalidationGate.RunAsync(RefreshAfterTeamInvalidationAsync));
+    }
+
+    private async Task RefreshAfterTeamInvalidationAsync()
+    {
+        if(_isDisposed ||
+           !_isAuthenticated ||
+           _isSubmitting ||
+           Tournament.ParticipationMode != ParticipationMode.Team)
             return;
 
         var tournamentId = Tournament.Id;
@@ -1267,7 +1363,7 @@ public partial class TournamentParticipantsTab : IDisposable
         }
         catch(Exception exception)
         {
-            if(!_isDisposed)
+            if(IsCurrentRequest(tournamentId, requestGeneration))
                 _teamError = GetErrorMessage(exception, "Team registration state could not be refreshed. Try again.");
         }
         finally
@@ -1283,7 +1379,8 @@ public partial class TournamentParticipantsTab : IDisposable
     private async Task<bool> RefreshTournamentAsync(
         Guid tournamentId,
         bool preserveRosterDraft = false,
-        long? expectedRequestGeneration = null)
+        long? expectedRequestGeneration = null,
+        bool preserveSubmitting = false)
     {
         var requestGeneration = expectedRequestGeneration ?? _requestGeneration;
         var updatedTournament = await TournamentService.GetTournamentByIdAsync(tournamentId);
@@ -1304,7 +1401,10 @@ public partial class TournamentParticipantsTab : IDisposable
         await OnTournamentUpdated.InvokeAsync(updatedTournament);
 
         if(IsCurrentRequest(tournamentId, requestGeneration))
-            return await LoadRegistrationContextAsync(preserveRosterDraft);
+            return await LoadRegistrationContextAsync(
+                preserveRosterDraft,
+                preserveSubmitting,
+                preserveSubmitting ? requestGeneration : null);
 
         return false;
     }
@@ -1349,6 +1449,16 @@ public partial class TournamentParticipantsTab : IDisposable
 
         return reconciled;
     }
+
+    internal static IReadOnlyList<Guid> MergeEditableRosterCandidateIds(
+        IEnumerable<Guid> existingCandidateIds,
+        IEnumerable<Guid> selectedRosterUserIds,
+        IEnumerable<Guid> eligibilityCandidateIds) =>
+        existingCandidateIds
+            .Concat(selectedRosterUserIds)
+            .Concat(eligibilityCandidateIds)
+            .Distinct()
+            .ToArray();
 
     private void MergeRosterCandidateEligibility(IEnumerable<RosterCandidateEligibilityDTO>? candidates)
     {
@@ -1508,6 +1618,56 @@ public partial class TournamentParticipantsTab : IDisposable
         return fallback;
     }
 
+    internal sealed class TeamStateInvalidationGate
+    {
+        private readonly object _sync = new();
+        private bool _isRunning;
+        private bool _hasPendingRequest;
+
+        public async Task RunAsync(Func<Task> action)
+        {
+            lock(_sync)
+            {
+                if(_isRunning)
+                {
+                    _hasPendingRequest = true;
+                    return;
+                }
+
+                _isRunning = true;
+            }
+
+            try
+            {
+                while(true)
+                {
+                    await action();
+
+                    lock(_sync)
+                    {
+                        if(!_hasPendingRequest)
+                        {
+                            _isRunning = false;
+                            return;
+                        }
+
+                        _hasPendingRequest = false;
+                    }
+                }
+            }
+            catch
+            {
+                lock(_sync)
+                {
+                    _isRunning = false;
+                    _hasPendingRequest = false;
+                }
+
+                throw;
+            }
+        }
+    }
+
     private string GetParticipantModalSummary() =>
         _selectedParticipant?.ParticipationMode == ParticipationMode.Team
             ? "Team roster, captain, and registered members."
@@ -1526,6 +1686,7 @@ public partial class TournamentParticipantsTab : IDisposable
         _rosterEligibility = null;
         _teamSummary = null;
         _selectedTeamId = null;
+        _pendingAdminRemovalRegistrationId = null;
         _selectedRosterUserIds.Clear();
         _teamEligibilityById.Clear();
         _rosterCandidatesById.Clear();

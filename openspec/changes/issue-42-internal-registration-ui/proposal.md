@@ -21,6 +21,8 @@ external registration URL has already been removed from the live tournament mode
   confirmed roster members cannot self-unregister.
 - Refresh tournament and current-user registration state after every successful mutation and keep
   the last confirmed state after errors.
+- Serialize and coalesce bursts of realtime invalidations, and ignore superseded async state,
+  error, and toast writes so registration controls cannot be stranded by an older request.
 - Consume the authenticated current-team registration context for any roster status so a confirmed
   member remains attached to a still-pending team while preserving the legacy active-only field.
 - Preserve anonymous, live, and mock behavior with loading, empty, unauthorized, unavailable, and
@@ -30,6 +32,8 @@ external registration URL has already been removed from the live tournament mode
 - Validate the selected exact roster separately from per-candidate eligibility, provide retryable
   loading/error states, and refresh public/current-user projections after realtime invalidation
   without silently discarding an unsaved roster draft while its selected team remains available.
+- Keep draft-only and eligibility-only roster candidates visible as explicit removal choices when a
+  team projection changes.
 - Reconcile a transferred captain by adding the current captain without silently removing saved
   members; an oversized roster remains invalid until the captain chooses who to remove.
 - Respect the backend roster-eligibility endpoint's 50-user request limit when discovering candidate

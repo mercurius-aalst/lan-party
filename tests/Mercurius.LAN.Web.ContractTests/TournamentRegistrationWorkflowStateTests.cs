@@ -87,6 +87,75 @@ public sealed class TournamentRegistrationWorkflowStateTests
     }
 
     [Fact]
+    public void EditableRosterCandidatesRetainDraftAndEligibilityOnlyUsers()
+    {
+        var currentTeamMember = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var draftOnlyMember = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var eligibilityOnlyMember = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+
+        var candidateIds = TournamentParticipantsTab.MergeEditableRosterCandidateIds(
+            [currentTeamMember],
+            [draftOnlyMember, currentTeamMember],
+            [eligibilityOnlyMember, draftOnlyMember]);
+
+        Assert.Equal(
+            [currentTeamMember, draftOnlyMember, eligibilityOnlyMember],
+            candidateIds);
+    }
+
+    [Fact]
+    public async Task TeamInvalidationGateSerializesAndCoalescesBursts()
+    {
+        var gate = new TournamentParticipantsTab.TeamStateInvalidationGate();
+        var firstStarted = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirst = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var callCount = 0;
+        var activeCallCount = 0;
+        var maxActiveCallCount = 0;
+
+        async Task Refresh()
+        {
+            var active = Interlocked.Increment(ref activeCallCount);
+            while(true)
+            {
+                var previousMaximum = Volatile.Read(ref maxActiveCallCount);
+                if(active <= previousMaximum ||
+                   Interlocked.CompareExchange(ref maxActiveCallCount, active, previousMaximum) == previousMaximum)
+                    break;
+            }
+
+            var call = Interlocked.Increment(ref callCount);
+            try
+            {
+                if(call == 1)
+                {
+                    firstStarted.SetResult(true);
+                    await releaseFirst.Task;
+                }
+            }
+            finally
+            {
+                Interlocked.Decrement(ref activeCallCount);
+            }
+        }
+
+        var firstRun = gate.RunAsync(Refresh);
+        await firstStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        var burstRuns = Enumerable.Range(0, 5)
+            .Select(_ => gate.RunAsync(Refresh))
+            .ToArray();
+
+        Assert.Equal(1, Volatile.Read(ref callCount));
+
+        releaseFirst.SetResult(true);
+        await Task.WhenAll(burstRuns.Append(firstRun));
+
+        Assert.Equal(2, Volatile.Read(ref callCount));
+        Assert.Equal(1, Volatile.Read(ref maxActiveCallCount));
+    }
+
+    [Fact]
     public void CaptainTransferKeepsSavedMembersAndAddsTheCurrentCaptain()
     {
         var formerCaptain = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");

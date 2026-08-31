@@ -33,6 +33,10 @@
 - [x] 2.12 Reconcile an existing roster after captain transfer by selecting the current captain
        without removing saved members, then require an explicit captain choice when the roster is
        oversized.
+- [x] 2.13 Dispatch realtime invalidations through the renderer, coalesce event bursts, and
+       generation-guard loading, submission, error, and toast state after awaited operations.
+- [x] 2.14 Keep draft-only and eligibility-only selected roster candidates available as explicit
+       removal choices when the current team projection changes.
 
 ## 3. Privacy and parity
 
@@ -61,3 +65,5 @@
 - [x] 4.7 Guard public/authenticated refresh commits with one request-generation snapshot, preserve
        dirty drafts while their selected team remains available, and warn/clear drafts when it
        disappears.
+- [x] 4.8 Add regression coverage for serialized/coalesced realtime invalidations and draft-only
+       candidate repair after a team projection change.
