@@ -29,7 +29,11 @@ external registration URL has already been removed from the live tournament mode
   mutation, including after a confirmation dialog has been open.
 - Validate the selected exact roster separately from per-candidate eligibility, provide retryable
   loading/error states, and refresh public/current-user projections after realtime invalidation
-  without silently discarding an unsaved roster draft.
+  without silently discarding an unsaved roster draft while its selected team remains available.
+- Reconcile a transferred captain by adding the current captain without silently removing saved
+  members; an oversized roster remains invalid until the captain chooses who to remove.
+- Respect the backend roster-eligibility endpoint's 50-user request limit when discovering candidate
+  reasons, while keeping that existing endpoint as the bounded candidate-discovery contract.
 
 ## Baseline Coverage From PR #53
 

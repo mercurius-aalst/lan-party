@@ -28,10 +28,11 @@
 - [x] 2.10 Consume the authenticated current-team registration context for pending and active
        roster states, retain active-field compatibility fallback, and show non-captain roster status
        without self-unregister controls.
-- [x] 2.11 Bound per-candidate roster eligibility discovery to 50 user ids per backend request and
-       merge chunk results deterministically, including former roster members.
-- [x] 2.12 Reconcile an existing roster after captain transfer by selecting the current captain,
-       removing the former captain when exact size requires it, and warning the captain to review.
+- [x] 2.11 Bound per-candidate roster eligibility discovery to the backend endpoint limit of 50 user
+       ids per request and merge chunk results deterministically, including former roster members.
+- [x] 2.12 Reconcile an existing roster after captain transfer by selecting the current captain
+       without removing saved members, then require an explicit captain choice when the roster is
+       oversized.
 
 ## 3. Privacy and parity
 
@@ -57,5 +58,6 @@
        mock parity without exposing pending data through public participant projections.
 - [x] 4.6 Add regression coverage for saved-but-unrefreshed mutation state, 51-member candidate
        discovery batching, and captain-transfer reconciliation including TeamSize=1.
-- [x] 4.7 Guard public/authenticated refresh commits with tournament route and registration
-       generation snapshots, and preserve/warn on dirty drafts when their selected team disappears.
+- [x] 4.7 Guard public/authenticated refresh commits with one request-generation snapshot, preserve
+       dirty drafts while their selected team remains available, and warn/clear drafts when it
+       disappears.

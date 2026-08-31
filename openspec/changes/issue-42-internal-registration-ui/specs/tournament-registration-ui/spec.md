@@ -73,7 +73,10 @@ selection, roster selection, and review/submit.
 
 - **WHEN** a captain opens team registration
 - **THEN** Step 1 MUST list only teams the current user captains
-- **AND** the selected team MUST be checked against backend team eligibility
+- **AND** the selected team MUST be checked against backend team eligibility before the captain can
+  continue
+- **AND** eligibility for another team MAY be loaded when that team is selected rather than when
+  the page first opens
 - **AND** an ineligible team MUST be disabled or clearly marked with its reason
 
 #### Scenario: Captain selects a roster
@@ -85,14 +88,16 @@ selection, roster selection, and review/submit.
 - **AND** the captain MUST remain selected
 - **AND** ineligible members MUST be disabled or clearly marked with their backend reason
 - **AND** the captain MUST NOT progress to review until the local roster constraints pass
+- **AND** a roster made oversized by a captain transfer MUST remain invalid until the captain
+  explicitly removes a member
 
 #### Scenario: Candidate discovery does not invalidate the selected roster
 
 - **WHEN** a team has more members than the configured team size
 - **THEN** roster eligibility MUST validate only the exact selected roster for progression and submit
 - **AND** eligibility reasons for unselected candidates MUST be shown independently
-- **AND** candidate-reason requests MUST be bounded to the backend maximum of 50 user ids per
-  request and merged without dropping or duplicating candidates
+- **AND** candidate-reason requests MUST be bounded to the backend roster-eligibility endpoint's
+  maximum of 50 user ids per request and merged without dropping or duplicating candidates
 - **AND** an existing registration containing a former team member MUST expose that member as
   removable or clearly explain the repair path
 
@@ -100,7 +105,7 @@ selection, roster selection, and review/submit.
 
 - **WHEN** the current team projection contains more than 50 possible roster candidates
 - **THEN** the page MUST split candidate-reason discovery into backend-safe requests of at most 50
-  user ids each
+  user ids each because the endpoint rejects larger requests
 - **AND** the selected exact roster MUST still be validated separately and remain eligible to
   advance when it satisfies the configured team size
 
@@ -123,8 +128,9 @@ selection, roster selection, and review/submit.
 - **WHEN** the saved roster identifies a former captain but the current team captain is a different
   member
 - **THEN** the page MUST include the current captain in the selected roster before validation
-- **AND** when the exact team size requires a removal, the former captain SHOULD be removed first
-  while remaining roster candidates stay removable
+- **AND** the page MUST NOT remove the former captain or another roster member automatically
+- **AND** when the exact team size requires a removal, the page MUST mark the roster invalid and
+  require the captain to choose who leaves
 - **AND** the page MUST explain the adjustment and require the captain to review it before saving
 
 ### Requirement: Roster confirmation and ownership state are clear
@@ -207,7 +213,9 @@ states while keeping public participant data separate from authenticated registr
 - **WHEN** a supported team or roster realtime event invalidates registration state
 - **THEN** the page MUST refresh the public tournament projection and authenticated registration
   context
-- **AND** an unsaved roster draft MUST be preserved or explicitly warned about before it is replaced
+- **AND** an unsaved roster draft MUST be preserved while its selected team remains available
+- **AND** if that team disappears, the page MUST warn the captain and clear the stale draft instead
+  of restoring it if the team later reappears
 
 #### Scenario: Backend event gap remains recoverable
 

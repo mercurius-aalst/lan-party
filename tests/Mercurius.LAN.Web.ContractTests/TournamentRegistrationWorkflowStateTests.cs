@@ -22,10 +22,10 @@ public sealed class TournamentRegistrationWorkflowStateTests
     }
 
     [Theory]
-    [InlineData(true, true, false)]
-    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    [InlineData(true, false, false)]
     [InlineData(false, false, false)]
-    public void DirtyRosterDraftIsKeptWhenItsTeamIsNoLongerSelected(
+    public void DirtyRosterDraftIsKeptOnlyWhenItsTeamStillExists(
         bool hasDraftTeam,
         bool selectedTeamIsSame,
         bool expected)
@@ -47,31 +47,27 @@ public sealed class TournamentRegistrationWorkflowStateTests
     }
 
     [Fact]
-    public void RefreshStartedBeforeLeavingAndReturningToTournamentIsRejected()
+    public void RequestStartedBeforeLeavingAndReturningToTournamentIsRejected()
     {
         var tournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
-        Assert.False(TournamentParticipantsTab.IsRefreshCurrent(
+        Assert.False(TournamentParticipantsTab.IsRequestCurrent(
             tournamentId,
             tournamentId,
-            expectedRouteVersion: 4,
-            currentRouteVersion: 6,
-            expectedRegistrationGeneration: 12,
-            currentRegistrationGeneration: 14));
+            expectedRequestGeneration: 4,
+            currentRequestGeneration: 6));
     }
 
     [Fact]
-    public void RefreshWithMatchingTournamentRouteAndGenerationIsCurrent()
+    public void RequestWithMatchingTournamentAndGenerationIsCurrent()
     {
         var tournamentId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
-        Assert.True(TournamentParticipantsTab.IsRefreshCurrent(
+        Assert.True(TournamentParticipantsTab.IsRequestCurrent(
             tournamentId,
             tournamentId,
-            expectedRouteVersion: 4,
-            currentRouteVersion: 4,
-            expectedRegistrationGeneration: 12,
-            currentRegistrationGeneration: 12));
+            expectedRequestGeneration: 4,
+            currentRequestGeneration: 4));
     }
 
     [Fact]
@@ -91,7 +87,7 @@ public sealed class TournamentRegistrationWorkflowStateTests
     }
 
     [Fact]
-    public void CaptainTransferReconcilesExistingRosterToTheCurrentCaptain()
+    public void CaptainTransferKeepsSavedMembersAndAddsTheCurrentCaptain()
     {
         var formerCaptain = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var retainedMember = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
@@ -99,25 +95,21 @@ public sealed class TournamentRegistrationWorkflowStateTests
 
         var reconciled = TournamentParticipantsTab.ReconcileRosterForCurrentCaptain(
             [formerCaptain, retainedMember],
-            currentCaptain,
-            requiredTeamSize: 2,
-            [formerCaptain]);
+            currentCaptain);
 
-        Assert.Equal([retainedMember, currentCaptain], reconciled);
+        Assert.Equal([formerCaptain, retainedMember, currentCaptain], reconciled);
     }
 
     [Fact]
-    public void CaptainTransferForSinglePlayerTeamKeepsOnlyTheCurrentCaptain()
+    public void CaptainTransferForSinglePlayerTeamKeepsSavedMemberForExplicitRemoval()
     {
         var formerCaptain = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var currentCaptain = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
 
         var reconciled = TournamentParticipantsTab.ReconcileRosterForCurrentCaptain(
             [formerCaptain],
-            currentCaptain,
-            requiredTeamSize: 1,
-            [formerCaptain]);
+            currentCaptain);
 
-        Assert.Equal([currentCaptain], reconciled);
+        Assert.Equal([formerCaptain, currentCaptain], reconciled);
     }
 }
