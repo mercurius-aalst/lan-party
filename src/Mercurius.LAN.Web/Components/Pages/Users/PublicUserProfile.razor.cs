@@ -18,7 +18,6 @@ public partial class PublicUserProfile
     private bool _isMatchSummariesLoading;
     private bool _hasMatchSummariesError;
     private CancellationTokenSource? _loadCancellation;
-    private long _loadGeneration;
     private bool _disposed;
     private string? _loadedUsername;
     private bool HasLinkedIdentities =>
@@ -33,7 +32,6 @@ public partial class PublicUserProfile
         if(_disposed)
             return;
 
-        var generation = ++_loadGeneration;
         CancelCurrentLoad();
         using var cancellation = new CancellationTokenSource();
         _loadCancellation = cancellation;
@@ -59,7 +57,7 @@ public partial class PublicUserProfile
             try
             {
                 var profile = await PublicProfileService.GetPublicUserByUsernameAsync(decodedUsername, cancellationToken);
-                if(!IsCurrentLoad(generation, cancellationToken))
+                if(!IsCurrentLoad(cancellation))
                     return;
 
                 _profile = profile;
@@ -71,19 +69,19 @@ public partial class PublicUserProfile
             }
             catch(Exception)
             {
-                if(IsCurrentLoad(generation, cancellationToken))
+                if(IsCurrentLoad(cancellation))
                     _hasError = true;
             }
             finally
             {
-                if(IsCurrentLoad(generation, cancellationToken))
+                if(IsCurrentLoad(cancellation))
                     _isLoading = false;
             }
 
-            if(!IsCurrentLoad(generation, cancellationToken) || _hasError || _profile is null)
+            if(!IsCurrentLoad(cancellation) || _hasError || _profile is null)
                 return;
 
-            await LoadMatchSummariesAsync(decodedUsername, generation, cancellationToken);
+            await LoadMatchSummariesAsync(decodedUsername, cancellation);
         }
         finally
         {
@@ -94,21 +92,21 @@ public partial class PublicUserProfile
 
     private async Task LoadMatchSummariesAsync(
         string username,
-        long generation,
-        CancellationToken cancellationToken)
+        CancellationTokenSource cancellation)
     {
-        if(!IsCurrentLoad(generation, cancellationToken))
+        if(!IsCurrentLoad(cancellation))
             return;
 
+        var cancellationToken = cancellation.Token;
         _isMatchSummariesLoading = true;
-        await NotifyStateChangedAsync(generation, cancellationToken);
-        if(!IsCurrentLoad(generation, cancellationToken))
+        await NotifyStateChangedAsync(cancellation);
+        if(!IsCurrentLoad(cancellation))
             return;
 
         try
         {
-            var matchSummaries = await PublicProfileService.GetPublicUserMatchSummariesAsync(username, cancellationToken);
-            if(!IsCurrentLoad(generation, cancellationToken))
+            var matchSummaries = await PublicProfileService.GetPublicUserMatchSummariesAsync(username, cancellation.Token);
+            if(!IsCurrentLoad(cancellation))
                 return;
 
             _matchSummaries = matchSummaries ?? new PublicProfileMatchSummariesDTO();
@@ -119,12 +117,12 @@ public partial class PublicUserProfile
         }
         catch(Exception)
         {
-            if(IsCurrentLoad(generation, cancellationToken))
+            if(IsCurrentLoad(cancellation))
                 _hasMatchSummariesError = true;
         }
         finally
         {
-            if(IsCurrentLoad(generation, cancellationToken))
+            if(IsCurrentLoad(cancellation))
                 _isMatchSummariesLoading = false;
         }
     }
@@ -134,7 +132,6 @@ public partial class PublicUserProfile
         if(_disposed || _profile is null || string.IsNullOrWhiteSpace(_loadedUsername))
             return;
 
-        var generation = ++_loadGeneration;
         CancelCurrentLoad();
         using var cancellation = new CancellationTokenSource();
         _loadCancellation = cancellation;
@@ -143,7 +140,7 @@ public partial class PublicUserProfile
 
         try
         {
-            await LoadMatchSummariesAsync(_loadedUsername, generation, cancellation.Token);
+            await LoadMatchSummariesAsync(_loadedUsername, cancellation);
         }
         finally
         {
@@ -155,7 +152,6 @@ public partial class PublicUserProfile
     public void Dispose()
     {
         _disposed = true;
-        ++_loadGeneration;
         CancelCurrentLoad();
         _loadCancellation = null;
     }
@@ -172,22 +168,22 @@ public partial class PublicUserProfile
         }
     }
 
-    private bool IsCurrentLoad(long generation, CancellationToken cancellationToken) =>
-        !_disposed && generation == _loadGeneration && !cancellationToken.IsCancellationRequested;
+    private bool IsCurrentLoad(CancellationTokenSource cancellation) =>
+        !_disposed && ReferenceEquals(_loadCancellation, cancellation) && !cancellation.IsCancellationRequested;
 
-    private async Task NotifyStateChangedAsync(long generation, CancellationToken cancellationToken)
+    private async Task NotifyStateChangedAsync(CancellationTokenSource cancellation)
     {
-        if(!IsCurrentLoad(generation, cancellationToken))
+        if(!IsCurrentLoad(cancellation))
             return;
 
         try
         {
             await InvokeAsync(StateHasChanged);
         }
-        catch(ObjectDisposedException) when(!IsCurrentLoad(generation, cancellationToken))
+        catch(ObjectDisposedException)
         {
         }
-        catch(InvalidOperationException) when(!IsCurrentLoad(generation, cancellationToken))
+        catch(InvalidOperationException)
         {
         }
     }

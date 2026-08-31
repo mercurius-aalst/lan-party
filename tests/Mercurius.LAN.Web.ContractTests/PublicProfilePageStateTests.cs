@@ -117,6 +117,140 @@ public sealed class PublicProfilePageStateTests
     }
 
     [Fact]
+    public async Task PublicUserProfile_IgnoresStaleSummaryAfterRouteChange()
+    {
+        var service = new StubPublicProfileService(
+            delayFirstCall: false,
+            returnProfiles: true,
+            controlSummaries: true)
+        {
+            DelaySecondSummary = false
+        };
+        var page = new TestPublicUserProfile();
+        SetInjectedService(page, nameof(PublicUserProfile), "PublicProfileService", service);
+        SetParameter(page, nameof(PublicUserProfile.Username), "A");
+
+        var firstLoad = page.LoadAsync();
+        await service.FirstSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicUserProfile.Username), "B");
+        var secondLoad = page.LoadAsync();
+        await service.SecondSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await secondLoad;
+
+        service.FirstSummaryResult.SetResult(CreateSummaries("A summary"));
+        await firstLoad;
+
+        var profile = Assert.IsType<PublicUserProfileDTO>(ReadField(page, nameof(PublicUserProfile), "_profile"));
+        var summaries = Assert.IsType<PublicProfileMatchSummariesDTO>(ReadField(page, nameof(PublicUserProfile), "_matchSummaries"));
+        Assert.Equal("B", profile.Username);
+        Assert.Equal("B summary", Assert.Single(summaries.UpcomingMatches).TournamentName);
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_hasMatchSummariesError"));
+        page.Dispose();
+    }
+
+    [Fact]
+    public async Task PublicUserProfile_IgnoresStaleRetryAfterRouteChange()
+    {
+        var service = new StubPublicProfileService(
+            delayFirstCall: false,
+            returnProfiles: true,
+            controlSummaries: true);
+        var page = new TestPublicUserProfile();
+        SetInjectedService(page, nameof(PublicUserProfile), "PublicProfileService", service);
+        SetParameter(page, nameof(PublicUserProfile.Username), "A");
+
+        var initialLoad = page.LoadAsync();
+        await service.FirstSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        service.FirstSummaryResult.SetException(new InvalidOperationException("initial summary failure"));
+        await initialLoad;
+
+        var retry = InvokePrivateTask(page, nameof(PublicUserProfile), "RetryMatchSummariesAsync");
+        await service.SecondSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicUserProfile.Username), "B");
+        var routeChange = page.LoadAsync();
+        await routeChange;
+
+        service.SecondSummaryResult.SetException(new InvalidOperationException("stale retry failure"));
+        await retry;
+
+        var profile = Assert.IsType<PublicUserProfileDTO>(ReadField(page, nameof(PublicUserProfile), "_profile"));
+        var summaries = Assert.IsType<PublicProfileMatchSummariesDTO>(ReadField(page, nameof(PublicUserProfile), "_matchSummaries"));
+        Assert.Equal("B", profile.Username);
+        Assert.Equal("B summary", Assert.Single(summaries.UpcomingMatches).TournamentName);
+        Assert.False(ReadBoolean(page, nameof(PublicUserProfile), "_hasMatchSummariesError"));
+        page.Dispose();
+    }
+
+    [Fact]
+    public async Task PublicTeamProfile_IgnoresStaleSummaryAfterRouteChange()
+    {
+        var service = new StubTeamService(
+            delayFirstCall: false,
+            returnProfiles: true,
+            controlSummaries: true)
+        {
+            DelaySecondSummary = false
+        };
+        var page = new TestPublicTeamProfile();
+        SetInjectedService(page, nameof(PublicTeamProfile), "TeamService", service);
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "A");
+
+        var firstLoad = page.LoadAsync();
+        await service.FirstSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "B");
+        var secondLoad = page.LoadAsync();
+        await service.SecondSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await secondLoad;
+
+        service.FirstSummaryResult.SetResult(CreateSummaries("A summary"));
+        await firstLoad;
+
+        var team = Assert.IsType<PublicTeamProfileDTO>(ReadField(page, nameof(PublicTeamProfile), "_team"));
+        var summaries = Assert.IsType<PublicProfileMatchSummariesDTO>(ReadField(page, nameof(PublicTeamProfile), "_matchSummaries"));
+        Assert.Equal("B", team.TeamName);
+        Assert.Equal("B summary", Assert.Single(summaries.UpcomingMatches).TournamentName);
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_hasMatchSummariesError"));
+        page.Dispose();
+    }
+
+    [Fact]
+    public async Task PublicTeamProfile_IgnoresStaleRetryAfterRouteChange()
+    {
+        var service = new StubTeamService(
+            delayFirstCall: false,
+            returnProfiles: true,
+            controlSummaries: true);
+        var page = new TestPublicTeamProfile();
+        SetInjectedService(page, nameof(PublicTeamProfile), "TeamService", service);
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "A");
+
+        var initialLoad = page.LoadAsync();
+        await service.FirstSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        service.FirstSummaryResult.SetException(new InvalidOperationException("initial summary failure"));
+        await initialLoad;
+
+        var retry = InvokePrivateTask(page, nameof(PublicTeamProfile), "RetryMatchSummariesAsync");
+        await service.SecondSummaryCallStarted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        SetParameter(page, nameof(PublicTeamProfile.TeamName), "B");
+        var routeChange = page.LoadAsync();
+        await routeChange;
+
+        service.SecondSummaryResult.SetException(new InvalidOperationException("stale retry failure"));
+        await retry;
+
+        var team = Assert.IsType<PublicTeamProfileDTO>(ReadField(page, nameof(PublicTeamProfile), "_team"));
+        var summaries = Assert.IsType<PublicProfileMatchSummariesDTO>(ReadField(page, nameof(PublicTeamProfile), "_matchSummaries"));
+        Assert.Equal("B", team.TeamName);
+        Assert.Equal("B summary", Assert.Single(summaries.UpcomingMatches).TournamentName);
+        Assert.False(ReadBoolean(page, nameof(PublicTeamProfile), "_hasMatchSummariesError"));
+        page.Dispose();
+    }
+
+    [Fact]
     public async Task PublicUserProfile_DisposeSuppressesPendingLoad()
     {
         var service = new StubPublicProfileService(delayFirstCall: true);
@@ -170,6 +304,31 @@ public sealed class PublicProfilePageStateTests
     private static bool ReadBoolean(object page, string pageTypeName, string fieldName) =>
         (bool)(ReadField(page, pageTypeName, fieldName) ?? false);
 
+    private static Task InvokePrivateTask(object page, string pageTypeName, string methodName)
+    {
+        var pageType = page.GetType().BaseType ?? throw new InvalidOperationException("Test page base type was not found.");
+        if(!string.Equals(pageType.Name, pageTypeName, StringComparison.Ordinal))
+            throw new InvalidOperationException($"Unexpected test page type '{pageType.Name}'.");
+
+        var method = pageType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Private method '{methodName}' was not found.");
+        return (Task)(method.Invoke(page, null) ?? throw new InvalidOperationException($"Private method '{methodName}' returned no task."));
+    }
+
+    private static PublicProfileMatchSummariesDTO CreateSummaries(string tournamentName) =>
+        new()
+        {
+            UpcomingMatches =
+            [
+                new PublicProfileMatchSummaryDTO
+                {
+                    TournamentName = tournamentName,
+                    MatchId = Guid.NewGuid(),
+                    TournamentId = Guid.NewGuid()
+                }
+            ]
+        };
+
     private static void SetParameter(object page, string propertyName, object? value)
     {
         var pageType = page.GetType().BaseType ?? throw new InvalidOperationException("Test page base type was not found.");
@@ -199,17 +358,35 @@ public sealed class PublicProfilePageStateTests
         public Task LoadAsync() => base.OnParametersSetAsync();
     }
 
-    private sealed class StubPublicProfileService(bool delayFirstCall) : IPublicProfileService
+    private sealed class StubPublicProfileService(
+        bool delayFirstCall,
+        bool returnProfiles = false,
+        bool controlSummaries = false) : IPublicProfileService
     {
         private readonly object _syncRoot = new();
         private readonly List<string> _requestedUsernames = [];
         private int _callCount;
+        private int _summaryCallCount;
 
         public TaskCompletionSource<bool> FirstCallStarted { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public TaskCompletionSource<PublicUserProfileDTO?> FirstCallResult { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> FirstSummaryCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> SecondSummaryCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicProfileMatchSummariesDTO?> FirstSummaryResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicProfileMatchSummariesDTO?> SecondSummaryResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool DelaySecondSummary { get; set; } = true;
 
         public IReadOnlyList<string> RequestedUsernames
         {
@@ -233,27 +410,66 @@ public sealed class PublicProfilePageStateTests
                 return FirstCallResult.Task;
             }
 
-            return Task.FromResult<PublicUserProfileDTO?>(null);
+            return returnProfiles
+                ? Task.FromResult<PublicUserProfileDTO?>(new PublicUserProfileDTO { Username = username })
+                : Task.FromResult<PublicUserProfileDTO?>(null);
         }
 
         public Task<PublicProfileMatchSummariesDTO?> GetPublicUserMatchSummariesAsync(
             string username,
-            CancellationToken cancellationToken = default) =>
-            Task.FromException<PublicProfileMatchSummariesDTO?>(
-                new InvalidOperationException("Match summaries must not be requested by this state test."));
+            CancellationToken cancellationToken = default)
+        {
+            if(!controlSummaries)
+            {
+                return Task.FromException<PublicProfileMatchSummariesDTO?>(
+                    new InvalidOperationException("Match summaries must not be requested by this state test."));
+            }
+
+            switch(Interlocked.Increment(ref _summaryCallCount))
+            {
+                case 1:
+                    FirstSummaryCallStarted.TrySetResult(true);
+                    return FirstSummaryResult.Task;
+                case 2:
+                    SecondSummaryCallStarted.TrySetResult(true);
+                    return DelaySecondSummary
+                        ? SecondSummaryResult.Task
+                        : Task.FromResult<PublicProfileMatchSummariesDTO?>(CreateSummaries($"{username} summary"));
+                default:
+                    return Task.FromResult<PublicProfileMatchSummariesDTO?>(CreateSummaries($"{username} summary"));
+            }
+        }
     }
 
-    private sealed class StubTeamService(bool delayFirstCall) : ITeamService
+    private sealed class StubTeamService(
+        bool delayFirstCall,
+        bool returnProfiles = false,
+        bool controlSummaries = false) : ITeamService
     {
         private readonly object _syncRoot = new();
         private readonly List<string> _requestedTeamNames = [];
         private int _callCount;
+        private int _summaryCallCount;
 
         public TaskCompletionSource<bool> FirstCallStarted { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public TaskCompletionSource<PublicTeamProfileDTO?> FirstCallResult { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> FirstSummaryCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<bool> SecondSummaryCallStarted { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicProfileMatchSummariesDTO?> FirstSummaryResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public TaskCompletionSource<PublicProfileMatchSummariesDTO?> SecondSummaryResult { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public bool DelaySecondSummary { get; set; } = true;
 
         public IReadOnlyList<string> RequestedTeamNames
         {
@@ -283,14 +499,35 @@ public sealed class PublicProfilePageStateTests
                 return FirstCallResult.Task;
             }
 
-            return Task.FromResult<PublicTeamProfileDTO?>(null);
+            return returnProfiles
+                ? Task.FromResult<PublicTeamProfileDTO?>(new PublicTeamProfileDTO { TeamName = teamName })
+                : Task.FromResult<PublicTeamProfileDTO?>(null);
         }
 
         public Task<PublicProfileMatchSummariesDTO?> GetPublicTeamMatchSummariesAsync(
             string teamName,
-            CancellationToken cancellationToken = default) =>
-            Task.FromException<PublicProfileMatchSummariesDTO?>(
-                new InvalidOperationException("Match summaries must not be requested by this state test."));
+            CancellationToken cancellationToken = default)
+        {
+            if(!controlSummaries)
+            {
+                return Task.FromException<PublicProfileMatchSummariesDTO?>(
+                    new InvalidOperationException("Match summaries must not be requested by this state test."));
+            }
+
+            switch(Interlocked.Increment(ref _summaryCallCount))
+            {
+                case 1:
+                    FirstSummaryCallStarted.TrySetResult(true);
+                    return FirstSummaryResult.Task;
+                case 2:
+                    SecondSummaryCallStarted.TrySetResult(true);
+                    return DelaySecondSummary
+                        ? SecondSummaryResult.Task
+                        : Task.FromResult<PublicProfileMatchSummariesDTO?>(CreateSummaries($"{teamName} summary"));
+                default:
+                    return Task.FromResult<PublicProfileMatchSummariesDTO?>(CreateSummaries($"{teamName} summary"));
+            }
+        }
 
         public Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(
             CancellationToken cancellationToken = default) =>

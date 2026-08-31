@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.DTOs.PublicProfiles;
+using Mercurius.LAN.Web.Extensions;
 using MatchLifecycleState = Mercurius.LAN.Web.DTOs.Matches.MatchLifecycleState;
 using Microsoft.AspNetCore.Components;
 
@@ -60,26 +61,26 @@ public partial class PublicProfileMatchSummaries
     {
         var completedAt = summary.CompletedAtUtc ?? summary.StartedAtUtc;
         return completedAt.HasValue
-            ? $"Played {FormatUtc(completedAt.Value)}"
+            ? $"Played {FormatLocal(completedAt.Value)}"
             : "Played date unavailable";
     }
 
     private static string GetUpcomingTimeLabel(PublicProfileMatchSummaryDTO summary)
     {
         if(summary.EstimatedStartTime is { } estimatedStart)
-            return $"Estimated {FormatUtc(estimatedStart)}";
+            return $"Estimated {FormatLocal(estimatedStart)}";
 
         if(summary.ScheduledStartTime is { } scheduledStart)
-            return $"Scheduled {FormatUtc(scheduledStart)}";
+            return $"Scheduled {FormatLocal(scheduledStart)}";
 
         return "Time to be confirmed";
     }
 
     private static string? GetTimeAttribute(DateTime? value) =>
-        value.HasValue ? value.Value.ToUniversalTime().ToString("O") : null;
+        value?.ToUtcIsoString();
 
-    private static string FormatUtc(DateTime value) =>
-        $"{value.ToUniversalTime():dd MMM yyyy, HH:mm} UTC";
+    private static string FormatLocal(DateTime value) =>
+        value.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
 
     private Task RetryAsync() => OnRetry.InvokeAsync();
 }

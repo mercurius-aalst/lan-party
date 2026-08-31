@@ -18,7 +18,6 @@ public partial class PublicTeamProfile
     private bool _isMatchSummariesLoading;
     private bool _hasMatchSummariesError;
     private CancellationTokenSource? _loadCancellation;
-    private long _loadGeneration;
     private bool _disposed;
     private string? _loadedTeamName;
     private int MemberCount => _team?.Members.Count ?? 0;
@@ -28,7 +27,6 @@ public partial class PublicTeamProfile
         if(_disposed)
             return;
 
-        var generation = ++_loadGeneration;
         CancelCurrentLoad();
         using var cancellation = new CancellationTokenSource();
         _loadCancellation = cancellation;
@@ -54,7 +52,7 @@ public partial class PublicTeamProfile
             try
             {
                 var team = await TeamService.GetPublicTeamByNameAsync(decodedTeamName, cancellationToken);
-                if(!IsCurrentLoad(generation, cancellationToken))
+                if(!IsCurrentLoad(cancellation))
                     return;
 
                 _team = team;
@@ -66,19 +64,19 @@ public partial class PublicTeamProfile
             }
             catch(Exception)
             {
-                if(IsCurrentLoad(generation, cancellationToken))
+                if(IsCurrentLoad(cancellation))
                     _hasError = true;
             }
             finally
             {
-                if(IsCurrentLoad(generation, cancellationToken))
+                if(IsCurrentLoad(cancellation))
                     _isLoading = false;
             }
 
-            if(!IsCurrentLoad(generation, cancellationToken) || _hasError || _team is null)
+            if(!IsCurrentLoad(cancellation) || _hasError || _team is null)
                 return;
 
-            await LoadMatchSummariesAsync(decodedTeamName, generation, cancellationToken);
+            await LoadMatchSummariesAsync(decodedTeamName, cancellation);
         }
         finally
         {
@@ -89,21 +87,21 @@ public partial class PublicTeamProfile
 
     private async Task LoadMatchSummariesAsync(
         string teamName,
-        long generation,
-        CancellationToken cancellationToken)
+        CancellationTokenSource cancellation)
     {
-        if(!IsCurrentLoad(generation, cancellationToken))
+        if(!IsCurrentLoad(cancellation))
             return;
 
+        var cancellationToken = cancellation.Token;
         _isMatchSummariesLoading = true;
-        await NotifyStateChangedAsync(generation, cancellationToken);
-        if(!IsCurrentLoad(generation, cancellationToken))
+        await NotifyStateChangedAsync(cancellation);
+        if(!IsCurrentLoad(cancellation))
             return;
 
         try
         {
-            var matchSummaries = await TeamService.GetPublicTeamMatchSummariesAsync(teamName, cancellationToken);
-            if(!IsCurrentLoad(generation, cancellationToken))
+            var matchSummaries = await TeamService.GetPublicTeamMatchSummariesAsync(teamName, cancellation.Token);
+            if(!IsCurrentLoad(cancellation))
                 return;
 
             _matchSummaries = matchSummaries ?? new PublicProfileMatchSummariesDTO();
@@ -114,12 +112,12 @@ public partial class PublicTeamProfile
         }
         catch(Exception)
         {
-            if(IsCurrentLoad(generation, cancellationToken))
+            if(IsCurrentLoad(cancellation))
                 _hasMatchSummariesError = true;
         }
         finally
         {
-            if(IsCurrentLoad(generation, cancellationToken))
+            if(IsCurrentLoad(cancellation))
                 _isMatchSummariesLoading = false;
         }
     }
@@ -129,7 +127,6 @@ public partial class PublicTeamProfile
         if(_disposed || _team is null || string.IsNullOrWhiteSpace(_loadedTeamName))
             return;
 
-        var generation = ++_loadGeneration;
         CancelCurrentLoad();
         using var cancellation = new CancellationTokenSource();
         _loadCancellation = cancellation;
@@ -138,7 +135,7 @@ public partial class PublicTeamProfile
 
         try
         {
-            await LoadMatchSummariesAsync(_loadedTeamName, generation, cancellation.Token);
+            await LoadMatchSummariesAsync(_loadedTeamName, cancellation);
         }
         finally
         {
@@ -150,7 +147,6 @@ public partial class PublicTeamProfile
     public void Dispose()
     {
         _disposed = true;
-        ++_loadGeneration;
         CancelCurrentLoad();
         _loadCancellation = null;
     }
@@ -167,22 +163,22 @@ public partial class PublicTeamProfile
         }
     }
 
-    private bool IsCurrentLoad(long generation, CancellationToken cancellationToken) =>
-        !_disposed && generation == _loadGeneration && !cancellationToken.IsCancellationRequested;
+    private bool IsCurrentLoad(CancellationTokenSource cancellation) =>
+        !_disposed && ReferenceEquals(_loadCancellation, cancellation) && !cancellation.IsCancellationRequested;
 
-    private async Task NotifyStateChangedAsync(long generation, CancellationToken cancellationToken)
+    private async Task NotifyStateChangedAsync(CancellationTokenSource cancellation)
     {
-        if(!IsCurrentLoad(generation, cancellationToken))
+        if(!IsCurrentLoad(cancellation))
             return;
 
         try
         {
             await InvokeAsync(StateHasChanged);
         }
-        catch(ObjectDisposedException) when(!IsCurrentLoad(generation, cancellationToken))
+        catch(ObjectDisposedException)
         {
         }
-        catch(InvalidOperationException) when(!IsCurrentLoad(generation, cancellationToken))
+        catch(InvalidOperationException)
         {
         }
     }
