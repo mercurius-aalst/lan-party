@@ -71,6 +71,54 @@ public sealed class MatchLifecycleUiStateTests
     }
 
     [Fact]
+    public void BlockedReason_UsesTheReasonForTheRequestedAdministratorAction()
+    {
+        var state = CreateActionState();
+        state.ResolveBlockedReason = "match_requires_admin_resolution";
+        state.ForceForfeitBlockedReason = "tournament_not_in_progress";
+        state.ReverseBlockedReason = "match_reversal_blocked";
+
+        Assert.Equal(
+            "This match already requires administrator resolution.",
+            TournamentMatchDetailsDialog.GetBlockedReason(
+                state,
+                TournamentMatchDetailsDialog.MatchMutationAction.Resolve));
+        Assert.Equal(
+            "This tournament is no longer in progress.",
+            TournamentMatchDetailsDialog.GetBlockedReason(
+                state,
+                TournamentMatchDetailsDialog.MatchMutationAction.ForceForfeit));
+        Assert.Equal(
+            "This result cannot be reversed because a linked downstream match has already been played or resolved.",
+            TournamentMatchDetailsDialog.GetBlockedReason(
+                state,
+                TournamentMatchDetailsDialog.MatchMutationAction.Reverse));
+    }
+
+    [Theory]
+    [InlineData(
+        "ConfirmEnded",
+        "Match-end confirmation is no longer available in the authoritative match state.")]
+    [InlineData(
+        "SubmitScore",
+        "Score submission is no longer available in the authoritative match state.")]
+    [InlineData(
+        "Forfeit",
+        "Forfeiting this match is no longer available for your side in the authoritative state.")]
+    public void BlockedReason_ForParticipantActions_IsActionSpecific(
+        string actionName,
+        string expectedMessage)
+    {
+        var state = CreateActionState();
+        state.ResolveBlockedReason = "match_requires_admin_resolution";
+        state.ForceForfeitBlockedReason = "tournament_not_in_progress";
+        state.ReverseBlockedReason = "match_reversal_blocked";
+        var action = Enum.Parse<TournamentMatchDetailsDialog.MatchMutationAction>(actionName);
+
+        Assert.Equal(expectedMessage, TournamentMatchDetailsDialog.GetBlockedReason(state, action));
+    }
+
+    [Fact]
     public void ReconcileSelectedMatch_UsesTheRefreshedSameIdInstance()
     {
         var matchId = Guid.NewGuid();
