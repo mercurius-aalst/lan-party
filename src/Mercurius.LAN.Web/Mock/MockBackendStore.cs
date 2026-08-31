@@ -39,6 +39,7 @@ internal sealed class MockBackendStore
     private readonly object _syncRoot = new();
     private readonly string _dataFilePath;
     private readonly Dictionary<Guid, List<TournamentRegistrationDTO>> _registrationDetails = [];
+    private readonly Dictionary<Guid, Dictionary<Guid, MockRegistrationSnapshot>> _publicRegistrationSnapshots = [];
     private readonly HashSet<Guid> _deletedTeamIds = [];
     private MockBackendDocument _document;
 
@@ -279,11 +280,9 @@ internal sealed class MockBackendStore
             if(subjectRegistrations.Count == 0)
                 continue;
 
-            var snapshots = activeRegistrations
-                .Select(ToRegistrationSnapshot)
-                .Where(snapshot => snapshot.ParticipantId.HasValue)
-                .GroupBy(snapshot => snapshot.ParticipantId!.Value)
-                .ToDictionary(group => group.Key, group => group.First());
+            var snapshots = _publicRegistrationSnapshots.TryGetValue(tournament.Id, out var tournamentSnapshots)
+                ? tournamentSnapshots
+                : new Dictionary<Guid, MockRegistrationSnapshot>();
 
             foreach(var match in tournament.Matches)
             {
@@ -1738,14 +1737,38 @@ internal sealed class MockBackendStore
     private List<TournamentRegistrationDTO> GetRegistrationDetails(TournamentExtended tournament)
     {
         if(_registrationDetails.TryGetValue(tournament.Id, out var registrations))
+        {
+            PreservePublicRegistrationSnapshots(tournament.Id, registrations);
             return registrations;
+        }
 
-        registrations = tournament.Registrations
-            .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
+        var projectedRegistrations = tournament.Registrations
             .Select(ToRegistrationDetails)
+            .ToList();
+        PreservePublicRegistrationSnapshots(tournament.Id, projectedRegistrations);
+        registrations = projectedRegistrations
+            .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
             .ToList();
         _registrationDetails[tournament.Id] = registrations;
         return registrations;
+    }
+
+    private void PreservePublicRegistrationSnapshots(
+        Guid tournamentId,
+        IEnumerable<TournamentRegistrationDTO> registrations)
+    {
+        if(!_publicRegistrationSnapshots.TryGetValue(tournamentId, out var snapshots))
+        {
+            snapshots = [];
+            _publicRegistrationSnapshots[tournamentId] = snapshots;
+        }
+
+        foreach(var registration in registrations)
+        {
+            var snapshot = ToRegistrationSnapshot(registration);
+            if(snapshot.ParticipantId is { } participantId && !string.IsNullOrWhiteSpace(snapshot.DisplayName))
+                snapshots[participantId] = snapshot;
+        }
     }
 
     private static TournamentRegistrationDTO ToRegistrationDetails(PublicTournamentRegistrationDTO registration)

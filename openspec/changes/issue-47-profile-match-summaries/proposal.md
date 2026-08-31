@@ -28,3 +28,5 @@ N+1 query pattern.
   enum and match state semantics.
 - BE PR #121 (`codex/issue-84-match-result-lifecycle`, `ca23a96`) supplies persisted lifecycle,
   result, forfeit, and reversal state. This change targets that branch and should merge after it.
+- BE PR #122 (`Add public profile match summaries`) supplies the anonymous user/team summary
+  endpoints and privacy-safe response contract.

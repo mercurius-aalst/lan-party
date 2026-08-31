@@ -17,6 +17,8 @@ public sealed class MockMatchLifecycleTests
 {
     private static readonly Guid FeaturedTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
     private static readonly Guid FeaturedGrandFinalId = Guid.Parse("31111111-1111-1111-1111-111111111115");
+    private static readonly Guid IndividualProfileFixtureTournamentId = Guid.Parse("91111111-1111-1111-1111-111111111111");
+    private static readonly Guid IndividualProfileFixtureOpponentId = Guid.Parse("91111111-1111-1111-1111-111111111113");
 
     [Fact]
     public void MockAdminForfeitAndReverseKeepExplicitLifecycleState()
@@ -205,6 +207,29 @@ public sealed class MockMatchLifecycleTests
         Assert.Equal(1, individualSummaries.PreviousMatches[0].OpponentScore);
 
         Assert.Null(store.GetPublicUserMatchSummaries("missing-user"));
+    }
+
+    [Fact]
+    public void MockPublicProfileSummariesRetainHistoricalOpponentSnapshotAfterRegistrationRemoval()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        store.RemoveTournamentUserRegistrationAsAdmin(
+            IndividualProfileFixtureTournamentId,
+            IndividualProfileFixtureOpponentId,
+            "Historical match snapshot regression");
+
+        var summaries = store.GetPublicUserMatchSummaries("solo1");
+
+        Assert.NotNull(summaries);
+        Assert.Equal("solo2", Assert.Single(summaries!.PreviousMatches).OpponentDisplayName);
+        Assert.Equal("solo2", Assert.Single(summaries.UpcomingMatches).OpponentDisplayName);
     }
 
     [Fact]
