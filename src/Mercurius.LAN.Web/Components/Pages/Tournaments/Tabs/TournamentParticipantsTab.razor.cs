@@ -1542,6 +1542,31 @@ public partial class TournamentParticipantsTab : IDisposable
                candidate.ReasonCodes.All(code => code == "duplicate_participation");
     }
 
+    internal static bool IsExistingRegistrationEligibilityUsable(EligibilityResponseDTO eligibility) =>
+        eligibility.Eligible || AreExistingRegistrationReasonsAllowed(eligibility.ReasonCodes);
+
+    internal static bool IsExistingRosterEligibilityUsable(
+        RosterCandidateEligibilityResponseDTO eligibility,
+        IReadOnlySet<Guid> existingRosterUserIds)
+    {
+        if(eligibility.Eligible)
+            return true;
+
+        if(!AreExistingRegistrationReasonsAllowed(eligibility.ReasonCodes))
+            return false;
+
+        return eligibility.Candidates.All(candidate =>
+            candidate.Eligible ||
+            existingRosterUserIds.Contains(candidate.UserId) &&
+            AreExistingRegistrationReasonsAllowed(candidate.ReasonCodes));
+    }
+
+    private static bool AreExistingRegistrationReasonsAllowed(IEnumerable<string> reasonCodes)
+    {
+        var reasons = reasonCodes.ToList();
+        return reasons.Count > 0 && reasons.All(IsExistingRegistrationConflictCode);
+    }
+
     private static bool IsExistingRegistrationConflictCode(string code) =>
         ExistingRegistrationConflictCodes.Contains(code);
 
