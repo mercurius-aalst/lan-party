@@ -7,7 +7,7 @@ public sealed class PublicTournamentTeamDTO
     public Guid Id { get; init; }
     public string Name { get; init; } = string.Empty;
     public Guid CaptainUserId { get; init; }
-    public string? LogoUrl { get; init; }
+    public string? LogoUrl { get; set; }
 
     // The public backend projection does not currently populate members. Keep this empty-safe
     // compatibility property for the existing participant projection; authenticated registration

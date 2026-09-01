@@ -57,3 +57,21 @@
 - [x] 10.1 Search the frontend for removed `/lan/games`, legacy lifecycle/registration routes, `RegisterFormUrl`, required `GameId` wire mappings, and aggregate `Game*` types; resolve every remaining live-contract reference or document only genuine backend field terminology such as `AverageGameDurationMinutes`. The only residual match is the historical documentation mention at `CHANGELOG.md:47`; gamer/game-ID prose and `AverageGameDurationMinutes` are legitimate terminology, not live-contract references.
 - [x] 10.2 Run `openspec validate integrate-current-backend-contracts-2026-08-28` and update this checklist as each implementation slice is completed.
 - [ ] 10.3 Build `src/Mercurius.LAN.Web/Mercurius.LAN.Web.csproj`, rebuild Tailwind only if styling changes, and smoke-test anonymous, authenticated, admin, mock, not-found, and API-error paths against the backend contract baseline. FE build, contract tests, and OpenSpec validation are automated checks; manual/browser smoke for these paths was not run in this workflow and remains required before release.
+
+## 11. Resolve PR #53 integration review findings
+
+- [x] 11.1 Allow a captain-managed existing team registration to edit/replace its roster and unregister, while keeping non-captain controls and unrelated eligibility conflicts restricted.
+- [x] 11.2 Include the contract-test project in `Mercurius.LAN.sln`, trigger CI for `tests/**`, and run tests through the solution workflow.
+- [x] 11.3 Disable tournament-detail prerender data loading so the interactive circuit performs the detail load once.
+- [x] 11.4 Gate sponsor administration data to administrators and keep lifecycle/sponsor busy state independent.
+- [x] 11.5 Refresh participant registration context for retained-parameter changes, complete loads only after success, and expose retry after failures.
+- [x] 11.6 Start independent registration initialization requests concurrently while retaining only genuine roster dependencies.
+- [x] 11.7 Apply confirmed registration mutation DTOs and removals locally without a redundant full tournament reload.
+- [x] 11.8 Cancel or supersede stale roster eligibility requests and ignore responses for older selections.
+- [x] 11.9 Resolve nested registration team logos and normalize `/v1`-suffixed asset bases to the API host root.
+- [x] 11.10 Rebuild the mock featured fixture registration projection for every seeded team.
+- [x] 11.11 Align mock lifecycle validation, generated matches/schedule, completion placements, and reset cleanup with the live transition contract.
+- [x] 11.12 Centralize participant projection and deduplication, including repeated roster-member identifiers.
+- [x] 11.13 Add focused contract regressions for URL resolution, projection replacement/deduplication, captain eligibility, mock fixture/lifecycle parity, and invalid transitions.
+- [x] 11.14 Run solution build/tests and strict OpenSpec validation; record remaining manual smoke-test work as the only release follow-up.
+- [x] 11.15 Supersede in-flight user and administrator registration mutations on tournament parameter changes or disposal, guard all stale completion side effects, and add A-to-B success/error regressions plus a tournament-ID projection backstop.
