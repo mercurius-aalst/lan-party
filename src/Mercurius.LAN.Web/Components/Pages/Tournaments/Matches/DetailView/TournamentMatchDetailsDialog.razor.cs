@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text.Json;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Matches;
@@ -14,6 +13,16 @@ namespace Mercurius.LAN.Web.Components.Pages.Tournaments.Matches.DetailView;
 
 public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 {
+    internal enum MatchMutationAction
+    {
+        ConfirmEnded,
+        SubmitScore,
+        Forfeit,
+        ForceForfeit,
+        Resolve,
+        Reverse
+    }
+
     [Parameter] public Match Match { get; set; } = null!;
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback OnClose { get; set; }
@@ -462,7 +471,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         await RunMutationAsync(
             () => TournamentService.ConfirmMatchEndedAsync(matchId),
             "Your match-end confirmation was saved.",
-            state => state.CanConfirmEnded);
+            state => state.CanConfirmEnded,
+            MatchMutationAction.ConfirmEnded);
     }
 
     private async Task SubmitScoreAsync()
@@ -482,7 +492,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     Participant2Score = participant2Score
                 }),
             "Your score report was saved.",
-            state => state.CanSubmitScore);
+            state => state.CanSubmitScore,
+            MatchMutationAction.SubmitScore);
     }
 
     private async Task ForfeitOwnSideAsync()
@@ -498,7 +509,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         await RunMutationAsync(
             () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
             "The forfeit was saved.",
-            state => state.CanForfeit);
+            state => state.CanForfeit,
+            MatchMutationAction.Forfeit);
         _forfeitConfirmationRequested = false;
     }
 
@@ -520,7 +532,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         await RunMutationAsync(
             () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
             "The administrator forfeit was saved.",
-            state => state.CanForceForfeit);
+            state => state.CanForceForfeit,
+            MatchMutationAction.ForceForfeit);
         _adminForfeitConfirmationSide = null;
     }
 
@@ -541,7 +554,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     Participant2Score = participant2Score
                 }),
             "The match was resolved and the result is official.",
-            state => state.CanResolve);
+            state => state.CanResolve,
+            MatchMutationAction.Resolve);
     }
 
     private async Task ReverseAsync()
@@ -553,13 +567,15 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         await RunMutationAsync(
             () => TournamentService.ReverseMatchAsync(matchId),
             "The match result was reversed.",
-            state => state.CanReverse);
+            state => state.CanReverse,
+            MatchMutationAction.Reverse);
     }
 
     private async Task RunMutationAsync(
         Func<Task<Match>> mutation,
         string successMessage,
-        Func<MatchActionStateDTO, bool> capability)
+        Func<MatchActionStateDTO, bool> capability,
+        MatchMutationAction action)
     {
         if(_isSubmitting || _isLoading || !_hasLoaded || !_hasFreshActionState || _actionState is null ||
            !capability(_actionState))
@@ -588,7 +604,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             await NotifyMatchRefreshedAsync();
             if(!capability(latestState))
             {
-                _errorMessage = GetBlockedReason(latestState, capability);
+                _errorMessage = GetBlockedReason(latestState, action);
                 return;
             }
 
@@ -645,29 +661,18 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         }
     }
 
-    private static string GetBlockedReason(
-        MatchActionStateDTO state,
-        Func<MatchActionStateDTO, bool> capability)
+    internal static string GetBlockedReason(MatchActionStateDTO state, MatchMutationAction action)
     {
-        if(capability == null)
-            return "The authoritative match state is no longer available. Retry and try again.";
-        if(!state.CanResolve && state.ResolveBlockedReason == "tournament_not_in_progress")
-            return "This tournament is no longer in progress.";
-        if(!state.CanForceForfeit && state.ForceForfeitBlockedReason == "tournament_not_in_progress")
-            return "This tournament is no longer in progress.";
-        if(!state.CanReverse && state.ReverseBlockedReason == "tournament_not_in_progress")
-            return "This tournament is no longer in progress.";
-        if(!state.CanReverse && state.ReverseBlockedReason == "match_reversal_blocked")
-            return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
-        if(!state.CanReverse && state.ReverseBlockedReason == "downstream_graph_too_large")
-            return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
-        if(!state.CanResolve && state.ResolveBlockedReason == "match_requires_admin_resolution")
-            return "This match already requires administrator resolution.";
-        if(!state.CanForceForfeit && state.ForceForfeitBlockedReason == "match_requires_admin_resolution")
-            return "This match already requires administrator resolution.";
-        if(!state.CanReverse && state.ReverseBlockedReason == "match_requires_admin_resolution")
-            return "This match already requires administrator resolution.";
-        return "The match changed while you were working. Refresh the authoritative state and try again.";
+        return action switch
+        {
+            MatchMutationAction.ForceForfeit => GetAdminBlockedReason(state.ForceForfeitBlockedReason),
+            MatchMutationAction.Resolve => GetAdminBlockedReason(state.ResolveBlockedReason),
+            MatchMutationAction.Reverse => GetAdminBlockedReason(state.ReverseBlockedReason),
+            MatchMutationAction.ConfirmEnded => "Match-end confirmation is no longer available in the authoritative match state.",
+            MatchMutationAction.SubmitScore => "Score submission is no longer available in the authoritative match state.",
+            MatchMutationAction.Forfeit => "Forfeiting this match is no longer available for your side in the authoritative state.",
+            _ => "The match changed while you were working. Refresh the authoritative state and try again."
+        };
     }
 
     private static string GetErrorMessage(Exception exception, string fallback)
@@ -682,68 +687,24 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             }
             if(apiException.StatusCode == HttpStatusCode.Conflict)
             {
-                var serverCode = GetServerCode(apiException.Content);
-                if(serverCode == "match_reversal_blocked")
+                var apiError = apiException.GetApiError();
+                if(apiError?.Code == "match_reversal_blocked")
                     return "This result cannot be reversed because a linked downstream match has already been played or resolved.";
-                if(serverCode == "downstream_graph_too_large")
+                if(apiError?.Code == "downstream_graph_too_large")
                     return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
-                if(serverCode == "match_requires_admin_resolution")
+                if(apiError?.Code == "match_requires_admin_resolution")
                     return "This match already requires administrator resolution.";
-                return GetServerMessage(apiException.Content)
+                return apiError?.Message
                     ?? "The match changed while you were working. Refresh the authoritative state and try again.";
             }
             if(!string.IsNullOrWhiteSpace(apiException.Content))
-                return GetServerMessage(apiException.Content) ?? apiException.Content!;
+                return apiException.GetApiError()?.Message ?? apiException.Content!;
         }
 
         if(exception is InvalidOperationException && !string.IsNullOrWhiteSpace(exception.Message))
             return exception.Message;
 
         return fallback;
-    }
-
-    private static string? GetServerMessage(string? content)
-    {
-        if(string.IsNullOrWhiteSpace(content))
-            return null;
-
-        try
-        {
-            using var document = JsonDocument.Parse(content);
-            if(document.RootElement.ValueKind == JsonValueKind.Object &&
-               document.RootElement.TryGetProperty("message", out var message) &&
-               message.ValueKind == JsonValueKind.String)
-                return message.GetString();
-
-            if(document.RootElement.ValueKind == JsonValueKind.String)
-                return document.RootElement.GetString();
-        }
-        catch(JsonException)
-        {
-            // Refit can expose a plain-text body when a proxy or legacy endpoint responds.
-        }
-
-        return content.Trim().Trim('"');
-    }
-
-    private static string? GetServerCode(string? content)
-    {
-        if(string.IsNullOrWhiteSpace(content))
-            return null;
-
-        try
-        {
-            using var document = JsonDocument.Parse(content);
-            return document.RootElement.ValueKind == JsonValueKind.Object &&
-                   document.RootElement.TryGetProperty("code", out var code) &&
-                   code.ValueKind == JsonValueKind.String
-                ? code.GetString()
-                : null;
-        }
-        catch(JsonException)
-        {
-            return null;
-        }
     }
 
     public async ValueTask DisposeAsync()
