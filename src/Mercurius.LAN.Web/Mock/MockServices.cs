@@ -12,6 +12,7 @@ using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using ModelTournamentStatus = Mercurius.LAN.Web.Models.Tournaments.TournamentStatus;
 
@@ -21,11 +22,16 @@ internal sealed class MockTournamentService : ITournamentService
 {
     private readonly MockBackendStore _store;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly AuthenticationStateProvider? _authenticationStateProvider;
 
-    public MockTournamentService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
+    public MockTournamentService(
+        MockBackendStore store,
+        IHttpContextAccessor httpContextAccessor,
+        AuthenticationStateProvider? authenticationStateProvider = null)
     {
         _store = store;
         _httpContextAccessor = httpContextAccessor;
+        _authenticationStateProvider = authenticationStateProvider;
     }
 
     public Task<List<Tournament>> GetTournamentsAsync(
@@ -87,69 +93,144 @@ internal sealed class MockTournamentService : ITournamentService
         CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetMatch(matchId));
 
-    public Task<Match> UpdateMatchScoresAsync(
+    public async Task<MatchActionStateDTO> GetMatchActionStateAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetMatchActionState(persona, matchId);
+    }
+
+    public async Task<Match> ConfirmMatchEndedAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.ConfirmMatchEnded(persona, matchId);
+    }
+
+    public async Task<Match> SubmitMatchScoreAsync(
+        Guid matchId,
+        SubmitMatchScoreDTO request,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.SubmitMatchScore(persona, matchId, request);
+    }
+
+    public async Task<Match> ForfeitMatchAsync(
+        Guid matchId,
+        ForfeitMatchDTO request,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.ForfeitMatch(persona, matchId, request);
+    }
+
+    public async Task<Match> ResolveMatchAsync(
+        Guid matchId,
+        ResolveMatchDTO request,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.ResolveMatch(persona, matchId, request);
+    }
+
+    public async Task<Match> ReverseMatchAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.ReverseMatch(persona, matchId);
+    }
+
+    public async Task<Match> UpdateMatchScoresAsync(
         Guid matchId,
         UpdateMatchDTO updateMatchDTO,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.UpdateMatch(matchId, updateMatchDTO));
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.UpdateMatch(persona, matchId, updateMatchDTO);
+    }
 
-    public Task<CurrentUserTournamentRegistrationStateDTO> GetCurrentUserTournamentRegistrationStateAsync(
-        Guid tournamentId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.GetCurrentUserTournamentRegistrationState(GetCurrentPersona(), tournamentId));
-
-    public Task<EligibilityResponseDTO> CheckIndividualTournamentRegistrationEligibilityAsync(
-        Guid tournamentId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.CheckIndividualTournamentRegistrationEligibility(GetCurrentPersona(), tournamentId));
-
-    public Task<EligibilityResponseDTO> CheckTeamTournamentRegistrationEligibilityAsync(
-        Guid tournamentId,
-        Guid teamId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.CheckTeamTournamentRegistrationEligibility(GetCurrentPersona(), tournamentId, teamId));
-
-    public Task<RosterCandidateEligibilityResponseDTO> CheckTeamRosterEligibilityAsync(
-        Guid tournamentId,
-        Guid teamId,
-        SubmitTeamRosterDTO roster,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.CheckTeamRosterEligibility(GetCurrentPersona(), tournamentId, teamId, roster));
-
-    public Task<TournamentRegistrationDTO> RegisterCurrentUserForTournamentAsync(
-        Guid tournamentId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.RegisterCurrentUserForTournament(GetCurrentPersona(), tournamentId));
-
-    public Task DeleteCurrentUserTournamentRegistrationAsync(
+    public async Task<CurrentUserTournamentRegistrationStateDTO> GetCurrentUserTournamentRegistrationStateAsync(
         Guid tournamentId,
         CancellationToken cancellationToken = default)
     {
-        _store.DeleteCurrentUserTournamentRegistration(GetCurrentPersona(), tournamentId);
-        return Task.CompletedTask;
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetCurrentUserTournamentRegistrationState(persona, tournamentId);
     }
 
-    public Task<TournamentRegistrationDTO> SubmitTeamTournamentRosterAsync(
+    public async Task<EligibilityResponseDTO> CheckIndividualTournamentRegistrationEligibilityAsync(
         Guid tournamentId,
-        Guid teamId,
-        SubmitTeamRosterDTO roster,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.SubmitTeamTournamentRoster(GetCurrentPersona(), tournamentId, teamId, roster));
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CheckIndividualTournamentRegistrationEligibility(persona, tournamentId);
+    }
 
-    public Task DeleteTeamTournamentRegistrationAsync(
+    public async Task<EligibilityResponseDTO> CheckTeamTournamentRegistrationEligibilityAsync(
         Guid tournamentId,
         Guid teamId,
         CancellationToken cancellationToken = default)
     {
-        _store.DeleteTeamTournamentRegistration(GetCurrentPersona(), tournamentId, teamId);
-        return Task.CompletedTask;
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CheckTeamTournamentRegistrationEligibility(persona, tournamentId, teamId);
     }
 
-    public Task<TournamentRegistrationDTO> ConfirmTournamentRosterMemberAsync(
+    public async Task<RosterCandidateEligibilityResponseDTO> CheckTeamRosterEligibilityAsync(
+        Guid tournamentId,
+        Guid teamId,
+        SubmitTeamRosterDTO roster,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CheckTeamRosterEligibility(persona, tournamentId, teamId, roster);
+    }
+
+    public async Task<TournamentRegistrationDTO> RegisterCurrentUserForTournamentAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.RegisterCurrentUserForTournament(persona, tournamentId);
+    }
+
+    public async Task DeleteCurrentUserTournamentRegistrationAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        _store.DeleteCurrentUserTournamentRegistration(persona, tournamentId);
+    }
+
+    public async Task<TournamentRegistrationDTO> SubmitTeamTournamentRosterAsync(
+        Guid tournamentId,
+        Guid teamId,
+        SubmitTeamRosterDTO roster,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.SubmitTeamTournamentRoster(persona, tournamentId, teamId, roster);
+    }
+
+    public async Task DeleteTeamTournamentRegistrationAsync(
+        Guid tournamentId,
+        Guid teamId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        _store.DeleteTeamTournamentRegistration(persona, tournamentId, teamId);
+    }
+
+    public async Task<TournamentRegistrationDTO> ConfirmTournamentRosterMemberAsync(
         Guid tournamentId,
         Guid rosterMemberId,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.ConfirmTournamentRosterMember(GetCurrentPersona(), tournamentId, rosterMemberId));
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.ConfirmTournamentRosterMember(persona, tournamentId, rosterMemberId);
+    }
 
     public Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
         Guid tournamentId,
@@ -178,10 +259,21 @@ internal sealed class MockTournamentService : ITournamentService
         return Task.CompletedTask;
     }
 
-    private string GetCurrentPersona()
+    private async Task<string> GetCurrentPersonaAsync()
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated == true)
+            return user.FindFirst("mock_persona")?.Value ?? "anonymous";
+
+        if(_authenticationStateProvider is null)
+            return "anonymous";
+
+        var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        user = authenticationState.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }
 
@@ -189,11 +281,16 @@ internal sealed class MockTeamService : ITeamService
 {
     private readonly MockBackendStore _store;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly AuthenticationStateProvider? _authenticationStateProvider;
 
-    public MockTeamService(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
+    public MockTeamService(
+        MockBackendStore store,
+        IHttpContextAccessor httpContextAccessor,
+        AuthenticationStateProvider? authenticationStateProvider = null)
     {
         _store = store;
         _httpContextAccessor = httpContextAccessor;
+        _authenticationStateProvider = authenticationStateProvider;
     }
 
     public Task<TeamPage> GetTeamsAsync(
@@ -224,49 +321,95 @@ internal sealed class MockTeamService : ITeamService
     public Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default) =>
         Task.FromResult(_store.GetPublicTeamByName(teamName));
 
-    public Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(_store.GetCurrentUserTeamSummary(GetCurrentPersona()));
-
-    public Task<Team> CreateTeamAsync(CreateTeamDTO team)
+    public async Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default)
     {
-        var summary = _store.CreateCurrentUserTeam(GetCurrentPersona(), team);
-        return Task.FromResult(new Team
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetCurrentUserTeamSummary(persona);
+    }
+
+    public async Task<Team> CreateTeamAsync(CreateTeamDTO team)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        var summary = _store.CreateCurrentUserTeam(persona, team);
+        return new Team
         {
             Id = summary.Id,
             Name = summary.Name,
             CaptainUserId = summary.CaptainUserId,
             LogoUrl = summary.LogoUrl,
             Members = summary.Members
-        });
+        };
     }
 
-    public Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId) => Task.FromResult(_store.CreateTeamInvite(GetCurrentPersona(), teamId, userId));
-
-    public Task<TeamInvite> CancelInviteAsync(Guid teamId, Guid inviteId) => Task.FromResult(_store.CancelTeamInvite(GetCurrentPersona(), teamId, inviteId));
-
-    public Task<TeamInvite> RespondToInviteAsync(Guid inviteId, bool accept) => Task.FromResult(_store.RespondToTeamInvite(GetCurrentPersona(), inviteId, accept));
-
-    public Task<TeamManagementSummaryDTO> LeaveTeamAsync(Guid teamId) => Task.FromResult(_store.LeaveTeam(GetCurrentPersona(), teamId));
-
-    public Task<TeamManagementSummaryDTO> RemoveMemberAsync(Guid teamId, Guid userId) => Task.FromResult(_store.RemoveTeamMember(GetCurrentPersona(), teamId, userId));
-
-    public Task<TeamManagementSummaryDTO> TransferCaptainAsync(Guid teamId, Guid newCaptainUserId) => Task.FromResult(_store.TransferCaptain(GetCurrentPersona(), teamId, newCaptainUserId));
-
-    public Task<TeamLogoResponseDTO> UploadLogoAsync(Guid teamId, Stream logoStream, string contentType, string fileName) =>
-        Task.FromResult(_store.UploadTeamLogo(GetCurrentPersona(), teamId, contentType, fileName));
-
-    public Task<TeamLogoResponseDTO> RemoveLogoAsync(Guid teamId) => Task.FromResult(_store.RemoveTeamLogo(GetCurrentPersona(), teamId));
-
-    public Task DeleteTeamAsync(Guid teamId)
+    public async Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId)
     {
-        _store.DeleteCurrentUserTeam(GetCurrentPersona(), teamId);
-        return Task.CompletedTask;
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CreateTeamInvite(persona, teamId, userId);
     }
 
-    private string GetCurrentPersona()
+    public async Task<TeamInvite> CancelInviteAsync(Guid teamId, Guid inviteId)
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CancelTeamInvite(persona, teamId, inviteId);
+    }
+
+    public async Task<TeamInvite> RespondToInviteAsync(Guid inviteId, bool accept)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.RespondToTeamInvite(persona, inviteId, accept);
+    }
+
+    public async Task<TeamManagementSummaryDTO> LeaveTeamAsync(Guid teamId)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.LeaveTeam(persona, teamId);
+    }
+
+    public async Task<TeamManagementSummaryDTO> RemoveMemberAsync(Guid teamId, Guid userId)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.RemoveTeamMember(persona, teamId, userId);
+    }
+
+    public async Task<TeamManagementSummaryDTO> TransferCaptainAsync(Guid teamId, Guid newCaptainUserId)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.TransferCaptain(persona, teamId, newCaptainUserId);
+    }
+
+    public async Task<TeamLogoResponseDTO> UploadLogoAsync(Guid teamId, Stream logoStream, string contentType, string fileName)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.UploadTeamLogo(persona, teamId, contentType, fileName);
+    }
+
+    public async Task<TeamLogoResponseDTO> RemoveLogoAsync(Guid teamId)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.RemoveTeamLogo(persona, teamId);
+    }
+
+    public async Task DeleteTeamAsync(Guid teamId)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        _store.DeleteCurrentUserTeam(persona, teamId);
+    }
+
+    private async Task<string> GetCurrentPersonaAsync()
+    {
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated == true)
+            return user.FindFirst("mock_persona")?.Value ?? "anonymous";
+
+        if(_authenticationStateProvider is null)
+            return "anonymous";
+
+        var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        user = authenticationState.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }
 
@@ -366,24 +509,41 @@ internal sealed class MockUserClient : IUserClient
 {
     private readonly MockBackendStore _store;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly AuthenticationStateProvider? _authenticationStateProvider;
 
-    public MockUserClient(MockBackendStore store, IHttpContextAccessor httpContextAccessor)
+    public MockUserClient(
+        MockBackendStore store,
+        IHttpContextAccessor httpContextAccessor,
+        AuthenticationStateProvider? authenticationStateProvider = null)
     {
         _store = store;
         _httpContextAccessor = httpContextAccessor;
+        _authenticationStateProvider = authenticationStateProvider;
     }
 
-    public Task<CurrentUserProfileResponse> GetCurrentUserProfileAsync() =>
-        Task.FromResult(_store.GetCurrentProfile(GetCurrentPersona()));
+    public async Task<CurrentUserProfileResponse> GetCurrentUserProfileAsync()
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetCurrentProfile(persona);
+    }
 
-    public Task<UserProfileDTO> CompleteCurrentUserProfileAsync(CompleteUserProfileRequest request) =>
-        Task.FromResult(_store.CompleteCurrentProfile(GetCurrentPersona(), request));
+    public async Task<UserProfileDTO> CompleteCurrentUserProfileAsync(CompleteUserProfileRequest request)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CompleteCurrentProfile(persona, request);
+    }
 
-    public Task<UserProfileDTO> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request) =>
-        Task.FromResult(_store.UpdateCurrentProfile(GetCurrentPersona(), request));
+    public async Task<UserProfileDTO> UpdateCurrentUserProfileAsync(UpdateUserProfileRequest request)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.UpdateCurrentProfile(persona, request);
+    }
 
-    public Task<UsernameAvailabilityResponse> CheckUsernameAvailabilityAsync(string username) =>
-        Task.FromResult(_store.CheckUsernameAvailability(GetCurrentPersona(), username));
+    public async Task<UsernameAvailabilityResponse> CheckUsernameAvailabilityAsync(string username)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.CheckUsernameAvailability(persona, username);
+    }
 
     public Task<UserActionResponse> ResendVerificationEmailAsync() =>
         Task.FromResult(new UserActionResponse("Mock verification email sent."));
@@ -391,8 +551,11 @@ internal sealed class MockUserClient : IUserClient
     public Task<UserActionResponse> SendPasswordResetEmailAsync() =>
         Task.FromResult(new UserActionResponse("Mock password reset email sent."));
 
-    public Task<UserActionResponse> DeleteCurrentUserAsync() =>
-        Task.FromResult(_store.DeleteCurrentUser(GetCurrentPersona()));
+    public async Task<UserActionResponse> DeleteCurrentUserAsync()
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.DeleteCurrentUser(persona);
+    }
 
     public Task<IEnumerable<UserDTO>> GetAllUsersAsync() => Task.FromResult<IEnumerable<UserDTO>>(_store.GetUsers());
 
@@ -429,9 +592,20 @@ internal sealed class MockUserClient : IUserClient
         return Task.CompletedTask;
     }
 
-    private string GetCurrentPersona()
+    private async Task<string> GetCurrentPersonaAsync()
     {
-        var persona = _httpContextAccessor.HttpContext?.User.FindFirst("mock_persona")?.Value;
-        return string.IsNullOrWhiteSpace(persona) ? "user" : persona;
+        var user = _httpContextAccessor.HttpContext?.User;
+        if(user?.Identity?.IsAuthenticated == true)
+            return user.FindFirst("mock_persona")?.Value ?? "anonymous";
+
+        if(_authenticationStateProvider is null)
+            return "anonymous";
+
+        var authenticationState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        user = authenticationState.User;
+        if(user?.Identity?.IsAuthenticated != true)
+            return "anonymous";
+
+        return user.FindFirst("mock_persona")?.Value ?? "anonymous";
     }
 }

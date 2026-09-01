@@ -27,31 +27,42 @@ The frontend SHALL require admins to provide planned tournament schedule configu
 
 ### Requirement: Frontend create and update requests use backend schedule field names
 
-The frontend SHALL serialize schedule configuration in create and update requests using the backend tournament schedule contract.
+The frontend SHALL serialize tournament schedule configuration in create and update multipart
+requests using the current backend tournament contract.
 
 #### Scenario: Create request is submitted
 - **WHEN** the frontend submits a create tournament multipart request
-- **THEN** the payload includes `PlannedStartTime`, `AverageGameDurationMinutes`, and `RoundBreakDurationMinutes`
+- **THEN** the payload includes `Name`, `BracketType`, `Format`, `FinalsFormat`, `ParticipationMode`, `Image`, `TeamSize` when applicable, `PlannedStartTime`, `AverageGameDurationMinutes`, and `RoundBreakDurationMinutes`
 - **AND** the planned start time is serialized using a UTC-compatible representation that matches the backend API contract
+- **AND** the payload does not include the removed `RegisterFormUrl` field
 
 #### Scenario: Update request is submitted
 - **WHEN** the frontend submits an update tournament multipart request
-- **THEN** the payload includes the current planned schedule values alongside the other editable tournament fields
+- **THEN** the payload includes the current planned schedule values and `TeamSize` alongside the other editable tournament fields
 - **AND** duration values are sent as positive minute values rather than formatted display strings
+- **AND** the payload does not include the removed `RegisterFormUrl` field
+
+#### Scenario: Backend rejects schedule or team-size values
+- **WHEN** the backend rejects a create or update submission because schedule configuration, team size, or editability is invalid
+- **THEN** the frontend surfaces the backend validation error to the admin
+- **AND** the form preserves the values the admin submitted so they can correct the input without re-entering the entire tournament
 
 ### Requirement: Frontend models distinguish planned and estimated schedule values
 
-The frontend SHALL model planned and estimated schedule values with explicit names instead of treating lifecycle timestamps as generated schedule estimates.
+The frontend SHALL model the current tournament and match response fields with explicit names
+instead of treating lifecycle timestamps as generated schedule estimates.
 
-#### Scenario: Game list or detail response includes schedule fields
-- **WHEN** the frontend deserializes a game response
-- **THEN** it can read planned start time, average single-game duration, round break duration, and estimated tournament end time from explicit schedule properties
+#### Scenario: Tournament list or detail response includes schedule fields
+- **WHEN** the frontend deserializes a tournament response
+- **THEN** it can read `PlannedStartTime`, `AverageGameDurationMinutes`, `RoundBreakDurationMinutes`, `EstimatedEndTime`, and optional `TeamSize` from explicit properties
 - **AND** `StartTime` and `EndTime` remain available only for actual lifecycle timing if the backend returns them
+- **AND** no external registration URL is required for the response to render
 
 #### Scenario: Match response includes estimated timing
-- **WHEN** the frontend deserializes a match in a game detail response
-- **THEN** it can read estimated match start and end times from explicit estimated schedule properties
+- **WHEN** the frontend deserializes a match in a tournament detail response
+- **THEN** it can read `EstimatedStartTime`, `EstimatedEndTime`, and `TournamentId`
 - **AND** the UI does not label those values as actual started or completed times
+- **AND** it does not require a legacy `GameId` property
 
 #### Scenario: Estimates have not been generated yet
 - **WHEN** a scheduled tournament has no generated match estimates yet
@@ -104,13 +115,15 @@ The frontend SHALL avoid presenting unsupported bracket types as usable tourname
 
 ### Requirement: Mock mode mirrors the schedule contract
 
-The frontend mock backend SHALL include the same planned and estimated schedule fields used by API-backed mode.
+The frontend mock backend SHALL include the same planned, estimated, and tournament-identity fields
+used by API-backed mode and SHALL not depend on the removed external registration URL.
 
-#### Scenario: Mock games are loaded
+#### Scenario: Mock tournaments are loaded
 - **WHEN** the application runs against mock data
-- **THEN** mock game records include planned start time, schedule duration configuration, and estimated end values consistent with the frontend models
-- **AND** mock match records include estimated start and end values when match estimates are expected
+- **THEN** mock tournament records include planned start time, schedule duration configuration, optional team size, and estimated end values consistent with the frontend models
+- **AND** mock match records include estimated start and end values and `TournamentId` when match estimates are expected
 
 #### Scenario: Mock create or update is submitted
-- **WHEN** a mock create or update request includes schedule fields
-- **THEN** mock handling stores and returns those schedule values using the same frontend model fields as API-backed mode
+- **WHEN** a mock create or update request includes schedule fields or team size
+- **THEN** mock handling stores and returns those values using the same frontend model fields as API-backed mode
+- **AND** mock handling does not require or persist `RegisterFormUrl`
