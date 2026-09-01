@@ -97,4 +97,3 @@ memory, and MUST NOT issue one query per tournament, match, or opponent.
 - **WHEN** a profile participates in many tournaments
 - **THEN** the summary read MUST use a constant bounded number of set-based queries with stable
   tournament and match ordering
-
