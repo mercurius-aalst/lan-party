@@ -231,4 +231,3 @@ states while keeping public participant data separate from authenticated registr
 - **THEN** the page MUST provide an explicit refresh action for the authenticated registration
   context
 - **AND** the UI MUST NOT claim that realtime synchronization is guaranteed for that mutation
-
