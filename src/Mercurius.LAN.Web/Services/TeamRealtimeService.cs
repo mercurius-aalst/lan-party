@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -69,6 +70,7 @@ public sealed class TeamRealtimeService : ITeamRealtimeService
         connection.On<TeamInviteChangedEvent>("TeamInviteChanged", _ => NotifyInvalidatedAsync());
         connection.On<TeamMembershipChangedEvent>("TeamMembershipChanged", _ => NotifyInvalidatedAsync());
         connection.On<TeamCaptainTransferredEvent>("TeamCaptainTransferred", _ => NotifyInvalidatedAsync());
+        connection.On<TournamentRosterConfirmationChangedEvent>("TournamentRosterConfirmationChanged", _ => NotifyInvalidatedAsync());
         connection.Reconnected += _ => NotifyInvalidatedAsync();
 
         return connection;

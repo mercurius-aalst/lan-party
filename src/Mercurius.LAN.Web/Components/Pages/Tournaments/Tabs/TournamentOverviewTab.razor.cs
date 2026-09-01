@@ -1,5 +1,6 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
+using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Tournaments;
@@ -67,9 +68,15 @@ public partial class TournamentOverviewTab
 
     private string GetRegistrationStateLabel()
     {
-        return Tournament.Status == TournamentStatus.Scheduled
-            ? "Check eligibility on this page"
-            : "Closed after tournament start";
+        if(Tournament.Status != TournamentStatus.Scheduled)
+            return "Closed after tournament start";
+
+        var activeRegistrationCount = Tournament.Registrations?.Count(registration =>
+            registration.Status == TournamentRegistrationStatus.Active) ?? 0;
+        var participantLabel = Tournament.ParticipationMode == ParticipationMode.Team ? "teams" : "players";
+        return activeRegistrationCount == 0
+            ? "Open · no registrations yet"
+            : $"Open · {activeRegistrationCount} {participantLabel} registered";
     }
 
     private async Task SubmitEditAsync()

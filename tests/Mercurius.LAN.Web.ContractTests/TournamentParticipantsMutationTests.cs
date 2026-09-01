@@ -6,7 +6,9 @@ using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Components.RenderTree;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Mercurius.LAN.Web.ContractTests;
@@ -88,6 +90,7 @@ public sealed class TournamentParticipantsMutationTests
         tab.SetTournamentForTest(tournamentA);
         var mutation = InvokeAdminMutation(tab, registration);
 
+        await service.CallStarted.Task.WaitAsync(TimeSpan.FromSeconds(1));
         Assert.Equal(registration.Id, GetField<Guid?>(tab, "_pendingAdminRemovalRegistrationId"));
         tab.SetTournamentForTest(tournamentB);
         SetPrivateField(tab, "_adminRemovalReason", "Tournament B reason.");
@@ -140,7 +143,6 @@ public sealed class TournamentParticipantsMutationTests
         var tab = new TestableTournamentParticipantsTab();
         var toast = DispatchProxy.Create<IToastService, RecordingToastServiceProxy>();
         toastService = (RecordingToastServiceProxy)(object)toast;
-        SetPrivateProperty(tab, "Configuration", new ConfigurationBuilder().Build());
         SetPrivateProperty(tab, "ToastService", toast);
         return tab;
     }
@@ -158,9 +160,16 @@ public sealed class TournamentParticipantsMutationTests
         Func<Task<TournamentRegistrationDTO?>> action)
     {
         var method = typeof(TournamentParticipantsTab).GetMethod(
-            "RunRegistrationActionCoreAsync",
-            PrivateInstance)!;
-        return (Task)method.Invoke(tab, [action, "The registration changed.", null])!;
+            "RunRegistrationActionAsync",
+            PrivateInstance,
+            binder: null,
+            [typeof(Func<Task>), typeof(string), typeof(Guid), typeof(long)],
+            modifiers: null)!;
+        var requestGeneration = GetField<long>(tab, "_requestGeneration") + 1;
+        SetPrivateField(tab, "_requestGeneration", requestGeneration);
+        var tournamentId = tab.Tournament.Id;
+        Func<Task> mutation = async () => await action();
+        return (Task)method.Invoke(tab, [mutation, "The registration changed.", tournamentId, requestGeneration])!;
     }
 
     private static Task InvokeAdminMutation(
@@ -170,7 +179,12 @@ public sealed class TournamentParticipantsMutationTests
         var method = typeof(TournamentParticipantsTab).GetMethod(
             "RemoveAdminRegistrationAsync",
             PrivateInstance)!;
-        return (Task)method.Invoke(tab, [registration])!;
+        var testTab = (TestableTournamentParticipantsTab)tab;
+        // This test invokes the mutation directly; skip the component's initial
+        // data load so the render triggered by the mutation cannot start a second
+        // lifecycle operation with unconfigured test services.
+        SetPrivateField(tab, "_hasLoadedForTournament", true);
+        return testTab.InvokeOnRendererAsync(() => (Task)method.Invoke(tab, [registration])!);
     }
 
     private static TournamentExtended CreateTournament(
@@ -242,11 +256,36 @@ public sealed class TournamentParticipantsMutationTests
 
     private sealed class TestableTournamentParticipantsTab : TournamentParticipantsTab
     {
+        private readonly TestRenderer _renderer = new();
+
+        public TestableTournamentParticipantsTab()
+        {
+            _renderer.Attach(this);
+        }
+
         public void SetTournamentForTest(TournamentExtended tournament)
         {
             Tournament = tournament;
             OnParametersSet();
         }
+
+        public Task InvokeOnRendererAsync(Func<Task> action) => _renderer.Dispatcher.InvokeAsync(action);
+    }
+
+    private sealed class TestRenderer : Renderer
+    {
+        public TestRenderer()
+            : base(new ServiceCollection().BuildServiceProvider(), NullLoggerFactory.Instance)
+        {
+        }
+
+        public override Dispatcher Dispatcher { get; } = Dispatcher.CreateDefault();
+
+        public void Attach(IComponent component) => AssignRootComponentId(component);
+
+        protected override void HandleException(Exception exception) => throw exception;
+
+        protected override Task UpdateDisplayAsync(in RenderBatch renderBatch) => Task.CompletedTask;
     }
 
     public class RecordingToastServiceProxy : DispatchProxy
@@ -265,6 +304,7 @@ public sealed class TournamentParticipantsMutationTests
     public class RecordingTournamentServiceProxy : DispatchProxy
     {
         public TaskCompletionSource<bool> RemovalCompletion { get; set; } = NewCompletionSource<bool>();
+        public TaskCompletionSource<bool> CallStarted { get; } = NewCompletionSource<bool>();
         public List<(Guid TournamentId, Guid UserId, string? Reason)> Calls { get; } = [];
 
         protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
@@ -272,6 +312,7 @@ public sealed class TournamentParticipantsMutationTests
             if(targetMethod?.Name == nameof(ITournamentService.RemoveTournamentUserRegistrationAsAdminAsync))
             {
                 Calls.Add(((Guid)args![0]!, (Guid)args[1]!, (string?)args[2]));
+                CallStarted.TrySetResult(true);
                 return RemovalCompletion.Task;
             }
 

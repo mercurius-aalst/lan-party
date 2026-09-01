@@ -27,6 +27,7 @@ internal sealed class MockBackendStore
         Converters = { new JsonStringEnumConverter() }
     };
     private static readonly Guid FeaturedDoubleEliminationTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
+    private static readonly Guid DefaultRegistrationFixtureTeamId = Guid.Parse("21111111-1111-1111-1111-111111111120");
     private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
 
@@ -40,6 +41,7 @@ internal sealed class MockBackendStore
         _dataFilePath = Path.Combine(environment.ContentRootPath, options.Value.DataFilePath);
         _document = LoadDocument(_dataFilePath);
         SeedFeaturedDoubleEliminationFixture();
+        SeedDefaultRegistrationFixture();
         InitializeRegistrationDetails();
     }
 
@@ -441,6 +443,14 @@ internal sealed class MockBackendStore
                 registration.Kind == TournamentRegistrationKind.Team &&
                 registration.Status == TournamentRegistrationStatus.Active &&
                 registration.RosterMembers.Any(member => member.User.Id == currentUser.Id));
+            var currentTeam = registrations
+                .Where(registration =>
+                    registration.Kind == TournamentRegistrationKind.Team &&
+                    registration.RosterMembers.Any(member => member.User.Id == currentUser.Id))
+                .OrderByDescending(registration => registration.Status == TournamentRegistrationStatus.Active)
+                .ThenByDescending(registration => registration.UpdatedAtUtc)
+                .ThenBy(registration => registration.Id)
+                .FirstOrDefault();
             var captainRegistrations = registrations
                 .Where(registration =>
                     registration.Kind == TournamentRegistrationKind.Team &&
@@ -457,9 +467,10 @@ internal sealed class MockBackendStore
                 TournamentId = tournamentId,
                 IndividualRegistration = Clone(individual),
                 PendingRosterConfirmation = Clone(pendingRoster),
+                CurrentTeamRegistration = Clone(currentTeam),
                 ActiveTeamRegistration = Clone(activeTeam),
                 CaptainManagedRegistrations = captainRegistrations,
-                CanRegisterIndividual = individualEligible.Eligible && activeTeam == null && pendingRoster == null,
+                CanRegisterIndividual = individualEligible.Eligible && currentTeam == null && pendingRoster == null,
                 CanConfirmRoster = pendingRoster != null,
                 CanUnregister = individual != null || activeTeam != null || captainRegistrations.Count > 0
             };
@@ -505,6 +516,16 @@ internal sealed class MockBackendStore
         Guid teamId,
         SubmitTeamRosterDTO roster)
     {
+        return CheckTeamRosterEligibilityCore(persona, tournamentId, teamId, roster, excludeExistingRegistration: false);
+    }
+
+    private RosterCandidateEligibilityResponseDTO CheckTeamRosterEligibilityCore(
+        string persona,
+        Guid tournamentId,
+        Guid teamId,
+        SubmitTeamRosterDTO roster,
+        bool excludeExistingRegistration)
+    {
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(tournamentId);
@@ -515,14 +536,24 @@ internal sealed class MockBackendStore
             var existing = registrations.FirstOrDefault(registration =>
                 registration.Kind == TournamentRegistrationKind.Team &&
                 registration.Team?.Id == teamId);
-            var reasons = GetTeamEligibilityFailures(tournament, registrations, team, currentUser.Id, existing?.Id);
-            var userIds = roster.UserIds ?? [];
+            var excludedRegistrationId = excludeExistingRegistration ? existing?.Id : null;
+            var reasons = GetTeamEligibilityFailures(tournament, registrations, team, currentUser.Id, excludedRegistrationId);
+            var userIds = roster?.UserIds ?? [];
             if(userIds.Count != userIds.Distinct().Count())
                 reasons.Add("roster_user_ids_must_be_unique");
             if(tournament.TeamSize.HasValue && userIds.Distinct().Count() != tournament.TeamSize.Value)
                 reasons.Add("exact_roster_size_required");
+            if(!userIds.Contains(team.CaptainUserId))
+                reasons.Add("captain_required");
 
             var teamMemberIds = team.Members.Select(member => member.Id).ToHashSet();
+            var participatingUserIds = registrations
+                .Where(registration => registration.Id != excludedRegistrationId)
+                .SelectMany(registration =>
+                    registration.Kind == TournamentRegistrationKind.Individual
+                        ? registration.User is null ? [] : [registration.User.Id]
+                        : registration.RosterMembers.Select(member => member.User.Id))
+                .ToHashSet();
             var candidates = userIds
                 .Distinct()
                 .Select(userId =>
@@ -532,7 +563,9 @@ internal sealed class MockBackendStore
                     if(user == null)
                         candidateReasons.Add("user_not_found");
                     if(!teamMemberIds.Contains(userId))
-                        candidateReasons.Add("user_not_team_member");
+                        candidateReasons.Add("not_team_member");
+                    if(participatingUserIds.Contains(userId))
+                        candidateReasons.Add("duplicate_participation");
                     return new RosterCandidateEligibilityDTO
                     {
                         UserId = userId,
@@ -544,6 +577,8 @@ internal sealed class MockBackendStore
                 .ToList();
 
             reasons.AddRange(candidates.SelectMany(candidate => candidate.ReasonCodes));
+            if(candidates.Any(candidate => !candidate.Eligible))
+                reasons.Add("roster_candidate_ineligible");
             return new RosterCandidateEligibilityResponseDTO
             {
                 Eligible = reasons.Count == 0,
@@ -586,6 +621,7 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(tournamentId);
+            EnsureScheduledTournament(tournament);
             var currentUser = GetCurrentProfile(persona).User
                 ?? throw new InvalidOperationException("Mock profile does not have a user.");
             var registrations = GetRegistrationDetails(tournament);
@@ -618,7 +654,7 @@ internal sealed class MockBackendStore
             var existing = registrations.FirstOrDefault(registration =>
                 registration.Kind == TournamentRegistrationKind.Team &&
                 registration.Team?.Id == teamId);
-            var eligibility = CheckTeamRosterEligibility(persona, tournamentId, teamId, roster);
+            var eligibility = CheckTeamRosterEligibilityCore(persona, tournamentId, teamId, roster, excludeExistingRegistration: true);
             EnsureEligible(new EligibilityResponseDTO
             {
                 Eligible = eligibility.Eligible,
@@ -629,7 +665,8 @@ internal sealed class MockBackendStore
                 registrations.Remove(existing);
 
             var now = DateTime.UtcNow;
-            var rosterMembers = roster.UserIds
+            var userIds = roster?.UserIds ?? [];
+            var rosterMembers = userIds
                 .Distinct()
                 .Select(userId =>
                 {
@@ -676,14 +713,14 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(tournamentId);
+            EnsureScheduledTournament(tournament);
             var currentUser = GetCurrentProfile(persona).User
                 ?? throw new InvalidOperationException("Mock profile does not have a user.");
             var registrations = GetRegistrationDetails(tournament);
             var registration = registrations.FirstOrDefault(candidate =>
                 candidate.Kind == TournamentRegistrationKind.Team &&
                 candidate.Team?.Id == teamId &&
-                (candidate.Team.CaptainUserId == currentUser.Id ||
-                 candidate.RosterMembers.Any(member => member.User.Id == currentUser.Id)));
+                candidate.Team.CaptainUserId == currentUser.Id);
 
             if(registration == null)
                 throw new InvalidOperationException("Team registration not found.");
@@ -701,6 +738,7 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(tournamentId);
+            EnsureScheduledTournament(tournament);
             var currentUser = GetCurrentProfile(persona).User
                 ?? throw new InvalidOperationException("Mock profile does not have a user.");
             var registrations = GetRegistrationDetails(tournament);
@@ -711,6 +749,19 @@ internal sealed class MockBackendStore
 
             if(registration == null || member == null || member.ConfirmationStatus != RosterMemberConfirmationStatus.Pending)
                 throw new InvalidOperationException("Pending roster confirmation not found.");
+
+            if(registration.Team is null ||
+               !registration.Team.Members.Any(candidate => candidate.Id == currentUser.Id))
+                throw new InvalidOperationException("not_team_member");
+
+            if(registrations
+                .Where(candidate => candidate.Id != registration.Id)
+                .Any(candidate =>
+                    candidate.User?.Id == currentUser.Id ||
+                    candidate.RosterMembers.Any(rosterMember => rosterMember.User.Id == currentUser.Id)))
+            {
+                throw new InvalidOperationException("duplicate_participation");
+            }
 
             var updatedRosterMembers = registration.RosterMembers
                 .Select(candidate => candidate.Id == rosterMemberId
@@ -953,6 +1004,8 @@ internal sealed class MockBackendStore
             reasons.Add("tournament_not_scheduled");
         if(!tournament.TeamSize.HasValue || tournament.TeamSize.Value <= 0)
             reasons.Add("team_size_required");
+        if(team.CaptainUserId != captainUserId)
+            reasons.Add("captain_required");
         if(registrations.Any(registration =>
                registration.Id != excludedRegistrationId &&
                registration.Kind == TournamentRegistrationKind.Team &&
@@ -1582,6 +1635,61 @@ internal sealed class MockBackendStore
         {
             AddOrReplaceTeam(team);
         }
+    }
+
+    private void SeedDefaultRegistrationFixture()
+    {
+        var tournament = _document.Tournaments
+            .Where(candidate =>
+                candidate.Status == TournamentStatus.Scheduled &&
+                candidate.ParticipationMode == ParticipationMode.Team &&
+                candidate.TeamSize is > 0)
+            .OrderBy(candidate => candidate.PlannedStartTime)
+            .FirstOrDefault();
+        var captain = _document.Users.FirstOrDefault(user =>
+            !user.IsDeleted &&
+            string.Equals(user.Username, "mockuser", StringComparison.OrdinalIgnoreCase));
+        if(tournament is null || captain is null || tournament.TeamSize is not > 0)
+            return;
+
+        var existingTeam = _document.Teams.FirstOrDefault(team => team.Id == DefaultRegistrationFixtureTeamId);
+        var requiredTeammateCount = tournament.TeamSize.Value - 1;
+        var pendingMember = _document.Users.FirstOrDefault(user =>
+            !user.IsDeleted &&
+            string.Equals(user.Username, "mockadmin", StringComparison.OrdinalIgnoreCase) &&
+            user.Id != captain.Id);
+        var teammates = _document.Users
+            .Where(user => !user.IsDeleted && user.Id != captain.Id && user.Id != pendingMember?.Id)
+            .Take(Math.Max(requiredTeammateCount - (pendingMember is null ? 0 : 1), 0))
+            .Prepend(pendingMember)
+            .Where(user => user is not null)
+            .Cast<UserDTO>()
+            .Take(requiredTeammateCount)
+            .ToList();
+        if(teammates.Count != requiredTeammateCount)
+            return;
+
+        var team = existingTeam ?? new Team
+        {
+            Id = DefaultRegistrationFixtureTeamId,
+            Name = "Mock Registration Crew",
+            TeamInvites = []
+        };
+        team.Name = "Mock Registration Crew";
+        team.CaptainUserId = captain.Id;
+        team.Members = new[] { PublicUserDTO.FromUser(captain) }
+            .Concat(teammates.Select(PublicUserDTO.FromUser))
+            .ToList();
+        team.TeamInvites = [];
+        AddOrReplaceTeam(team);
+
+        var tournamentTeams = tournament.Teams.ToList();
+        var tournamentTeamIndex = tournamentTeams.FindIndex(candidate => candidate.Id == team.Id);
+        if(tournamentTeamIndex >= 0)
+            tournamentTeams[tournamentTeamIndex] = Clone(team)!;
+        else
+            tournamentTeams.Add(Clone(team)!);
+        tournament.Teams = tournamentTeams;
     }
 
     private static List<Team> BuildFeaturedDoubleEliminationTeams()
@@ -2328,6 +2436,12 @@ internal sealed class MockBackendStore
         _document.Tournaments.FirstOrDefault(tournament => tournament.Id == id)
         ?? throw new InvalidOperationException($"Mock tournament '{id}' was not found.");
 
+    private static void EnsureScheduledTournament(TournamentExtended tournament)
+    {
+        if(tournament.Status != TournamentStatus.Scheduled)
+            throw new InvalidOperationException("tournament_not_scheduled");
+    }
+
     private UserDTO GetRequiredUser(Guid id) =>
         _document.Users.FirstOrDefault(user => user.Id == id)
         ?? throw new InvalidOperationException($"Mock user '{id}' was not found.");
@@ -2411,10 +2525,14 @@ internal sealed class MockBackendStore
         var captainedId = Guid.Parse("23111111-1111-1111-1111-111111111120");
         var memberId = Guid.Parse("23111111-1111-1111-1111-111111111121");
         var inviteId = Guid.Parse("23111111-1111-1111-1111-111111111122");
+        var fallbackUsers = _document.Users
+            .Where(user => !user.IsDeleted && user.Id != currentUser.Id)
+            .ToList();
+        var teammate = _document.Users.FirstOrDefault(user => user.Username == "track1")
+            ?? fallbackUsers.FirstOrDefault();
 
-        if(_document.Teams.All(team => team.Id != captainedId))
+        if(_document.Teams.All(team => team.Id != captainedId) && teammate is not null)
         {
-            var teammate = _document.Users.First(user => user.Username == "track1");
             AddOrReplaceTeam(new Team
             {
                 Id = captainedId,
@@ -2436,28 +2554,31 @@ internal sealed class MockBackendStore
             });
         }
 
-        if(_document.Teams.All(team => team.Id != memberId))
+        var fallbackCaptain = _document.Users.FirstOrDefault(user => user.Username == "binary1")
+            ?? fallbackUsers.FirstOrDefault(user => user.Id != teammate?.Id)
+            ?? teammate;
+        if(_document.Teams.All(team => team.Id != memberId) && fallbackCaptain is not null)
         {
-            var captain = _document.Users.First(user => user.Username == "binary1");
             AddOrReplaceTeam(new Team
             {
                 Id = memberId,
                 Name = "Roster Lock",
-                CaptainUserId = captain.Id,
-                Members = [PublicUserDTO.FromUser(captain), ToPublicUser(currentUser)],
+                CaptainUserId = fallbackCaptain.Id,
+                Members = [PublicUserDTO.FromUser(fallbackCaptain), ToPublicUser(currentUser)],
                 TeamInvites = []
             });
         }
 
-        if(_document.Teams.All(team => team.Id != inviteId))
+        var inviteCaptain = _document.Users.FirstOrDefault(user => user.Username == "gamma1")
+            ?? fallbackCaptain;
+        if(_document.Teams.All(team => team.Id != inviteId) && inviteCaptain is not null)
         {
-            var captain = _document.Users.First(user => user.Username == "gamma1");
             AddOrReplaceTeam(new Team
             {
                 Id = inviteId,
                 Name = "Pending Pixels",
-                CaptainUserId = captain.Id,
-                Members = [PublicUserDTO.FromUser(captain)],
+                CaptainUserId = inviteCaptain.Id,
+                Members = [PublicUserDTO.FromUser(inviteCaptain)],
                 TeamInvites =
                 [
                     new TeamInvite
