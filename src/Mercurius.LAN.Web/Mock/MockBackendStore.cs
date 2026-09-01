@@ -451,14 +451,32 @@ internal sealed class MockBackendStore
                 ? registration.User?.Username ?? registration.User?.DisplayName
                 : registration.Team?.Name);
 
-    private static string? GetOpponentDisplayName(
+    private string? GetOpponentDisplayName(
         MockProfileMatchCandidate candidate,
         IReadOnlyDictionary<Guid, MockRegistrationSnapshot> snapshots)
     {
         var opponentId = candidate.SubjectIsParticipant1
             ? candidate.Participant2Id
             : candidate.Participant1Id;
-        return opponentId is { } id && snapshots.TryGetValue(id, out var snapshot)
+        if(opponentId is not { } id)
+            return null;
+
+        var currentDisplayName = candidate.ParticipationMode == ParticipationMode.Individual
+            ? _document.Users.FirstOrDefault(user =>
+                user.Id == id &&
+                !user.IsDeleted &&
+                !string.IsNullOrWhiteSpace(user.Username) &&
+                !string.IsNullOrWhiteSpace(user.Firstname) &&
+                !string.IsNullOrWhiteSpace(user.Lastname))?.Username
+            : _document.Teams.FirstOrDefault(team =>
+                team.Id == id &&
+                !_deletedTeamIds.Contains(team.Id) &&
+                !string.IsNullOrWhiteSpace(team.Name))?.Name;
+
+        if(!string.IsNullOrWhiteSpace(currentDisplayName))
+            return currentDisplayName;
+
+        return snapshots.TryGetValue(id, out var snapshot)
             ? snapshot.DisplayName
             : null;
     }
@@ -2542,7 +2560,7 @@ internal sealed class MockBackendStore
         {
             EnsureScheduleFields(tournament);
             NormalizeMatchLifecycleDefaults(tournament);
-            EnsureRegistrationProjection(tournament);
+            PopulateRegistrationProjection(tournament);
         }
 
         return document;
@@ -2949,7 +2967,15 @@ internal sealed class MockBackendStore
         }).ToList();
     }
 
-    private static void EnsureRegistrationProjection(TournamentExtended tournament)
+    private void EnsureRegistrationProjection(TournamentExtended tournament)
+    {
+        if(_registrationDetails.ContainsKey(tournament.Id))
+            return;
+
+        PopulateRegistrationProjection(tournament);
+    }
+
+    private static void PopulateRegistrationProjection(TournamentExtended tournament)
     {
         if(tournament.Registrations.Any())
             return;

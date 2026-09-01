@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Mock;
@@ -429,6 +430,61 @@ public sealed class MockMatchLifecycleTests
     }
 
     [Fact]
+    public void MockPublicProfileSummariesPreferCurrentPublicOpponentLabelsAfterRename()
+    {
+        var store = CreateRenamedOpponentStore();
+
+        store.UpdateCurrentProfile("user", new UpdateUserProfileRequest
+        {
+            Username = "current-opponent",
+            Firstname = "Current",
+            Lastname = "Opponent"
+        });
+        var opponentTeam = Assert.Single(store.GetTeams(1, 100).Where(team => team.Name == "Gamma Grid"));
+        store.UpdateTeam(opponentTeam.Id, new UpdateTeamDTO
+        {
+            Name = "Current Gamma Grid"
+        });
+
+        var userSummaries = store.GetPublicUserMatchSummaries("solo1");
+        var teamSummaries = store.GetPublicTeamMatchSummaries("Team Alpha");
+
+        Assert.Equal("current-opponent", Assert.Single(userSummaries!.PreviousMatches).OpponentDisplayName);
+        Assert.Equal("current-opponent", Assert.Single(userSummaries.UpcomingMatches).OpponentDisplayName);
+        Assert.Equal("Current Gamma Grid", Assert.Single(teamSummaries!.UpcomingMatches).OpponentDisplayName);
+    }
+
+    [Fact]
+    public void MockRemovingFinalTeamRegistrationDoesNotRepopulatePublicProjection()
+    {
+        var store = CreateFeaturedStore();
+        var teamIds = store.GetTournament(FeaturedTournamentId)!.Registrations
+            .Where(registration =>
+                registration.Kind == TournamentRegistrationKind.Team &&
+                registration.Status == TournamentRegistrationStatus.Active)
+            .Select(registration => registration.Team!.Id)
+            .ToList();
+
+        Assert.NotEmpty(teamIds);
+        foreach(var teamId in teamIds)
+            store.RemoveTournamentTeamRegistrationAsAdmin(
+                FeaturedTournamentId,
+                teamId,
+                "Final registration projection regression");
+
+        Assert.Empty(store.GetTournament(FeaturedTournamentId)!.Registrations);
+
+        var teamProfile = store.GetPublicTeamByName("Pixel Pushers");
+        Assert.NotNull(teamProfile);
+        Assert.Empty(teamProfile!.Tournaments);
+
+        var summaries = store.GetPublicTeamMatchSummaries("Pixel Pushers");
+        Assert.NotNull(summaries);
+        Assert.Empty(summaries!.PreviousMatches);
+        Assert.Empty(summaries.UpcomingMatches);
+    }
+
+    [Fact]
     public void MockDeletedTeamIsNotPublicAndAReusedNameDoesNotInheritHistory()
     {
         var repositoryRoot = FindRepositoryRoot();
@@ -509,6 +565,54 @@ public sealed class MockMatchLifecycleTests
             {
                 DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
             }));
+    }
+
+    private static MockBackendStore CreateRenamedOpponentStore()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var dataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json");
+        var serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        var document = JsonSerializer.Deserialize<MockBackendDocument>(File.ReadAllText(dataFilePath), serializerOptions)
+            ?? throw new InvalidOperationException("Failed to load the mock backend fixture.");
+        var profile = document.Profiles.Single(candidate => candidate.Persona == "user");
+        var opponent = profile.Profile.User ?? throw new InvalidOperationException("Mock user profile is missing.");
+        opponent.Id = IndividualProfileFixtureOpponentId;
+        opponent.Username = "solo2";
+        opponent.Firstname = "Omar";
+        opponent.Lastname = "Opponent";
+        opponent.DisplayName = "solo2";
+
+        return CreateSerializedStore(document, "mercurius-lan-current-labels");
+    }
+
+    private static MockBackendStore CreateSerializedStore(MockBackendDocument document, string directoryPrefix)
+    {
+        var temporaryDirectory = Path.Combine(Path.GetTempPath(), $"{directoryPrefix}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectory);
+        var dataFilePath = Path.Combine(temporaryDirectory, "backend.json");
+        var serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        File.WriteAllText(dataFilePath, JsonSerializer.Serialize(document, serializerOptions));
+
+        try
+        {
+            return new MockBackendStore(
+                new TestHostEnvironment(temporaryDirectory),
+                Microsoft.Extensions.Options.Options.Create(new MockBackendOptions { DataFilePath = "backend.json" }));
+        }
+        finally
+        {
+            File.Delete(dataFilePath);
+            Directory.Delete(temporaryDirectory);
+        }
     }
 
     private static MockBackendStore CreateReplayStore()
