@@ -34,6 +34,9 @@ external registration URL has already been removed from the live tournament mode
   without silently discarding an unsaved roster draft while its selected team remains available.
 - Keep draft-only and eligibility-only roster candidates visible as explicit removal choices when a
   team projection changes.
+- Reconcile a changed captain into a preserved dirty draft without removing selected members,
+  retain the explicit oversized-roster repair warning, and clear stale team errors when eligibility
+  checks restart.
 - Reconcile a transferred captain by adding the current captain without silently removing saved
   members; an oversized roster remains invalid until the captain chooses who to remove.
 - Respect the backend roster-eligibility endpoint's 50-user request limit when discovering candidate

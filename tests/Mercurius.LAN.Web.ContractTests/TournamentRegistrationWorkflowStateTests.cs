@@ -170,6 +170,25 @@ public sealed class TournamentRegistrationWorkflowStateTests
     }
 
     [Fact]
+    public void CaptainTransferInDirtyDraftKeepsOversizedRosterForExplicitRemoval()
+    {
+        var formerCaptain = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var retainedMember = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var currentCaptain = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc");
+        const int requiredTeamSize = 2;
+
+        var reconciled = TournamentParticipantsTab.ReconcileRosterForCurrentCaptain(
+            [formerCaptain, retainedMember],
+            currentCaptain);
+
+        Assert.Equal([formerCaptain, retainedMember, currentCaptain], reconciled);
+        Assert.True(reconciled.Count > requiredTeamSize);
+        Assert.Contains(
+            "Choose a member to remove before saving.",
+            TournamentParticipantsTab.GetCaptainTransferWarning(reconciled.Count, requiredTeamSize));
+    }
+
+    [Fact]
     public void CaptainTransferForSinglePlayerTeamKeepsSavedMemberForExplicitRemoval()
     {
         var formerCaptain = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");

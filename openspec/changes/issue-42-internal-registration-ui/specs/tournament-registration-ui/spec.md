@@ -88,6 +88,8 @@ selection, roster selection, and review/submit.
 - **AND** the captain MUST remain selected
 - **AND** ineligible members MUST be disabled or clearly marked with their backend reason
 - **AND** the captain MUST NOT progress to review until the local roster constraints pass
+- **AND** when a preserved dirty draft is rechecked, the current captain MUST be added without
+  removing an existing selected member
 - **AND** a roster made oversized by a captain transfer MUST remain invalid until the captain
   explicitly removes a member
 - **AND** a selected draft member who is no longer in the current team projection MUST remain
@@ -192,6 +194,8 @@ states while keeping public participant data separate from authenticated registr
 - **WHEN** a team or roster eligibility response contains reason codes
 - **THEN** the page MUST render those reasons next to the affected team, member, or action
 - **AND** the page MUST avoid replacing a specific reason with only generic failure text
+- **AND** starting a new selected-team or roster eligibility check MUST clear stale team-level
+  error text before displaying the new result
 
 #### Scenario: Anonymous visitor views registration
 

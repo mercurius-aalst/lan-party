@@ -549,6 +549,7 @@ public partial class TournamentParticipantsTab : IDisposable
 
         try
         {
+            _teamError = null;
             if(!_teamEligibilityById.TryGetValue(SelectedTeam.Id, out var teamEligibility))
             {
                 teamEligibility = await TournamentService.CheckTeamTournamentRegistrationEligibilityAsync(
@@ -570,23 +571,6 @@ public partial class TournamentParticipantsTab : IDisposable
                     if(member.User is not null)
                         _selectedRosterUserIds.Add(member.User.Id);
                 }
-
-                if(SelectedTeam.CaptainUserId != Guid.Empty)
-                {
-                    var selectedBeforeCaptainReconciliation = _selectedRosterUserIds.ToHashSet();
-                    var reconciledRoster = ReconcileRosterForCurrentCaptain(
-                        _selectedRosterUserIds,
-                        SelectedTeam.CaptainUserId);
-
-                    _selectedRosterUserIds.Clear();
-                    _selectedRosterUserIds.UnionWith(reconciledRoster);
-                    if(!selectedBeforeCaptainReconciliation.SetEquals(_selectedRosterUserIds))
-                    {
-                        _registrationWarning = _selectedRosterUserIds.Count > RequiredTeamSize
-                            ? $"The team captain changed. The current captain was added to this roster, which now has {_selectedRosterUserIds.Count} of the required {RequiredTeamSize} members. Choose a member to remove before saving."
-                            : "The team captain changed. The current captain was added to this roster. Review the roster before saving.";
-                    }
-                }
             }
             else if(!keepDraft)
             {
@@ -597,6 +581,21 @@ public partial class TournamentParticipantsTab : IDisposable
                 var remainingSlots = Math.Max(RequiredTeamSize - _selectedRosterUserIds.Count, 0);
                 foreach(var member in teamMembers.Where(member => member.Id != SelectedTeam.CaptainUserId).Take(remainingSlots))
                     _selectedRosterUserIds.Add(member.Id);
+            }
+
+            if((keepDraft || CaptainManagedRegistration is not null) && SelectedTeam.CaptainUserId != Guid.Empty)
+            {
+                var selectedBeforeCaptainReconciliation = _selectedRosterUserIds.ToHashSet();
+                var reconciledRoster = ReconcileRosterForCurrentCaptain(
+                    _selectedRosterUserIds,
+                    SelectedTeam.CaptainUserId);
+
+                _selectedRosterUserIds.Clear();
+                _selectedRosterUserIds.UnionWith(reconciledRoster);
+                if(!selectedBeforeCaptainReconciliation.SetEquals(_selectedRosterUserIds))
+                    _registrationWarning = GetCaptainTransferWarning(
+                        _selectedRosterUserIds.Count,
+                        RequiredTeamSize);
             }
 
             await RefreshRosterEligibilityAsync(tournamentId, generation, includeCandidateReasons: true);
@@ -627,6 +626,7 @@ public partial class TournamentParticipantsTab : IDisposable
         if(!IsCurrentRequest(tournamentId, generation))
             return;
 
+        _teamError = null;
         _rosterEligibility = null;
         if(SelectedTeam is null)
             return;
@@ -1459,6 +1459,11 @@ public partial class TournamentParticipantsTab : IDisposable
             .Concat(eligibilityCandidateIds)
             .Distinct()
             .ToArray();
+
+    internal static string GetCaptainTransferWarning(int rosterCount, int requiredTeamSize) =>
+        rosterCount > requiredTeamSize
+            ? $"The team captain changed. The current captain was added to this roster, which now has {rosterCount} of the required {requiredTeamSize} members. Choose a member to remove before saving."
+            : "The team captain changed. The current captain was added to this roster. Review the roster before saving.";
 
     private void MergeRosterCandidateEligibility(IEnumerable<RosterCandidateEligibilityDTO>? candidates)
     {

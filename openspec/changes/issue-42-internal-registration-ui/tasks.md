@@ -37,6 +37,9 @@
        generation-guard loading, submission, error, and toast state after awaited operations.
 - [x] 2.14 Keep draft-only and eligibility-only selected roster candidates available as explicit
        removal choices when the current team projection changes.
+- [x] 2.15 Reconcile the current captain into preserved dirty drafts without removing selected
+       members, retain the oversized-roster warning, and clear stale team errors on eligibility
+       checks.
 
 ## 3. Privacy and parity
 
@@ -67,3 +70,5 @@
        disappears.
 - [x] 4.8 Add regression coverage for serialized/coalesced realtime invalidations and draft-only
        candidate repair after a team projection change.
+- [x] 4.9 Add regression coverage for captain transfer reconciliation in a preserved oversized
+       draft.
