@@ -302,24 +302,62 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(tournamentId);
-            tournament.Status = state;
 
-            if(state == TournamentStatus.Scheduled)
+            switch(state)
             {
-                tournament.Placements = [];
-                foreach(var match in tournament.Matches)
-                {
-                    match.Participant1Score = null;
-                    match.Participant2Score = null;
-                    match.UserWinnerId = null;
-                    match.UserLoserId = null;
-                    match.TeamWinnerId = null;
-                    match.TeamLoserId = null;
-                }
-            }
-            else if(state == TournamentStatus.Completed && !tournament.Placements.Any())
-            {
-                tournament.Placements = BuildPlacements(tournament);
+                case TournamentStatus.Canceled:
+                    if(tournament.Status == TournamentStatus.Completed)
+                        throw new InvalidOperationException("Tournament cannot be canceled when it is already completed.");
+
+                    tournament.Status = TournamentStatus.Canceled;
+                    break;
+                case TournamentStatus.InProgress:
+                    if(tournament.Status != TournamentStatus.Scheduled)
+                        throw new InvalidOperationException("Tournament has to be scheduled to be able to start.");
+                    if(tournament.BracketType == BracketType.Swiss)
+                        throw new NotSupportedException("Swiss tournaments are not supported by the mock backend.");
+
+                    var registrations = GetRegistrationDetails(tournament);
+                    var activeParticipantCount = registrations.Count(registration =>
+                        registration.Status == TournamentRegistrationStatus.Active &&
+                        registration.Kind == (tournament.ParticipationMode == ParticipationMode.Team
+                            ? TournamentRegistrationKind.Team
+                            : TournamentRegistrationKind.Individual) &&
+                        (tournament.ParticipationMode == ParticipationMode.Team
+                            ? registration.Team is not null && registration.Team.Id != Guid.Empty
+                            : registration.User is not null && registration.User.Id != Guid.Empty));
+                    if(activeParticipantCount < 2)
+                        throw new InvalidOperationException("At least 2 participants required.");
+
+                    tournament.StartTime = DateTime.UtcNow;
+                    tournament.Status = TournamentStatus.InProgress;
+                    UpdatePublicRegistrationProjection(tournament, registrations);
+                    TournamentProjectionMapper.PopulateParticipantProjection(tournament);
+                    tournament.Matches = BuildGeneratedMatches(tournament, registrations);
+                    break;
+                case TournamentStatus.Completed:
+                    if(tournament.Status != TournamentStatus.InProgress)
+                        throw new InvalidOperationException("Tournament has to be in progress to be able to complete.");
+
+                    TournamentProjectionMapper.PopulateParticipantProjection(tournament);
+                    var placements = BuildPlacements(tournament);
+                    tournament.EndTime = DateTime.UtcNow;
+                    tournament.Status = TournamentStatus.Completed;
+                    tournament.Placements = placements;
+                    break;
+                case TournamentStatus.Scheduled:
+                    if(tournament.Status is not (TournamentStatus.Completed or TournamentStatus.Canceled))
+                        throw new InvalidOperationException("Tournament has to be completed or canceled to be able to reset.");
+
+                    tournament.Status = TournamentStatus.Scheduled;
+                    tournament.StartTime = DateTime.MinValue;
+                    tournament.EndTime = DateTime.MinValue;
+                    tournament.EstimatedEndTime = null;
+                    tournament.Matches = [];
+                    tournament.Placements = [];
+                    break;
+                default:
+                    throw new InvalidOperationException("A supported tournament lifecycle state is required.");
             }
         }
     }
@@ -363,6 +401,8 @@ internal sealed class MockBackendStore
                 match.UserWinnerId = participant1Won ? match.UserParticipant1Id : match.UserParticipant2Id;
                 match.UserLoserId = participant1Won ? match.UserParticipant2Id : match.UserParticipant1Id;
             }
+
+            PropagateMatchResult(tournament, match);
 
             return Clone(match)!;
         }
@@ -1588,6 +1628,7 @@ internal sealed class MockBackendStore
         tournament.Users = [];
         tournament.Teams = Clone(teams)!;
         tournament.Matches = BuildFeaturedDoubleEliminationMatches(tournament.Id, teams);
+        tournament.Registrations = [];
         EnsureRegistrationProjection(tournament);
 
         foreach(var team in teams)
@@ -1846,22 +1887,464 @@ internal sealed class MockBackendStore
         };
     }
 
-    private static List<Placement> BuildPlacements(TournamentExtended tournament)
+    private static List<Match> BuildGeneratedMatches(
+        TournamentExtended tournament,
+        IReadOnlyCollection<TournamentRegistrationDTO> registrations)
     {
-        if(tournament.ParticipationMode == ParticipationMode.Team)
+        var participantIds = registrations
+            .Where(registration => registration.Status == TournamentRegistrationStatus.Active)
+            .Where(registration => registration.Kind == (tournament.ParticipationMode == ParticipationMode.Team
+                ? TournamentRegistrationKind.Team
+                : TournamentRegistrationKind.Individual))
+            .Select(registration => tournament.ParticipationMode == ParticipationMode.Team
+                ? registration.Team?.Id
+                : registration.User?.Id)
+            .Where(id => id.HasValue && id.Value != Guid.Empty)
+            .Select(id => id!.Value)
+            .ToList();
+        var matches = tournament.BracketType switch
         {
-            return tournament.Teams.Take(4).Select((team, index) => new Placement
+            BracketType.SingleElimination => BuildSingleEliminationMatches(tournament, participantIds),
+            BracketType.DoubleElimination => BuildDoubleEliminationMatches(tournament, participantIds),
+            BracketType.RoundRobin => BuildRoundRobinMatches(tournament, participantIds),
+            _ => throw new NotSupportedException($"Bracket type {tournament.BracketType} is not supported by the mock backend.")
+        };
+
+        PropagateKnownMatchResults(tournament, matches);
+        AssignEstimatedSchedule(tournament, matches);
+        return matches;
+    }
+
+    private static List<Match> BuildSingleEliminationMatches(
+        TournamentExtended tournament,
+        IReadOnlyList<Guid> participantIds,
+        bool useFinalsFormat = true)
+    {
+        var nextPowerOfTwo = 1;
+        while(nextPowerOfTwo < participantIds.Count)
+            nextPowerOfTwo <<= 1;
+
+        var totalRounds = (int)Math.Log2(nextPowerOfTwo);
+        var slots = new Guid?[nextPowerOfTwo];
+        for(var index = 0; index < participantIds.Count; index++)
+            slots[index] = participantIds[index];
+
+        var matches = new List<Match>();
+        for(var round = 1; round <= totalRounds; round++)
+        {
+            var matchesThisRound = nextPowerOfTwo >> round;
+            for(var matchNumber = 1; matchNumber <= matchesThisRound; matchNumber++)
             {
-                Place = index + 1,
-                Teams = [Clone(team)!]
-            }).ToList();
+                var match = CreateGeneratedMatch(
+                    tournament,
+                    round,
+                    matchNumber,
+                    format: useFinalsFormat && round == totalRounds ? tournament.FinalsFormat : tournament.Format);
+
+                if(round == 1)
+                {
+                    var participant1 = slots[(matchNumber - 1) * 2];
+                    var participant2 = slots[(matchNumber - 1) * 2 + 1];
+                    SetMatchParticipant(match, tournament.ParticipationMode, true, participant1);
+                    SetMatchParticipant(match, tournament.ParticipationMode, false, participant2);
+                    match.Participant1IsBYE = !participant1.HasValue;
+                    match.Participant2IsBYE = !participant2.HasValue;
+
+                    if(participant1.HasValue != participant2.HasValue)
+                        SetMatchWinner(match, tournament.ParticipationMode, participant1 ?? participant2);
+                }
+
+                matches.Add(match);
+            }
         }
 
-        return tournament.Users.Take(4).Select((user, index) => new Placement
+        LinkSingleEliminationMatches(matches, totalRounds);
+        return matches;
+    }
+
+    private static List<Match> BuildDoubleEliminationMatches(
+        TournamentExtended tournament,
+        IReadOnlyList<Guid> participantIds)
+    {
+        var upperBracket = BuildSingleEliminationMatches(tournament, participantIds, useFinalsFormat: false);
+        var upperRounds = upperBracket.Max(match => match.RoundNumber);
+        var lowerRounds = Math.Max((upperRounds - 1) * 2, 0);
+        var matches = new List<Match>(upperBracket);
+        var lowerMatches = new List<Match>();
+        var matchesThisRound = upperRounds > 1 ? 1 << (upperRounds - 2) : 0;
+
+        for(var round = 1; round <= lowerRounds; round++)
         {
-            Place = index + 1,
-            Users = [Clone(user)!]
-        }).ToList();
+            for(var matchNumber = 1; matchNumber <= matchesThisRound; matchNumber++)
+            {
+                var match = CreateGeneratedMatch(tournament, round, matchNumber, isLowerBracketMatch: true);
+                lowerMatches.Add(match);
+                matches.Add(match);
+            }
+
+            if(round % 2 == 0)
+                matchesThisRound = Math.Max(matchesThisRound / 2, 1);
+        }
+
+        var grandFinal = CreateGeneratedMatch(
+            tournament,
+            Math.Max(upperRounds, lowerRounds) + 1,
+            1,
+            format: tournament.FinalsFormat);
+        matches.Add(grandFinal);
+
+        LinkSingleEliminationMatches(matches.Where(match => !match.IsLowerBracketMatch).ToList(), upperRounds);
+        LinkDoubleEliminationMatches(upperBracket, lowerMatches, grandFinal, upperRounds);
+        return matches;
+    }
+
+    private static List<Match> BuildRoundRobinMatches(
+        TournamentExtended tournament,
+        IReadOnlyList<Guid> participantIds)
+    {
+        var rotation = participantIds.Select(id => (Guid?)id).ToList();
+        if(rotation.Count % 2 != 0)
+            rotation.Add(null);
+
+        var matches = new List<Match>();
+        var matchNumber = 0;
+        for(var round = 1; round < rotation.Count; round++)
+        {
+            var matchesThisRound = rotation.Count / 2;
+            for(var index = 0; index < matchesThisRound; index++)
+            {
+                var participant1 = rotation[index];
+                var participant2 = rotation[rotation.Count - index - 1];
+                if(!participant1.HasValue || !participant2.HasValue)
+                    continue;
+
+                var match = CreateGeneratedMatch(tournament, round, matchNumber++);
+                SetMatchParticipant(match, tournament.ParticipationMode, true, participant1);
+                SetMatchParticipant(match, tournament.ParticipationMode, false, participant2);
+                matches.Add(match);
+            }
+
+            var last = rotation[^1];
+            rotation.RemoveAt(rotation.Count - 1);
+            rotation.Insert(1, last);
+        }
+
+        return matches;
+    }
+
+    private static Match CreateGeneratedMatch(
+        TournamentExtended tournament,
+        int round,
+        int matchNumber,
+        bool isLowerBracketMatch = false,
+        TournamentFormat? format = null) =>
+        new()
+        {
+            Id = Guid.NewGuid(),
+            BracketType = tournament.BracketType,
+            Format = format ?? tournament.Format,
+            ParticipationMode = tournament.ParticipationMode,
+            RoundNumber = round,
+            MatchNumber = matchNumber,
+            IsLowerBracketMatch = isLowerBracketMatch,
+            TournamentId = tournament.Id
+        };
+
+    private static void LinkSingleEliminationMatches(List<Match> matches, int totalRounds)
+    {
+        foreach(var match in matches.Where(match => !match.IsLowerBracketMatch && match.RoundNumber < totalRounds))
+        {
+            match.WinnerNextMatchId = matches
+                .Single(next => !next.IsLowerBracketMatch &&
+                    next.RoundNumber == match.RoundNumber + 1 &&
+                    next.MatchNumber == (match.MatchNumber + 1) / 2)
+                .Id;
+        }
+    }
+
+    private static void LinkDoubleEliminationMatches(
+        IReadOnlyList<Match> upperMatches,
+        IReadOnlyList<Match> lowerMatches,
+        Match grandFinal,
+        int upperRounds)
+    {
+        foreach(var match in upperMatches)
+        {
+            if(match.RoundNumber == upperRounds)
+            {
+                match.WinnerNextMatchId = grandFinal.Id;
+                match.LoserNextMatchId = lowerMatches.LastOrDefault()?.Id;
+                continue;
+            }
+
+            var nextUpper = upperMatches.FirstOrDefault(next =>
+                next.RoundNumber == match.RoundNumber + 1 &&
+                next.MatchNumber == (match.MatchNumber + 1) / 2);
+            if(nextUpper is not null)
+                match.WinnerNextMatchId = nextUpper.Id;
+
+            if(lowerMatches.Count == 0)
+                continue;
+
+            var targetRound = match.RoundNumber <= 2 ? match.RoundNumber : (match.RoundNumber - 1) * 2;
+            var targetNumber = match.RoundNumber == 1 ? (match.MatchNumber + 1) / 2 : match.MatchNumber;
+            var nextLower = lowerMatches.FirstOrDefault(next =>
+                next.RoundNumber == targetRound && next.MatchNumber == targetNumber);
+            if(nextLower is not null)
+                match.LoserNextMatchId = nextLower.Id;
+        }
+
+        foreach(var match in lowerMatches)
+        {
+            var targetNumber = match.RoundNumber % 2 == 1
+                ? match.MatchNumber
+                : (match.MatchNumber + 1) / 2;
+            var nextLower = lowerMatches.FirstOrDefault(next =>
+                next.RoundNumber == match.RoundNumber + 1 && next.MatchNumber == targetNumber);
+            match.WinnerNextMatchId = nextLower?.Id ?? grandFinal.Id;
+        }
+    }
+
+    private static void SetMatchParticipant(Match match, ParticipationMode mode, bool first, Guid? participantId)
+    {
+        if(!participantId.HasValue)
+            return;
+
+        if(mode == ParticipationMode.Team)
+        {
+            if(first)
+                match.TeamParticipant1Id = participantId;
+            else
+                match.TeamParticipant2Id = participantId;
+        }
+        else
+        {
+            if(first)
+                match.UserParticipant1Id = participantId;
+            else
+                match.UserParticipant2Id = participantId;
+        }
+    }
+
+    private static void SetMatchWinner(Match match, ParticipationMode mode, Guid? participantId)
+    {
+        if(!participantId.HasValue)
+            return;
+
+        if(mode == ParticipationMode.Team)
+            match.TeamWinnerId = participantId;
+        else
+            match.UserWinnerId = participantId;
+    }
+
+    private static Guid? GetMatchWinner(Match match, ParticipationMode mode) =>
+        mode == ParticipationMode.Team ? match.TeamWinnerId : match.UserWinnerId;
+
+    private static Guid? GetMatchLoser(Match match, ParticipationMode mode) =>
+        mode == ParticipationMode.Team ? match.TeamLoserId : match.UserLoserId;
+
+    private static void PropagateKnownMatchResults(TournamentExtended tournament, IReadOnlyList<Match> matches)
+    {
+        foreach(var match in matches.OrderBy(match => match.RoundNumber).ThenBy(match => match.MatchNumber))
+        {
+            PropagateMatchResult(tournament, matches, match);
+        }
+    }
+
+    private static void PropagateMatchResult(TournamentExtended tournament, Match match)
+    {
+        PropagateMatchResult(
+            tournament,
+            tournament.Matches.ToList(),
+            match);
+    }
+
+    private static void PropagateMatchResult(
+        TournamentExtended tournament,
+        IReadOnlyList<Match> matches,
+        Match match)
+    {
+        PropagateMatchParticipant(tournament, matches, match.WinnerNextMatchId, GetMatchWinner(match, tournament.ParticipationMode));
+        PropagateMatchParticipant(tournament, matches, match.LoserNextMatchId, GetMatchLoser(match, tournament.ParticipationMode));
+    }
+
+    private static void PropagateMatchParticipant(
+        TournamentExtended tournament,
+        IReadOnlyList<Match> matches,
+        Guid? nextMatchId,
+        Guid? participantId)
+    {
+        if(!nextMatchId.HasValue || !participantId.HasValue)
+            return;
+
+        var nextMatch = matches.FirstOrDefault(match => match.Id == nextMatchId.Value);
+        if(nextMatch is null)
+            return;
+
+        if(tournament.ParticipationMode == ParticipationMode.Team)
+        {
+            if(!nextMatch.TeamParticipant1Id.HasValue)
+                nextMatch.TeamParticipant1Id = participantId;
+            else if(!nextMatch.TeamParticipant2Id.HasValue)
+                nextMatch.TeamParticipant2Id = participantId;
+        }
+        else if(!nextMatch.UserParticipant1Id.HasValue)
+            nextMatch.UserParticipant1Id = participantId;
+        else if(!nextMatch.UserParticipant2Id.HasValue)
+            nextMatch.UserParticipant2Id = participantId;
+    }
+
+    private static void AssignEstimatedSchedule(TournamentExtended tournament, IReadOnlyList<Match> matches)
+    {
+        var currentRoundStart = tournament.PlannedStartTime == default
+            ? DateTime.UtcNow
+            : tournament.PlannedStartTime;
+        DateTime? latestEnd = null;
+        foreach(var round in matches.GroupBy(match => match.RoundNumber).OrderBy(group => group.Key))
+        {
+            DateTime? roundEnd = null;
+            foreach(var match in round)
+            {
+                var duration = GetMatchDuration(tournament, match.Format);
+                var estimatedEnd = currentRoundStart + duration;
+                match.EstimatedStartTime = currentRoundStart;
+                match.EstimatedEndTime = estimatedEnd;
+                roundEnd = !roundEnd.HasValue || estimatedEnd > roundEnd.Value ? estimatedEnd : roundEnd;
+            }
+
+            if(roundEnd.HasValue)
+            {
+                latestEnd = !latestEnd.HasValue || roundEnd > latestEnd ? roundEnd : latestEnd;
+                currentRoundStart = roundEnd.Value + TimeSpan.FromMinutes(Math.Max(tournament.RoundBreakDurationMinutes, 0));
+            }
+        }
+
+        tournament.EstimatedEndTime = latestEnd;
+    }
+
+    private static TimeSpan GetMatchDuration(TournamentExtended tournament, TournamentFormat format)
+    {
+        var multiplier = format switch
+        {
+            TournamentFormat.BestOf1 => 1,
+            TournamentFormat.BestOf3 => 3,
+            TournamentFormat.BestOf5 => 5,
+            _ => 1
+        };
+        return TimeSpan.FromMinutes(Math.Max(tournament.AverageGameDurationMinutes, 1) * multiplier);
+    }
+
+    private static List<Placement> BuildPlacements(TournamentExtended tournament)
+    {
+        if(tournament.BracketType == BracketType.RoundRobin)
+            return BuildRoundRobinPlacements(tournament);
+
+        var finalMatch = tournament.Matches
+            .OrderByDescending(match => match.RoundNumber)
+            .ThenByDescending(match => match.MatchNumber)
+            .FirstOrDefault()
+            ?? throw new InvalidOperationException("The tournament has no final match.");
+
+        var winnerId = tournament.ParticipationMode == ParticipationMode.Team
+            ? finalMatch.TeamWinnerId
+            : finalMatch.UserWinnerId;
+        if(!winnerId.HasValue)
+            throw new InvalidOperationException("The final match has no winner assigned.");
+
+        var loserId = tournament.ParticipationMode == ParticipationMode.Team
+            ? finalMatch.TeamLoserId
+            : finalMatch.UserLoserId;
+        if(tournament.BracketType == BracketType.DoubleElimination && !loserId.HasValue)
+            throw new InvalidOperationException("The final match has no loser assigned.");
+
+        var placements = new List<Placement>();
+        if(tournament.ParticipationMode == ParticipationMode.Team)
+        {
+            var winner = tournament.Teams.FirstOrDefault(team => team.Id == winnerId.Value)
+                ?? throw new InvalidOperationException("The final winner is not a registered team.");
+            placements.Add(new Placement { Place = 1, Teams = [Clone(winner)!] });
+
+            if(loserId.HasValue)
+            {
+                var loser = tournament.Teams.FirstOrDefault(team => team.Id == loserId.Value)
+                    ?? throw new InvalidOperationException("The final loser is not a registered team.");
+                placements.Add(new Placement { Place = 2, Teams = [Clone(loser)!] });
+            }
+        }
+        else
+        {
+            var winner = tournament.Users.FirstOrDefault(user => user.Id == winnerId.Value)
+                ?? throw new InvalidOperationException("The final winner is not a registered user.");
+            placements.Add(new Placement { Place = 1, Users = [Clone(winner)!] });
+
+            if(loserId.HasValue)
+            {
+                var loser = tournament.Users.FirstOrDefault(user => user.Id == loserId.Value)
+                    ?? throw new InvalidOperationException("The final loser is not a registered user.");
+                placements.Add(new Placement { Place = 2, Users = [Clone(loser)!] });
+            }
+        }
+
+        var loserIds = tournament.Matches
+            .OrderByDescending(match => match.RoundNumber)
+            .ThenByDescending(match => match.MatchNumber)
+            .Where(match => match != finalMatch)
+            .Select(match => tournament.ParticipationMode == ParticipationMode.Team
+                ? match.TeamLoserId
+                : match.UserLoserId)
+            .Where(id => id.HasValue && id != winnerId && id != loserId)
+            .Select(id => id!.Value)
+            .Distinct()
+            .ToList();
+
+        for(var index = 0; index < loserIds.Count; index++)
+        {
+            var place = index + (loserId.HasValue ? 3 : 2);
+            if(tournament.ParticipationMode == ParticipationMode.Team)
+            {
+                var team = tournament.Teams.FirstOrDefault(candidate => candidate.Id == loserIds[index]);
+                if(team is not null)
+                    placements.Add(new Placement { Place = place, Teams = [Clone(team)!] });
+            }
+            else
+            {
+                var user = tournament.Users.FirstOrDefault(candidate => candidate.Id == loserIds[index]);
+                if(user is not null)
+                    placements.Add(new Placement { Place = place, Users = [Clone(user)!] });
+            }
+        }
+
+        return placements;
+    }
+
+    private static List<Placement> BuildRoundRobinPlacements(TournamentExtended tournament)
+    {
+        var participants = tournament.ParticipationMode == ParticipationMode.Team
+            ? tournament.Teams.Select(team => (Id: team.Id, Wins: tournament.Matches.Count(match => match.TeamWinnerId == team.Id)))
+            : tournament.Users.Select(user => (Id: user.Id, Wins: tournament.Matches.Count(match => match.UserWinnerId == user.Id)));
+
+        var orderedParticipants = participants
+            .OrderByDescending(participant => participant.Wins)
+            .ThenBy(participant => participant.Id)
+            .ToList();
+        var placements = new List<Placement>();
+
+        for(var index = 0; index < orderedParticipants.Count; index++)
+        {
+            var participant = orderedParticipants[index];
+            if(tournament.ParticipationMode == ParticipationMode.Team)
+            {
+                var team = tournament.Teams.First(candidate => candidate.Id == participant.Id);
+                placements.Add(new Placement { Place = index + 1, Teams = [Clone(team)!] });
+            }
+            else
+            {
+                var user = tournament.Users.First(candidate => candidate.Id == participant.Id);
+                placements.Add(new Placement { Place = index + 1, Users = [Clone(user)!] });
+            }
+        }
+
+        return placements;
     }
 
     private static void EnsureRegistrationProjection(TournamentExtended tournament)

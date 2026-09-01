@@ -9,6 +9,7 @@ using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Tournaments;
+using Microsoft.Extensions.Configuration;
 using Refit;
 using Xunit;
 
@@ -29,6 +30,50 @@ public sealed class ApiContractTests
     public void BuildApiBaseAddress_NormalizesToApiRoot(string configuredAddress, string expectedAddress)
     {
         Assert.Equal(expectedAddress, DependencyExtensions.BuildApiBaseAddress(configuredAddress));
+    }
+
+    [Fact]
+    public void AssetUrlResolver_UsesApiRootForVersionedBaseAddress()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["MercuriusAPI:BaseAddress"] = "https://api.example.test/v1/"
+            })
+            .Build();
+
+        Assert.Equal(
+            "https://api.example.test/images/team.png",
+            AssetUrlResolver.Resolve(configuration, "images/team.png"));
+    }
+
+    [Fact]
+    public void TeamAssetUrlResolver_ResolvesNestedRegistrationTeamLogos()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["MercuriusAPI:BaseAddress"] = "https://api.example.test/v1/"
+            })
+            .Build();
+        var tournament = new TournamentExtended
+        {
+            Registrations =
+            [
+                new PublicTournamentRegistrationDTO
+                {
+                    Kind = TournamentRegistrationKind.Team,
+                    Status = TournamentRegistrationStatus.Active,
+                    Team = new PublicTournamentTeamDTO { LogoUrl = "images/nested-team.png" }
+                }
+            ]
+        };
+
+        TeamAssetUrlResolver.Resolve(configuration, tournament);
+
+        Assert.Equal(
+            "https://api.example.test/images/nested-team.png",
+            Assert.Single(tournament.Registrations).Team!.LogoUrl);
     }
 
     [Fact]

@@ -74,6 +74,68 @@ participant additions or the removed external registration URL as live capabilit
 - **THEN** the front-end uses `DELETE /v1/lan/tournaments/{tournamentId}/registrations/admin/users/{userId}` or `/teams/{teamId}` with a reason body
 - **AND** it does not offer an admin endpoint to add participants, swap roster members, or force confirmation
 
+### Requirement: Registration context remains current and mutation responses are authoritative
+The participant surface MUST refresh authenticated registration context when the tournament identity,
+lifecycle status, participation mode, or team size changes. It MUST mark a load complete only after
+the current load finishes, provide a retry path after a failed load, and apply confirmed mutation
+responses locally without an unnecessary tournament detail reload.
+
+#### Scenario: Tournament parameters change on a retained component
+- **WHEN** the same participant component receives a changed tournament status, participation mode,
+  team size, or a different tournament identifier
+- **THEN** the previous registration context is discarded or superseded
+- **AND** the current tournament receives a fresh authenticated context load
+
+#### Scenario: Registration context loading fails
+- **WHEN** an authenticated registration-state or eligibility request fails
+- **THEN** the context is not marked successfully loaded
+- **AND** the page exposes a retry action that can issue a new context load
+
+#### Scenario: Existing captain updates a roster
+- **WHEN** a captain has an existing team registration and selects a replacement roster
+- **THEN** an eligibility response containing only conflicts caused by that existing registration
+  does not hide the roster submit control
+- **AND** unrelated eligibility conflicts remain blocking
+- **AND** the confirmed registration response updates the public projection and registration state
+  without a second full tournament detail request
+
+#### Scenario: Existing captain unregisters a team
+- **WHEN** a captain removes the team registration
+- **THEN** the participant projection and captain registration state remove that registration from
+  the confirmed mutation response path
+- **AND** a non-captain roster member is not offered the captain-only unregister control
+
+### Requirement: Roster eligibility requests are cancellation-safe
+The participant surface MUST supersede in-flight roster eligibility checks when the selected roster
+changes and MUST apply a response only when it matches the current tournament, team, and selected
+user set.
+
+#### Scenario: Roster members are toggled rapidly
+- **WHEN** several roster checkboxes change before earlier eligibility requests complete
+- **THEN** prior requests are canceled or superseded
+- **AND** an out-of-order response for an older selection cannot overwrite the current eligibility
+  state
+
+### Requirement: Participant projections have one canonical deduplication policy
+The participant surface MUST derive displayed users, teams, and team roster members from the canonical
+registration projection and MUST deduplicate repeated registration or roster-member identifiers.
+
+#### Scenario: Detail data contains duplicate public registration records
+- **WHEN** duplicate active registrations or repeated roster members are present in the detail
+  response
+- **THEN** the participant cards and roster projection contain each participant identifier once
+- **AND** nested team logos use the same resolved asset URL policy as top-level team data
+
+### Requirement: Asset URLs use the configured API host root
+The front-end MUST resolve relative API asset paths against the normalized API host root, including
+when `MercuriusAPI:BaseAddress` has a `/v1` suffix.
+
+#### Scenario: Versioned API base resolves a team logo
+- **WHEN** a relative `images/...` asset is returned while the configured base is
+  `https://api.example/v1/`
+- **THEN** the rendered asset URL is rooted at `https://api.example/images/...`
+- **AND** it does not include `/v1/images/...`
+
 ### Requirement: Live response models preserve privacy-safe projections and canonical identifiers
 The front-end MUST deserialize the current tournament, match, registration, team, search, sponsor, and
 profile response shapes without requiring private-field enrichment calls. Aggregate-level identifiers
@@ -118,3 +180,16 @@ and blocked-action states using the current public and authenticated response sh
 - **WHEN** a mock visitor searches with at least three trimmed characters
 - **THEN** the mock service returns wrapped bounded results using `user`, `team`, and `tournament` types and `TournamentId`
 - **AND** shorter queries return no results without a lookup
+
+#### Scenario: Mock featured tournament is initialized
+- **WHEN** mock mode initializes the featured tournament fixture
+- **THEN** every seeded team has one active team registration in the canonical projection
+- **AND** the projected participant count matches the seeded team count
+
+#### Scenario: Mock lifecycle follows live transition rules
+- **WHEN** mock administration starts, completes, cancels, or resets a tournament
+- **THEN** unsupported transitions and starts with fewer than two active participants are rejected
+- **AND** a successful start creates matches with tournament identifiers and estimated timing
+- **AND** completion creates placements
+- **AND** reset clears matches, placements, and estimated timing and returns start/end times to their
+  reset values
