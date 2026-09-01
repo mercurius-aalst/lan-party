@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -51,7 +52,7 @@ public sealed class TeamRealtimeService : ITeamRealtimeService
     private HubConnection BuildConnection()
     {
         var configuredBaseAddress = _configuration.GetValue<string>("MercuriusAPI:BaseAddress") ?? string.Empty;
-        var hubUrl = $"{configuredBaseAddress.TrimEnd('/')}/v1/lan/team-events";
+        var hubUrl = $"{DependencyExtensions.BuildApiBaseAddress(configuredBaseAddress)}v1/lan/team-events";
 
         var connection = new HubConnectionBuilder()
             .WithUrl(hubUrl, options =>

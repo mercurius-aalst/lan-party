@@ -5,17 +5,27 @@
 
 <PageTitle>Mercurius LAN</PageTitle>
 
-@if(_games == null)
+@if(_tournaments == null && _loadError is null)
 {
     <LoadingScreen Message="Loading..." />
+}
+else if(_loadError is not null)
+{
+    <section class="brand-section">
+        <div class="brand-card home-empty-state" role="alert">
+            <h1>Unable to load tournament highlights</h1>
+            <p>@_loadError</p>
+            <button type="button" class="button-primary" @onclick="RetryLoadAsync">Try again</button>
+        </div>
+    </section>
 }
 else
 {
     <section class="home-hero">
         @{
-            string? primaryHeroImage = HeroGames.Count > 0 ? AssetUrlResolver.Resolve(Configuration, HeroGames[0].ImageUrl) : null;
-            string? secondaryHeroImage = HeroGames.Count > 1 ? AssetUrlResolver.Resolve(Configuration, HeroGames[1].ImageUrl) : null;
-            string? tertiaryHeroImage = HeroGames.Count > 2 ? AssetUrlResolver.Resolve(Configuration, HeroGames[2].ImageUrl) : null;
+            string? primaryHeroImage = HeroTournaments.Count > 0 ? AssetUrlResolver.Resolve(Configuration, HeroTournaments[0].ImageUrl) : null;
+            string? secondaryHeroImage = HeroTournaments.Count > 1 ? AssetUrlResolver.Resolve(Configuration, HeroTournaments[1].ImageUrl) : null;
+            string? tertiaryHeroImage = HeroTournaments.Count > 2 ? AssetUrlResolver.Resolve(Configuration, HeroTournaments[2].ImageUrl) : null;
         }
 
         <div class="home-hero-shell">
@@ -93,7 +103,7 @@ else
             <article class="brand-card feature-card">
                 <span class="brand-section-number">01</span>
                 <h2>Tournaments</h2>
-                <p>Compete across multiple games, climb the bracket, and chase the weekend highlight.</p>
+                <p>Compete across multiple tournaments, climb the bracket, and chase the weekend highlight.</p>
             </article>
             <article class="brand-card feature-card">
                 <span class="brand-section-number">02</span>
@@ -103,31 +113,35 @@ else
             <article class="brand-card feature-card">
                 <span class="brand-section-number">03</span>
                 <h2>Community</h2>
-                <p>Meet students who care about good games, good setups, and a strong event atmosphere.</p>
+                <p>Meet students who care about good tournaments, good setups, and a strong event atmosphere.</p>
             </article>
         </section>
 
         <section class="brand-section">
             <div class="home-section-header">
                 <div>
-                    <span class="section-eyebrow">Compete in your favorite games</span>
-                    <h2>Featured Games</h2>
+                    <span class="section-eyebrow">Compete in your favorite tournaments</span>
+                    <h2>Featured Tournaments</h2>
                 </div>
-                <a href="/games" class="button-secondary">View All Games</a>
+                <a href="/tournaments" class="button-secondary">View All Tournaments</a>
             </div>
 
-            <div class="home-game-grid">
-                @foreach(var game in FeaturedGames)
+            <div class="home-tournament-grid">
+                @if(FeaturedTournaments.Count == 0)
                 {
-                    var imageUrl = AssetUrlResolver.Resolve(Configuration, game.ImageUrl);
-                    <article class="brand-card home-game-card" @onclick="() => NavigateToGame(game.Id)">
-                        <img src="@imageUrl" alt="@game.Name" class="home-game-image" />
-                        <div class="home-game-body">
-                            <div class="home-game-meta">
-                                <h3>@game.Name</h3>
-                                <span class="game-status @game.Status.GetStatusClass()">@game.Status.GetStatusLabel()</span>
+                    <p class="home-empty-copy">No tournaments are currently published.</p>
+                }
+                @foreach(var tournament in FeaturedTournaments)
+                {
+                    var imageUrl = AssetUrlResolver.Resolve(Configuration, tournament.ImageUrl);
+                    <article class="brand-card home-tournament-card" @onclick="() => NavigateToTournament(tournament.Id)">
+                        <img src="@imageUrl" alt="@tournament.Name" class="home-tournament-image" />
+                        <div class="home-tournament-body">
+                            <div class="home-tournament-meta">
+                                <h3>@tournament.Name</h3>
+                                <span class="tournament-status @tournament.Status.GetStatusClass()">@tournament.Status.GetStatusLabel()</span>
                             </div>
-                            <p>@game.BracketType.GetLabel() · @game.Format.GetLabel()</p>
+                            <p>@tournament.BracketType.GetLabel() · @tournament.Format.GetLabel()</p>
                         </div>
                     </article>
                 }
@@ -162,7 +176,7 @@ else
             <article class="brand-card home-callout">
                 <span class="section-eyebrow">Tickets</span>
                 <h2>Join the LAN</h2>
-                <p>Compare visitor and gamer passes, then use the tournament list to explore competitions and registration links.</p>
+                <p>Compare visitor and gamer passes, then use the tournament list to explore competitions and registration options.</p>
                 <a href="/info#tickets" class="button-primary">View Ticket Info</a>
             </article>
 

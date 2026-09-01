@@ -10,6 +10,6 @@ public enum GlobalSearchResultType
     [JsonStringEnumMemberName("team")]
     Team,
 
-    [JsonStringEnumMemberName("game")]
-    Game
+    [JsonStringEnumMemberName("tournament")]
+    Tournament
 }

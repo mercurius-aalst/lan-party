@@ -1,5 +1,5 @@
 using Mercurius.LAN.Web.DTOs.Users;
-using Mercurius.LAN.Web.Models.Games;
+using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 
@@ -7,7 +7,7 @@ namespace Mercurius.LAN.Web.Mock;
 
 internal sealed class MockBackendDocument
 {
-    public List<GameExtended> Games { get; set; } = [];
+    public List<TournamentExtended> Tournaments { get; set; } = [];
     public List<Team> Teams { get; set; } = [];
     public List<UserDTO> Users { get; set; } = [];
     public List<MockProfileRecord> Profiles { get; set; } = [];

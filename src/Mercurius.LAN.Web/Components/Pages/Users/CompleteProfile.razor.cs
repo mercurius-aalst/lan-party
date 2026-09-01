@@ -19,6 +19,7 @@ public partial class CompleteProfile
     private string? _usernameAvailabilityMessage;
     private string _usernameAvailabilityClass = "form-text";
     private bool _isSaving;
+    private string? _loadError;
 
     [Inject] private IUserClient UserClient { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -31,6 +32,7 @@ public partial class CompleteProfile
 
     protected override async Task OnInitializedAsync()
     {
+        _loadError = null;
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         PrefillFromClaims(authenticationState.User);
 
@@ -53,6 +55,16 @@ public partial class CompleteProfile
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
         {
             NavigationManager.NavigateTo("/account/logout", true);
+            return;
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            // A first-time Auth0 user has no active profile yet. Keep the form open and
+            // bootstrap it with the PUT /users/me completion call on submit.
+        }
+        catch(ApiException exception)
+        {
+            _loadError = await GetApiErrorAsync(exception, "Profile setup is unavailable right now.");
             return;
         }
         catch(UnauthorizedAccessException)
@@ -89,6 +101,24 @@ public partial class CompleteProfile
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict)
         {
             ToastService.ShowError(await GetApiErrorAsync(exception));
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
+        {
+            ToastService.ShowError("Your profile could not be created. Please sign in again and retry.");
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var returnUrl = GetSafeReturnUrl(ReturnUrl);
+            NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", true);
+        }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
+        {
+            NavigationManager.NavigateTo("/account/logout", true);
+        }
+        catch(UnauthorizedAccessException)
+        {
+            var returnUrl = GetSafeReturnUrl(ReturnUrl);
+            NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", true);
         }
         finally
         {
@@ -138,10 +168,17 @@ public partial class CompleteProfile
         }
     }
 
-    private static async Task<string> GetApiErrorAsync(ApiException exception)
+    private static async Task<string> GetApiErrorAsync(ApiException exception, string fallback = "Profile could not be saved.")
     {
-        var content = await exception.GetContentAsAsync<string>();
-        return string.IsNullOrWhiteSpace(content) ? "Profile could not be saved." : content;
+        try
+        {
+            var content = await exception.GetContentAsAsync<string>();
+            return string.IsNullOrWhiteSpace(content) ? fallback : content;
+        }
+        catch
+        {
+            return string.IsNullOrWhiteSpace(exception.Content) ? fallback : exception.Content.Trim('"');
+        }
     }
 
     private static string? FindClaim(ClaimsPrincipal user, params string[] claimTypes)

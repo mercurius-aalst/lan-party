@@ -14,7 +14,7 @@ else if(_hasError)
     <StatusPage Eyebrow="Teams"
                 Title="Team unavailable"
                 Message="This team profile could not be loaded right now."
-                PrimaryHref="/games"
+                PrimaryHref="/tournaments"
                 PrimaryLabel="Browse tournaments"
                 SecondaryHref="/"
                 SecondaryLabel="Back home" />
@@ -24,7 +24,7 @@ else if(_team is null)
     <StatusPage Eyebrow="Teams"
                 Title="Team not found"
                 Message="We could not find a public profile for that team."
-                PrimaryHref="/games"
+                PrimaryHref="/tournaments"
                 PrimaryLabel="Browse tournaments"
                 SecondaryHref="/"
                 SecondaryLabel="Back home" />
@@ -105,10 +105,20 @@ else
                             @foreach(var tournament in _team.Tournaments)
                             {
                                 <li>
-                                    <a href="/games/@tournament.GameId" class="public-team-tournament-link">
-                                        <span class="bi bi-controller" aria-hidden="true"></span>
-                                        <span>@tournament.Name</span>
-                                    </a>
+                                    @if(tournament.TournamentId != Guid.Empty)
+                                    {
+                                        <a href="/tournaments/@tournament.TournamentId" class="public-team-tournament-link">
+                                            <span class="bi bi-controller" aria-hidden="true"></span>
+                                            <span>@tournament.Name</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="public-team-tournament-link public-team-tournament-link--unavailable">
+                                            <span class="bi bi-controller" aria-hidden="true"></span>
+                                            <span>@tournament.Name</span>
+                                        </span>
+                                    }
                                 </li>
                             }
                         </ul>

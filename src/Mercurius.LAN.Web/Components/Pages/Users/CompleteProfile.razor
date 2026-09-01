@@ -6,7 +6,17 @@
 
 <PageTitle>Complete Profile</PageTitle>
 
-@if(_editContext is null)
+@if(!string.IsNullOrWhiteSpace(_loadError))
+{
+    <StatusPage Eyebrow="Profile"
+                Title="Profile setup unavailable"
+                Message="@_loadError"
+                PrimaryHref="/complete-profile"
+                PrimaryLabel="Try Again"
+                SecondaryHref="/"
+                SecondaryLabel="Back home" />
+}
+else if(_editContext is null)
 {
     <LoadingScreen />
 }

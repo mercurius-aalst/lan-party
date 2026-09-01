@@ -1,0 +1,314 @@
+.tournaments-browse-shell {
+    --brand-page-hero-columns: minmax(0, 0.82fr) minmax(30rem, 1.18fr);
+    --brand-page-hero-gap: clamp(1rem, 3vw, 2.5rem);
+    --brand-page-hero-padding: clamp(1.25rem, 2.6vw, 2.25rem);
+    --brand-page-hero-padding-mobile: 1rem;
+    --brand-page-hero-copy-gap: 0.7rem;
+    --brand-page-hero-copy-paragraph-size: clamp(0.98rem, 1.25vw, 1.05rem);
+    --brand-page-hero-copy-paragraph-line-height: 1.58;
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.tournaments-browse-shell::after {
+    display: none;
+}
+
+.tournaments-browse-section {
+    padding-top: 0;
+    padding-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+.tournaments-grid-section {
+    padding-block: clamp(0.75rem, 1.6vw, 1.25rem);
+}
+
+.tournaments-process-section {
+    padding-block: clamp(2rem, 3.5vw, 3rem);
+}
+
+.tournaments-browse-lead,
+.tournaments-browse-controls {
+    position: relative;
+    z-index: 1;
+}
+
+.tournaments-browse-lead {
+    display: grid;
+    align-content: center;
+    gap: 0.8rem;
+}
+
+.tournaments-browse-copy h1,
+.tournaments-results-header h2,
+.tournaments-process-card h3,
+.tournaments-card h3,
+.tournaments-add-card h3,
+.tournaments-empty-state h3,
+.tournaments-sponsors-copy h2 {
+    margin-bottom: 0;
+}
+
+.tournaments-browse-copy h1 {
+    font-size: clamp(2.35rem, 4.2vw, 3.75rem);
+    line-height: 0.92;
+}
+
+.tournaments-browse-copy p,
+.tournaments-results-header p,
+.tournaments-process-card p,
+.tournaments-empty-state p,
+.tournaments-sponsors-copy p {
+    margin: 0;
+}
+
+.tournaments-browse-copy p,
+.tournaments-filter-caption {
+    color: var(--color-muted-text);
+}
+
+.tournaments-browse-controls {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1.45fr) minmax(14rem, 0.75fr);
+    align-content: start;
+    padding: 1rem;
+    overflow: hidden;
+    border: 1px solid rgba(163, 230, 53, 0.26);
+    border-radius: 28px;
+    background: rgba(15, 23, 42, 0.96);
+    color: var(--color-white);
+    box-shadow: 0 24px 48px rgba(15, 23, 42, 0.24);
+}
+
+.tournaments-browse-controls::before {
+    display: none;
+}
+
+.tournaments-control-field,
+.tournaments-filter-group {
+    position: relative;
+    display: grid;
+    gap: 0.55rem;
+    padding: 0.75rem 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(12px);
+}
+
+.tournaments-control-field--search,
+.tournaments-filter-group {
+    min-width: 0;
+}
+
+.tournaments-filter-group-header {
+    display: grid;
+    gap: 0.25rem;
+}
+
+.tournaments-filter-caption {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
+    line-height: 1.25;
+}
+
+.tournaments-control-field label,
+.tournaments-filter-group .section-eyebrow {
+    color: var(--color-electric-lime);
+    margin-bottom: 0;
+}
+
+.tournaments-search-input,
+.tournaments-sort-select {
+    width: 100%;
+    min-height: 2.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.96);
+    color: var(--color-dark-navy);
+    padding: 0.7rem 0.85rem;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.tournaments-search-input::placeholder {
+    color: var(--color-muted-text);
+}
+
+.tournaments-search-input:focus,
+.tournaments-sort-select:focus {
+    border-color: rgba(34, 197, 94, 0.55);
+    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+    outline: none;
+}
+
+.tournaments-filter-chip-row {
+    align-items: start;
+    gap: 0.45rem !important;
+}
+
+.tournaments-filter-chip {
+    padding: 0.52rem 0.78rem;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--color-dark-navy);
+    font-size: 0.9rem;
+    font-weight: 700;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.tournaments-filter-chip:hover,
+.tournaments-filter-chip.is-active {
+    border-color: rgba(34, 197, 94, 0.42);
+    background: rgba(34, 197, 94, 0.12);
+    color: var(--color-deep-green);
+    box-shadow: 0 8px 18px rgba(34, 197, 94, 0.12);
+}
+
+.tournaments-filter-chip.is-active {
+    transform: translateY(-1px);
+}
+
+.tournaments-results-header {
+    margin-bottom: 1.5rem;
+}
+
+.tournaments-process-anchor {
+    scroll-margin-top: 5.75rem;
+}
+
+.tournaments-results-header h2 {
+    margin-bottom: 0.45rem;
+}
+
+.tournaments-add-card,
+.tournaments-card,
+.tournaments-process-card {
+    height: 100%;
+}
+
+.tournaments-add-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.9rem;
+    padding: 1.5rem;
+    text-align: left;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.tournaments-add-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(34, 197, 94, 0.4);
+    box-shadow: var(--shadow-brand-hover);
+}
+
+.tournaments-add-card-icon {
+    margin-top: auto;
+    color: var(--color-primary-green);
+    font-family: "Saira", system-ui, sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.tournaments-process-card,
+.tournaments-empty-state,
+.tournaments-sponsors-panel {
+    padding: 1.5rem;
+}
+
+.tournaments-sponsors {
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+    padding-inline: clamp(1rem, 4vw, 2rem);
+    padding-block-start: clamp(2rem, 3.5vw, 3rem);
+    padding-block-end: clamp(2.5rem, 4vw, 3.5rem);
+}
+
+.tournaments-sponsors-panel {
+    width: min(100%, 1600px);
+    margin-inline: auto;
+    border-radius: 24px;
+}
+
+.tournaments-sponsors-panel ::deep(.sponsor-scroller__logo) {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tournaments-sponsors-panel ::deep(.sponsor-scroller__logo:hover),
+.tournaments-sponsors-panel ::deep(.sponsor-scroller__logo:focus-visible) {
+    border-color: rgba(34, 197, 94, 0.4);
+    background: rgba(34, 197, 94, 0.12);
+}
+
+@media (min-width: 1000px) {
+    .tournaments-browse-links {
+        gap: 0.75rem;
+    }
+
+    .tournaments-control-field,
+    .tournaments-filter-group {
+        gap: 0.55rem;
+        padding: 0.85rem 0.9rem;
+    }
+
+    .tournaments-filter-caption {
+        font-size: 0.86rem;
+        line-height: 1.25;
+    }
+}
+
+@media (max-width: 1100px) {
+    .tournaments-browse-shell {
+        --brand-page-hero-columns: 1fr;
+    }
+
+    .tournaments-browse-lead {
+        align-items: start;
+    }
+}
+
+@media (max-width: 900px) {
+    .tournaments-browse-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .tournaments-sponsors-panel {
+        padding: 1.15rem 1rem 1rem;
+    }
+}
+
+@media (max-width: 700px) {
+    .tournaments-results-header,
+    .tournaments-card-topline,
+    .tournaments-browse-lead {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tournaments-card-meta > div {
+        grid-template-columns: 1fr;
+        gap: 0.2rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .tournaments-browse-links {
+        width: 100%;
+    }
+
+    .tournaments-browse-links a {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+
+    .tournaments-sponsors-panel {
+        padding: 1rem 0.85rem 0.9rem;
+        border-radius: 20px;
+    }
+}
+
+

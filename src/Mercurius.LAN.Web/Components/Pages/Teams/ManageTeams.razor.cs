@@ -11,7 +11,7 @@ namespace Mercurius.LAN.Web.Components.Pages.Teams;
 
 public partial class ManageTeams : IAsyncDisposable
 {
-    private const long MaximumLogoBytes = 2 * 1024 * 1024;
+    private const long MaximumLogoBytes = 5 * 1024 * 1024;
 
     [Inject] private ITeamService TeamService { get; set; } = null!;
     [Inject] private ITeamNotificationService NotificationService { get; set; } = null!;
@@ -306,7 +306,7 @@ public partial class ManageTeams : IAsyncDisposable
         var file = args.File;
         if(file.Size > MaximumLogoBytes)
         {
-            ShowActionToast("Choose a logo smaller than 2 MB.", TeamActionSeverity.Warning);
+            ShowActionToast("Choose a logo no larger than 5 MB.", TeamActionSeverity.Warning);
             return;
         }
 
