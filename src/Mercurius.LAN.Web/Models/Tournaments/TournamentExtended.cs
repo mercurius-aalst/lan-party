@@ -7,6 +7,8 @@ namespace Mercurius.LAN.Web.Models.Tournaments;
 
 public class TournamentExtended : Tournament
 {
+    // Internal mock assignment metadata; public tournament clones clear it.
+    public Guid? AssignedAdminUserId { get; set; }
     public IEnumerable<Placement> Placements { get; set; } = [];
     public IEnumerable<Match> Matches { get; set; } = [];
     public IEnumerable<PublicTournamentRegistrationDTO> Registrations { get; set; } = [];

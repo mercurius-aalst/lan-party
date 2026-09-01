@@ -9,5 +9,5 @@
 
 @if(_showDialog)
 {
-    <TournamentMatchDetailsDialog Match="@Match" Tournament="@Tournament" Participant1Name="@Participant1Name" Participant2Name="@Participant2Name" Participant1="@ResolveParticipant(Participant1Id)" Participant2="@ResolveParticipant(Participant2Id)" OnClose="CloseDetailsDialogAsync" OnDataReload="OnDataReload" />
+    <TournamentMatchDetailsDialog Match="@Match" Tournament="@Tournament" Participant1Name="@Participant1Name" Participant2Name="@Participant2Name" Participant1="@ResolveParticipant(Participant1Id)" Participant2="@ResolveParticipant(Participant2Id)" OnClose="CloseDetailsDialogAsync" OnDataReload="HandleMatchDataReloadAsync" OnMatchRefreshed="HandleMatchRefreshedAsync" />
 }

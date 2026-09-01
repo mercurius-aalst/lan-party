@@ -208,7 +208,7 @@ public static class DependencyExtensions
         }
 
         var identity = string.Equals(normalizedPersona, "anonymous", StringComparison.OrdinalIgnoreCase)
-            ? new ClaimsIdentity()
+            ? new ClaimsIdentity(claims)
             : new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme, ClaimTypes.Name, ClaimTypes.Role);
 
         return new ClaimsPrincipal(identity);

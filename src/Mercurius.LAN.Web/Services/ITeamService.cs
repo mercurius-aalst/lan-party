@@ -11,6 +11,7 @@ public interface ITeamService
         int pageSize = TeamPage.DefaultPageSize,
         CancellationToken cancellationToken = default);
     Task<PublicTeamProfileDTO?> GetPublicTeamByNameAsync(string teamName, CancellationToken cancellationToken = default);
+    Task<PublicProfileMatchSummariesDTO?> GetPublicTeamMatchSummariesAsync(string teamName, CancellationToken cancellationToken = default);
     Task<CurrentUserTeamSummaryDTO> GetCurrentUserTeamSummaryAsync(CancellationToken cancellationToken = default);
     Task<Team> CreateTeamAsync(CreateTeamDTO team);
     Task<TeamInvite> InviteUserAsync(Guid teamId, Guid userId);

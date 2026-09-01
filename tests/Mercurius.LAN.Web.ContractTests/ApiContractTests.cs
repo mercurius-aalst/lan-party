@@ -3,7 +3,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.PublicProfiles;
 using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Users;
@@ -153,6 +155,68 @@ public sealed class ApiContractTests
 
         Assert.Equal(HttpMethod.Get, handler.Request!.Method);
         Assert.Equal($"/v1/lan/matches/{matchId}", handler.Request.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task MatchLifecycleRoutes_UseExplicitParticipantAndAdminActions()
+    {
+        var matchId = Guid.Parse("77777777-7777-7777-7777-777777777777");
+        var handler = new RecordingHandler($"{{\"match\":{{\"id\":\"{matchId}\",\"lifecycleState\":\"AwaitingScore\"}},\"authorizedParticipant\":\"Participant1\",\"canConfirmEnded\":false,\"canSubmitScore\":true,\"canForfeit\":true,\"canResolve\":true,\"canForceForfeit\":true,\"canReverse\":true}}");
+        using var httpClient = CreateHttpClient(handler);
+        var client = RestService.For<ILANClient>(httpClient, CreateRefitSettings());
+
+        var actionState = await client.GetMatchActionStateAsync(matchId);
+        Assert.Equal(HttpMethod.Get, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/me", handler.Request.RequestUri!.AbsolutePath);
+        Assert.True(actionState.CanResolve);
+        Assert.True(actionState.CanForceForfeit);
+        Assert.True(actionState.CanReverse);
+
+        await client.ConfirmMatchEndedAsync(matchId);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/confirm-ended", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.SubmitMatchScoreAsync(matchId, new SubmitMatchScoreDTO { Participant1Score = 2, Participant2Score = 1 });
+        Assert.Equal(HttpMethod.Put, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/score", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = MatchParticipantSide.Participant1 });
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/forfeit", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ResolveMatchAsync(matchId, new ResolveMatchDTO { Participant1Score = 2, Participant2Score = 0 });
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/resolve", handler.Request.RequestUri!.AbsolutePath);
+
+        await client.ReverseMatchAsync(matchId);
+        Assert.Equal(HttpMethod.Post, handler.Request!.Method);
+        Assert.Equal($"/v1/lan/matches/{matchId}/reverse", handler.Request.RequestUri!.AbsolutePath);
+    }
+
+    [Fact]
+    public async Task PublicProfileMatchSummaryRoutes_DeserializeSafeGuidProjection()
+    {
+        var matchId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+        var tournamentId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+        var handler = new RecordingHandler($"{{\"previousMatches\":[{{\"matchId\":\"{matchId}\",\"tournamentId\":\"{tournamentId}\",\"tournamentName\":\"LAN Cup\",\"opponentDisplayName\":\"Rival\",\"opponentIsTbd\":false,\"scheduledStartTime\":\"2026-09-01T10:00:00Z\",\"lifecycleState\":\"Completed\",\"participantScore\":2,\"opponentScore\":1,\"roundNumber\":1,\"matchNumber\":1}}],\"upcomingMatches\":[]}}");
+        using var httpClient = CreateHttpClient(handler);
+        var client = RestService.For<ILANClient>(httpClient, CreateRefitSettings());
+
+        var userSummaries = await client.GetPublicUserMatchSummariesAsync("public-user");
+
+        Assert.Equal(HttpMethod.Get, handler.Request!.Method);
+        Assert.Equal("/v1/lan/public/users/public-user/match-summaries", handler.Request.RequestUri!.AbsolutePath);
+        var previous = Assert.Single(userSummaries.PreviousMatches);
+        Assert.Equal(matchId, previous.MatchId);
+        Assert.Equal(tournamentId, previous.TournamentId);
+
+        handler.ResponseBody = "{\"previousMatches\":[],\"upcomingMatches\":[]}";
+        var teamSummaries = await client.GetPublicTeamMatchSummariesAsync("public team");
+
+        Assert.Equal(HttpMethod.Get, handler.Request!.Method);
+        Assert.Equal("/v1/lan/public/teams/public%20team/match-summaries", handler.Request.RequestUri!.AbsolutePath);
+        Assert.Empty(teamSummaries.PreviousMatches);
+        Assert.Empty(teamSummaries.UpcomingMatches);
     }
 
     [Fact]

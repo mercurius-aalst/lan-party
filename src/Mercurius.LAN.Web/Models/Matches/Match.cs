@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.Models.Tournaments;
+using Mercurius.LAN.Web.DTOs.Matches;
 
 namespace Mercurius.LAN.Web.Models.Matches
 {
@@ -28,7 +29,24 @@ namespace Mercurius.LAN.Web.Models.Matches
         public Guid? TeamLoserId { get; set; }
         public int? Participant1Score { get; set; }
         public int? Participant2Score { get; set; }
-        public Guid? WinnerNextMatchId { get; set; }
-        public Guid? LoserNextMatchId { get; set; }
-    }
+    public Guid? WinnerNextMatchId { get; set; }
+    public Guid? LoserNextMatchId { get; set; }
+    public Guid? Participant1SourceMatchId { get; set; }
+    public Guid? Participant2SourceMatchId { get; set; }
+    public MatchLifecycleState LifecycleState { get; set; }
+    public bool Participant1Ended { get; set; }
+    public bool Participant2Ended { get; set; }
+    public int? Participant1ReportedScore1 { get; set; }
+    public int? Participant1ReportedScore2 { get; set; }
+    public int? Participant2ReportedScore1 { get; set; }
+    public int? Participant2ReportedScore2 { get; set; }
+    public DateTime? ScoreConfirmationDeadlineUtc { get; set; }
+    public DateTime? CorrectionDeadlineUtc { get; set; }
+    public int Participant1CorrectionCount { get; set; }
+    public int Participant2CorrectionCount { get; set; }
+    public int? ForfeitedParticipantNumber { get; set; }
+    public MatchResultKind? ResultKind { get; set; }
+    public DateTime? ResultRecordedAtUtc { get; set; }
+    public int ResultVersion { get; set; }
+}
 }

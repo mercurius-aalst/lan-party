@@ -26,7 +26,7 @@ else
             @switch(_activeView)
             {
                 case BracketView.Upper:
-                    <SingleEliminationTournamentBracketComponent Tournament="@_upperBracketTournament" OnDataReload="OnDataReload" />
+                    <SingleEliminationTournamentBracketComponent Tournament="@_upperBracketTournament" OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" />
                     break;
                 case BracketView.Lower:
                     @if(_lBMatches.Any())
@@ -45,7 +45,7 @@ else
                                         {
                                             if(matchData.MatchPositions.TryGetValue(match.Id, out var pos))
                                             {
-                                                <TournamentBracketMatchComponent Match="match" Tournament="Tournament" Position="pos" OnDataReload="OnDataReload"></TournamentBracketMatchComponent>
+                                                <TournamentBracketMatchComponent Match="match" Tournament="Tournament" Position="pos" OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed"></TournamentBracketMatchComponent>
                                             }
                                         }
                                     }
@@ -58,7 +58,7 @@ else
                     @if(_gFMatch != null)
                     {
                         <div class="double-elimination-finals-card">
-                            <TournamentBracketMatchComponent Match="_gFMatch" Tournament="Tournament" ExtraCssClasses="relative" OnDataReload="OnDataReload" />
+                            <TournamentBracketMatchComponent Match="_gFMatch" Tournament="Tournament" ExtraCssClasses="relative" OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" />
                         </div>
                     }
                     break;

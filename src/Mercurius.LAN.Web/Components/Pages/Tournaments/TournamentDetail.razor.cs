@@ -166,6 +166,7 @@ public partial class TournamentDetail : IDisposable
                 return;
             }
 
+            ReconcileSelectedMatchProjection();
             _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
             SyncSelectedSponsor();
 
@@ -273,6 +274,7 @@ public partial class TournamentDetail : IDisposable
             return Task.CompletedTask;
 
         _tournament = updatedTournament;
+        ReconcileSelectedMatchProjection();
         _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
         SyncSelectedSponsor();
         return InvokeAsync(StateHasChanged);
@@ -586,9 +588,64 @@ public partial class TournamentDetail : IDisposable
             _ => "All brackets"
         };
 
+    private async Task HandleMatchDataReloadAsync(Match refreshedMatch)
+    {
+        if(!TryApplyRefreshedMatchProjection(refreshedMatch))
+            return;
+
+        // Apply the child refresh before asking the parent to reload. If that reload
+        // fails, both the schedule and either bracket view still render the fresh
+        // match instead of passing their old same-ID instance back to the dialog.
+        await LoadTournamentDataAsync(TournamentId);
+    }
+
+    private Task HandleMatchRefreshedAsync(Match refreshedMatch)
+    {
+        TryApplyRefreshedMatchProjection(refreshedMatch);
+        return Task.CompletedTask;
+    }
+
+    private bool TryApplyRefreshedMatchProjection(Match refreshedMatch)
+    {
+        if(_tournament is null || !_tournament.Matches.Any(match => match.Id == refreshedMatch.Id))
+            return false;
+
+        _selectedMatch = ApplyRefreshedMatchProjection(_tournament, _selectedMatch, refreshedMatch);
+        return true;
+    }
+
+    private void ReconcileSelectedMatchProjection()
+    {
+        if(_tournament is null)
+            return;
+
+        _selectedMatch = ReconcileSelectedMatch(_selectedMatch, _tournament);
+    }
+
     private void OpenMatchDetails(Match match)
     {
         _selectedMatch = match;
+    }
+
+    internal static Match? ReconcileSelectedMatch(Match? selectedMatch, TournamentExtended tournament) =>
+        selectedMatch is null
+            ? null
+            : tournament.Matches.FirstOrDefault(match => match.Id == selectedMatch.Id);
+
+    internal static Match? PreserveSelectedMatchProjection(Match? selectedMatch, Match refreshedMatch) =>
+        selectedMatch?.Id == refreshedMatch.Id
+            ? refreshedMatch
+            : selectedMatch;
+
+    internal static Match? ApplyRefreshedMatchProjection(
+        TournamentExtended tournament,
+        Match? selectedMatch,
+        Match refreshedMatch)
+    {
+        tournament.Matches = tournament.Matches
+            .Select(match => match.Id == refreshedMatch.Id ? refreshedMatch : match)
+            .ToList();
+        return PreserveSelectedMatchProjection(selectedMatch, refreshedMatch);
     }
 
     private void HandleScheduleItemKeyDown(KeyboardEventArgs args, Match match)

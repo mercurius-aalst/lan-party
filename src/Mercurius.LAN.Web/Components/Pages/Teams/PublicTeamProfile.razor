@@ -125,6 +125,11 @@ else
                     }
                 </section>
             </div>
+
+            <PublicProfileMatchSummaries Summaries="@_matchSummaries"
+                                         IsLoading="@_isMatchSummariesLoading"
+                                         HasError="@_hasMatchSummariesError"
+                                         OnRetry="RetryMatchSummariesAsync" />
         </div>
     </section>
 }
