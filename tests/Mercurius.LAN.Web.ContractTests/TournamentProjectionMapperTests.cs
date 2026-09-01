@@ -70,6 +70,107 @@ public sealed class TournamentProjectionMapperTests
         Assert.Empty(tournament.Teams);
     }
 
+    [Fact]
+    public void PopulateParticipantProjection_DeduplicatesRosterMembersAndTeams()
+    {
+        var captain = CreateUser(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "captain");
+        var teammate = CreateUser(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "teammate");
+        var team = new PublicTournamentTeamDTO
+        {
+            Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+            Name = "Duplicate Proof",
+            CaptainUserId = captain.Id
+        };
+        var tournament = new TournamentExtended
+        {
+            Registrations =
+            [
+                new PublicTournamentRegistrationDTO
+                {
+                    Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"),
+                    Kind = TournamentRegistrationKind.Team,
+                    Status = TournamentRegistrationStatus.Active,
+                    Team = team,
+                    RosterMembers =
+                    [
+                        new() { User = captain, IsCaptain = true },
+                        new() { User = teammate },
+                        new() { User = teammate }
+                    ]
+                },
+                new PublicTournamentRegistrationDTO
+                {
+                    Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
+                    Kind = TournamentRegistrationKind.Team,
+                    Status = TournamentRegistrationStatus.Active,
+                    Team = team,
+                    RosterMembers = [new() { User = captain, IsCaptain = true }]
+                }
+            ]
+        };
+
+        TournamentProjectionMapper.PopulateParticipantProjection(tournament);
+
+        var projectedTeam = Assert.Single(tournament.Teams);
+        Assert.Equal(new[] { captain.Id, teammate.Id }, projectedTeam.Members.Select(member => member.Id));
+    }
+
+    [Fact]
+    public void ApplyRegistration_ReplacesExistingTeamProjection()
+    {
+        var captain = CreateUser(Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), "captain");
+        var oldTeammate = CreateUser(Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), "old");
+        var newTeammate = CreateUser(Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), "new");
+        var teamId = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd");
+        var tournament = new TournamentExtended
+        {
+            Registrations =
+            [
+                new PublicTournamentRegistrationDTO
+                {
+                    Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
+                    Kind = TournamentRegistrationKind.Team,
+                    Status = TournamentRegistrationStatus.Active,
+                    Team = new PublicTournamentTeamDTO
+                    {
+                        Id = teamId,
+                        Name = "Replaceable",
+                        CaptainUserId = captain.Id
+                    },
+                    RosterMembers =
+                    [
+                        new() { User = captain, IsCaptain = true },
+                        new() { User = oldTeammate }
+                    ]
+                }
+            ]
+        };
+        var replacement = new TournamentRegistrationDTO
+        {
+            Id = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
+            TournamentId = tournament.Id,
+            Kind = TournamentRegistrationKind.Team,
+            Status = TournamentRegistrationStatus.Active,
+            Team = new()
+            {
+                Id = teamId,
+                Name = "Replaceable",
+                CaptainUserId = captain.Id
+            },
+            RosterMembers =
+            [
+                new() { User = captain, IsCaptain = true },
+                new() { User = newTeammate }
+            ]
+        };
+
+        TournamentProjectionMapper.ApplyRegistration(tournament, replacement);
+
+        var projectedTeam = Assert.Single(tournament.Teams);
+        Assert.Equal(new[] { captain.Id, newTeammate.Id }, projectedTeam.Members.Select(member => member.Id));
+        Assert.Equal(replacement.Id, Assert.Single(tournament.Registrations).Id);
+    }
+
     private static PublicUserDTO CreateUser(Guid id, string username) => new()
     {
         Id = id,

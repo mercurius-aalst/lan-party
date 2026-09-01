@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - src/**
+      - tests/**
+      - Mercurius.LAN.sln
       - Dockerfile
     types:
       - opened

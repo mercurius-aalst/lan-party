@@ -8,7 +8,7 @@
 @using Mercurius.LAN.Web.Models.Sponsors
 @using Microsoft.AspNetCore.Components.Authorization
 
-@rendermode InteractiveServer
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
 
 <PageTitle>Tournament Detail</PageTitle>
 @if(_isLoading && _tournament is null)

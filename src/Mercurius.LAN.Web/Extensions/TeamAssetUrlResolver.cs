@@ -49,6 +49,12 @@ public static class TeamAssetUrlResolver
 
     public static void Resolve(IConfiguration configuration, TournamentExtended tournament)
     {
+        foreach(var registration in tournament.Registrations)
+        {
+            if(registration.Team is not null)
+                registration.Team.LogoUrl = ResolveLogoUrl(configuration, registration.Team.LogoUrl);
+        }
+
         foreach(var team in tournament.Teams)
             Resolve(configuration, team);
 

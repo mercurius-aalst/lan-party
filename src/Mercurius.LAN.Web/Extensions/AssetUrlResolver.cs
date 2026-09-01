@@ -17,7 +17,7 @@ public static class AssetUrlResolver
         if(string.IsNullOrWhiteSpace(baseAddress))
             return assetPath.StartsWith("/", StringComparison.Ordinal) ? assetPath : "/" + assetPath.TrimStart('/');
 
-        return $"{baseAddress.TrimEnd('/')}/{assetPath.TrimStart('/')}";
+        return $"{DependencyExtensions.BuildApiBaseAddress(baseAddress)}{assetPath.TrimStart('/')}";
     }
 
     private static bool IsFrontendAssetPath(string assetPath) =>

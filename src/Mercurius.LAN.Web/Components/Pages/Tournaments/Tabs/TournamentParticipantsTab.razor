@@ -1,4 +1,3 @@
-@rendermode InteractiveServer
 @using Mercurius.LAN.Web.Components.Shared
 @using Mercurius.LAN.Web.DTOs.Registrations
 @using Mercurius.LAN.Web.Models.Tournaments
@@ -43,9 +42,13 @@
                 }
             </div>
 
-            @if(_registrationError is not null)
+            @if(HasRegistrationContextError)
             {
-                <p class="registration-message registration-message--error" role="alert">@_registrationError</p>
+                <p class="registration-message registration-message--error" role="alert">@(_registrationError ?? "Some registration options are unavailable right now.")</p>
+                @if(!_isLoadingRegistration)
+                {
+                    <button type="button" class="button-secondary" @onclick="RetryRegistrationContextAsync">Try again</button>
+                }
             }
 
             @if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Individual)
@@ -108,12 +111,12 @@
                             </div>
                         </div>
 
-                        @if(_selectedTeamEligibility is { Eligible: false })
+                        @if(_selectedTeamEligibility is { Eligible: false } && !IsSelectedTeamEligible)
                         {
                             <p class="registration-message registration-message--warning">This team cannot register: @GetReasonText(_selectedTeamEligibility.ReasonCodes)</p>
                         }
-                    else if(SelectedTeam is not null)
-                    {
+                        else if(SelectedTeam is not null)
+                        {
                             @if(_registrationState?.CaptainManagedRegistrations.FirstOrDefault(registration => registration.Team?.Id == SelectedTeam.Id) is { } managedRegistration)
                             {
                                 <p class="registration-message registration-message--success">Your team registration is @managedRegistration.Status.ToString().ToLowerInvariant().</p>
@@ -132,7 +135,7 @@
                                         <label class="registration-roster-member">
                                             <input type="checkbox"
                                                    checked="@_selectedRosterUserIds.Contains(member.Id)"
-                                                   disabled="@(_isSubmitting || (_rosterEligibility?.Candidates.FirstOrDefault(candidate => candidate.UserId == member.Id) is { Eligible: false }))"
+                                                   disabled="@(_isSubmitting || (!_selectedRosterUserIds.Contains(member.Id) && _rosterEligibility?.Candidates.FirstOrDefault(candidate => candidate.UserId == member.Id) is { Eligible: false }))"
                                                    @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                             <span>@GetUserLabel(member)@(member.Id == SelectedTeam.CaptainUserId ? " (captain)" : string.Empty)</span>
                                         </label>
@@ -140,18 +143,18 @@
                                 </div>
                             </fieldset>
 
-                            @if(_rosterEligibility is { Eligible: false })
+                            @if(_rosterEligibility is { Eligible: false } && !IsSelectedRosterEligible)
                             {
                                 <p class="registration-message registration-message--warning">This roster cannot be submitted: @GetReasonText(_rosterEligibility.ReasonCodes)</p>
                             }
-                            else if(_rosterEligibility is { Eligible: true })
+                            else if(IsSelectedRosterEligible)
                             {
                                 <p class="registration-message registration-message--success">The selected roster is eligible.</p>
                             }
 
                             <div class="registration-actions">
                                 <button type="button" class="button-primary" disabled="@(!CanSubmitRoster || _isSubmitting)" @onclick="SubmitTeamRosterAsync">Submit team roster</button>
-                                @if(_registrationState?.ActiveTeamRegistration?.Team is not null || _registrationState?.CaptainManagedRegistrations.Any(registration => registration.Team?.Id == SelectedTeam.Id) == true)
+                                @if(HasManagedRegistration)
                                 {
                                     <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="UnregisterTeamAsync">Unregister team</button>
                                 }

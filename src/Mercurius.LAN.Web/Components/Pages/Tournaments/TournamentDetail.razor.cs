@@ -9,6 +9,7 @@ using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Refit;
 
@@ -29,6 +30,7 @@ public partial class TournamentDetail : IDisposable
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private IConfiguration Configuration { get; set; } = null!;
     [Inject] private ISponsorService SponsorService { get; set; } = null!;
+    [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
 
     [Parameter] public Guid TournamentId { get; set; }
 
@@ -48,7 +50,8 @@ public partial class TournamentDetail : IDisposable
     private CancellationTokenSource? _loadCancellation;
     private Guid? _loadedTournamentId;
     private long _loadGeneration;
-    private long _actionGeneration;
+    private long _tournamentActionGeneration;
+    private long _sponsorActionGeneration;
     private bool _isDisposed;
 
     private IReadOnlyList<Match> ScheduledMatches =>
@@ -134,7 +137,8 @@ public partial class TournamentDetail : IDisposable
         _loadError = null;
         _notFound = false;
         _sponsorError = null;
-        ++_actionGeneration;
+        ++_tournamentActionGeneration;
+        ++_sponsorActionGeneration;
         _isActionRunning = false;
         _isSavingSponsor = false;
     }
@@ -165,7 +169,13 @@ public partial class TournamentDetail : IDisposable
             _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
             SyncSelectedSponsor();
 
-            if(_availableSponsors.Count == 0)
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if(!IsCurrentLoad(tournamentId, loadGeneration))
+                return;
+
+            if(authenticationState.User.Identity?.IsAuthenticated == true &&
+               authenticationState.User.IsInRole("admin") &&
+               _availableSponsors.Count == 0)
             {
                 try
                 {
@@ -249,7 +259,12 @@ public partial class TournamentDetail : IDisposable
 
     private bool IsCurrentAction(Guid tournamentId, long actionGeneration) =>
         !_isDisposed &&
-        actionGeneration == _actionGeneration &&
+        actionGeneration == _tournamentActionGeneration &&
+        tournamentId == TournamentId;
+
+    private bool IsCurrentSponsorAction(Guid tournamentId, long actionGeneration) =>
+        !_isDisposed &&
+        actionGeneration == _sponsorActionGeneration &&
         tournamentId == TournamentId;
 
     private Task HandleTournamentUpdated(TournamentExtended updatedTournament)
@@ -306,7 +321,7 @@ public partial class TournamentDetail : IDisposable
 
         var tournamentId = TournamentId;
         var tournamentName = _tournament?.Name ?? "Tournament";
-        var actionGeneration = ++_actionGeneration;
+        var actionGeneration = ++_tournamentActionGeneration;
         _isActionRunning = true;
         try
         {
@@ -350,7 +365,7 @@ public partial class TournamentDetail : IDisposable
         if(_isActionRunning)
             return;
 
-        var actionGeneration = ++_actionGeneration;
+        var actionGeneration = ++_tournamentActionGeneration;
         _isActionRunning = true;
         try
         {
@@ -596,7 +611,7 @@ public partial class TournamentDetail : IDisposable
             return;
 
         var tournamentId = _tournament.Id;
-        var actionGeneration = ++_actionGeneration;
+        var actionGeneration = ++_sponsorActionGeneration;
         _isSavingSponsor = true;
         _sponsorError = null;
         try
@@ -618,7 +633,7 @@ public partial class TournamentDetail : IDisposable
                 SponsorPlacements = sponsorPlacements
             });
 
-            if(!IsCurrentAction(tournamentId, actionGeneration))
+            if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
             _tournament = updatedTournament;
@@ -629,7 +644,7 @@ public partial class TournamentDetail : IDisposable
         }
         catch(ApiException ex)
         {
-            if(!IsCurrentAction(tournamentId, actionGeneration))
+            if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
             _sponsorError = string.IsNullOrWhiteSpace(ex.Content)
@@ -639,7 +654,7 @@ public partial class TournamentDetail : IDisposable
         }
         catch(UnauthorizedAccessException)
         {
-            if(!IsCurrentAction(tournamentId, actionGeneration))
+            if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
             _sponsorError = "You are not authorized to update this tournament sponsor.";
@@ -647,7 +662,7 @@ public partial class TournamentDetail : IDisposable
         }
         catch(Exception)
         {
-            if(!IsCurrentAction(tournamentId, actionGeneration))
+            if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
             _sponsorError = "The tournament sponsor could not be updated right now.";
@@ -655,7 +670,7 @@ public partial class TournamentDetail : IDisposable
         }
         finally
         {
-            if(IsCurrentAction(tournamentId, actionGeneration))
+            if(IsCurrentSponsorAction(tournamentId, actionGeneration))
                 _isSavingSponsor = false;
         }
     }
@@ -669,7 +684,8 @@ public partial class TournamentDetail : IDisposable
     {
         _isDisposed = true;
         ++_loadGeneration;
-        ++_actionGeneration;
+        ++_tournamentActionGeneration;
+        ++_sponsorActionGeneration;
         var loadCancellation = _loadCancellation;
         _loadCancellation = null;
         loadCancellation?.Cancel();
