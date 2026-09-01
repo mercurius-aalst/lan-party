@@ -74,3 +74,4 @@
 - [x] 11.12 Centralize participant projection and deduplication, including repeated roster-member identifiers.
 - [x] 11.13 Add focused contract regressions for URL resolution, projection replacement/deduplication, captain eligibility, mock fixture/lifecycle parity, and invalid transitions.
 - [x] 11.14 Run solution build/tests and strict OpenSpec validation; record remaining manual smoke-test work as the only release follow-up.
+- [x] 11.15 Supersede in-flight user and administrator registration mutations on tournament parameter changes or disposal, guard all stale completion side effects, and add A-to-B success/error regressions plus a tournament-ID projection backstop.

@@ -171,6 +171,41 @@ public sealed class TournamentProjectionMapperTests
         Assert.Equal(replacement.Id, Assert.Single(tournament.Registrations).Id);
     }
 
+    [Fact]
+    public void ApplyRegistration_IgnoresRegistrationFromAnotherTournament()
+    {
+        var tournamentId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var otherTournamentId = Guid.Parse("22222222-2222-2222-2222-222222222222");
+        var existingRegistration = new PublicTournamentRegistrationDTO
+        {
+            Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
+            TournamentId = tournamentId,
+            Kind = TournamentRegistrationKind.Individual,
+            Status = TournamentRegistrationStatus.Active,
+            User = CreateUser(Guid.Parse("44444444-4444-4444-4444-444444444444"), "existing")
+        };
+        var tournament = new TournamentExtended
+        {
+            Id = tournamentId,
+            Registrations = [existingRegistration]
+        };
+        var staleRegistration = new TournamentRegistrationDTO
+        {
+            Id = Guid.Parse("55555555-5555-5555-5555-555555555555"),
+            TournamentId = otherTournamentId,
+            Kind = TournamentRegistrationKind.Individual,
+            Status = TournamentRegistrationStatus.Active,
+            User = CreateUser(Guid.Parse("66666666-6666-6666-6666-666666666666"), "stale")
+        };
+
+        TournamentProjectionMapper.PopulateParticipantProjection(tournament);
+        TournamentProjectionMapper.ApplyRegistration(tournament, staleRegistration);
+
+        var result = Assert.Single(tournament.Registrations);
+        Assert.Equal(existingRegistration.Id, result.Id);
+        Assert.Equal(existingRegistration.User!.Id, Assert.Single(tournament.Users).Id);
+    }
+
     private static PublicUserDTO CreateUser(Guid id, string username) => new()
     {
         Id = id,

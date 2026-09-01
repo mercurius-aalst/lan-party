@@ -34,6 +34,22 @@ response when rendering schedule, bracket, participant, and registration surface
 - **THEN** the participant surface renders the returned privacy-safe users, teams, and rosters
 - **AND** inactive or private registrations are not presented as active public participants
 
+### Requirement: Tournament registration mutations remain scoped to their initiating detail context
+The participant surface MUST ignore a user or administrator registration mutation completion when
+the tournament parameter changes or the component is disposed before that completion arrives.
+
+#### Scenario: User mutation completes after the tournament changes
+- **WHEN** a user registration or unregistration starts for tournament A
+- **AND** the participant surface changes to tournament B before the backend response or error arrives
+- **THEN** the response or error from tournament A MUST NOT update tournament B's registration state,
+  participant projection, loading indicators, error state, toast messages, or update callback
+
+#### Scenario: Administrator removal completes after the tournament changes
+- **WHEN** an administrator registration removal starts for tournament A
+- **AND** the participant surface changes to tournament B before the backend response or error arrives
+- **THEN** the response or error from tournament A MUST NOT update tournament B's registration state,
+  participant projection, pending-removal state, error state, toast messages, or update callback
+
 ### Requirement: Tournament detail loads only in the interactive circuit
 The tournament detail page MUST avoid executing its tournament or sponsor data load during
 prerender and MUST keep lifecycle and sponsor action busy state independent when operations overlap.

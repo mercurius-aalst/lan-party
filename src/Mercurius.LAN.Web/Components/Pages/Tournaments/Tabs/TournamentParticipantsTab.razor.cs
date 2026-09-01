@@ -57,8 +57,10 @@ public partial class TournamentParticipantsTab : IDisposable
     private CancellationTokenSource? _registrationCancellation;
     private CancellationTokenSource? _rosterEligibilityCancellation;
     private long _registrationLoadGeneration;
+    private long _registrationMutationGeneration;
     private long _rosterEligibilityGeneration;
     private Guid? _currentUserId;
+    private bool _isDisposed;
 
     private IReadOnlyList<TeamManagementSummaryDTO> CaptainedTeams =>
         _teamSummary?.CaptainedTeams ?? [];
@@ -112,6 +114,7 @@ public partial class TournamentParticipantsTab : IDisposable
 
         if(registrationContextChanged)
         {
+            InvalidateRegistrationMutations();
             _loadedTournamentId = Tournament.Id;
             _loadedTournamentStatus = Tournament.Status;
             _loadedParticipationMode = Tournament.ParticipationMode;
@@ -592,11 +595,16 @@ public partial class TournamentParticipantsTab : IDisposable
         string successMessage,
         Guid? removedRegistrationId)
     {
+        var tournamentId = Tournament.Id;
+        var mutationGeneration = _registrationMutationGeneration;
         _isSubmitting = true;
         _registrationError = null;
         try
         {
             var registration = await action();
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             if(registration is not null)
                 ApplyRegistrationMutation(registration);
             else if(removedRegistrationId.HasValue)
@@ -604,21 +612,31 @@ public partial class TournamentParticipantsTab : IDisposable
 
             ToastService.ShowSuccess(successMessage);
             await OnTournamentUpdated.InvokeAsync(Tournament);
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             await InvokeAsync(StateHasChanged);
         }
         catch(Exception exception) when(IsUnauthorized(exception))
         {
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             _registrationError = "You are not authorized to change this registration.";
             ToastService.ShowError(_registrationError);
         }
         catch(Exception exception)
         {
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             _registrationError = GetErrorMessage(exception, "The registration could not be changed right now.");
             ToastService.ShowError(_registrationError);
         }
         finally
         {
-            _isSubmitting = false;
+            if(IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                _isSubmitting = false;
         }
     }
 
@@ -627,50 +645,72 @@ public partial class TournamentParticipantsTab : IDisposable
         if(_pendingAdminRemovalRegistrationId.HasValue)
             return;
 
+        var tournamentId = Tournament.Id;
+        var mutationGeneration = _registrationMutationGeneration;
+        var removalReason = _adminRemovalReason;
         _pendingAdminRemovalRegistrationId = registration.Id;
         _adminError = null;
         try
         {
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             if(registration.Kind == TournamentRegistrationKind.Individual && registration.User is not null)
             {
                 await TournamentService.RemoveTournamentUserRegistrationAsAdminAsync(
-                    Tournament.Id,
+                    tournamentId,
                     registration.User.Id,
-                    _adminRemovalReason);
+                    removalReason);
             }
             else if(registration.Kind == TournamentRegistrationKind.Team && registration.Team is not null)
             {
                 await TournamentService.RemoveTournamentTeamRegistrationAsAdminAsync(
-                    Tournament.Id,
+                    tournamentId,
                     registration.Team.Id,
-                    _adminRemovalReason);
+                    removalReason);
             }
             else
             {
+                if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                    return;
+
                 _adminError = "This registration does not contain enough identity data to remove it.";
                 return;
             }
+
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
 
             ApplyRegistrationRemoval(registration.Id);
             _adminRegistrations.RemoveAll(candidate => candidate.Id == registration.Id);
             _adminRemovalReason = string.Empty;
             ToastService.ShowSuccess("The registration was removed.");
             await OnTournamentUpdated.InvokeAsync(Tournament);
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             await InvokeAsync(StateHasChanged);
         }
         catch(Exception exception) when(IsUnauthorized(exception))
         {
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             _adminError = "You are not authorized to remove this registration.";
             ToastService.ShowError(_adminError);
         }
         catch(Exception exception)
         {
+            if(!IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                return;
+
             _adminError = GetErrorMessage(exception, "The registration could not be removed right now.");
             ToastService.ShowError(_adminError);
         }
         finally
         {
-            _pendingAdminRemovalRegistrationId = null;
+            if(IsCurrentRegistrationMutation(tournamentId, mutationGeneration))
+                _pendingAdminRemovalRegistrationId = null;
         }
     }
 
@@ -935,6 +975,11 @@ public partial class TournamentParticipantsTab : IDisposable
         tournamentId == Tournament.Id &&
         loadGeneration == _registrationLoadGeneration;
 
+    private bool IsCurrentRegistrationMutation(Guid tournamentId, long mutationGeneration) =>
+        !_isDisposed &&
+        tournamentId == Tournament.Id &&
+        mutationGeneration == _registrationMutationGeneration;
+
     private bool IsCurrentRosterEligibility(
         Guid tournamentId,
         Guid teamId,
@@ -952,6 +997,13 @@ public partial class TournamentParticipantsTab : IDisposable
         var cancellation = _registrationCancellation;
         _registrationCancellation = null;
         cancellation?.Cancel();
+    }
+
+    private void InvalidateRegistrationMutations()
+    {
+        ++_registrationMutationGeneration;
+        _isSubmitting = false;
+        _pendingAdminRemovalRegistrationId = null;
     }
 
     private void CancelRosterEligibilityLoad()
@@ -978,6 +1030,8 @@ public partial class TournamentParticipantsTab : IDisposable
 
     public void Dispose()
     {
+        _isDisposed = true;
+        InvalidateRegistrationMutations();
         CancelRegistrationLoad();
         CancelRosterEligibilityLoad();
     }

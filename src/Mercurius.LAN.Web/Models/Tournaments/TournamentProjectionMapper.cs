@@ -12,6 +12,9 @@ public static class TournamentProjectionMapper
 {
     public static void ApplyRegistration(TournamentExtended tournament, TournamentRegistrationDTO registration)
     {
+        if(registration.TournamentId != tournament.Id)
+            return;
+
         var registrations = tournament.Registrations?.ToList() ?? [];
         registrations.RemoveAll(existing =>
             existing.Id == registration.Id ||
