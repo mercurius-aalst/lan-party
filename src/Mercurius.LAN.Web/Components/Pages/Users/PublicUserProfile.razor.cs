@@ -5,14 +5,21 @@ using Microsoft.AspNetCore.Components;
 namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class PublicUserProfile
+    : IDisposable
 {
     [Inject] private IPublicProfileService PublicProfileService { get; set; } = null!;
 
     [Parameter] public string Username { get; set; } = string.Empty;
 
     private PublicUserProfileDTO? _profile;
+    private PublicProfileMatchSummariesDTO? _matchSummaries;
     private bool _isLoading;
     private bool _hasError;
+    private bool _isMatchSummariesLoading;
+    private bool _hasMatchSummariesError;
+    private CancellationTokenSource? _loadCancellation;
+    private bool _disposed;
+    private string? _loadedUsername;
     private bool HasLinkedIdentities =>
         !string.IsNullOrWhiteSpace(_profile?.DiscordId) ||
         !string.IsNullOrWhiteSpace(_profile?.SteamId) ||
@@ -22,28 +29,162 @@ public partial class PublicUserProfile
 
     protected override async Task OnParametersSetAsync()
     {
+        if(_disposed)
+            return;
+
+        CancelCurrentLoad();
+        using var cancellation = new CancellationTokenSource();
+        _loadCancellation = cancellation;
+        var cancellationToken = cancellation.Token;
+
         _isLoading = true;
         _hasError = false;
         _profile = null;
+        _loadedUsername = null;
+        _matchSummaries = null;
+        _isMatchSummariesLoading = false;
+        _hasMatchSummariesError = false;
 
         var decodedUsername = Uri.UnescapeDataString(Username ?? string.Empty).Trim();
-        if(string.IsNullOrWhiteSpace(decodedUsername))
-        {
-            _isLoading = false;
-            return;
-        }
-
         try
         {
-            _profile = await PublicProfileService.GetPublicUserByUsernameAsync(decodedUsername);
-        }
-        catch(Exception)
-        {
-            _hasError = true;
+            if(string.IsNullOrWhiteSpace(decodedUsername))
+            {
+                _isLoading = false;
+                return;
+            }
+
+            try
+            {
+                var profile = await PublicProfileService.GetPublicUserByUsernameAsync(decodedUsername, cancellationToken);
+                if(!IsCurrentLoad(cancellation))
+                    return;
+
+                _profile = profile;
+                _loadedUsername = decodedUsername;
+            }
+            catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+            catch(Exception)
+            {
+                if(IsCurrentLoad(cancellation))
+                    _hasError = true;
+            }
+            finally
+            {
+                if(IsCurrentLoad(cancellation))
+                    _isLoading = false;
+            }
+
+            if(!IsCurrentLoad(cancellation) || _hasError || _profile is null)
+                return;
+
+            await LoadMatchSummariesAsync(decodedUsername, cancellation);
         }
         finally
         {
-            _isLoading = false;
+            if(ReferenceEquals(_loadCancellation, cancellation))
+                _loadCancellation = null;
+        }
+    }
+
+    private async Task LoadMatchSummariesAsync(
+        string username,
+        CancellationTokenSource cancellation)
+    {
+        if(!IsCurrentLoad(cancellation))
+            return;
+
+        var cancellationToken = cancellation.Token;
+        _isMatchSummariesLoading = true;
+        await NotifyStateChangedAsync(cancellation);
+        if(!IsCurrentLoad(cancellation))
+            return;
+
+        try
+        {
+            var matchSummaries = await PublicProfileService.GetPublicUserMatchSummariesAsync(username, cancellation.Token);
+            if(!IsCurrentLoad(cancellation))
+                return;
+
+            _matchSummaries = matchSummaries ?? new PublicProfileMatchSummariesDTO();
+        }
+        catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+        catch(Exception)
+        {
+            if(IsCurrentLoad(cancellation))
+                _hasMatchSummariesError = true;
+        }
+        finally
+        {
+            if(IsCurrentLoad(cancellation))
+                _isMatchSummariesLoading = false;
+        }
+    }
+
+    private async Task RetryMatchSummariesAsync()
+    {
+        if(_disposed || _profile is null || string.IsNullOrWhiteSpace(_loadedUsername))
+            return;
+
+        CancelCurrentLoad();
+        using var cancellation = new CancellationTokenSource();
+        _loadCancellation = cancellation;
+        _matchSummaries = null;
+        _hasMatchSummariesError = false;
+
+        try
+        {
+            await LoadMatchSummariesAsync(_loadedUsername, cancellation);
+        }
+        finally
+        {
+            if(ReferenceEquals(_loadCancellation, cancellation))
+                _loadCancellation = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        CancelCurrentLoad();
+        _loadCancellation = null;
+    }
+
+    private void CancelCurrentLoad()
+    {
+        try
+        {
+            _loadCancellation?.Cancel();
+        }
+        catch(ObjectDisposedException)
+        {
+            // The owning async load disposes its source after it completes.
+        }
+    }
+
+    private bool IsCurrentLoad(CancellationTokenSource cancellation) =>
+        !_disposed && ReferenceEquals(_loadCancellation, cancellation) && !cancellation.IsCancellationRequested;
+
+    private async Task NotifyStateChangedAsync(CancellationTokenSource cancellation)
+    {
+        if(!IsCurrentLoad(cancellation))
+            return;
+
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+        catch(ObjectDisposedException)
+        {
+        }
+        catch(InvalidOperationException)
+        {
         }
     }
 

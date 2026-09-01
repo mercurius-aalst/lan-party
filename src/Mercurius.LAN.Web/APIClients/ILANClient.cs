@@ -283,6 +283,16 @@ public interface ILANClient
         string username,
         CancellationToken cancellationToken = default);
 
+    [Get("/v1/lan/public/users/{username}/match-summaries")]
+    Task<PublicProfileMatchSummariesDTO> GetPublicUserMatchSummariesAsync(
+        string username,
+        CancellationToken cancellationToken = default);
+
+    [Get("/v1/lan/public/teams/{teamName}/match-summaries")]
+    Task<PublicProfileMatchSummariesDTO> GetPublicTeamMatchSummariesAsync(
+        string teamName,
+        CancellationToken cancellationToken = default);
+
     [Get("/v1/lan/sponsors")]
     Task<IEnumerable<Sponsor>> GetSponsorsAsync(
         CancellationToken cancellationToken = default);

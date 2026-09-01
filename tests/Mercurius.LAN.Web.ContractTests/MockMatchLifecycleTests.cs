@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.DTOs.Participants.Teams;
+using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Mock;
@@ -22,6 +24,8 @@ public sealed class MockMatchLifecycleTests
 {
     private static readonly Guid FeaturedTournamentId = Guid.Parse("11111111-1111-1111-1111-111111111112");
     private static readonly Guid FeaturedGrandFinalId = Guid.Parse("31111111-1111-1111-1111-111111111115");
+    private static readonly Guid IndividualProfileFixtureTournamentId = Guid.Parse("91111111-1111-1111-1111-111111111111");
+    private static readonly Guid IndividualProfileFixtureOpponentId = Guid.Parse("91111111-1111-1111-1111-111111111113");
     private static readonly Guid FeaturedLowerBracketFinalId = Guid.Parse("31111111-1111-1111-1111-111111111114");
     private static readonly Guid ReplayTournamentId = Guid.Parse("51111111-1111-1111-1111-111111111111");
     private static readonly Guid ReplayMatchId = Guid.Parse("51111111-1111-1111-1111-111111111112");
@@ -362,6 +366,160 @@ public sealed class MockMatchLifecycleTests
     }
 
     [Fact]
+    public void MockPublicProfilesExposeBoundedLifecycleAwareMatchSummaries()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var userSummaries = store.GetPublicUserMatchSummaries("alpha1");
+        Assert.NotNull(userSummaries);
+        Assert.Single(userSummaries!.PreviousMatches);
+        Assert.Single(userSummaries.UpcomingMatches);
+        Assert.Equal("Gamma Grid", userSummaries.UpcomingMatches[0].OpponentDisplayName);
+        Assert.Equal(MatchLifecycleState.AwaitingEndedConfirmation, userSummaries.UpcomingMatches[0].LifecycleState);
+        Assert.NotNull(userSummaries.PreviousMatches[0].ParticipantScore);
+
+        var teamSummaries = store.GetPublicTeamMatchSummaries("Team Alpha");
+        Assert.NotNull(teamSummaries);
+        Assert.Single(teamSummaries!.PreviousMatches);
+        Assert.Single(teamSummaries.UpcomingMatches);
+        Assert.Equal(userSummaries.UpcomingMatches[0].MatchId, teamSummaries.UpcomingMatches[0].MatchId);
+
+        var emptySummaries = store.GetPublicUserMatchSummaries("track1");
+        Assert.NotNull(emptySummaries);
+        Assert.Empty(emptySummaries!.PreviousMatches);
+        Assert.Empty(emptySummaries.UpcomingMatches);
+
+        var individualSummaries = store.GetPublicUserMatchSummaries("solo1");
+        Assert.NotNull(individualSummaries);
+        Assert.Single(individualSummaries!.PreviousMatches);
+        Assert.Single(individualSummaries.UpcomingMatches);
+        Assert.Equal("solo2", individualSummaries.UpcomingMatches[0].OpponentDisplayName);
+        Assert.Equal(2, individualSummaries.PreviousMatches[0].ParticipantScore);
+        Assert.Equal(1, individualSummaries.PreviousMatches[0].OpponentScore);
+
+        Assert.Null(store.GetPublicUserMatchSummaries("missing-user"));
+    }
+
+    [Fact]
+    public void MockPublicProfileSummariesRetainHistoricalOpponentSnapshotAfterRegistrationRemoval()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        store.RemoveTournamentUserRegistrationAsAdmin(
+            IndividualProfileFixtureTournamentId,
+            IndividualProfileFixtureOpponentId,
+            "Historical match snapshot regression");
+
+        var summaries = store.GetPublicUserMatchSummaries("solo1");
+
+        Assert.NotNull(summaries);
+        Assert.Equal("solo2", Assert.Single(summaries!.PreviousMatches).OpponentDisplayName);
+        Assert.Equal("solo2", Assert.Single(summaries.UpcomingMatches).OpponentDisplayName);
+    }
+
+    [Fact]
+    public void MockPublicProfileSummariesPreferCurrentPublicOpponentLabelsAfterRename()
+    {
+        var store = CreateRenamedOpponentStore();
+
+        store.UpdateCurrentProfile("user", new UpdateUserProfileRequest
+        {
+            Username = "current-opponent",
+            Firstname = "Current",
+            Lastname = "Opponent"
+        });
+        var opponentTeam = Assert.Single(store.GetTeams(1, 100).Where(team => team.Name == "Gamma Grid"));
+        store.UpdateTeam(opponentTeam.Id, new UpdateTeamDTO
+        {
+            Name = "Current Gamma Grid"
+        });
+
+        var userSummaries = store.GetPublicUserMatchSummaries("solo1");
+        var teamSummaries = store.GetPublicTeamMatchSummaries("Team Alpha");
+
+        Assert.Equal("current-opponent", Assert.Single(userSummaries!.PreviousMatches).OpponentDisplayName);
+        Assert.Equal("current-opponent", Assert.Single(userSummaries.UpcomingMatches).OpponentDisplayName);
+        Assert.Equal("Current Gamma Grid", Assert.Single(teamSummaries!.UpcomingMatches).OpponentDisplayName);
+    }
+
+    [Fact]
+    public void MockRemovingFinalTeamRegistrationDoesNotRepopulatePublicProjection()
+    {
+        var store = CreateFeaturedStore();
+        var teamIds = store.GetTournament(FeaturedTournamentId)!.Registrations
+            .Where(registration =>
+                registration.Kind == TournamentRegistrationKind.Team &&
+                registration.Status == TournamentRegistrationStatus.Active)
+            .Select(registration => registration.Team!.Id)
+            .ToList();
+
+        Assert.NotEmpty(teamIds);
+        foreach(var teamId in teamIds)
+            store.RemoveTournamentTeamRegistrationAsAdmin(
+                FeaturedTournamentId,
+                teamId,
+                "Final registration projection regression");
+
+        Assert.Empty(store.GetTournament(FeaturedTournamentId)!.Registrations);
+
+        var teamProfile = store.GetPublicTeamByName("Pixel Pushers");
+        Assert.NotNull(teamProfile);
+        Assert.Empty(teamProfile!.Tournaments);
+
+        var summaries = store.GetPublicTeamMatchSummaries("Pixel Pushers");
+        Assert.NotNull(summaries);
+        Assert.Empty(summaries!.PreviousMatches);
+        Assert.Empty(summaries.UpcomingMatches);
+    }
+
+    [Fact]
+    public void MockDeletedTeamIsNotPublicAndAReusedNameDoesNotInheritHistory()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var store = new MockBackendStore(
+            new TestHostEnvironment(repositoryRoot),
+            Microsoft.Extensions.Options.Options.Create(new MockBackendOptions
+            {
+                DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
+            }));
+
+        var originalTeam = Assert.Single(store.GetTeams(1, 100).Where(team => team.Name == "Team Alpha"));
+        Assert.NotNull(store.GetPublicTeamByName("Team Alpha"));
+        Assert.NotNull(store.GetPublicTeamMatchSummaries("Team Alpha"));
+
+        store.DeleteTeam(originalTeam.Id);
+
+        Assert.Null(store.GetPublicTeamByName("Team Alpha"));
+        Assert.Null(store.GetPublicTeamMatchSummaries("Team Alpha"));
+
+        var captain = store.GetPublicUserByUsername("alpha1");
+        Assert.NotNull(captain);
+        var replacement = store.CreateTeam(new CreateTeamDTO
+        {
+            Name = "Team Alpha",
+            CaptainUserId = Guid.Parse("41111111-1111-1111-1111-111111111111")
+        });
+
+        Assert.NotNull(store.GetPublicTeamByName("Team Alpha"));
+        var replacementSummaries = store.GetPublicTeamMatchSummaries(replacement.Name);
+        Assert.NotNull(replacementSummaries);
+        Assert.Empty(replacementSummaries!.PreviousMatches);
+        Assert.Empty(replacementSummaries.UpcomingMatches);
+    }
+
+    [Fact]
     public async Task MockServicesUseAuthenticationStateWhenInteractiveCircuitHasNoHttpContext()
     {
         var repositoryRoot = FindRepositoryRoot();
@@ -407,6 +565,54 @@ public sealed class MockMatchLifecycleTests
             {
                 DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
             }));
+    }
+
+    private static MockBackendStore CreateRenamedOpponentStore()
+    {
+        var repositoryRoot = FindRepositoryRoot();
+        var dataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json");
+        var serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        var document = JsonSerializer.Deserialize<MockBackendDocument>(File.ReadAllText(dataFilePath), serializerOptions)
+            ?? throw new InvalidOperationException("Failed to load the mock backend fixture.");
+        var profile = document.Profiles.Single(candidate => candidate.Persona == "user");
+        var opponent = profile.Profile.User ?? throw new InvalidOperationException("Mock user profile is missing.");
+        opponent.Id = IndividualProfileFixtureOpponentId;
+        opponent.Username = "solo2";
+        opponent.Firstname = "Omar";
+        opponent.Lastname = "Opponent";
+        opponent.DisplayName = "solo2";
+
+        return CreateSerializedStore(document, "mercurius-lan-current-labels");
+    }
+
+    private static MockBackendStore CreateSerializedStore(MockBackendDocument document, string directoryPrefix)
+    {
+        var temporaryDirectory = Path.Combine(Path.GetTempPath(), $"{directoryPrefix}-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(temporaryDirectory);
+        var dataFilePath = Path.Combine(temporaryDirectory, "backend.json");
+        var serializerOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter() }
+        };
+        File.WriteAllText(dataFilePath, JsonSerializer.Serialize(document, serializerOptions));
+
+        try
+        {
+            return new MockBackendStore(
+                new TestHostEnvironment(temporaryDirectory),
+                Microsoft.Extensions.Options.Options.Create(new MockBackendOptions { DataFilePath = "backend.json" }));
+        }
+        finally
+        {
+            File.Delete(dataFilePath);
+            Directory.Delete(temporaryDirectory);
+        }
     }
 
     private static MockBackendStore CreateReplayStore()

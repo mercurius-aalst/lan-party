@@ -1,0 +1,88 @@
+@using Mercurius.LAN.Web.DTOs.PublicProfiles
+
+<section class="public-profile-match-summaries brand-card" aria-labelledby="public-profile-match-summaries-heading">
+    <div class="public-profile-match-summaries-heading">
+        <span class="section-eyebrow">Competition history</span>
+        <h2 id="public-profile-match-summaries-heading">Matches</h2>
+        <p>One recent result and the next scheduled match per tournament.</p>
+    </div>
+
+    @if(IsLoading)
+    {
+        <p class="public-profile-match-summary-status" role="status" aria-live="polite">Loading match history...</p>
+    }
+    else if(HasError)
+    {
+        <div class="public-profile-match-summary-status-panel" role="alert">
+            <p class="public-profile-match-summary-status public-profile-match-summary-status--error">
+                Match history is temporarily unavailable. The rest of this public profile is still available.
+            </p>
+            @if(OnRetry.HasDelegate)
+            {
+                <button type="button" class="public-profile-match-summary-retry" @onclick="RetryAsync">Retry match history</button>
+            }
+        </div>
+    }
+
+    <div class="public-profile-match-summaries-grid">
+        <section class="public-profile-match-summary-group" aria-labelledby="public-profile-previous-match-heading">
+            <h2 id="public-profile-previous-match-heading">Previous</h2>
+            @if(!IsLoading && !HasError && Summaries?.PreviousMatches.Count > 0)
+            {
+                <ul class="public-profile-match-summary-list">
+                @foreach(var previous in Summaries!.PreviousMatches)
+                {
+                    <li>
+                        <a class="public-profile-match-summary-card" href="@BuildTournamentHref(previous)">
+                            <div class="public-profile-match-summary-card-topline">
+                                <h3>@previous.TournamentName</h3>
+                                <span class="public-profile-match-summary-arrow bi bi-arrow-up-right" aria-hidden="true"></span>
+                            </div>
+                            <span class="public-profile-match-summary-opponent">vs @GetOpponentLabel(previous)</span>
+                            <span class="public-profile-match-summary-result">@GetResultLabel(previous)</span>
+                            <span class="public-profile-match-summary-meta">
+                                @GetRoundLabel(previous) ·
+                                <time datetime="@GetTimeAttribute(previous.CompletedAtUtc ?? previous.StartedAtUtc)">@GetPreviousTimeLabel(previous)</time>
+                            </span>
+                        </a>
+                    </li>
+                }
+                </ul>
+            }
+            else if(!IsLoading && !HasError)
+            {
+                <p class="public-profile-match-summary-status">No completed match is listed yet.</p>
+            }
+        </section>
+
+        <section class="public-profile-match-summary-group" aria-labelledby="public-profile-upcoming-match-heading">
+            <h2 id="public-profile-upcoming-match-heading">Upcoming</h2>
+            @if(!IsLoading && !HasError && Summaries?.UpcomingMatches.Count > 0)
+            {
+                <ul class="public-profile-match-summary-list">
+                @foreach(var upcoming in Summaries!.UpcomingMatches)
+                {
+                    <li>
+                        <a class="public-profile-match-summary-card" href="@BuildTournamentHref(upcoming)">
+                            <div class="public-profile-match-summary-card-topline">
+                                <h3>@upcoming.TournamentName</h3>
+                                <span class="public-profile-match-summary-arrow bi bi-arrow-up-right" aria-hidden="true"></span>
+                            </div>
+                            <span class="public-profile-match-summary-opponent">vs @GetOpponentLabel(upcoming)</span>
+                            <span class="public-profile-match-summary-result">@GetUpcomingStateLabel(upcoming)</span>
+                            <span class="public-profile-match-summary-meta">
+                                @GetRoundLabel(upcoming) ·
+                                <time datetime="@GetTimeAttribute(upcoming.EstimatedStartTime ?? upcoming.ScheduledStartTime)">@GetUpcomingTimeLabel(upcoming)</time>
+                            </span>
+                        </a>
+                    </li>
+                }
+                </ul>
+            }
+            else if(!IsLoading && !HasError)
+            {
+                <p class="public-profile-match-summary-status">No upcoming match is scheduled.</p>
+            }
+        </section>
+    </div>
+</section>

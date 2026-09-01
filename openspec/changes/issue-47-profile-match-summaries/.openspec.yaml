@@ -1,0 +1,4 @@
+schema: spec-driven
+
+change-id: issue-47-profile-match-summaries
+summary: Show public previous and upcoming match summaries on player and team profiles.
