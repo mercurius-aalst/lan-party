@@ -1,4 +1,5 @@
 @using System.Net
+@using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.AspNetCore.Components.Authorization
 @using Refit
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -28,10 +29,15 @@
         try
         {
             var currentUserProfile = await UserClient.GetCurrentUserProfileAsync();
+            if(IsRegistrationFlow())
+            {
+                NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
+                return;
+            }
+
             if(!currentUserProfile.IsComplete)
             {
-                var returnUrl = GetCurrentRelativeUrl();
-                NavigationManager.NavigateTo($"/complete-profile?returnUrl={Uri.EscapeDataString(returnUrl)}");
+                NavigationManager.NavigateTo(GetCompleteProfileUrl());
             }
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
@@ -45,13 +51,24 @@
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
         {
-            var returnUrl = GetCurrentRelativeUrl();
-            NavigationManager.NavigateTo($"/complete-profile?returnUrl={Uri.EscapeDataString(returnUrl)}");
+            NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: IsRegistrationFlow());
         }
         catch(UnauthorizedAccessException)
         {
             var returnUrl = GetCurrentRelativeUrl();
             NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
+        }
+        catch(ApiException) when(IsRegistrationFlow())
+        {
+            NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
+        }
+        catch(HttpRequestException) when(IsRegistrationFlow())
+        {
+            NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
+        }
+        catch(TaskCanceledException) when(IsRegistrationFlow())
+        {
+            NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
         }
     }
 
@@ -71,6 +88,38 @@
         return path.StartsWith("account/", StringComparison.OrdinalIgnoreCase);
     }
 
+    private bool IsRegistrationFlow()
+    {
+        var query = QueryHelpers.ParseQuery(new Uri(NavigationManager.Uri).Query);
+        return query.TryGetValue("registration", out var values) &&
+               values.Any(value => string.Equals(value, "true", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private string GetRegistrationReturnUrl()
+    {
+        var currentRelativeUrl = GetCurrentRelativeUrl();
+        var currentUri = new Uri($"http://localhost{currentRelativeUrl}");
+        var query = QueryHelpers.ParseQuery(currentUri.Query)
+            .Where(entry => !string.Equals(entry.Key, "registration", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(entry => entry.Key, entry => (string?)entry.Value.ToString());
+        var returnUrl = QueryHelpers.AddQueryString(currentUri.AbsolutePath, query) + currentUri.Fragment;
+
+        return GetSafeLocalReturnUrl(returnUrl);
+    }
+
+    private string GetCompleteProfileUrl()
+    {
+        var isRegistrationFlow = IsRegistrationFlow();
+        var returnUrl = isRegistrationFlow
+            ? GetRegistrationReturnUrl()
+            : GetSafeLocalReturnUrl(GetCurrentRelativeUrl());
+        var returnUrlQuery = $"returnUrl={Uri.EscapeDataString(returnUrl)}";
+
+        return isRegistrationFlow
+            ? $"/complete-profile?registration=true&{returnUrlQuery}"
+            : $"/complete-profile?{returnUrlQuery}";
+    }
+
     private string GetCurrentRelativeUrl()
     {
         var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
@@ -78,5 +127,23 @@
         return string.IsNullOrWhiteSpace(relativePath)
             ? "/"
             : $"/{relativePath}";
+    }
+
+    private static string GetSafeLocalReturnUrl(string? returnUrl)
+    {
+        if(string.IsNullOrWhiteSpace(returnUrl))
+            return "/";
+
+        if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
+            return "/";
+
+        if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
+           returnUrl.StartsWith("//", StringComparison.Ordinal) ||
+           returnUrl.StartsWith("/\\", StringComparison.Ordinal))
+        {
+            return "/";
+        }
+
+        return returnUrl;
     }
 }

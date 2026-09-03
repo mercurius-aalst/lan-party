@@ -252,9 +252,11 @@ public static class DependencyExtensions
         query["login"] = reason;
         uriBuilder.Query = query.ToString() ?? string.Empty;
 
-        return string.IsNullOrWhiteSpace(uriBuilder.Query)
+        var failureUri = string.IsNullOrWhiteSpace(uriBuilder.Query)
             ? uriBuilder.Path
             : $"{uriBuilder.Path}?{uriBuilder.Query.TrimStart('?')}";
+
+        return failureUri + uriBuilder.Fragment;
     }
 
     private static string GetSafeLocalReturnUrl(string? returnUrl)
