@@ -246,7 +246,7 @@ public static class DependencyExtensions
 
     private static string BuildLoginFailureRedirectUri(string? redirectUri, string reason)
     {
-        var safeReturnUrl = GetSafeLocalReturnUrl(redirectUri);
+        var safeReturnUrl = LocalReturnUrlHelper.GetSafeLocalReturnUrl(redirectUri);
         var uriBuilder = new UriBuilder($"http://localhost{safeReturnUrl}");
         var query = HttpUtility.ParseQueryString(uriBuilder.Query);
         query["login"] = reason;
@@ -259,21 +259,4 @@ public static class DependencyExtensions
         return failureUri + uriBuilder.Fragment;
     }
 
-    private static string GetSafeLocalReturnUrl(string? returnUrl)
-    {
-        if(string.IsNullOrWhiteSpace(returnUrl))
-            return "/";
-
-        if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
-            return "/";
-
-        if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
-           returnUrl.StartsWith("//", StringComparison.Ordinal) ||
-           returnUrl.StartsWith("/\\", StringComparison.Ordinal))
-        {
-            return "/";
-        }
-
-        return returnUrl;
-    }
 }

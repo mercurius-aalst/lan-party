@@ -1,6 +1,7 @@
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.DTOs.Users;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -55,8 +56,7 @@ public partial class CompleteProfile
             _email = currentProfile.Email ?? currentProfile.User?.Email ?? _email;
             if(currentProfile.IsComplete)
             {
-                if(IsRegistrationFlow) { _isCompleted = true; return; }
-                NavigationManager.NavigateTo(GetSafeReturnUrl(ReturnUrl), true);
+                NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl), true);
                 return;
             }
         }
@@ -108,12 +108,12 @@ public partial class CompleteProfile
             return;
         }
 
-        NavigationManager.NavigateTo(GetSafeReturnUrl(ReturnUrl));
+        NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl));
     }
 
     private string GetRetryHref()
     {
-        var returnUrl = GetSafeReturnUrl(ReturnUrl);
+        var returnUrl = LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl);
         var returnUrlQuery = $"returnUrl={Uri.EscapeDataString(returnUrl)}";
         return IsRegistrationFlow
             ? $"/complete-profile?registration=true&{returnUrlQuery}"
@@ -124,12 +124,12 @@ public partial class CompleteProfile
 
     private string GetLoginHref()
     {
-        var loginReturnUrl = IsRegistrationFlow ? GetRetryHref() : GetSafeReturnUrl(ReturnUrl);
+        var loginReturnUrl = IsRegistrationFlow ? GetRetryHref() : LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl);
         return $"/account/login?returnUrl={Uri.EscapeDataString(loginReturnUrl)}";
     }
 
     private void SetLoadError() => _loadError = "Profile setup is unavailable right now. Please try again.";
-    private void ContinueAfterCompletion() => NavigationManager.NavigateTo(GetSafeReturnUrl(ReturnUrl), true);
+    private void ContinueAfterCompletion() => NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl), true);
 
     private bool ValidateCurrentStep()
     {
@@ -163,7 +163,7 @@ public partial class CompleteProfile
             await UserClient.CompleteCurrentUserProfileAsync(_model);
             ToastService.ShowSuccess(IsRegistrationFlow ? "Account created. Welcome to Mercurius LAN." : "Profile completed.");
             if(IsRegistrationFlow) _isCompleted = true;
-            else NavigationManager.NavigateTo(GetSafeReturnUrl(ReturnUrl), true);
+            else NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl), true);
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict) { ToastService.ShowError(await GetApiErrorAsync(exception)); }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound) { ToastService.ShowError("Your profile could not be created. Please sign in again and retry."); }
@@ -239,10 +239,4 @@ public partial class CompleteProfile
         return null;
     }
 
-    private static string GetSafeReturnUrl(string? returnUrl)
-    {
-        if(string.IsNullOrWhiteSpace(returnUrl) || !Uri.TryCreate(returnUrl, UriKind.Relative, out _)) return "/";
-        if(!returnUrl.StartsWith("/", StringComparison.Ordinal) || returnUrl.StartsWith("//", StringComparison.Ordinal) || returnUrl.StartsWith("/\\", StringComparison.Ordinal)) return "/";
-        return returnUrl;
-    }
 }

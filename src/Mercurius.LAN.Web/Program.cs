@@ -64,9 +64,9 @@ if(mockModeEnabled)
         await httpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             principal,
-            new AuthenticationProperties { RedirectUri = GetSafeLocalReturnUrl(returnUrl) });
+            new AuthenticationProperties { RedirectUri = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl) });
 
-        return Results.LocalRedirect(GetSafeLocalReturnUrl(returnUrl));
+        return Results.LocalRedirect(LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl));
     }).AllowAnonymous();
 
     app.MapGet("/account/register", async (HttpContext httpContext, MockBackendStore store, string? returnUrl = null, string? persona = null) =>
@@ -94,7 +94,7 @@ else
 {
     app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
     {
-        var redirectUri = GetSafeLocalReturnUrl(returnUrl);
+        var redirectUri = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl);
         var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
                 .WithRedirectUri(redirectUri)
                 .Build();
@@ -130,26 +130,8 @@ app.MapRazorComponents<App>()
 
 app.Run();
 
-static string GetSafeLocalReturnUrl(string? returnUrl)
-{
-    if(string.IsNullOrWhiteSpace(returnUrl))
-        return "/";
-
-    if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
-        return "/";
-
-    if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
-       returnUrl.StartsWith("//", StringComparison.Ordinal) ||
-       returnUrl.StartsWith("/\\", StringComparison.Ordinal))
-    {
-        return "/";
-    }
-
-    return returnUrl;
-}
-
 static string BuildRegistrationRedirectUri(string? returnUrl)
 {
-    var safeReturnUrl = GetSafeLocalReturnUrl(returnUrl);
+    var safeReturnUrl = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl);
     return QueryHelpers.AddQueryString(safeReturnUrl, "registration", "true");
 }

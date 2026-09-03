@@ -20,6 +20,9 @@
       states without losing safe return context.
 - [x] 2.5 Reuse existing profile DTOs, validation, Auth0 claims, API calls, and
       styling patterns without adding dependencies.
+- [x] 2.6 Redirect authenticated registration users with an already-complete
+      profile to the validated return destination without marking onboarding
+      complete locally.
 
 ## Validation
 

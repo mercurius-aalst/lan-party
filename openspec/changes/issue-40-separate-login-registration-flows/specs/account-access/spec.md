@@ -41,6 +41,15 @@ existing authenticated profile-completion contract to collect profile data.
 - **AND** field validation errors MUST be shown inline where the existing form
   validation supports them
 
+#### Scenario: Registration returns an already-complete profile
+
+- **WHEN** the authenticated registration flow loads a profile that is already
+  complete
+- **THEN** the application MUST redirect to the validated local return
+  destination
+- **AND** it MUST NOT display registration completion before a successful
+  profile completion request
+
 #### Scenario: Profile onboarding completes
 
 - **WHEN** the user submits valid required profile data and the profile request
@@ -79,8 +88,8 @@ and MUST preserve mock-login behavior when mock backend mode is enabled.
 
 #### Scenario: Unsafe return URL is supplied
 
-- **WHEN** login or registration receives an absolute, protocol-relative, or
-  backslash-prefixed return URL
+- **WHEN** login or registration receives an absolute, protocol-relative,
+  backslash-prefixed, or control-character-containing return URL
 - **THEN** the application MUST fall back to home
 - **AND** it MUST NOT redirect to an external destination
 

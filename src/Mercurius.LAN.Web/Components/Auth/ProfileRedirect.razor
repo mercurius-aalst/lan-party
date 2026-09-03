@@ -1,6 +1,7 @@
 @using System.Net
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.AspNetCore.Components.Authorization
+@using Mercurius.LAN.Web.Extensions
 @using Refit
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
@@ -104,7 +105,7 @@
             .ToDictionary(entry => entry.Key, entry => (string?)entry.Value.ToString());
         var returnUrl = QueryHelpers.AddQueryString(currentUri.AbsolutePath, query) + currentUri.Fragment;
 
-        return GetSafeLocalReturnUrl(returnUrl);
+        return LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl);
     }
 
     private string GetCompleteProfileUrl()
@@ -112,7 +113,7 @@
         var isRegistrationFlow = IsRegistrationFlow();
         var returnUrl = isRegistrationFlow
             ? GetRegistrationReturnUrl()
-            : GetSafeLocalReturnUrl(GetCurrentRelativeUrl());
+            : LocalReturnUrlHelper.GetSafeLocalReturnUrl(GetCurrentRelativeUrl());
         var returnUrlQuery = $"returnUrl={Uri.EscapeDataString(returnUrl)}";
 
         return isRegistrationFlow
@@ -129,21 +130,4 @@
             : $"/{relativePath}";
     }
 
-    private static string GetSafeLocalReturnUrl(string? returnUrl)
-    {
-        if(string.IsNullOrWhiteSpace(returnUrl))
-            return "/";
-
-        if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
-            return "/";
-
-        if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
-           returnUrl.StartsWith("//", StringComparison.Ordinal) ||
-           returnUrl.StartsWith("/\\", StringComparison.Ordinal))
-        {
-            return "/";
-        }
-
-        return returnUrl;
-    }
 }
