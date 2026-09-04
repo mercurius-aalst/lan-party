@@ -80,3 +80,48 @@ mock-login, Auth0 challenge, or Auth0 callback redirect behavior.
   unchanged
 - **AND** the logout return-target policy MUST NOT be used to discard a valid
   account onboarding or callback destination
+
+### Requirement: Live provider logout uses a fixed callback and time-limited protected state
+
+The live Auth0 logout flow MUST send the provider to the fixed local
+`/account/logout/callback` URI. It MUST NOT reflect the requested local target
+in that provider callback URI. Before provider sign-out, the application MUST
+store the already validated logout target in authenticated and confidential
+state protected by a five-minute cryptographic expiry. Validated logout
+targets MUST be limited to 1024 characters; longer targets MUST fall back to
+`/` before protection. The state MUST use a purpose-specific, HttpOnly cookie
+and the protected value MUST be limited to 3072 characters as a cookie-size
+guard, with `/` as the fallback if that limit is exceeded. The cookie MUST
+have no Domain, Path `/account/logout`, SameSite `Lax`, and IsEssential set.
+The cookie MUST have a short Max-Age and Expires value, and MUST be Secure
+outside Development (and for HTTPS Development requests).
+
+#### Scenario: Auth0 logout returns through the fixed callback
+
+- **WHEN** an authenticated user logs out from a public page in live mode
+- **THEN** the provider logout request MUST use the fixed
+  `/account/logout/callback` callback
+- **AND** the validated public path, query, and fragment MUST be carried in
+  protected logout state rather than in the provider callback URI
+- **AND** the user's cookie session MUST be cleared before the provider round
+  trip completes
+
+#### Scenario: Callback consumes valid state
+
+- **WHEN** the provider returns to `/account/logout/callback` with valid,
+  unexpired logout state
+- **THEN** the callback MUST delete the state cookie before or while reading it
+- **AND** it MUST revalidate the recovered target through the logout
+  return-target policy
+- **AND** it MUST issue a local redirect to the resulting safe target
+
+#### Scenario: Callback receives missing, expired, or tampered state
+
+- **WHEN** the provider returns without usable logout state
+- **THEN** the callback MUST delete any presented state cookie on read
+- **AND** it MUST redirect locally to `/`
+- **AND** it MUST NOT trust a target supplied directly in the callback query
+
+The browser cookie is a best-effort navigation hint: callback processing MUST
+delete it on read, but the application MUST NOT add a server-side nonce,
+replay store, or cryptographic single-use guarantee.

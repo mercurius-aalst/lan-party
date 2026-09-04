@@ -8,6 +8,7 @@ using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using MudBlazor.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
@@ -114,16 +115,22 @@ else
         await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, IDataProtectionProvider dataProtectionProvider, string? returnUrl = null) =>
     {
-        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
+        LogoutState.Store(httpContext, dataProtectionProvider, returnUrl, app.Environment.IsDevelopment());
+
         var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri(redirectUri)
+                .WithRedirectUri(LogoutState.CallbackPath)
                 .Build();
 
         await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }).RequireAuthorization();
+
+    app.MapGet(LogoutState.CallbackPath, (HttpContext httpContext, IDataProtectionProvider dataProtectionProvider) =>
+    {
+        return Results.LocalRedirect(LogoutState.Consume(httpContext, dataProtectionProvider, app.Environment.IsDevelopment()));
+    }).AllowAnonymous();
 }
 
 app.MapStaticAssets();

@@ -8,13 +8,22 @@ Allowed Callback URLs:
 
 - `https://localhost:7044/callback`
 - `http://localhost:5003/callback`
-- `https://mercurius-aalst.be/callback`
+- `https://lan.mercurius-aalst.be/callback`
 
 Allowed Logout URLs:
 
-- `https://localhost:7044`
-- `http://localhost:5003`
-- `https://mercurius-aalst.be`
+- `https://localhost:7044/account/logout/callback`
+- `http://localhost:5003/account/logout/callback`
+- `https://lan.mercurius-aalst.be/account/logout/callback`
+
+The application always returns from Auth0 through the fixed
+`/account/logout/callback` path. Add the exact callback URL for every origin
+used in development or production; do not add a dynamic path or query string.
+Logout return targets are limited to 1024 characters; longer targets fall back
+to `/`. The protected state is limited to 3072 characters as a cookie-size
+guard and also falls back to `/` when exceeded. Live logout state is protected
+for five minutes in an HttpOnly cookie scoped to `/account/logout`, then
+deleted on callback read. No server-side replay store is required.
 
 ## Application Settings
 

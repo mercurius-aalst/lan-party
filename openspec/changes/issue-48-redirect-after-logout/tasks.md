@@ -16,8 +16,17 @@
       absolute, protocol-relative, backslash-prefixed, control-character,
       dot-segment, encoded-separator, malformed-escape, and nested-encoding
       targets; fall back from protected descendants and `/account/logout`.
-- [x] 2.3 Apply the validated target to both mock-cookie and Auth0 logout
-      flows without changing login, registration, or callback behavior.
+- [x] 2.3 Apply the validated target to the mock-cookie logout flow and stage
+      it for live provider state without changing login, registration, or
+      callback behavior.
+- [x] 2.4 Route live provider logout through the fixed
+      `/account/logout/callback` URI and carry the validated target in
+      a purpose-specific, cryptographically time-limited logout cookie with
+      bounded target and protected-state sizes.
+- [x] 2.5 Consume and clear logout state at the anonymous callback, fall back
+      to `/` for missing, expired, or tampered state, revalidate the recovered
+      target, and preserve the existing mock flow. Cookie deletion is
+      best-effort; no server-side replay store is required.
 
 ## Validation
 
@@ -29,3 +38,8 @@
       coverage remains unavailable because this contract test project does not
       reference a TestServer/WebApplicationFactory harness; adding that
       package or harness is outside this focused correction.
+- [x] 3.3 Add focused platform-state tests for protection, genuine expiry,
+      tamper/missing-state fallback, bounded targets, delete-on-read, cookie
+      settings, independent contexts, and fixed callback invariance.
+- [x] 3.4 Document exact development and production Auth0 Allowed Logout URL
+      entries for the fixed callback and rerun the required validation.
