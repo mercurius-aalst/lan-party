@@ -84,10 +84,11 @@ if(mockModeEnabled)
         return Results.LocalRedirect(redirectUri);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
+        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Results.LocalRedirect("/");
+        return Results.LocalRedirect(redirectUri);
     }).AllowAnonymous();
 }
 else
@@ -113,10 +114,11 @@ else
         await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
+        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
         var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri("/")
+                .WithRedirectUri(redirectUri)
                 .Build();
 
         await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
