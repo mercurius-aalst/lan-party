@@ -4,17 +4,32 @@
 @using Microsoft.AspNetCore.Authorization
 @using Mercurius.LAN.Web.DTOs.Users
 
-<PageTitle>Complete Profile</PageTitle>
+<PageTitle>@(IsRegistrationFlow ? "Create your profile" : "Complete Profile")</PageTitle>
 
 @if(!string.IsNullOrWhiteSpace(_loadError))
 {
-    <StatusPage Eyebrow="Profile"
-                Title="Profile setup unavailable"
-                Message="@_loadError"
-                PrimaryHref="/complete-profile"
-                PrimaryLabel="Try Again"
-                SecondaryHref="/"
-                SecondaryLabel="Back home" />
+    <section class="status-page brand-section" role="alert" aria-live="assertive">
+        <div class="brand-card status-page-card">
+            <span class="section-eyebrow">Profile</span>
+            <h1>Profile setup unavailable</h1>
+            <p>@_loadError</p>
+            <div class="status-page-actions">
+                <button type="button" class="button-primary" @onclick="LoadProfileAsync">Try Again</button>
+                <a href="@GetRecoveryHref()" class="button-secondary">@(IsRegistrationFlow ? "Cancel registration" : "Back home")</a>
+            </div>
+        </div>
+    </section>
+}
+else if(_isCompleted)
+{
+    <section class="complete-profile-page">
+        <section class="brand-card complete-profile-success" role="status" aria-live="polite">
+            <span class="section-eyebrow">Registration complete</span>
+            <h1>You’re ready to play.</h1>
+            <p>Your account and player profile are set up. Continue to explore tournaments and the LAN event.</p>
+            <button type="button" class="btn btn-primary" @onclick="ContinueAfterCompletion">Continue to Mercurius LAN</button>
+        </section>
+    </section>
 }
 else if(_editContext is null)
 {
@@ -24,90 +39,96 @@ else
 {
     <section class="complete-profile-page">
         <header class="complete-profile-header brand-section">
-            <span class="section-eyebrow">Account setup</span>
-            <h1>Complete Profile</h1>
-            <p>Finish your account details before registering for tournaments or appearing in competition data.</p>
+            <span class="section-eyebrow">@(IsRegistrationFlow ? "Join Mercurius LAN" : "Account setup")</span>
+            <h1>@(IsRegistrationFlow ? "Create your player profile" : "Complete your profile")</h1>
+            <p>@(IsRegistrationFlow ? "A few quick details help us make your tournament experience yours." : "Finish your account details before registering for tournaments or appearing in competition data.")</p>
         </header>
 
         <div class="complete-profile-layout">
             <section class="brand-card complete-profile-main-card">
                 <div class="complete-profile-card-header">
                     <div>
-                        <span class="section-eyebrow">Required details</span>
-                        <h2>Create your player profile</h2>
+                        <span class="section-eyebrow">Profile onboarding</span>
+                        <h2>@StepTitles[_activeStep]</h2>
                     </div>
+                    <span class="complete-profile-required-note">Required fields are marked required</span>
                 </div>
 
-                @if(!string.IsNullOrWhiteSpace(_email))
-                {
-                    <div class="complete-profile-email-row">
-                        <label class="form-label">Email</label>
-                        <input class="form-control" value="@_email" disabled />
-                    </div>
-                }
+                <ol class="complete-profile-steps" aria-label="Profile setup progress">
+                    @for(var stepIndex = 0; stepIndex < StepTitles.Length; stepIndex++)
+                    {
+                        <li class="@GetStepClass(stepIndex)" aria-current="@(stepIndex == _activeStep ? "step" : null)">
+                            <span class="complete-profile-step-number">@(stepIndex + 1)</span>
+                            <span class="complete-profile-step-copy"><strong>@StepTitles[stepIndex]</strong><small>@StepDescriptions[stepIndex]</small></span>
+                        </li>
+                    }
+                </ol>
 
-                <EditForm EditContext="_editContext" OnValidSubmit="SaveAsync" FormName="complete-profile">
+                <EditForm EditContext="_editContext" OnSubmit="HandleSubmitAsync" FormName="complete-profile">
                     <DataAnnotationsValidator />
                     <ValidationSummary />
 
-                    <div class="complete-profile-form-grid">
-                        <div class="form-group">
-                            <label for="username">Username</label>
-                            <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" />
-                            <ValidationMessage For="@(() => _model.Username)" />
-                            @if(!string.IsNullOrWhiteSpace(_usernameAvailabilityMessage))
+                    @if(_activeStep == 0)
+                    {
+                        <div class="complete-profile-step-content">
+                            @if(!string.IsNullOrWhiteSpace(_email))
                             {
-                                <div class="@_usernameAvailabilityClass complete-profile-status-text">@_usernameAvailabilityMessage</div>
+                                <div class="complete-profile-email-row">
+                                    <label class="form-label" for="email">Email <small>(from your account)</small></label>
+                                    <input id="email" class="form-control" value="@_email" disabled />
+                                </div>
                             }
+                            <div class="form-group">
+                                <label for="username">Username <small>(required)</small></label>
+                                <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" autocomplete="username" />
+                                <ValidationMessage For="@(() => _model.Username)" />
+                                @if(!string.IsNullOrWhiteSpace(_usernameAvailabilityMessage))
+                                {
+                                    <div class="@_usernameAvailabilityClass complete-profile-status-text" role="status">@_usernameAvailabilityMessage</div>
+                                }
+                                <small class="form-text">Use 3–32 letters or numbers. This is how other players will find you.</small>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="firstname">First name</label>
-                            <InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" />
-                            <ValidationMessage For="@(() => _model.Firstname)" />
+                    }
+                    else if(_activeStep == 1)
+                    {
+                        <div class="complete-profile-step-content">
+                            <p class="complete-profile-help">Tell us who will be playing. Both fields are required for your player profile.</p>
+                            <div class="complete-profile-form-grid">
+                                <div class="form-group"><label for="firstname">First name <small>(required)</small></label><InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" autocomplete="given-name" /><ValidationMessage For="@(() => _model.Firstname)" /></div>
+                                <div class="form-group"><label for="lastname">Last name <small>(required)</small></label><InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" autocomplete="family-name" /><ValidationMessage For="@(() => _model.Lastname)" /></div>
+                            </div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="lastname">Last name</label>
-                            <InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" />
-                            <ValidationMessage For="@(() => _model.Lastname)" />
+                    }
+                    else
+                    {
+                        <div class="complete-profile-step-content">
+                            <p class="complete-profile-help">These links are optional. Add the gaming IDs you want teammates and tournament admins to use.</p>
+                            <div class="complete-profile-form-grid">
+                                <div class="form-group"><label for="discordId">Discord ID <small>(optional)</small></label><InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.DiscordId)" /></div>
+                                <div class="form-group"><label for="steamId">Steam ID <small>(optional)</small></label><InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.SteamId)" /></div>
+                                <div class="form-group"><label for="riotId">Riot ID <small>(optional)</small></label><InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.RiotId)" /></div>
+                            </div>
+                            <div class="complete-profile-review" aria-label="Profile review"><span class="section-eyebrow">Ready to finish?</span><p><strong>@_model.Username</strong> · @_model.Firstname @_model.Lastname</p><small>You can update optional identifiers later from your profile.</small></div>
                         </div>
+                    }
 
-                        <div class="form-group">
-                            <label for="discordId">Discord ID</label>
-                            <InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" />
-                            <ValidationMessage For="@(() => _model.DiscordId)" />
+                    <div class="complete-profile-form-actions">
+                        <div class="complete-profile-form-actions-main">
+                            @if(_activeStep > 0) { <button type="button" class="btn btn-outline-secondary" @onclick="PreviousStep" disabled="@_isSaving">Back</button> }
+                            @if(_activeStep < LastStepIndex) { <button type="button" class="btn btn-primary" @onclick="NextStepAsync" disabled="@_isSaving">Continue</button> }
+                            else { <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? "Saving…" : "Create profile")</button> }
                         </div>
-
-                        <div class="form-group">
-                            <label for="steamId">Steam ID</label>
-                            <InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" />
-                            <ValidationMessage For="@(() => _model.SteamId)" />
-                        </div>
-
-                        <div class="form-group">
-                            <label for="riotId">Riot ID</label>
-                            <InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" />
-                            <ValidationMessage For="@(() => _model.RiotId)" />
-                        </div>
-                    </div>
-
-                    <div class="form-actions-section">
-                        <button type="submit" class="btn btn-primary" disabled="@_isSaving">Save profile</button>
+                        @if(IsRegistrationFlow)
+                        {
+                            <button type="button" class="btn btn-link complete-profile-cancel" @onclick="CancelOnboarding" disabled="@_isSaving">Cancel</button>
+                        }
                     </div>
                 </EditForm>
             </section>
 
             <aside class="complete-profile-sidebar">
-                <section class="brand-card complete-profile-side-card">
-                    <span class="section-eyebrow">Why this matters</span>
-                    <h2>What this profile unlocks</h2>
-                    <ul class="complete-profile-points">
-                        <li>Username checks before tournament registration.</li>
-                        <li>Bracket, placement, and participant displays.</li>
-                        <li>Linked Discord, Steam, or Riot identifiers when needed.</li>
-                    </ul>
-                </section>
+                <section class="brand-card complete-profile-side-card"><span class="section-eyebrow">Why this matters</span><h2>What this profile unlocks</h2><ul class="complete-profile-points"><li>Username checks before tournament registration.</li><li>Bracket, placement, and participant displays.</li><li>Optional Discord, Steam, or Riot identifiers when needed.</li></ul></section>
             </aside>
         </div>
     </section>

@@ -9,6 +9,7 @@ using Mercurius.LAN.Web.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MudBlazor.Services;
+using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -63,9 +64,24 @@ if(mockModeEnabled)
         await httpContext.SignInAsync(
             CookieAuthenticationDefaults.AuthenticationScheme,
             principal,
-            new AuthenticationProperties { RedirectUri = GetSafeLocalReturnUrl(returnUrl) });
+            new AuthenticationProperties { RedirectUri = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl) });
 
-        return Results.LocalRedirect(GetSafeLocalReturnUrl(returnUrl));
+        return Results.LocalRedirect(LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl));
+    }).AllowAnonymous();
+
+    app.MapGet("/account/register", async (HttpContext httpContext, MockBackendStore store, string? returnUrl = null, string? persona = null) =>
+    {
+        var mockOptions = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<MockBackendOptions>>().Value;
+        var resolvedPersona = DependencyExtensions.NormalizeMockPersona(persona, mockOptions.Persona);
+        var principal = DependencyExtensions.BuildMockPrincipal(resolvedPersona, store);
+        var redirectUri = BuildRegistrationRedirectUri(returnUrl);
+
+        await httpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            principal,
+            new AuthenticationProperties { RedirectUri = redirectUri });
+
+        return Results.LocalRedirect(redirectUri);
     }).AllowAnonymous();
 
     app.MapGet("/account/logout", async (HttpContext httpContext) =>
@@ -78,9 +94,20 @@ else
 {
     app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
     {
-        var redirectUri = GetSafeLocalReturnUrl(returnUrl);
+        var redirectUri = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl);
         var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
                 .WithRedirectUri(redirectUri)
+                .Build();
+
+        await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
+    }).AllowAnonymous();
+
+    app.MapGet("/account/register", async (HttpContext httpContext, string? returnUrl = null) =>
+    {
+        var redirectUri = BuildRegistrationRedirectUri(returnUrl);
+        var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
+                .WithRedirectUri(redirectUri)
+                .WithParameter("screen_hint", "signup")
                 .Build();
 
         await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
@@ -103,20 +130,8 @@ app.MapRazorComponents<App>()
 
 app.Run();
 
-static string GetSafeLocalReturnUrl(string? returnUrl)
+static string BuildRegistrationRedirectUri(string? returnUrl)
 {
-    if(string.IsNullOrWhiteSpace(returnUrl))
-        return "/";
-
-    if(!Uri.TryCreate(returnUrl, UriKind.Relative, out _))
-        return "/";
-
-    if(!returnUrl.StartsWith("/", StringComparison.Ordinal) ||
-       returnUrl.StartsWith("//", StringComparison.Ordinal) ||
-       returnUrl.StartsWith("/\\", StringComparison.Ordinal))
-    {
-        return "/";
-    }
-
-    return returnUrl;
+    var safeReturnUrl = LocalReturnUrlHelper.GetSafeLocalReturnUrl(returnUrl);
+    return QueryHelpers.AddQueryString(safeReturnUrl, "registration", "true");
 }

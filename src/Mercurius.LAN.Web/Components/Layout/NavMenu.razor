@@ -204,6 +204,7 @@
             <NotAuthorized>
                 <div class="brand-auth-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center">
                     <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">Login</button>
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginRegistration">Register</button>
                     @if(IsMockBackendEnabled)
                     {
                         <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">Mock Admin</a>

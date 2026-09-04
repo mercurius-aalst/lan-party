@@ -60,6 +60,7 @@ public partial class NavMenu : IAsyncDisposable
     public EventCallback OnNavigationSelected { get; set; }
 
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
+    private string RegisterHref => $"/account/register?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
     private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/sponsors")}";
     private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
     private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible || _isNotificationMenuVisible;
@@ -139,6 +140,13 @@ public partial class NavMenu : IAsyncDisposable
         CloseAllTemporarySurfaces(clearSearchResults: true, clearSearchQuery: true);
         await OnNavigationSelected.InvokeAsync();
         NavigationManager.NavigateTo(LoginHref, forceLoad: true);
+    }
+
+    private async Task BeginRegistration()
+    {
+        CloseAllTemporarySurfaces(clearSearchResults: true, clearSearchQuery: true);
+        await OnNavigationSelected.InvokeAsync();
+        NavigationManager.NavigateTo(RegisterHref, forceLoad: true);
     }
 
     private async Task Logout()
