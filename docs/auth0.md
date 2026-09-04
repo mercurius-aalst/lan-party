@@ -8,13 +8,23 @@ Allowed Callback URLs:
 
 - `https://localhost:7044/callback`
 - `http://localhost:5003/callback`
-- `https://mercurius-aalst.be/callback`
+- `https://lan.mercurius-aalst.be/callback`
 
 Allowed Logout URLs:
 
-- `https://localhost:7044`
-- `http://localhost:5003`
-- `https://mercurius-aalst.be`
+- `https://localhost:7044/account/logout/callback`
+- `http://localhost:5003/account/logout/callback`
+- `https://lan.mercurius-aalst.be/account/logout/callback`
+
+The application always returns from Auth0 through the fixed
+`/account/logout/callback` path and appends the already validated destination as
+an encoded `returnUrl` query parameter. Auth0's Allowed Logout URL validation
+does not take the query string or hash into account; see the official
+[Redirect Users After Logout documentation](https://auth0.com/docs/authenticate/login/logout/redirect-users-after-logout).
+The exact base callback URL for each origin is therefore sufficient; do not add
+dynamic paths or query-string variants. The callback revalidates the decoded
+target and falls back to `/` when it is missing, unsafe, protected, or
+malformed.
 
 ## Application Settings
 

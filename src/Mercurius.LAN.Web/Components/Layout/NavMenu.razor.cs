@@ -1,5 +1,6 @@
 using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
@@ -151,9 +152,10 @@ public partial class NavMenu : IAsyncDisposable
 
     private async Task Logout()
     {
+        var returnUrl = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(GetCurrentRelativeUrl());
         CloseAllTemporarySurfaces(clearSearchResults: true, clearSearchQuery: true);
         await OnNavigationSelected.InvokeAsync();
-        NavigationManager.NavigateTo("/account/logout", true);
+        NavigationManager.NavigateTo($"/account/logout?returnUrl={Uri.EscapeDataString(returnUrl)}", true);
     }
 
     private void ToggleUserMenu()

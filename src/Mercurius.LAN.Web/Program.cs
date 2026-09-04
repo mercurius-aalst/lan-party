@@ -39,6 +39,7 @@ builder.Services.AddCustomServices(builder.Configuration);
 
 var app = builder.Build();
 var mockModeEnabled = DependencyExtensions.IsMockBackendEnabled(app.Configuration);
+const string logoutCallbackPath = "/account/logout/callback";
 
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment())
@@ -84,10 +85,11 @@ if(mockModeEnabled)
         return Results.LocalRedirect(redirectUri);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
+        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return Results.LocalRedirect("/");
+        return Results.LocalRedirect(redirectUri);
     }).AllowAnonymous();
 }
 else
@@ -113,15 +115,26 @@ else
         await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
+        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
+        var callbackUri = logoutCallbackPath + QueryString.Create("returnUrl", redirectUri).ToUriComponent();
+
         var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri("/")
+                .WithRedirectUri(callbackUri)
                 .Build();
 
         await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }).RequireAuthorization();
+
+    app.MapGet(logoutCallbackPath, (HttpRequest request) =>
+    {
+        var returnUrl = request.Query["returnUrl"];
+        return Results.LocalRedirect(returnUrl.Count == 1
+            ? LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl[0])
+            : "/");
+    }).AllowAnonymous();
 }
 
 app.MapStaticAssets();
