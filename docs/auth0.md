@@ -17,13 +17,14 @@ Allowed Logout URLs:
 - `https://lan.mercurius-aalst.be/account/logout/callback`
 
 The application always returns from Auth0 through the fixed
-`/account/logout/callback` path. Add the exact callback URL for every origin
-used in development or production; do not add a dynamic path or query string.
-Logout return targets are limited to 1024 characters; longer targets fall back
-to `/`. The protected state is limited to 3072 characters as a cookie-size
-guard and also falls back to `/` when exceeded. Live logout state is protected
-for five minutes in an HttpOnly cookie scoped to `/account/logout`, then
-deleted on callback read. No server-side replay store is required.
+`/account/logout/callback` path and appends the already validated destination as
+an encoded `returnUrl` query parameter. Auth0's Allowed Logout URL validation
+does not take the query string or hash into account; see the official
+[Redirect Users After Logout documentation](https://auth0.com/docs/authenticate/login/logout/redirect-users-after-logout).
+The exact base callback URL for each origin is therefore sufficient; do not add
+dynamic paths or query-string variants. The callback revalidates the decoded
+target and falls back to `/` when it is missing, unsafe, protected, or
+malformed.
 
 ## Application Settings
 

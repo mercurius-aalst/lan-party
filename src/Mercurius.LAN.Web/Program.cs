@@ -8,7 +8,6 @@ using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Serialization;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.DataProtection;
 using MudBlazor.Services;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text.Json;
@@ -40,6 +39,7 @@ builder.Services.AddCustomServices(builder.Configuration);
 
 var app = builder.Build();
 var mockModeEnabled = DependencyExtensions.IsMockBackendEnabled(app.Configuration);
+const string logoutCallbackPath = "/account/logout/callback";
 
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment())
@@ -115,21 +115,25 @@ else
         await httpContext.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
     }).AllowAnonymous();
 
-    app.MapGet("/account/logout", async (HttpContext httpContext, IDataProtectionProvider dataProtectionProvider, string? returnUrl = null) =>
+    app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
-        LogoutState.Store(httpContext, dataProtectionProvider, returnUrl, app.Environment.IsDevelopment());
+        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
+        var callbackUri = logoutCallbackPath + QueryString.Create("returnUrl", redirectUri).ToUriComponent();
 
         var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri(LogoutState.CallbackPath)
+                .WithRedirectUri(callbackUri)
                 .Build();
 
         await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     }).RequireAuthorization();
 
-    app.MapGet(LogoutState.CallbackPath, (HttpContext httpContext, IDataProtectionProvider dataProtectionProvider) =>
+    app.MapGet(logoutCallbackPath, (HttpRequest request) =>
     {
-        return Results.LocalRedirect(LogoutState.Consume(httpContext, dataProtectionProvider, app.Environment.IsDevelopment()));
+        var returnUrl = request.Query["returnUrl"];
+        return Results.LocalRedirect(returnUrl.Count == 1
+            ? LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl[0])
+            : "/");
     }).AllowAnonymous();
 }
 

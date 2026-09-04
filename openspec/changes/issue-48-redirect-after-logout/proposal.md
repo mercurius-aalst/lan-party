@@ -13,12 +13,12 @@ cleared.
   logout.
 - Preserve that URL through the mock logout endpoint and the Auth0 provider
   round trip when it is a safe public application destination.
-- Send live Auth0 logout through the fixed `/account/logout/callback` URI and
-  carry the validated destination in short-lived, cryptographically protected
-  browser state.
-- Limit the validated logout target to 1024 characters and fall back to `/`
-  before protection when it exceeds that limit; cap the protected state at
-  3072 characters as a cookie-size guard with the same fallback.
+- Send live Auth0 logout through the fixed `/account/logout/callback` URI with
+  the already validated destination in an encoded `returnUrl` query
+  parameter.
+- Revalidate the callback's decoded `returnUrl` with the existing local logout
+  policy and fall back to `/` for missing, protected, unsafe, or malformed
+  values.
 - Fall back to home (or an equivalent safe public location) for protected,
   malformed, external, absolute, protocol-relative, backslash-prefixed, or
   control-character-containing targets.
@@ -29,9 +29,7 @@ cleared.
 ## Non-goals
 
 - Do not add a backend logout endpoint or put a dynamic local destination in an
-  Auth0 allowlisted URL. Auth0 provider configuration is limited to the fixed
-  callback URLs documented in `docs/auth0.md`.
-- Do not add server-side logout state, nonce, locking, or replay storage. The
-  browser cookie MUST be deleted on callback read on a best-effort basis, while
-  the protected payload MUST enforce a five-minute cryptographic expiry.
+  Auth0 allowlisted path. Auth0 provider configuration is limited to the fixed
+  callback URLs documented in `docs/auth0.md`; the destination travels in the
+  callback query string.
 - Do not change authenticated authorization or route protection behavior.
