@@ -44,7 +44,9 @@ public partial class CompleteProfile
 
     private bool IsRegistrationFlow => Registration;
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync() => LoadProfileAsync();
+
+    private async Task LoadProfileAsync()
     {
         _loadError = null;
         var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
