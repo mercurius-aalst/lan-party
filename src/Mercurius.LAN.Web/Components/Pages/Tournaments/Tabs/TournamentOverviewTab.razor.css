@@ -52,7 +52,7 @@
 
 .overview-list dd {
     margin: 0;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-weight: 600;
 }
 

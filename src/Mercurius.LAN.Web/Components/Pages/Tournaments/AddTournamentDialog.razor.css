@@ -20,10 +20,10 @@
     overflow: hidden;
     padding: clamp(1.25rem, 3vw, 2rem);
     border: 1px solid var(--color-border);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.99);
-    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-card);
+    background: var(--color-surface) !important;
+    box-shadow: var(--shadow-brand);
+    color: var(--color-ink) !important;
 }
 
 .Tournament-editor-form-container {
@@ -48,12 +48,12 @@
 .Tournament-editor-form-container::-webkit-scrollbar-thumb {
     border: 0.18rem solid transparent;
     border-radius: 999px;
-    background: rgba(71, 85, 105, 0.45);
+    background: var(--color-border-strong);
     background-clip: content-box;
 }
 
 .Tournament-editor-form-container::-webkit-scrollbar-thumb:hover {
-    background: rgba(71, 85, 105, 0.68);
+    background: var(--color-subtle);
     background-clip: content-box;
 }
 
@@ -75,16 +75,16 @@
     width: 2.6rem;
     height: 2.6rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-button);
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
     font-size: 1.4rem;
     line-height: 1;
 }
 
 .Tournament-editor-modal-close:hover {
     border-color: rgba(34, 197, 94, 0.4);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    box-shadow: none;
 }
 
 .Tournament-editor-form {
@@ -134,12 +134,12 @@
     height: 3rem;
     min-height: 3rem;
     overflow: hidden;
-    border-radius: 16px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
     font-family: inherit;
     font-size: 1rem;
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    box-shadow: none;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -155,11 +155,11 @@
 }
 
 .Tournament-editor-datetime-row ::deep .mud-input.mud-input-outlined.mud-input-focused {
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    box-shadow: 0 0 0 3px rgba(9, 158, 51, 0.2);
 }
 
 .Tournament-editor-datetime-row ::deep .mud-input.mud-input-outlined.mud-input-focused .mud-input-outlined-border {
-    border-color: rgba(34, 197, 94, 0.52);
+    border-color: var(--color-primary-green);
     border-width: 1px;
 }
 
@@ -167,19 +167,19 @@
     height: 3rem;
     min-height: 3rem;
     padding: 0.75rem 0.9rem;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
     font: inherit;
 }
 
 .Tournament-editor-datetime-row ::deep .mud-input-root-outlined {
     padding-top: 0;
     padding-bottom: 0;
-    background: var(--color-white);
+    background: var(--color-surface-muted);
 }
 
 .Tournament-editor-datetime-row ::deep input.mud-input-root::placeholder {
-    color: rgba(71, 85, 105, 0.72);
+    color: var(--color-subtle);
     opacity: 1;
 }
 
@@ -188,7 +188,7 @@
     display: inline-flex;
     align-items: center;
     margin-inline-end: 0.75rem;
-    background: var(--color-white);
+    background: var(--color-surface-muted);
 }
 
 .Tournament-editor-datetime-row ::deep .mud-input-adornment-end {
@@ -203,7 +203,7 @@
 }
 
 .Tournament-editor-datetime-row ::deep .mud-input-adornment .mud-icon-root {
-    color: rgba(71, 85, 105, 0.9);
+    color: var(--color-subtle);
     font-size: 1.2rem;
 }
 
@@ -236,10 +236,10 @@
     min-height: 3rem;
     padding: 0.75rem 0.9rem;
     border: 1px solid var(--color-border);
-    border-radius: 16px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    box-shadow: none;
 }
 
 .form-group ::deep .form-control {
@@ -249,8 +249,8 @@
 
 .form-group input:focus,
 .form-group select:focus {
-    border-color: rgba(34, 197, 94, 0.52);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    border-color: var(--color-primary-green);
+    box-shadow: 0 0 0 3px rgba(9, 158, 51, 0.2);
     outline: none;
 }
 

@@ -29,8 +29,14 @@ else
             <p>Keep your tournament profile accurate so registrations, brackets, and contact details stay in sync.</p>
         </header>
 
+        <SectionNav AdditionalClass="profile-section-nav" AriaLabel="Profile sections">
+            <a href="/profile#profile-details" class="button-secondary">Profile details</a>
+            <a href="/profile#profile-security" class="button-secondary">Security</a>
+            <a href="/profile#profile-danger" class="button-secondary">Delete account</a>
+        </SectionNav>
+
         <div class="profile-layout grid gap-6 lg:[grid-template-columns:minmax(0,1.4fr)_minmax(18rem,0.8fr)] lg:items-start">
-            <section class="brand-card profile-main-card p-4 sm:p-6">
+            <section id="profile-details" class="brand-card profile-main-card p-4 sm:p-6 brand-section-anchor">
                 <div class="profile-card-header">
                     <div>
                         <span class="section-eyebrow">Profile details</span>
@@ -97,7 +103,7 @@ else
             </section>
 
             <aside class="profile-sidebar grid gap-6">
-                <section class="brand-card profile-side-card p-4 sm:p-6">
+                <section id="profile-security" class="brand-card profile-side-card p-4 sm:p-6 brand-section-anchor">
                     <span class="section-eyebrow">Account tools</span>
                     <h2>Security and verification</h2>
                     <p>Use these actions to verify your email or trigger a password reset without changing profile data.</p>
@@ -110,7 +116,7 @@ else
                     </div>
                 </section>
 
-                <section class="brand-card profile-side-card profile-danger-card p-4 sm:p-6">
+                <section id="profile-danger" class="brand-card profile-side-card profile-danger-card p-4 sm:p-6 brand-section-anchor">
                     <span class="section-eyebrow">Danger zone</span>
                     <h2>Delete account</h2>
                     <p>Type <strong>DELETE</strong> to confirm permanent account removal.</p>

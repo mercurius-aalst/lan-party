@@ -6,8 +6,8 @@
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    background: rgba(15, 23, 42, 0.48);
-    backdrop-filter: blur(8px);
+    background: rgba(3, 8, 12, 0.82);
+    backdrop-filter: blur(4px);
 }
 
 .match-modal-dialog {
@@ -19,10 +19,10 @@
     overflow-y: auto;
     padding: clamp(1.25rem, 3vw, 2rem);
     border: 1px solid var(--color-border);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.99);
-    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-card);
+    background: var(--color-surface) !important;
+    box-shadow: var(--shadow-brand);
+    color: var(--color-ink) !important;
 }
 
 .match-modal-close {
@@ -32,9 +32,9 @@
     width: 2.6rem;
     height: 2.6rem;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-button);
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
     font-size: 1.45rem;
     line-height: 1;
 }
@@ -76,7 +76,7 @@
 }
 
 .match-header-score {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .match-header-vs {
@@ -99,9 +99,9 @@
     min-width: min(100%, 18rem);
     padding: 0.8rem 1rem;
     border: 1px solid var(--color-border);
-    border-radius: 16px;
-    background: var(--color-white);
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    box-shadow: none;
     text-align: center;
 }
 
@@ -112,7 +112,7 @@
 }
 
 .match-start-time strong {
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-size: 1rem;
     font-weight: 800;
 }
@@ -132,33 +132,33 @@
 
 .match-status-pill--scheduled,
 .match-outcome-chip--winner {
-    background: rgba(34, 197, 94, 0.12);
-    border-color: rgba(34, 197, 94, 0.24);
-    color: var(--color-deep-green);
+    background: rgba(9, 158, 51, 0.14);
+    border-color: rgba(57, 201, 101, 0.44);
+    color: var(--color-link);
 }
 
 .match-status-pill--pending {
-    background: rgba(148, 163, 184, 0.16);
-    border-color: rgba(148, 163, 184, 0.3);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
     color: var(--color-muted-text);
 }
 
 .match-status-pill--complete {
-    background: rgba(15, 23, 42, 0.08);
-    border-color: rgba(15, 23, 42, 0.14);
-    color: var(--color-dark-navy);
+    background: var(--color-surface-muted);
+    border-color: var(--color-border);
+    color: var(--color-muted-text);
 }
 
 .match-status-pill--attention {
-    background: rgba(234, 179, 8, 0.16);
-    border-color: rgba(202, 138, 4, 0.3);
-    color: #854d0e;
+    background: rgba(233, 180, 76, 0.14);
+    border-color: rgba(233, 180, 76, 0.44);
+    color: #f1c86d;
 }
 
 .match-status-pill--reversed {
-    background: rgba(100, 116, 139, 0.14);
-    border-color: rgba(100, 116, 139, 0.28);
-    color: #334155;
+    background: var(--color-surface-muted);
+    border-color: var(--color-border-strong);
+    color: var(--color-subtle);
 }
 
 .match-lifecycle-panel,
@@ -167,8 +167,8 @@
     gap: 0.75rem;
     padding: 1rem 1.1rem;
     border: 1px solid var(--color-border);
-    border-radius: 22px;
-    background: rgba(247, 250, 248, 0.92);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised);
 }
 
 .match-lifecycle-panel {
@@ -179,7 +179,7 @@
 .match-lifecycle-panel h3,
 .match-action-panel h3 {
     margin: 0.2rem 0 0;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-size: 1.15rem;
 }
 
@@ -196,7 +196,7 @@
     min-width: min(100%, 14rem);
     padding: 0.7rem 0.85rem;
     border-radius: 14px;
-    background: var(--color-white);
+    background: var(--color-surface-muted);
     text-align: right;
 }
 
@@ -212,12 +212,12 @@
 
 .match-deadline strong,
 .match-confirmation-status strong {
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-size: 0.9rem;
 }
 
 .match-deadline small {
-    color: var(--color-deep-green);
+    color: var(--color-link);
     font-size: 0.78rem;
     font-weight: 800;
     white-space: nowrap;
@@ -231,18 +231,18 @@
     padding: 0.9rem 1rem;
     border: 1px solid var(--color-border);
     border-radius: 16px;
-    background: var(--color-white);
+    background: var(--color-surface-muted);
 }
 
 .match-state-message--error,
 .match-confirmation-box {
     border-color: rgba(234, 88, 12, 0.28);
-    background: rgba(255, 247, 237, 0.96);
+    background: rgba(227, 107, 107, 0.12);
 }
 
 .match-state-message p {
     margin: 0;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
 }
 
 .match-refresh-message {
@@ -269,7 +269,7 @@
 }
 
 .match-action-panel--admin {
-    background: rgba(241, 245, 249, 0.92);
+    background: var(--color-surface-muted);
 }
 
 .match-admin-forfeit-actions {
@@ -282,33 +282,33 @@
 .match-admin-blocked-reason {
     padding: 0.65rem 0.8rem;
     border-left: 3px solid var(--color-deep-green);
-    background: rgba(220, 252, 231, 0.55);
-    color: var(--color-dark-navy) !important;
+    background: rgba(233, 180, 76, 0.12);
+    color: #f1c86d !important;
     font-weight: 700;
 }
 
 .button-danger {
     border-color: rgba(185, 28, 28, 0.28);
-    background: #fff;
-    color: #b91c1c;
+    background: rgba(227, 107, 107, 0.14);
+    color: #ffb1b1;
 }
 
 .button-danger:hover,
 .button-danger:focus-visible {
-    background: rgba(254, 226, 226, 0.8);
+    background: rgba(227, 107, 107, 0.24);
 }
 
 .match-outcome-chip--loser {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: rgba(239, 68, 68, 0.22);
-    color: #b91c1c;
+    background: rgba(227, 107, 107, 0.14);
+    border-color: rgba(227, 107, 107, 0.5);
+    color: #ffb1b1;
 }
 
 .match-score-editor {
     padding: 1rem 1.1rem;
     border: 1px solid var(--color-border);
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.82);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised);
 }
 
 .match-score-editor-copy h3 {
@@ -350,26 +350,27 @@
     align-content: start;
     padding: 1rem;
     border: 1px solid var(--color-border);
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.84);
-    box-shadow: var(--shadow-brand);
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+    box-shadow: none;
 }
 
 .participant-card.winner-card {
-    border-color: rgba(34, 197, 94, 0.34);
-    box-shadow: 0 14px 28px rgba(34, 197, 94, 0.16);
+    border-color: rgba(57, 201, 101, 0.44);
+    background: rgba(9, 158, 51, 0.08);
+    box-shadow: none;
 }
 
 .match-modal-dialog ::deep .participant-surface {
-    background: rgba(255, 255, 255, 0.98);
+    background: var(--color-surface-raised);
 }
 
 .match-modal-dialog ::deep .participant-type {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .match-modal-dialog ::deep .participant-member-chip--captain {
-    background: rgba(34, 197, 94, 0.12);
+    background: rgba(9, 158, 51, 0.14);
 }
 
 .participant-card.loser-card {

@@ -15,7 +15,7 @@
 }
 
 .public-profile-match-summaries-heading p {
-    color: var(--text-muted, #667085);
+    color: var(--text-muted, var(--color-muted-text));
     margin: 0;
 }
 
@@ -47,8 +47,8 @@
 }
 
 .public-profile-match-summary-card {
-    background: var(--surface-muted, #f8fafc);
-    border: 1px solid var(--border-subtle, #e4e7ec);
+    background: var(--surface-muted, var(--color-surface-muted));
+    border: 1px solid var(--border-subtle, var(--color-border));
     border-radius: 0.75rem;
     color: inherit;
     display: grid;
@@ -62,13 +62,13 @@
 
 .public-profile-match-summary-card:hover,
 .public-profile-match-summary-card:focus-visible {
-    border-color: var(--brand-primary, #6750a4);
-    box-shadow: 0 0.4rem 1.2rem rgb(16 24 40 / 10%);
+    border-color: var(--brand-primary, var(--color-primary-green));
+    box-shadow: none;
     transform: translateY(-1px);
 }
 
 .public-profile-match-summary-card:focus-visible {
-    outline: 3px solid rgb(103 80 164 / 35%);
+    outline: 3px solid rgba(57, 201, 101, 0.32);
     outline-offset: 2px;
 }
 
@@ -99,7 +99,7 @@
 }
 
 .public-profile-match-summary-opponent {
-    color: var(--text-muted, #667085);
+    color: var(--text-muted, var(--color-muted-text));
 }
 
 .public-profile-match-summary-result {
@@ -107,12 +107,12 @@
 }
 
 .public-profile-match-summary-meta {
-    color: var(--text-muted, #667085);
+    color: var(--text-muted, var(--color-muted-text));
     font-size: 0.875rem;
 }
 
 .public-profile-match-summary-status {
-    color: var(--text-muted, #667085);
+    color: var(--text-muted, var(--color-muted-text));
     margin: 0;
 }
 
@@ -122,15 +122,15 @@
 }
 
 .public-profile-match-summary-status--error {
-    color: var(--text-danger, #b42318);
+    color: var(--text-danger, var(--color-danger));
 }
 
 .public-profile-match-summary-retry {
     align-self: start;
-    border: 1px solid var(--brand-primary, #6750a4);
+    border: 1px solid var(--brand-primary, var(--color-primary-green));
     border-radius: 0.5rem;
     background: transparent;
-    color: var(--brand-primary, #6750a4);
+    color: var(--brand-primary, var(--color-link));
     cursor: pointer;
     min-height: 2.75rem;
     padding: 0.55rem 0.85rem;
@@ -139,7 +139,7 @@
 }
 
 .public-profile-match-summary-retry:focus-visible {
-    outline: 3px solid rgb(103 80 164 / 35%);
+    outline: 3px solid rgba(57, 201, 101, 0.32);
     outline-offset: 2px;
 }
 

@@ -1,0 +1,12 @@
+@if (ChildContent is not null)
+{
+    <nav class="brand-section-nav @AdditionalClass" aria-label="@AriaLabel">
+        @ChildContent
+    </nav>
+}
+
+@code {
+    [Parameter] public string AriaLabel { get; set; } = "On this page";
+    [Parameter] public string? AdditionalClass { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

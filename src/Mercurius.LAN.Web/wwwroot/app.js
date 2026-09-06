@@ -65,3 +65,84 @@ function addNavMenuOutsideClickListener(elementId, dotNetHelper) {
         }
     };
 }
+
+function activateTeamModalFocusTrap(dialog) {
+    if (!dialog) {
+        return { dispose: () => {} };
+    }
+
+    const previousFocus = document.activeElement;
+    const inertedElements = [];
+    let current = dialog;
+
+    while (current && current.parentElement) {
+        const parent = current.parentElement;
+        for (const sibling of parent.children) {
+            if (sibling === current || sibling.hasAttribute('inert')) {
+                continue;
+            }
+
+            sibling.setAttribute('inert', '');
+            inertedElements.push(sibling);
+        }
+
+        if (parent === document.body) {
+            break;
+        }
+
+        current = parent;
+    }
+
+    const getFocusableElements = () => Array.from(dialog.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )).filter(element => element.getClientRects().length > 0 && !element.closest('[inert]'));
+
+    const focusFirst = () => {
+        const first = getFocusableElements()[0];
+        (first || dialog).focus();
+    };
+
+    const handleKeyDown = event => {
+        if (event.key !== 'Tab') {
+            return;
+        }
+
+        const focusableElements = getFocusableElements();
+        if (focusableElements.length === 0) {
+            event.preventDefault();
+            dialog.focus();
+            return;
+        }
+
+        const first = focusableElements[0];
+        const last = focusableElements[focusableElements.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    };
+
+    const handleFocusIn = event => {
+        if (!dialog.contains(event.target)) {
+            focusFirst();
+        }
+    };
+
+    dialog.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('focusin', handleFocusIn, true);
+    requestAnimationFrame(focusFirst);
+
+    return {
+        dispose: () => {
+            dialog.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener('focusin', handleFocusIn, true);
+            inertedElements.forEach(element => element.removeAttribute('inert'));
+            if (previousFocus && previousFocus.isConnected && typeof previousFocus.focus === 'function') {
+                previousFocus.focus();
+            }
+        }
+    };
+}

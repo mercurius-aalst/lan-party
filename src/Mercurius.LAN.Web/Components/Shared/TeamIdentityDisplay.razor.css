@@ -30,8 +30,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: #1976d2;
-    color: #fff;
+    background: var(--color-primary-green);
+    color: var(--color-white);
     font-size: 1.4rem;
     font-weight: 700;
     line-height: 1;
@@ -68,7 +68,7 @@
     width: clamp(3rem, 7vw, 3.8rem);
     height: clamp(3rem, 7vw, 3.8rem);
     border-radius: 16px;
-    background: var(--color-dark-navy);
+    background: var(--color-surface-muted);
     font-size: clamp(1rem, 2vw, 1.2rem);
     font-weight: 800;
 }
@@ -97,6 +97,6 @@
 
 .team-identity-display[href]:focus-visible {
     border-radius: 10px;
-    outline: 3px solid rgba(34, 197, 94, 0.22);
+    outline: 3px solid rgba(57, 201, 101, 0.3);
     outline-offset: 3px;
 }
