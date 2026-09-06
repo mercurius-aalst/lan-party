@@ -16,6 +16,22 @@
     margin-top: 0.1rem;
 }
 
+.profile-email-row .form-control:disabled {
+    background-color: var(--color-field);
+    border-color: var(--color-border);
+    color: var(--color-ink);
+    opacity: 1;
+    -webkit-text-fill-color: var(--color-ink);
+}
+
+.profile-email-row .profile-status-text.text-success {
+    color: var(--color-success) !important;
+}
+
+.profile-email-row .profile-status-text.text-warning {
+    color: var(--color-warning) !important;
+}
+
 .profile-danger-card {
     border-color: rgba(220, 38, 38, 0.18);
 }

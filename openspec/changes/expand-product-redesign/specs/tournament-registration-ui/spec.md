@@ -7,15 +7,14 @@ conflict, and mutation-error states, make the current player/team ownership and
 next step clear, and keep public participant data separate from authenticated
 registration data.
 
-#### Scenario: Eligibility provides a specific explanation
+#### Scenario: Eligibility renders only an unavailable state
 
-- **WHEN** a team or roster eligibility response contains a specific explanation
-- **THEN** the page MUST render a concise plain-language explanation next to the affected team, member,
-  or action
-- **AND** the page MUST avoid replacing a specific explanation with only generic
-  failure text or a raw internal status code
-- **AND** starting a new selected-team or roster eligibility check MUST clear
-  stale team-level error text before displaying the new result
+- **WHEN** a team or roster eligibility response marks a team or member as
+  unavailable
+- **THEN** the affected option MUST render only a compact visual `Unavailable`
+  state with an icon or accessible label
+- **AND** validation reasons, raw reason codes, and explanatory paragraphs MUST
+  not be rendered beside the option
 
 #### Scenario: Anonymous visitor views registration
 
@@ -59,11 +58,10 @@ registration data.
 #### Scenario: Backend event gap remains recoverable
 
 - **WHEN** a backend mutation does not publish a roster invalidation event
-- **THEN** the page MUST provide a user-friendly update action for the
-  authenticated registration context, such as a labelled icon or "Check for
-  updates" action
-- **AND** the UI MUST NOT claim that realtime synchronization is guaranteed for
-  that mutation
+- **THEN** the existing backend-authoritative response and the next supported
+  page or popup load MUST remain the source of truth
+- **AND** the UI MUST NOT render `Check again`, `live update`, `refresh
+  registration state`, or an equivalent technical availability control
 
 #### Scenario: Player reaches a registration next step
 
@@ -94,7 +92,9 @@ page content.
 - **THEN** the selection MUST advance automatically to roster selection after
   eligibility is confirmed
 - **AND** an unavailable team MUST stay selectable only as a visibly disabled or
-  status-marked item with an accessible plain-language explanation
+  status-marked option with the visual label `Unavailable`
+- **AND** validation reasons, raw reason codes, and explanatory paragraphs MUST
+  not be rendered beside the option
 
 #### Scenario: Eligible player registers individually
 
@@ -109,6 +109,6 @@ page content.
 
 - **WHEN** a team or roster member cannot be used for the tournament
 - **THEN** the UI MUST communicate unavailability through disabled/status
-  styling and an icon or label, not text alone
-- **AND** the explanation MUST remain available to assistive technology without
-  exposing raw backend reason codes or technical refresh terminology
+  styling and an icon or label, not explanatory validation text
+- **AND** the accessible label MUST communicate `Unavailable` without exposing
+  raw backend reason codes or technical refresh terminology

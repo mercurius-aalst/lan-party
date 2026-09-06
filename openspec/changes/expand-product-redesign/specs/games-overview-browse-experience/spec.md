@@ -59,3 +59,28 @@ filter semantics, admin visibility, or service behavior.
 - **THEN** the existing empty state MUST remain visible and recoverable
 - **AND** an authorized admin's existing add-tournament entry MUST remain
   available according to the current rules
+
+### Requirement: Overview Register opens the existing popup immediately
+
+The Tournaments overview MUST retain its general browse layout while making an
+available Register action an immediate entry point to the existing accessible
+registration popup. Selecting Register MUST NOT first navigate to tournament
+detail. Selecting the tournament identity or detail action remains a separate
+canonical GUID route handoff.
+
+#### Scenario: Visitor selects Register from an available result
+
+- **WHEN** an authenticated visitor selects Register on an eligible tournament
+  result
+- **THEN** the existing registration popup MUST open immediately in the
+  overview
+- **AND** focus MUST move into the labelled popup and return to the Register
+  trigger when it closes
+- **AND** search, filters, results, pagination, and schedule context MUST remain
+  part of the general browse surface
+
+#### Scenario: Visitor selects tournament detail instead
+
+- **WHEN** a visitor selects the tournament identity or detail action
+- **THEN** the application MUST navigate to the canonical GUID detail route
+- **AND** the detail page's separate Register action MUST remain available

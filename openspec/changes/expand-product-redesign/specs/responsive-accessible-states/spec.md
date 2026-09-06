@@ -61,14 +61,16 @@ existing recovery actions and message meaning.
 ### Requirement: Motion, theme, and contrast remain preference-aware
 
 The redesign MUST retain reduced-motion support, avoid decorative motion as the
-only way to communicate state, and maintain readable contrast for both the
+only way to communicate state, and maintain WCAG AA contrast for both the
 user-selected light and dark themes and existing logo assets. Dark mode MUST
 use neutral surfaces and off-white text rather than green-tinted general copy.
+Contrast corrections MUST be made at the owning selector or semantic token;
+broad global recoloring and broad `!important` overrides are not permitted.
 
 #### Scenario: Visitor prefers reduced motion
 
 - **WHEN** the browser reports `prefers-reduced-motion: reduce`
-- **THEN** non-essential transition, scroll, marquee, and decorative animation
+- **THEN** non-essential transition, scroll, and decorative animation
   MUST be disabled or reduced
 - **AND** content and action availability MUST remain unchanged
 

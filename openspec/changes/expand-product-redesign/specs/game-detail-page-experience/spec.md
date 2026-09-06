@@ -35,6 +35,33 @@ specification, not by an inline workflow.
 - **AND** the surrounding section navigation MUST remain usable after the
   action completes or fails
 
+### Requirement: Detail Register remains a separate popup action
+
+The tournament detail page MUST retain a distinct Register action in its detail
+context. Selecting it MUST open the existing accessible registration popup
+without changing the GUID route or rendering a second inline workflow. This
+detail action is separate from the overview's immediate Register action.
+
+#### Scenario: Visitor registers from tournament detail
+
+- **WHEN** a visitor selects Register on the tournament detail page
+- **THEN** the existing registration popup MUST open from the detail action
+- **AND** the detail identity, GUID route, current context, and surrounding
+  actions MUST remain available after dismissal or failure
+
+### Requirement: Match sections retain actions and states without read-only prose
+
+Tournament match sections MUST retain real match actions, status, schedule
+context, links, loading, empty, and error states. Read-only explanatory prose
+that does not change a decision, action, or state MUST be omitted.
+
+#### Scenario: Visitor views a match section
+
+- **WHEN** a visitor opens a match schedule, bracket, result, or match dialog
+- **THEN** the real match context, statuses, actions, and recovery states MUST
+  remain available
+- **AND** redundant read-only explanatory paragraphs MUST not be rendered
+
 ## ADDED Requirements
 
 ### Requirement: Tournament detail makes current context persistent
@@ -82,3 +109,21 @@ navigating to the public user route.
 - **AND** missing linked IDs MUST be omitted, private fields MUST remain hidden,
   and no enrichment request MUST be issued
 - **AND** focus, Escape, close, and focus restoration MUST be keyboard usable
+
+### Requirement: Tournament detail match cards are breathable and aligned
+
+Match cards and match-summary cards on tournament detail MUST provide
+comfortable internal padding and aligned identity, schedule, result, status,
+and action content at supported breakpoints. The correction MUST preserve the
+existing match data, links, mutation callbacks, status semantics, and contained
+overflow behavior.
+
+#### Scenario: Visitor views tournament match cards
+
+- **WHEN** a schedule, bracket result, or match-summary card is rendered
+- **THEN** its text and controls MUST have enough internal spacing to avoid a
+  compressed appearance and MUST align consistently within the card
+- **AND** match identity, schedule, status, actions, links, loading, empty, and
+  error states MUST remain available
+- **AND** the card MUST remain readable without page-wide horizontal overflow at
+  desktop and narrow supported widths

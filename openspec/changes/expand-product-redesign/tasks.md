@@ -203,3 +203,63 @@
       src/Mercurius.LAN.Web/Mercurius.LAN.Web.csproj`, `git diff --check`, and
       route/API/auth/privacy preservation checks. Record unavailable live/Auth0
       or browser evidence without weakening the requirements.
+
+## 11. Post-baseline feedback alignment
+
+- [x] 11.1 Remove the specified low-value taglines, descriptive filler, and
+      read-only match prose while retaining real actions, labels, legal copy,
+      statuses, schedules, links, loading, empty, and error states.
+- [x] 11.2 Add only purposeful motion using the existing CSS, JavaScript,
+      Blazor, and MudBlazor stack. Give every animation a hierarchy, feedback,
+      storytelling, or state-transition reason and provide a static or
+      `prefers-reduced-motion` fallback. Do not add a package.
+- [x] 11.3 Improve dark-mode contrast at owning selectors or semantic tokens to
+      WCAG AA for text, controls, focus, and status states without broad global
+      recoloring, brand-palette replacement, or broad `!important` overrides.
+- [x] 11.4 Preserve the existing Home hero content/assets and five-section IA,
+      then vary composition after the hero without repeating title-content
+      enumeration. Keep the Tournaments overview in its general browse layout.
+- [x] 11.5 Place Tickets and Contact in the same responsive final row, retain
+      their existing actions and anchors, and stack them in reading order on
+      narrow screens.
+- [x] 11.6 Render team and roster unavailability as only a compact visual
+      `Unavailable` state with an icon or accessible label. Remove validation
+      reasons, raw reason codes, and explanatory paragraphs from option lists.
+- [x] 11.7 Remove user-facing `Check again`, `live update`, `refresh
+      registration state`, and equivalent technical availability controls while
+      preserving backend-authoritative refresh behavior.
+- [x] 11.8 Remove useless read-only match prose while retaining real match
+      actions, statuses, schedules, links, loading, empty, error, and recovery
+      states.
+- [x] 11.9 Make the overview Register action open the existing registration
+      popup immediately; keep detail Register as a separate detail action and
+      keep tournament links on canonical GUID routes.
+- [ ] 11.10 Run focused static, accessibility, responsive, and mock-mode browser
+       checks for the nine outcomes, including both themes, reduced motion,
+       popup focus, preserved actions/states, and the unchanged overview layout.
+- [ ] 11.11 Add comfortable internal padding and aligned text to team detail
+       match cards while preserving match identity, schedule, status, actions,
+       and responsive behavior.
+- [x] 11.12 Correct dark-mode private profile email contrast and keep dark,
+       readable input focus, selected, and autofill states without changing
+       field names, field order, labels, validation, or submission behavior.
+- [x] 11.13 Restore distinct Info packing accents for hardware, basic, and
+       optional items and verify WCAG AA dark-mode contrast without changing
+       the useful packing details or light-theme palette.
+- [x] 11.14 Normalize representative section spacing by reducing only
+       excessive gaps while retaining comfortable rhythm around headings,
+       controls, and content.
+- [x] 11.15 Remove SponsorScroller's outer framing wrapper only if it adds no
+       semantic, accessibility, interaction, state, or anchor value; widen
+       non-Home instances while preserving the Home width and composition.
+- [x] 11.16 Audit representative pages with the zero-value copy test: remove a
+       title, subtitle, or description only when it merely restates obvious
+       surrounding UI and adds zero value; preserve context, meaning,
+       navigation, status, accessibility, decision support, useful details,
+       and information architecture.
+- [x] 11.17 Replace bright white Privacy cards in dark mode with dark semantic
+       surfaces while preserving legal/privacy copy, hierarchy, and accessible
+       reading order.
+- [ ] 11.18 Run focused computed-style, copy, spacing, responsive, contrast,
+       route/API/auth, and form-order checks for this batch. Keep fonts, brand
+       palette, useful content, Home hero, and all existing contracts intact.

@@ -64,3 +64,42 @@ is sufficient.
 - **WHEN** a page heading has no meaningful subtitle or description
 - **THEN** the shared primitive MUST omit the redundant supporting block
 - **AND** content MUST retain comfortable spacing and a clear hierarchy
+
+### Requirement: Shared section spacing stays consistent and intentional
+
+Shared and page-local section composition MUST use a consistent spacing rhythm.
+Excessive gaps MAY be reduced, but useful separation between headings, labels,
+controls, content, and state surfaces MUST remain. Spacing changes MUST NOT
+remove an action, context, accessibility relationship, or stable anchor.
+
+#### Scenario: A page is corrected for excessive gaps
+
+- **WHEN** a representative page has visibly uneven or excessive vertical space
+- **THEN** the correction MUST reduce only the unnecessary gap and retain
+  comfortable internal and inter-section spacing
+- **AND** the page MUST preserve reading order, useful copy, actions, and
+  responsive behavior
+
+### Requirement: SponsorScroller framing and width preserve content purpose
+
+SponsorScroller MUST preserve its sponsor content, links, labels, loading,
+empty, error, accessibility, and interaction behavior. An outer visual framing
+wrapper MAY be removed only when it contributes no semantic grouping, accessible
+name, interaction boundary, state, or required anchor. Non-Home instances MAY
+use the available content width, while Home MUST retain its existing width and
+composition.
+
+#### Scenario: SponsorScroller renders on Home
+
+- **WHEN** Home renders the sponsor scroller
+- **THEN** its existing width, composition, sponsor content, and actions MUST
+  remain unchanged
+- **AND** any wrapper removal MUST not change its semantics or accessibility
+
+#### Scenario: SponsorScroller renders outside Home
+
+- **WHEN** a non-Home page renders the sponsor scroller
+- **THEN** it MAY use a wider page-local content frame when that improves the
+  composition
+- **AND** sponsor links, labels, state behavior, and keyboard interaction MUST
+  remain unchanged

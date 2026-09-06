@@ -207,6 +207,10 @@
     gap: 1rem;
 }
 
+#team-matches ::deep .public-profile-match-summaries {
+    padding: clamp(1rem, 1.8vw, 1.35rem);
+}
+
 .public-team-member-list,
 .public-team-tournament-list {
     margin-top: 0;

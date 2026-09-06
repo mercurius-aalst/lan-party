@@ -84,3 +84,22 @@ actions where the current flow supports recovery.
   recovery action
 - **THEN** the shared state MUST present that action with an accessible label
 - **AND** the action MUST use the existing route or callback
+
+### Requirement: Redundant headings are removed only by a zero-value test
+
+Shared page framing MUST allow a title, subtitle, or description to be omitted
+only when it adds zero value and merely restates obvious surrounding UI. A
+heading or supporting copy that provides context, meaning, navigation, status,
+accessibility, decision support, useful detail, or information architecture
+MUST remain available.
+
+#### Scenario: Representative page framing is reviewed
+
+- **WHEN** a representative page heading, subtitle, or description is evaluated
+  for removal
+- **THEN** it MAY be removed only if the surrounding UI already communicates
+  the same information plainly and the copy adds zero value
+- **AND** labels, useful details, context, navigation, status, accessibility
+  names, decision support, and stable page structure MUST be preserved
+- **AND** the existing route, anchors, field order, actions, and data state
+  behavior MUST remain unchanged

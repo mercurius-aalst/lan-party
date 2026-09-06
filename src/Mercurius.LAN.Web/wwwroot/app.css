@@ -1129,8 +1129,46 @@ input[type="email"]:focus,
 input[type="password"]:focus,
 textarea:focus,
 select:focus {
-    border-color: var(--color-primary-green);
+    background-color: var(--color-field);
+    color: var(--color-ink);
+    border-color: var(--color-electric-lime);
     box-shadow: 0 0 0 4px var(--color-focus);
+}
+
+.form-control:disabled,
+.form-select:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+    background-color: var(--color-field);
+    color: var(--color-ink);
+    opacity: 1;
+    -webkit-text-fill-color: var(--color-ink);
+}
+
+select option:checked {
+    background-color: var(--color-surface-muted);
+    color: var(--color-ink);
+}
+
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+    accent-color: var(--color-electric-lime);
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-field) inset;
+    caret-color: var(--color-ink);
+}
+
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill:focus {
+    -webkit-box-shadow: 0 0 0 1000px var(--color-field) inset, 0 0 0 4px var(--color-focus);
 }
 
 .status-scheduled {

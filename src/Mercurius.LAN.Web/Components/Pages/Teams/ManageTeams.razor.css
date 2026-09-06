@@ -1,6 +1,6 @@
 .team-manage-page {
     display: grid;
-    gap: clamp(1.5rem, 3vw, 2.5rem);
+    gap: clamp(1rem, 2.25vw, 1.75rem);
     width: min(calc(100% - 2rem), var(--site-max-width));
     min-height: calc(100vh - var(--header-height));
     min-height: calc(100dvh - var(--header-height));
@@ -304,7 +304,7 @@
 
 .team-workspace-detail {
     display: grid;
-    gap: clamp(1.5rem, 3vw, 2.25rem);
+    gap: clamp(1.1rem, 2.2vw, 1.75rem);
     min-width: 0;
     padding: clamp(1.15rem, 3vw, 2rem);
     border-radius: var(--radius-card);

@@ -61,36 +61,86 @@ control over light and dark presentation without losing the event identity.
   resolution logic, and backend calls MUST continue to use the existing
   tournament identifier contract.
 
-## Corrective visual expansion
+## Post-baseline feedback alignment
 
-This active change also includes a focused visual-quality correction pass based
-on browser evidence from the landed foundation. The correction MUST preserve
-all route, anchor, form, auth, authorization, API, service, DTO, mock/live, and
-successful mutation contracts while fixing composition and styling defects.
+This active change also includes a preserve-mode correction pass based on the
+latest browser review. Existing fonts, brand palette, logo treatment, hero
+content and assets, landing information architecture, route and anchor IDs,
+service boundaries, and established component details MUST remain unchanged
+unless an outcome below explicitly calls for a presentation change. The pass
+MUST preserve all form, auth, authorization, API, service, DTO, mock/live, and
+successful mutation contracts.
 
-- Home MUST render a true full-viewport hero using the existing dynamic
-  tournament imagery and fallback branches, with the current date/location and
-  both current calls to action visible in the initial desktop and mobile
-  viewport. The hero MUST use responsive crop/object positioning, avoid
-  horizontal overflow and max-height clipping, contain no animated scroll cue,
-  glow, or image drift, and remain safe under reduced motion.
-- The visual system MUST provide complete light/dark semantic conversion and WCAG AA
-  readable states for custom dialogs, MudBlazor controls and steppers, filters,
-  tabs, brackets, match dialogs, public relationship cards, team invite and
-  danger surfaces, nested labels/values, loading/empty/error/status states, and
-  semantic sponsor, winner, loser, and priority/type distinctions. Component-
-  local theme declarations MUST be corrected at their source instead of being
-  flattened by broad global overrides. Dark mode MUST use neutral surfaces and
-  readable off-white text rather than green-tinted text.
-- Registration MUST be rendered as a modal dialog launched from the tournament
-  page. Visible copy MUST use plain user language: technical labels such as
-  "refresh registration state", raw reason codes, and internal status names
-  MUST not be shown to users. Update affordances MAY use an icon, but MUST
-  retain an accessible label and a concise result message.
-- Completion MUST include browser-computed-style checks at representative
-  public, authenticated, and organizer routes, including reachable dialogs and
-  the 1440, 1280, and 390 pixel viewport targets, with contrast and overflow
-  evidence recorded before the corrective tasks are marked complete.
+- Previously identified low-value copy MUST be removed, including redundant
+  taglines, descriptive filler, and read-only explanatory prose on information
+  and match surfaces. Action labels, field labels, legal copy, loading/error
+  states, match status, schedule context, and other decision-supporting content
+  MUST remain.
+- Purposeful motion MAY be added with the existing CSS, JavaScript, Blazor, and
+  component stack; no new package or dependency is permitted for this pass.
+  Motion MUST communicate hierarchy, feedback, storytelling, or a state
+  transition and MUST have a static or `prefers-reduced-motion` equivalent.
+- Dark-mode contrast MUST be improved at the owning component selectors or
+  semantic tokens to meet WCAG AA for text, controls, focus, and status states.
+  Broad global recoloring, brand-palette replacement, and broad `!important`
+  overrides MUST NOT be used.
+- Home MUST preserve the existing hero content and assets and the five-section
+  IA. After the hero, Sponsors, Tournaments, Tickets, and Contact MAY use
+  varied composition rather than repeating title-content enumeration, while the
+  Tournaments overview MUST retain its general browse layout.
+- Tickets and Contact MUST share the same responsive final row, retaining their
+  existing actions and anchors and stacking in reading order on narrow screens.
+- Team and roster option lists MUST show only a compact visual `Unavailable`
+  state with an icon or accessible label when a team or member cannot be used.
+  Validation reasons, raw reason codes, and explanatory paragraphs MUST not be
+  rendered beside those options.
+- User-facing `Check again`, `live update`, `refresh registration state`, and
+  equivalent technical availability controls MUST not be rendered. Existing
+  backend-authoritative refresh behavior MUST remain intact behind the scenes.
+- Read-only match prose that does not change a decision, action, or state MUST
+  be removed, while real match actions, status, schedule, links, loading,
+  empty, and error states remain available.
+- Register from the Tournaments overview MUST open the existing registration
+  popup immediately. Register from tournament detail MUST remain a separate
+  detail-page action using that existing popup, and all tournament links MUST
+  remain canonical GUID routes.
+
+## Latest preserve-mode feedback batch
+
+The next screenshot review extends the same preserve-mode correction pass. The
+implementation MUST keep existing fonts, brand palette, useful content, form
+fields and order, routes, anchors, APIs, authentication/authorization, and the
+Home hero content/assets. Screenshots remain visual evidence only and MUST not
+replace contract, accessibility, or behavior checks.
+
+- Team detail match cards MUST have comfortable internal padding and aligned
+  text without dropping match context, actions, status, or schedule meaning.
+- Private profile email MUST remain readable in dark mode. Inputs MUST retain
+  dark, readable surfaces and focus, selected, and autofill states in dark mode
+  without changing field order, labels, validation, or submission behavior.
+- Info packing items MUST retain distinct hardware, basic, and optional accents
+  with dark-mode contrast that meets WCAG AA.
+- Section spacing MUST be consistent and intentional. Excessive gaps MAY be
+  reduced, but useful breathing room between headings, controls, and content
+  MUST remain.
+- SponsorScroller MAY lose an outer framing wrapper only when that wrapper adds
+  no semantic grouping, accessible name, interaction boundary, state, or
+  anchor value. Non-Home SponsorScroller surfaces SHOULD use the available
+  content width while Home retains its existing width and composition.
+- Representative pages MAY remove a title, subtitle, or description only when
+  it adds zero value and merely restates obvious surrounding UI. Labels,
+  details, context, navigation, status, accessibility text, decision support,
+  useful content, and information architecture MUST be preserved.
+- Privacy surfaces in dark mode MUST use dark semantic surfaces rather than
+  bright white cards while preserving legal/privacy copy and its hierarchy.
+
+Completion MUST include focused contrast, spacing, responsive, and preservation
+checks for these surfaces, plus strict OpenSpec validation and `git diff
+--check`.
+
+Completion MUST include static route/API/preservation checks, focused browser
+checks where available, and `git diff --check`; screenshots MAY support visual
+evidence but MUST NOT replace behavior, accessibility, or contract checks.
 
 ## Capabilities
 

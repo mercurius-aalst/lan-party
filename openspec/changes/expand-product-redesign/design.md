@@ -23,6 +23,13 @@ while keeping product surfaces predictable; motion is reserved for hierarchy,
 feedback, and state changes; density stays breathable for event discovery and
 team workflows.
 
+**Preserve-mode boundaries:** Existing fonts, brand palette, logo treatment,
+hero content and assets, landing information architecture, route and anchor
+IDs, and established component details are the baseline. The latest feedback
+pass may change only the explicitly listed copy, motion, contrast, composition,
+availability, match-prose, and registration-entry outcomes. It MUST use the
+existing CSS, JavaScript, Blazor, and MudBlazor stack without adding a package.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -208,8 +215,13 @@ sponsor-tier, winner, loser, podium, blocked, or priority/type distinctions.
 Borders MUST be sparse and purposeful: form boundaries and focus/error states
 remain available, but parent and child surfaces MUST not receive duplicate
 frames when whitespace or a single divider communicates the grouping.
+Dark-mode contrast corrections MUST be made at the owning component selector or
+semantic token and MUST meet WCAG AA without broad global recoloring,
+brand-palette replacement, or broad `!important` overrides. Low-value taglines,
+descriptive filler, and read-only match prose MUST be removed only where they do
+not change a decision, action, or state.
 
-### 9. Restore a full-viewport media-led Home hero
+### 9. Preserve the existing media-led Home hero and vary the follow-on flow
 
 Home will use the existing dynamic tournament image resolver and fallback
 branches in a responsive asymmetric grid. The hero MUST use a
@@ -220,19 +232,27 @@ initial 1440x900, 1280x900, and 390x844 viewports. Object positioning and a
 readable scrim will keep artwork labels and essential copy legible. Decorative
 scroll cues, glow fields, parallax/drift, and non-essential continuous motion
 are removed; reduced-motion behavior leaves content and actions unchanged.
+The hero's existing content and assets MUST remain intact. After the hero,
+Sponsors, Tournaments, Tickets, and Contact MAY use different composition
+families rather than repeating title-content enumeration, while the Tournaments
+overview keeps its general browse layout. Tickets and Contact MUST share one
+responsive final row, retain their existing actions and anchors, and stack in
+reading order on narrow screens.
 
 ### 10. Keep registration and participant identity close to the user's task
 
-Tournament registration will be an accessible popup launched from a concise
-detail-page action. The popup may retain the existing three logical steps for a
-team registration, but selecting an eligible team MUST automatically advance to
-roster selection. Individual registration will be a single action followed by a
-plain-language confirmation, without repeating that the user is an individual.
-Unavailable teams and members will use disabled or status styling plus an icon
-or label and a concise accessible explanation; internal reason codes MUST not
-be displayed as user copy. Any update action will use friendly text or a
-meaningful icon with an accessible name, never an internal phrase such as
-"refresh registration state".
+Tournament registration will retain the existing accessible popup and its
+logical team-registration steps. Selecting an eligible team MUST automatically
+advance to roster selection, and individual registration will remain a single
+action followed by a plain-language confirmation. Unavailable teams and
+members MUST render only a compact visual `Unavailable` state with an icon or
+accessible label; validation reasons, raw reason codes, and explanatory
+paragraphs MUST not be rendered. `Check again`, `live update`, `refresh
+registration state`, and equivalent technical availability controls MUST not be
+rendered, while backend-authoritative refresh behavior remains intact. The
+overview Register action MUST open the existing popup immediately; the detail
+Register action MUST remain a separate detail-page action, and tournament links
+MUST remain canonical GUID routes.
 
 Team management may change its complete composition while preserving every
 existing team, invite, roster, captain, leave, delete, and logo callback. A user
@@ -253,6 +273,37 @@ and priority/type distinctions. The checks MUST cover public, authenticated,
 and administrator routes in mock mode where available. Unavailable Auth0/live
 paths may be documented, but they MUST NOT weaken the route and contract
 preservation requirements.
+
+### 12. Calibrate high-risk surfaces without widening the redesign
+
+The latest review is handled as a preserve-mode calibration pass. Existing
+fonts, brand palette, useful content, field names and order, routes, anchors,
+APIs, authentication/authorization, and the Home hero content/assets remain
+fixed. A title, subtitle, or description is removable only when it adds zero
+value and merely restates obvious surrounding UI. Any label or copy that
+provides context, meaning, navigation, status, accessibility, decision support,
+or useful detail stays in place.
+
+Team detail match cards will use comfortable internal padding, aligned text,
+and enough separation between identity, schedule, result, and action content.
+The private profile email remains an authenticated field and receives a
+readable dark-mode foreground. Dark inputs, selected controls, focus rings, and
+autofill states use dark semantic surfaces with readable text and accents while
+preserving field order, validation, and submission behavior. The Privacy page
+uses the same dark semantic surfaces instead of bright white cards and keeps
+its legal/privacy copy and hierarchy intact.
+
+Info packing cards retain distinct hardware, basic, and optional priority/type
+accents in both themes, with local dark-mode values that meet WCAG AA. Shared
+section spacing is normalized by reducing only excessive gaps and retaining
+comfortable rhythm around headings, controls, and content.
+
+SponsorScroller is treated as content, not decoration. Its outer frame MAY be
+removed only when it contributes no semantic grouping, accessible name,
+interaction boundary, loading/empty/error state, or required anchor. On
+non-Home pages it may use the available content width; Home keeps its existing
+width and composition. All sponsor content, links, labels, and state handling
+remain unchanged.
 
 ## Risks / Trade-offs
 

@@ -79,3 +79,53 @@ move ownership of API-coupled actions or alter their contracts.
 - The Tournaments overview retains its general layout and is excluded from any
   thereality.nl-style structural rewrite. Structural inspiration is limited to
   Home and marketing-oriented surfaces.
+
+## Post-baseline feedback preservation
+
+- Existing fonts, brand palette, logo treatment, hero content/assets, Home
+  section order, route/anchor IDs, and established component details remain the
+  baseline unless an explicit post-baseline outcome changes presentation.
+- Low-value taglines, descriptive filler, and read-only match prose MAY be
+  removed only when they do not change a decision, action, or state. Actions,
+  statuses, schedules, links, loading, empty, and error states remain.
+- Motion uses the existing CSS, JavaScript, Blazor, and MudBlazor stack, has a
+  hierarchy, feedback, storytelling, or state-transition purpose, and has a
+  static or reduced-motion equivalent. No new package is introduced.
+- Dark contrast fixes are local to the owning selector or semantic token and
+  meet WCAG AA. Broad global recoloring, brand-palette replacement, and broad
+  `!important` overrides are prohibited.
+- Home composition MAY vary after the hero, but the five-section IA and hero
+  content/assets remain. Tickets and Contact share one responsive final row,
+  retain their anchors/actions, and stack in reading order on narrow screens.
+- Team/member availability options show only a visual `Unavailable` state with
+  an icon or accessible label. Validation reasons, raw reason codes, and
+  explanatory paragraphs are not rendered.
+- `Check again`, `live update`, `refresh registration state`, and equivalent
+  technical availability controls are not rendered; backend-authoritative
+  refresh behavior remains intact.
+- The overview Register action opens the existing popup immediately; detail
+  Register remains a separate detail action, and GUID tournament routes remain
+  canonical.
+
+## Latest preserve-mode feedback batch
+
+- Existing fonts, brand palette, useful content, form field names/order, routes,
+  anchors, APIs, authentication/authorization, and the Home hero content/assets
+  remain unchanged.
+- Team detail match cards retain match identity, schedule, status, and actions
+  while gaining comfortable internal padding and aligned text.
+- Private profile email remains authenticated and readable in dark mode. Dark
+  input surfaces, focus, selected, and autofill states remain dark and readable
+  without changing form fields, order, labels, validation, or submission.
+- Info packing items retain visible hardware/basic/optional distinctions and
+  WCAG AA dark contrast. Section spacing MAY lose excessive gaps but MUST keep
+  useful breathing room around headings, controls, and content.
+- SponsorScroller framing MAY be removed only when it adds no semantic,
+  accessibility, interaction, state, or anchor value. Non-Home instances MAY
+  use a wider content frame; Home width and composition remain unchanged.
+- Representative headings MAY lose title/subtitle/description copy only when it
+  adds zero value and merely restates obvious surrounding UI. Context, meaning,
+  navigation, status, accessibility, decision support, useful details, and IA
+  remain.
+- Privacy page dark mode uses dark semantic surfaces instead of bright white
+  cards while preserving legal/privacy copy and hierarchy.
