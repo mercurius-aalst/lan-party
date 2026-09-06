@@ -29,24 +29,81 @@
             </div>
         }
 
-        <section class="registration-panel" aria-labelledby="registration-panel-heading">
-            <div class="registration-panel-header">
-                <div>
-                    <span class="section-eyebrow">Registration</span>
-                    <h3 id="registration-panel-heading">Join this tournament</h3>
-                    <p>@GetRegistrationStateMessage()</p>
+        <section id="registration" class="registration-panel brand-section-anchor" aria-labelledby="registration-panel-heading">
+            <div class="registration-entry">
+                <div class="registration-panel-header">
+                    <div>
+                        <span class="section-eyebrow">Registration</span>
+                        <h3 id="registration-panel-heading">Join this tournament</h3>
+                        <p>@GetRegistrationStateMessage()</p>
+                    </div>
+                    @if(_isLoadingRegistration)
+                    {
+                        <span class="registration-loading" role="status">Checking options...</span>
+                    }
                 </div>
-                @if(_isLoadingRegistration)
+
+                @if(IsRegistrationOpen)
                 {
-                    <span class="registration-loading" role="status">Checking options...</span>
+                    <div class="registration-entry-actions">
+                        <button type="button"
+                                class="button-primary registration-open-button"
+                                disabled="@(_isSubmitting || _isLoadingRegistration)"
+                                @onclick="OpenRegistrationDialog">
+                            <span class="bi bi-arrow-up-right-circle" aria-hidden="true"></span>
+                            <span>@GetRegistrationActionLabel()</span>
+                        </button>
+                        @if(_isAuthenticated)
+                        {
+                            <button type="button" class="button-link registration-refresh-button" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)" @onclick="RetryRegistrationContextAsync">Check again</button>
+                        }
+                    </div>
                 }
-                @if(_isAuthenticated && IsRegistrationOpen)
+                else
                 {
-                    <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)" @onclick="RetryRegistrationContextAsync">Refresh registration state</button>
+                    <span class="registration-closed-badge" role="status">
+                        <span class="bi bi-lock" aria-hidden="true"></span>
+                        Registration closed
+                    </span>
                 }
             </div>
+        </section>
 
-            @if(_registrationError is not null)
+        @if(_isRegistrationDialogOpen)
+        {
+            <div class="registration-dialog-overlay"
+                 role="presentation"
+                 @onclick="CloseRegistrationDialogAsync"
+                 @onkeydown="HandleRegistrationDialogKeyDown">
+                <div class="participants-modal-dialog registration-dialog"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="registration-dialog-title"
+                     aria-describedby="registration-dialog-description"
+                     tabindex="-1"
+                     @ref="_registrationDialogElement"
+                     @onclick:stopPropagation>
+                    <button type="button"
+                            class="participants-modal-close"
+                            aria-label="Close registration"
+                            autofocus
+                            @onclick="CloseRegistrationDialogAsync">
+                        <span class="bi bi-x-lg" aria-hidden="true"></span>
+                    </button>
+
+                    <header class="participants-modal-header registration-dialog-header">
+                        <span class="section-eyebrow">Registration</span>
+                        <h2 id="registration-dialog-title">Join @Tournament.Name</h2>
+                        <p id="registration-dialog-description">@GetRegistrationStateMessage()</p>
+                    </header>
+
+                    <div class="registration-dialog-body">
+                        @if(_isLoadingRegistration)
+                        {
+                            <p class="registration-message" role="status">Checking your options...</p>
+                        }
+
+                        @if(_registrationError is not null)
             {
                 <div class="registration-message registration-message--error" role="alert">
                     <p>@_registrationError</p>
@@ -207,14 +264,14 @@
                                     {
                                         <p class="registration-message registration-message--warning">Select an eligible team to continue.</p>
                                     }
-                                        else if(!CanAdvanceFromTeamSelection)
-                                        {
-                                            <p class="registration-message registration-message--warning">This team cannot be used for this tournament: @GetReasonText(_selectedTeamEligibility?.ReasonCodes ?? [])</p>
-                                        }
-                                        @if(_teamEligibilityUnavailable && !_isLoadingTeams)
-                                        {
-                                            <p class="registration-message registration-message--error" role="alert">Team eligibility is unavailable. Retry the team checks before continuing.</p>
-                                        }
+                                    else if(!CanAdvanceFromTeamSelection)
+                                    {
+                                        <p class="registration-message registration-message--warning">This team cannot be used for this tournament: @GetReasonText(_selectedTeamEligibility?.ReasonCodes ?? [])</p>
+                                    }
+                                    @if(_teamEligibilityUnavailable && !_isLoadingTeams)
+                                    {
+                                        <p class="registration-message registration-message--error" role="alert">Team eligibility is unavailable. Retry the team checks before continuing.</p>
+                                    }
                                 </div>
                                 </MudStep>
 
@@ -352,7 +409,6 @@
                                                 }
                                             </div>
                                         }
-                                        <p class="registration-help">The backend performs the final eligibility and authorization check when you save.</p>
                                     }
                                 </div>
                                 </MudStep>
@@ -414,16 +470,18 @@
                     <div>
                         <span class="section-eyebrow">Roster confirmation</span>
                         <p>Your place for <strong>@GetUserLabel(pending.User)</strong>@(currentTeam is null ? string.Empty : $" on {currentTeam.Name}") in <strong>@Tournament.Name</strong> is waiting for your confirmation.</p>
-                        <small class="registration-help">Confirming is still subject to the backend's latest roster and tournament checks.</small>
                     </div>
                     <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
                 </div>
             }
-        </section>
+                    </div>
+                </div>
+            </div>
+        }
 
         @if(_isAdmin)
         {
-            <section class="registration-panel registration-panel--admin" aria-labelledby="admin-registration-heading">
+            <section id="admin-registration" class="registration-panel registration-panel--admin brand-section-anchor" aria-labelledby="admin-registration-heading">
                 <div class="registration-panel-header">
                     <div>
                         <span class="section-eyebrow">Admin</span>
@@ -479,6 +537,7 @@
                  aria-labelledby="participant-details-title"
                  aria-describedby="participant-details-summary"
                  tabindex="-1"
+                 @onkeydown="HandleParticipantDialogKeyDown"
                  @onclick:stopPropagation>
                 <button type="button" class="participants-modal-close" aria-label="Close participant details" @onclick="HidePopup">&times;</button>
                 <div class="participants-modal-header">
@@ -486,8 +545,10 @@
                     <h3 id="participant-details-title">@_selectedParticipant.DisplayName</h3>
                     <p id="participant-details-summary">@GetParticipantModalSummary()</p>
                 </div>
-                <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" />
+                <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" OnUserSelected="DisplayUserPopup" />
             </div>
         </div>
     }
+
+    <UserInfoDialog User="_selectedUser" OnClose="HideUserInfoPopup" />
 </div>

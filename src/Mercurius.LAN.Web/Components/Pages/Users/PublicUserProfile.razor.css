@@ -13,24 +13,22 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: rgba(15, 23, 42, 0.64);
+    color: var(--color-subtle);
     font-size: 0.9rem;
     font-weight: 600;
 }
 
 .public-profile-breadcrumb a {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .public-user-hero {
     display: grid;
     gap: 1rem;
     padding: clamp(1rem, 1.8vw, 1.35rem);
-    border-radius: 20px;
-    background:
-        radial-gradient(circle at 88% 15%, rgba(163, 230, 53, 0.24) 0%, transparent 38%),
-        linear-gradient(145deg, rgba(21, 128, 61, 0.1) 0%, rgba(15, 23, 42, 0.04) 100%),
-        #ffffff;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-raised);
 }
 
 .public-user-hero-identity {
@@ -47,8 +45,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 16px;
-    background: rgba(34, 197, 94, 0.2);
-    color: var(--color-dark-navy);
+    background: rgba(57, 201, 101, 0.18);
+    color: var(--color-ink);
     font-size: clamp(1rem, 2vw, 1.2rem);
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -62,7 +60,7 @@
 .public-user-hero-identity p {
     margin: 0;
     max-width: 44ch;
-    color: rgba(15, 23, 42, 0.72);
+    color: var(--color-muted-text);
 }
 
 .public-user-card {
@@ -89,13 +87,13 @@
     display: grid;
     gap: 0.25rem;
     padding: 0.9rem 1rem;
-    border: 1px solid rgba(15, 23, 42, 0.11);
-    border-radius: 14px;
-    background: rgba(248, 250, 252, 0.95);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
 }
 
 .public-user-panel-label {
-    color: rgba(15, 23, 42, 0.62);
+    color: var(--color-subtle);
     font-size: 0.76rem;
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -103,7 +101,7 @@
 }
 
 .public-user-detail-panel strong {
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-size: 1.15rem;
     overflow-wrap: anywhere;
 }
@@ -127,9 +125,9 @@
     display: grid;
     gap: 0.25rem;
     padding: 0.72rem 0.85rem;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
 }
 
 .public-user-linked-card dt {
@@ -137,7 +135,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: rgba(15, 23, 42, 0.66);
+    color: var(--color-subtle);
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.03em;
@@ -146,7 +144,7 @@
 
 .public-user-linked-card dd {
     margin: 0;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-weight: 700;
     overflow-wrap: anywhere;
 }
@@ -161,6 +159,51 @@
     }
 
     .public-user-identity-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.public-user-card {
+    display: grid;
+    gap: 1rem;
+    border: 0;
+    background: var(--color-surface-raised);
+    box-shadow: none;
+}
+
+.public-user-card-heading p {
+    display: none;
+}
+
+.public-user-identity-grid {
+    margin-top: 0;
+}
+
+.public-user-detail-panel,
+.public-user-linked-card {
+    border: 0;
+    background: var(--color-surface-muted);
+}
+
+.public-user-detail-panel {
+    box-shadow: inset 4px 0 0 var(--color-primary-green);
+}
+
+.public-user-linked-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.public-user-linked-card .bi {
+    color: var(--color-info);
+}
+
+.public-user-avatar {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+@media (max-width: 760px) {
+    .public-user-linked-grid {
         grid-template-columns: 1fr;
     }
 }

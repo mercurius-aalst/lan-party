@@ -9,12 +9,14 @@ using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using MudBlazor;
 using Refit;
 
 namespace Mercurius.LAN.Web.Components.Pages.Tournaments.Tabs;
 
-public partial class TournamentParticipantsTab : IDisposable
+public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 {
     // The backend roster-eligibility endpoint rejects requests with more than 50 user ids.
     private const int MaxRosterEligibilityUserIds = 50;
@@ -29,6 +31,8 @@ public partial class TournamentParticipantsTab : IDisposable
 
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback<TournamentExtended> OnTournamentUpdated { get; set; }
+    [Parameter] public bool RegistrationDialogOpen { get; set; }
+    [Parameter] public EventCallback<bool> RegistrationDialogOpenChanged { get; set; }
 
     [Inject] private ITeamService TeamService { get; set; } = null!;
     [Inject] private ITournamentService TournamentService { get; set; } = null!;
@@ -36,6 +40,7 @@ public partial class TournamentParticipantsTab : IDisposable
     [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ITeamRealtimeService TeamRealtimeService { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
     private readonly List<ParticipantViewModel> _participants = [];
     private readonly List<AdminTournamentRegistrationDTO> _adminRegistrations = [];
@@ -44,6 +49,10 @@ public partial class TournamentParticipantsTab : IDisposable
     private readonly Dictionary<Guid, RosterCandidateEligibilityDTO> _rosterCandidatesById = [];
 
     private ParticipantViewModel? _selectedParticipant;
+    private PublicUserDTO? _selectedUser;
+    private bool _isRegistrationDialogOpen;
+    private ElementReference _registrationDialogElement;
+    private IJSObjectReference? _registrationFocusTrap;
     private CurrentUserTournamentRegistrationStateDTO? _registrationState;
     private EligibilityResponseDTO? _individualEligibility;
     private EligibilityResponseDTO? _selectedTeamEligibility;
@@ -213,6 +222,9 @@ public partial class TournamentParticipantsTab : IDisposable
 
     protected override void OnParametersSet()
     {
+        if(_isRegistrationDialogOpen != RegistrationDialogOpen)
+            _isRegistrationDialogOpen = RegistrationDialogOpen;
+
         var registrationFingerprint = GetRegistrationFingerprint(Tournament);
         if(_loadedTournamentId != Tournament.Id || _loadedRegistrationFingerprint != registrationFingerprint)
         {
@@ -232,6 +244,17 @@ public partial class TournamentParticipantsTab : IDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(_isRegistrationDialogOpen && _registrationFocusTrap is null)
+        {
+            _registrationFocusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "activateTeamModalFocusTrap",
+                _registrationDialogElement);
+        }
+        else if(!_isRegistrationDialogOpen && _registrationFocusTrap is not null)
+        {
+            await DisposeRegistrationFocusTrapAsync();
+        }
+
         if(_hasLoadedForTournament || Tournament.Id == Guid.Empty)
             return;
 
@@ -732,13 +755,69 @@ public partial class TournamentParticipantsTab : IDisposable
 
     private void DisplayParticipantPopup(ParticipantViewModel participant)
     {
+        if(participant.User is { } user)
+        {
+            _selectedParticipant = null;
+            _selectedUser = user;
+            return;
+        }
+
+        _selectedUser = null;
         _selectedParticipant = participant;
+    }
+
+    private void DisplayUserPopup(PublicUserDTO user)
+    {
+        _selectedUser = user;
     }
 
     private void HidePopup()
     {
         _selectedParticipant = null;
+        _selectedUser = null;
     }
+
+    private void HideUserInfoPopup()
+    {
+        _selectedUser = null;
+    }
+
+    private Task HandleParticipantDialogKeyDown(KeyboardEventArgs args)
+    {
+        if(!string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+            return Task.CompletedTask;
+
+        HidePopup();
+        return Task.CompletedTask;
+    }
+
+    private string GetRegistrationActionLabel() =>
+        _registrationState?.IndividualRegistration is not null ||
+        HasCaptainManagedRegistration ||
+        CurrentTeamRegistration is not null
+            ? "Manage registration"
+            : "View registration options";
+
+    private async Task OpenRegistrationDialog()
+    {
+        if(!IsRegistrationOpen || _isSubmitting)
+            return;
+
+        _isRegistrationDialogOpen = true;
+        await RegistrationDialogOpenChanged.InvokeAsync(true);
+    }
+
+    private async Task CloseRegistrationDialogAsync()
+    {
+        _isRegistrationDialogOpen = false;
+        await DisposeRegistrationFocusTrapAsync();
+        await RegistrationDialogOpenChanged.InvokeAsync(false);
+    }
+
+    private Task HandleRegistrationDialogKeyDown(KeyboardEventArgs args) =>
+        !_isSubmitting && string.Equals(args.Key, "Escape", StringComparison.Ordinal)
+            ? CloseRegistrationDialogAsync()
+            : Task.CompletedTask;
 
     private async Task RegisterIndividualAsync()
     {
@@ -1074,7 +1153,12 @@ public partial class TournamentParticipantsTab : IDisposable
             return;
 
         if(_selectedTeamId == teamId && _selectedTeamEligibility is not null)
+        {
+            if(CanAdvanceFromTeamSelection)
+                _activeTeamStep = Math.Max(_activeTeamStep, 1);
+
             return;
+        }
 
         _hasDirtyRosterDraft = false;
         _selectedTeamId = teamId;
@@ -1084,6 +1168,8 @@ public partial class TournamentParticipantsTab : IDisposable
         try
         {
             await LoadSelectedTeamEligibilityAsync(Tournament.Id, generation);
+            if(IsCurrentRequest(Tournament.Id, generation) && CanAdvanceFromTeamSelection)
+                _activeTeamStep = 1;
         }
         finally
         {
@@ -1319,7 +1405,8 @@ public partial class TournamentParticipantsTab : IDisposable
                 title,
                 message,
                 yesText: actionText,
-                noText: "Cancel");
+                noText: "Cancel",
+                options: new DialogOptions { CloseOnEscapeKey = true, DefaultFocus = DefaultFocus.FirstChild });
             return result == true;
         }
         finally
@@ -1388,7 +1475,7 @@ public partial class TournamentParticipantsTab : IDisposable
             return false;
 
         if(updatedTournament is null)
-            throw new InvalidOperationException("The tournament could not be found while refreshing registration state.");
+            throw new InvalidOperationException("The tournament could not be found while loading registration options.");
 
         Tournament = updatedTournament;
         _loadedRegistrationFingerprint = GetRegistrationFingerprint(updatedTournament);
@@ -1643,7 +1730,16 @@ public partial class TournamentParticipantsTab : IDisposable
     private static string GetErrorMessage(Exception exception, string fallback)
     {
         if(exception is ApiException apiException && !string.IsNullOrWhiteSpace(apiException.Content))
-            return apiException.Content!;
+        {
+            var content = apiException.Content!.Trim().Trim('"', '\'');
+            if(content.Contains("duplicate_participation", StringComparison.OrdinalIgnoreCase))
+                return "This player is already in another tournament entry.";
+
+            if(content.Contains("team_already_registered", StringComparison.OrdinalIgnoreCase))
+                return "This team already has a tournament entry.";
+
+            return fallback;
+        }
 
         return fallback;
     }
@@ -1731,10 +1827,33 @@ public partial class TournamentParticipantsTab : IDisposable
         _hasDirtyRosterDraft = false;
     }
 
+    private async ValueTask DisposeRegistrationFocusTrapAsync()
+    {
+        var focusTrap = _registrationFocusTrap;
+        _registrationFocusTrap = null;
+        if(focusTrap is null)
+            return;
+
+        try
+        {
+            await focusTrap.InvokeVoidAsync("dispose");
+            await focusTrap.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
     public void Dispose()
     {
         _isDisposed = true;
         _requestGeneration++;
         TeamRealtimeService.TeamStateInvalidated -= HandleTeamStateInvalidatedAsync;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Dispose();
+        await DisposeRegistrationFocusTrapAsync();
     }
 }

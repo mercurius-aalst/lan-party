@@ -4,13 +4,13 @@
     padding: 0.5rem 0;
     border: 0;
     background: transparent;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-weight: 600;
 }
 
 .brand-nav-link.brand-nav-link--active,
 .brand-nav-links ::deep .brand-nav-link.brand-nav-link--active {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .brand-nav-link::after,
@@ -56,63 +56,63 @@
     gap: 0.5rem;
     height: 2.75rem;
     padding: 0.72rem 1rem;
-    border: 1px solid rgba(15, 23, 42, 0.14);
-    border-radius: 12px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button);
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
     font-weight: 600;
-    box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+    box-shadow: none;
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 .brand-utility-button:hover {
-    border-color: rgba(15, 23, 42, 0.22);
-    background: #f8fafc;
-    color: var(--color-dark-navy);
-    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    box-shadow: none;
     transform: translateY(-1px);
 }
 
 .brand-utility-button:focus-visible {
-    border-color: rgba(21, 128, 61, 0.38);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12), 0 16px 28px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    box-shadow: 0 0 0 3px var(--color-focus);
 }
 
 .brand-utility-button.brand-utility-button--open,
 .brand-utility-button[aria-expanded="true"] {
-    border-color: rgba(15, 23, 42, 0.26);
-    background: #f1f5f9;
-    color: var(--color-dark-navy);
-    box-shadow: 0 14px 24px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    box-shadow: none;
 }
 
 .user-button .user-icon {
     font-size: 1.1rem;
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .nav-user-widget-controls {
     display: flex;
     align-items: stretch;
     width: 100%;
-    border: 1px solid rgba(15, 23, 42, 0.14);
-    border-radius: 12px;
-    background: var(--color-white);
-    box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button);
+    background: var(--color-surface-raised);
+    box-shadow: none;
     transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .nav-user-widget-controls:hover {
-    border-color: rgba(15, 23, 42, 0.22);
-    background: #f8fafc;
-    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    background: var(--color-surface-muted);
+    box-shadow: none;
 }
 
 .nav-user-widget-controls:has(.brand-utility-button--open),
 .nav-user-widget-controls:has(.brand-utility-button[aria-expanded="true"]) {
-    border-color: rgba(15, 23, 42, 0.26);
-    background: #f1f5f9;
-    box-shadow: 0 14px 24px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    background: var(--color-surface-muted);
+    box-shadow: none;
 }
 
 .nav-user-widget-controls .brand-utility-button,
@@ -149,7 +149,7 @@
 }
 
 .nav-widget-notification-button:hover .bi {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .nav-user-widget-controls .brand-utility-button:focus-visible {
@@ -166,9 +166,9 @@
     min-width: 1rem;
     height: 1rem;
     padding-inline: 0.16rem;
-    border: 1px solid var(--color-white);
+    border: 1px solid var(--color-surface-raised);
     border-radius: 999px;
-    background: #dc2626;
+    background: var(--color-danger);
     color: var(--color-white);
     font-size: 0.56rem;
     font-weight: 800;
@@ -194,14 +194,14 @@
     justify-content: space-between;
     gap: 0.75rem;
     padding: 0.4rem 0.45rem;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
 }
 
 .nav-notification-header button,
 .nav-notification-action {
     border: 0;
     background: transparent;
-    color: var(--color-deep-green);
+    color: var(--color-link);
     font-size: 0.78rem;
     font-weight: 700;
 }
@@ -209,7 +209,7 @@
 .nav-notification-empty {
     padding: 0.7rem 0.85rem;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--color-surface);
     color: var(--color-muted-text);
     font-weight: 600;
 }
@@ -222,7 +222,7 @@
     padding: 0.7rem 0.75rem;
     border: 1px solid transparent;
     border-radius: 12px;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--color-surface);
 }
 
 .nav-notification-actions {
@@ -240,32 +240,33 @@
     width: 1.8rem;
     height: 1.8rem;
     border-radius: 999px;
-    color: rgba(15, 23, 42, 0.58);
+    color: var(--color-subtle);
 }
 
 .nav-notification-action:hover {
-    background: rgba(15, 23, 42, 0.08);
-    color: var(--color-dark-navy);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
 }
 
 .nav-notification-action--accept {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .nav-notification-action--decline {
-    color: #b91c1c;
+    color: var(--color-danger);
 }
 
 .nav-notification-item--unread {
-    border-color: rgba(21, 128, 61, 0.22);
-    background: rgba(240, 253, 244, 0.96);
+    border-color: transparent;
+    background: var(--color-success-soft);
+    box-shadow: inset 3px 0 0 var(--color-primary-green);
 }
 
 .nav-notification-item a {
     display: grid;
     gap: 0.15rem;
     min-width: 0;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     text-decoration: none;
 }
 
@@ -286,7 +287,7 @@
     align-items: center;
     min-height: 2.75rem;
     white-space: nowrap;
-    box-shadow: 0 16px 30px rgba(34, 197, 94, 0.24);
+    box-shadow: var(--shadow-brand-hover);
 }
 
 .brand-dev-link {
@@ -295,7 +296,7 @@
     min-height: 2.75rem;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .brand-nav-search {
@@ -313,21 +314,21 @@
     gap: 0.5rem;
     min-height: 2.75rem;
     padding: 0.55rem 0.7rem;
-    border: 1px solid rgba(15, 23, 42, 0.14);
-    border-radius: 12px;
-    background: var(--color-white);
-    box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-button);
+    background: var(--color-surface-raised);
+    box-shadow: none;
     transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
 .nav-search-input-shell:focus-within,
 .nav-search-input-shell--open {
-    border-color: rgba(21, 128, 61, 0.38);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12), 0 16px 28px rgba(15, 23, 42, 0.12);
+    border-color: var(--color-primary-green);
+    box-shadow: 0 0 0 3px var(--color-focus);
 }
 
 .nav-search-icon {
-    color: rgba(15, 23, 42, 0.52);
+    color: var(--color-subtle);
     font-size: 0.95rem;
 }
 
@@ -335,7 +336,7 @@
     width: 100%;
     border: none;
     background: transparent;
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-size: 0.92rem;
     font-weight: 500;
 }
@@ -345,7 +346,7 @@
 }
 
 .nav-search-input::placeholder {
-    color: rgba(15, 23, 42, 0.46);
+    color: var(--color-subtle);
 }
 
 .nav-search-clear-button {
@@ -356,14 +357,14 @@
     height: 1.8rem;
     border: none;
     border-radius: 999px;
-    background: rgba(15, 23, 42, 0.08);
-    color: rgba(15, 23, 42, 0.58);
+    background: var(--color-surface-muted);
+    color: var(--color-subtle);
     transition: background-color 160ms ease, color 160ms ease;
 }
 
 .nav-search-clear-button:hover {
-    background: rgba(15, 23, 42, 0.14);
-    color: rgba(15, 23, 42, 0.78);
+    background: var(--color-surface);
+    color: var(--color-ink);
 }
 
 .nav-search-dropdown {
@@ -375,8 +376,8 @@
     padding: 0.5rem;
     border: 1px solid var(--color-border);
     border-radius: 16px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, #f8fafc 100%);
-    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-brand);
 }
 
 .nav-search-state {
@@ -385,14 +386,14 @@
     gap: 0.55rem;
     padding: 0.72rem 0.75rem;
     border-radius: 12px;
-    color: rgba(15, 23, 42, 0.76);
+    color: var(--color-ink);
     font-size: 0.88rem;
     font-weight: 600;
 }
 
 .nav-search-state--error {
-    background: rgba(220, 38, 38, 0.08);
-    color: #b91c1c;
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
 }
 
 .nav-menu-group {
@@ -415,8 +416,8 @@
     padding: 0.45rem;
     border: 1px solid var(--color-border);
     border-radius: 16px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, #f8fafc 100%);
-    box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-brand);
 }
 
 .info-dropdown {
@@ -432,9 +433,9 @@
     width: 100%;
     padding: 0.7rem 0.85rem;
     border: 1px solid transparent;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.96);
-    color: var(--color-dark-navy);
+    border-radius: var(--radius-button);
+    background: var(--color-surface);
+    color: var(--color-ink);
     text-align: left;
     font-weight: 600;
     transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
@@ -446,32 +447,45 @@
 
 .dropdown-item:hover,
 .dropdown-menu-custom ::deep .dropdown-item:hover {
-    background: #f8fafc;
-    border-color: rgba(15, 23, 42, 0.12);
-    color: var(--color-dark-navy);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
 }
 
 .dropdown-item:focus-visible,
 .dropdown-menu-custom ::deep .dropdown-item:focus-visible {
-    border-color: rgba(21, 128, 61, 0.28);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    box-shadow: 0 0 0 3px var(--color-focus);
     outline: none;
 }
 
 .dropdown-item.dropdown-item--active,
 .dropdown-menu-custom ::deep .dropdown-item.dropdown-item--active {
-    background: #eef2f7;
-    border-color: rgba(15, 23, 42, 0.14);
-    color: var(--color-dark-navy);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1024px) {
+    .brand-nav-shell,
+    .brand-nav-links,
+    .brand-nav-actions {
+        box-sizing: border-box;
+        min-width: 0;
+        width: 100%;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: flex-start !important;
+    }
+
     .brand-nav-shell {
         padding: 1rem;
-        border: 1px solid var(--color-border);
-        border-radius: 22px;
-        background: rgba(255, 255, 255, 0.96);
-        box-shadow: 0 20px 42px rgba(15, 23, 42, 0.14);
+        border: 0;
+        border-radius: var(--radius-card);
+        background: var(--color-surface-raised);
+        box-shadow: var(--shadow-brand);
+    }
+
+    .brand-nav-search {
+        min-width: 0;
+        max-width: none;
     }
 
     .dropdown-menu-custom {

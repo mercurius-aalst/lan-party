@@ -23,7 +23,7 @@
                         {
                             @Participant1Name
                         }
-                        <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "—")]</span>
+                        <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "?")]</span>
                     </span>
                     <span class="match-header-vs">vs</span>
                     <span class="match-header-name">
@@ -35,7 +35,7 @@
                         {
                             @Participant2Name
                         }
-                        <span class="match-header-score">[@(Match.Participant2Score?.ToString() ?? "—")]</span>
+                        <span class="match-header-score">[@(Match.Participant2Score?.ToString() ?? "?")]</span>
                     </span>
                 </h2>
                 <div class="match-summary-badges">
@@ -98,7 +98,7 @@
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
@@ -121,7 +121,7 @@
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
@@ -314,4 +314,5 @@
             }
         </div>
     </div>
+    <UserInfoDialog User="_selectedUser" OnClose="HideUserInfoPopup" />
 </CascadingValue>

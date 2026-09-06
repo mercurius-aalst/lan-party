@@ -6,6 +6,8 @@ using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace Mercurius.LAN.Web.Components.Pages.Teams;
 
@@ -17,7 +19,7 @@ public partial class ManageTeams : IAsyncDisposable
     [Inject] private ITeamNotificationService NotificationService { get; set; } = null!;
     [Inject] private ITeamRealtimeService RealtimeService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
     private CurrentUserTeamSummaryDTO _summary = new();
     private bool _isLoading = true;
@@ -27,6 +29,9 @@ public partial class ManageTeams : IAsyncDisposable
     private bool _isInviteDialogOpen;
     private Guid? _inviteTeamId;
     private string _inviteTeamName = "this team";
+    private PublicUserDTO? _selectedUser;
+    private ElementReference _confirmationDialogElement;
+    private IJSObjectReference? _confirmationFocusTrap;
     private TeamConfirmation? _confirmation;
     private TeamManagementTab _activeTab = TeamManagementTab.Members;
     private readonly Dictionary<Guid, Guid?> _transferSelections = [];
@@ -56,7 +61,21 @@ public partial class ManageTeams : IAsyncDisposable
         }
         catch(Exception)
         {
-            ToastService.ShowWarning("Live team updates are unavailable; team data still refreshes after actions.");
+            ToastService.ShowWarning("Live updates are unavailable. Your changes will still appear after each action.");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(_confirmation is not null && _confirmationFocusTrap is null)
+        {
+            _confirmationFocusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "activateTeamModalFocusTrap",
+                _confirmationDialogElement);
+        }
+        else if(_confirmation is null && _confirmationFocusTrap is not null)
+        {
+            await DisposeConfirmationFocusTrapAsync();
         }
     }
 
@@ -204,12 +223,12 @@ public partial class ManageTeams : IAsyncDisposable
         });
     }
 
-    private async Task ConfirmLeaveAsync(Guid teamId)
+    private async Task ConfirmLeaveAsync(Guid teamId, string teamName)
     {
         _confirmation = new TeamConfirmation(
             "Membership",
             "Leave team",
-            "Leave this team? Backend roster rules may block the action.",
+            $"Leave {teamName}? You can join again if the captain invites you.",
             "Leave",
             async () =>
             {
@@ -255,7 +274,7 @@ public partial class ManageTeams : IAsyncDisposable
         _confirmation = new TeamConfirmation(
             "Roster",
             "Remove member",
-            $"Remove {memberName} from {teamName}? Backend roster rules may block the action.",
+            $"Remove {memberName} from {teamName}?",
             "Remove member",
             async () =>
             {
@@ -275,6 +294,14 @@ public partial class ManageTeams : IAsyncDisposable
     private void CancelConfirmation()
     {
         _confirmation = null;
+    }
+
+    private Task HandleConfirmationKeyDown(KeyboardEventArgs args)
+    {
+        if(string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+            CancelConfirmation();
+
+        return Task.CompletedTask;
     }
 
     private async Task ConfirmPendingActionAsync()
@@ -388,34 +415,19 @@ public partial class ManageTeams : IAsyncDisposable
     private bool IsCaptain(TeamManagementSummaryDTO team) =>
         _summary.CaptainedTeams.Any(candidate => candidate.Id == team.Id);
 
-    private string GetTeamCardShellClass(Guid teamId)
+    private string GetTeamSelectorClass(Guid teamId)
     {
-        var classes = "team-card-shell";
-        return _selectedTeamId == teamId ? $"{classes} team-card-shell--active" : classes;
-    }
-
-    private ParticipantViewModel GetTeamParticipant(TeamManagementSummaryDTO team) =>
-        ParticipantViewModel.FromTeam(new Team
-        {
-            Id = team.Id,
-            Name = team.Name,
-            CaptainUserId = team.CaptainUserId,
-            LogoUrl = team.LogoUrl,
-            Members = team.Members
-        });
-
-    private void SelectTeamParticipant(ParticipantViewModel participant)
-    {
-        SelectTeam(participant.Id);
+        var classes = "team-selector-item";
+        return _selectedTeamId == teamId ? $"{classes} team-selector-item--active" : classes;
     }
 
     private void SelectMemberParticipant(ParticipantViewModel participant)
     {
-        if(participant.User is not { } user || string.IsNullOrWhiteSpace(user.Username))
-            return;
-
-        NavigationManager.NavigateTo($"/users/{Uri.EscapeDataString(user.Username.Trim())}");
+        if(participant.User is { } user)
+            _selectedUser = user;
     }
+
+    private void CloseUserInfoDialog() => _selectedUser = null;
 
     private string GetTabClass(TeamManagementTab tab)
     {
@@ -473,8 +485,16 @@ public partial class ManageTeams : IAsyncDisposable
         }
     }
 
-    private static string GetMemberName(PublicUserDTO member) =>
-        member.Username ?? member.DisplayName ?? "Player";
+    private static string GetMemberName(PublicUserDTO member)
+    {
+        if(!string.IsNullOrWhiteSpace(member.Username))
+            return member.Username.Trim();
+
+        if(!string.IsNullOrWhiteSpace(member.DisplayName))
+            return member.DisplayName.Trim();
+
+        return "Player";
+    }
 
     private static string GetInitials(string value)
     {
@@ -483,12 +503,31 @@ public partial class ManageTeams : IAsyncDisposable
     }
 
     private static string GetErrorMessage(Exception exception) =>
-        exception is TeamServiceException ? exception.Message : exception.Message;
+        exception is TeamServiceException serviceException
+            ? serviceException.Message
+            : "The team action could not be completed right now.";
 
-    public ValueTask DisposeAsync()
+    private async ValueTask DisposeConfirmationFocusTrapAsync()
+    {
+        var focusTrap = _confirmationFocusTrap;
+        _confirmationFocusTrap = null;
+        if(focusTrap is null)
+            return;
+
+        try
+        {
+            await focusTrap.InvokeVoidAsync("dispose");
+            await focusTrap.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
+    public async ValueTask DisposeAsync()
     {
         RealtimeService.TeamStateInvalidated -= RefreshFromSignalAsync;
-        return ValueTask.CompletedTask;
+        await DisposeConfirmationFocusTrapAsync();
     }
 
     private enum TeamManagementTab

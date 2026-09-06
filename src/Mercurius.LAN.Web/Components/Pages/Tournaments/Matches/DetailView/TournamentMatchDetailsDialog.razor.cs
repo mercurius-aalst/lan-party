@@ -2,6 +2,7 @@ using System.Net;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Tournaments;
@@ -63,6 +64,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private DateTime? _deadlineRefreshTriggeredFor;
     private Task? _deadlineRefreshTask;
     private Match? _freshMatchProjection;
+    private PublicUserDTO? _selectedUser;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -96,6 +98,16 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private ParticipantViewModel? GetParticipantById(Guid? participantId) =>
         _participantLookup.Resolve(Match.ParticipationMode, participantId);
+
+    private void DisplayUserPopup(PublicUserDTO user)
+    {
+        _selectedUser = user;
+    }
+
+    private void HideUserInfoPopup()
+    {
+        _selectedUser = null;
+    }
 
     private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;
 

@@ -1,0 +1,86 @@
+@using Mercurius.LAN.Web.DTOs.Users
+@inject IServiceProvider ServiceProvider
+@implements IAsyncDisposable
+
+@if(User is { } user)
+{
+    <div class="user-info-dialog-overlay"
+         role="presentation"
+         @onclick="CloseAsync"
+         @onkeydown="HandleKeyDown">
+        <div class="user-info-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="@DialogTitleId"
+             aria-describedby="@DialogDescriptionId"
+             tabindex="-1"
+             @ref="_dialogElement"
+             @onclick:stopPropagation>
+            <button type="button"
+                    class="user-info-dialog-close"
+                    aria-label="Close player details"
+                    autofocus
+                    @onclick="CloseAsync">
+                <span class="bi bi-x-lg" aria-hidden="true"></span>
+            </button>
+
+            <header class="user-info-dialog-header">
+                <span class="user-info-dialog-eyebrow">Player details</span>
+                <h2 id="@DialogTitleId">@GetDialogTitle(user)</h2>
+                <p id="@DialogDescriptionId">Only details this player has shared are shown.</p>
+            </header>
+
+            @if(HasPublicDetails(user))
+            {
+                <dl class="user-info-dialog-details">
+                    @if(HasValue(user.Firstname))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>First name</dt>
+                            <dd>@user.Firstname!.Trim()</dd>
+                        </div>
+                    }
+                    @if(HasValue(user.Lastname))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>Last name</dt>
+                            <dd>@user.Lastname!.Trim()</dd>
+                        </div>
+                    }
+                    @if(HasValue(user.Username))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>Username</dt>
+                            <dd>@user.Username!.Trim()</dd>
+                        </div>
+                    }
+                    @if(HasValue(user.DiscordId))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>Discord</dt>
+                            <dd>@user.DiscordId!.Trim()</dd>
+                        </div>
+                    }
+                    @if(HasValue(user.SteamId))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>Steam</dt>
+                            <dd>@user.SteamId!.Trim()</dd>
+                        </div>
+                    }
+                    @if(HasValue(user.RiotId))
+                    {
+                        <div class="user-info-dialog-detail">
+                            <dt>Riot</dt>
+                            <dd>@user.RiotId!.Trim()</dd>
+                        </div>
+                    }
+                </dl>
+            }
+            else
+            {
+                <p class="user-info-dialog-empty">No additional public details are available.</p>
+            }
+        </div>
+    </div>
+}

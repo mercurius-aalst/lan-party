@@ -8,6 +8,46 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <base href="/" />
+    <script>
+        (() => {
+            const storageKey = "mercurius-lan-theme";
+            const isTheme = value => value === "light" || value === "dark";
+            const getSystemTheme = () => window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+            const getStoredTheme = () => {
+                try {
+                    return localStorage.getItem(storageKey);
+                }
+                catch {
+                    return null;
+                }
+            };
+            const applyTheme = preference => {
+                const theme = isTheme(preference)
+                    ? preference
+                    : (getSystemTheme() ? "dark" : "light");
+                document.documentElement.dataset.theme = theme;
+                document.documentElement.style.colorScheme = theme;
+                return theme;
+            };
+
+            applyTheme(getStoredTheme());
+            window.lanTheme = {
+                getStored: getStoredTheme,
+                getSystem: getSystemTheme,
+                apply: applyTheme,
+                set: preference => {
+                    try {
+                        localStorage.setItem(storageKey, preference);
+                    }
+                    catch {
+                        // Continue using the in-memory theme when storage is unavailable.
+                    }
+
+                    applyTheme(preference);
+                }
+            };
+        })();
+    </script>
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["Mercurius.LAN.Web.styles.css"]" />
@@ -15,10 +55,7 @@
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
     <ImportMap />
     <link rel="icon" type="image/svg" href="favicon.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <HeadOutlet @rendermode="RenderModeForPage" />
 </head>
 

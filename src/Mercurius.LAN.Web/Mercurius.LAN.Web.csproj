@@ -9,13 +9,17 @@
 
   <ItemGroup>
     <Compile Remove="Components\Pages\Admin\Tabs\**" />
+    <Compile Remove="output\**" />
     <Content Remove="Components\Pages\Admin\Tabs\**" />
+    <Content Remove="output\**" />
     <EmbeddedResource Remove="Components\Pages\Admin\Tabs\**" />
+    <EmbeddedResource Remove="output\**" />
     <None Remove="Components\Pages\Admin\Tabs\**" />
     <Compile Remove="artifacts\**" />
     <Content Remove="artifacts\**" />
     <EmbeddedResource Remove="artifacts\**" />
     <None Remove="artifacts\**" />
+    <None Remove="output\**" />
   </ItemGroup>
 
 	<ItemGroup>

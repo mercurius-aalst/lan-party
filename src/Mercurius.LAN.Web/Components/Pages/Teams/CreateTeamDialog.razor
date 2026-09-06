@@ -1,15 +1,25 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 @if(IsOpen)
 {
     <div class="team-modal-overlay" @onclick="CancelAsync">
-        <div class="team-modal-dialog" @onclick:stopPropagation>
+        <div class="team-modal-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="create-team-dialog-title"
+             aria-describedby="create-team-dialog-description"
+             tabindex="-1"
+             @ref="_dialogElement"
+             @onkeydown="HandleKeyDown"
+            @onclick:stopPropagation>
             <button type="button" class="team-modal-close" aria-label="Close create team dialog" @onclick="CancelAsync">&times;</button>
             <div class="team-modal-header">
-                <span class="section-eyebrow">New Squad</span>
-                <h3>Create team</h3>
-                <p>Name your squad and optionally add a logo.</p>
+                <span class="section-eyebrow">New team</span>
+                <h3 id="create-team-dialog-title">Create team</h3>
+                <p id="create-team-dialog-description">Choose a name and add a logo if you have one.</p>
             </div>
 
             <div class="team-dialog-form-container">
@@ -72,6 +82,8 @@
     private TeamLogoSelection? _logo;
     private string? _error;
     private bool _wasOpen;
+    private ElementReference _dialogElement;
+    private IJSObjectReference? _focusTrap;
 
     protected override void OnParametersSet()
     {
@@ -79,6 +91,18 @@
             Reset();
 
         _wasOpen = IsOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(IsOpen && _focusTrap is null)
+        {
+            _focusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>("activateTeamModalFocusTrap", _dialogElement);
+        }
+        else if(!IsOpen && _focusTrap is not null)
+        {
+            await DisposeFocusTrapAsync();
+        }
     }
 
     private void Reset()
@@ -117,10 +141,34 @@
         await TeamCreated.InvokeAsync(new CreateTeamDialogResult(_model.Name.Trim(), _logo));
     }
 
+    private Task HandleKeyDown(KeyboardEventArgs args) =>
+        string.Equals(args.Key, "Escape", StringComparison.Ordinal)
+            ? CancelAsync()
+            : Task.CompletedTask;
+
     private async Task CancelAsync()
     {
         await Canceled.InvokeAsync();
     }
+
+    private async ValueTask DisposeFocusTrapAsync()
+    {
+        var focusTrap = _focusTrap;
+        _focusTrap = null;
+        if(focusTrap is null)
+            return;
+
+        try
+        {
+            await focusTrap.InvokeVoidAsync("dispose");
+            await focusTrap.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
+    public ValueTask DisposeAsync() => DisposeFocusTrapAsync();
 
     private sealed class CreateTeamFormModel
     {

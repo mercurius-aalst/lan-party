@@ -27,9 +27,8 @@ else
         </div>
     </section>
 
-    <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section">
+    <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section brand-section-anchor">
         <div class="brand-section-shell sponsors-impact-header">
-            <span class="section-eyebrow">Sponsors & Partners</span>
             <h2>Why sponsors matter to the event</h2>
             <p>Partner support helps us run a better LAN for everyone: stronger tournaments, better on-site comfort, and a more memorable community weekend.</p>
         </div>
@@ -69,7 +68,7 @@ else
     }
     else
     {
-        <div id="current-partners" class="sponsors-tier-list">
+        <div id="current-partners" class="sponsors-tier-list brand-section-anchor">
             @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
             {
                 <section class="@GetTierSectionClass(tier)">

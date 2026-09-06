@@ -8,6 +8,9 @@ public partial class ParticipantComponent
     [Parameter] public ParticipantViewModel? Participant { get; set; }
     [Parameter] public string EmptyLabel { get; set; } = "TBD";
     [Parameter] public bool ShowIdentityHeader { get; set; } = true;
+    [Parameter] public EventCallback<PublicUserDTO> OnUserSelected { get; set; }
+
+    private bool CanOpenUserInfo => OnUserSelected.HasDelegate;
 
     private static string GetUserLabel(PublicUserDTO user)
     {
@@ -21,15 +24,7 @@ public partial class ParticipantComponent
         return string.IsNullOrWhiteSpace(fullName) ? "Participant" : fullName;
     }
 
-    private static bool HasPublicUsername(PublicUserDTO user)
-    {
-        return !string.IsNullOrWhiteSpace(user.Username);
-    }
-
-    private static string GetUserProfileHref(PublicUserDTO user)
-    {
-        return $"/users/{Uri.EscapeDataString(user.Username!.Trim())}";
-    }
+    private Task SelectUserAsync(PublicUserDTO user) => OnUserSelected.InvokeAsync(user);
 
     private static string GetTeamProfileHref(Models.Participants.Team team)
     {

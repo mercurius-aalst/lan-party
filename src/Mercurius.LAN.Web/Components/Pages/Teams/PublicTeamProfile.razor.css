@@ -13,24 +13,22 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: rgba(15, 23, 42, 0.64);
+    color: var(--color-subtle);
     font-size: 0.9rem;
     font-weight: 600;
 }
 
 .public-team-breadcrumb a {
-    color: var(--color-deep-green);
+    color: var(--color-link);
 }
 
 .public-team-hero {
     display: grid;
     gap: 1rem;
     padding: clamp(1rem, 1.8vw, 1.35rem);
-    border-radius: 20px;
-    background:
-        radial-gradient(circle at 90% 14%, rgba(34, 197, 94, 0.22) 0%, transparent 44%),
-        linear-gradient(140deg, rgba(15, 23, 42, 0.05) 0%, rgba(34, 197, 94, 0.1) 100%),
-        #ffffff;
+    border-radius: var(--radius-card);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface-raised);
 }
 
 .public-team-hero-identity {
@@ -48,7 +46,7 @@
 .public-team-hero-identity p {
     margin: 0;
     max-width: 44ch;
-    color: rgba(15, 23, 42, 0.72);
+    color: var(--color-muted-text);
 }
 
 .public-team-content-grid {
@@ -72,8 +70,8 @@
 .public-team-empty {
     margin: 1rem 0 0;
     padding: 0.85rem 0.95rem;
-    border: 1px dashed rgba(15, 23, 42, 0.18);
-    border-radius: 12px;
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-control);
     color: var(--color-muted-text);
     font-weight: 600;
 }
@@ -90,11 +88,11 @@
 .public-team-member-link,
 .public-team-tournament-link {
     width: 100%;
-    border: 1px solid rgba(15, 23, 42, 0.12);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.95);
-    color: var(--color-dark-navy);
-    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface);
+    color: var(--color-ink);
+    transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 }
 
 .public-team-member-link {
@@ -115,16 +113,15 @@
 
 .public-team-member-link:hover,
 .public-team-tournament-link:hover {
-    border-color: rgba(15, 23, 42, 0.22);
-    background: #f8fafc;
+    border-color: var(--color-primary-green);
+    background: var(--color-surface-raised);
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
 }
 
 .public-team-member-link:focus-visible,
 .public-team-tournament-link:focus-visible {
-    border-color: rgba(21, 128, 61, 0.28);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    border-color: var(--color-primary-green);
+    box-shadow: 0 0 0 3px rgba(57, 201, 101, 0.26);
     outline: none;
 }
 
@@ -135,8 +132,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    background: rgba(34, 197, 94, 0.18);
-    color: var(--color-dark-navy);
+    background: rgba(57, 201, 101, 0.18);
+    color: var(--color-ink);
     font-size: 0.82rem;
     font-weight: 800;
     letter-spacing: 0.04em;
@@ -156,7 +153,7 @@
 }
 
 .public-team-member-copy span {
-    color: rgba(15, 23, 42, 0.6);
+    color: var(--color-muted-text);
     font-size: 0.8rem;
     font-weight: 600;
 }
@@ -167,9 +164,9 @@
     justify-content: center;
     padding: 0.18rem 0.46rem;
     border-radius: 999px;
-    background: #e8f7ee;
-    border: 1px solid rgba(21, 128, 61, 0.24);
-    color: var(--color-deep-green);
+    background: rgba(6, 117, 42, 0.42);
+    border: 1px solid rgba(57, 201, 101, 0.42);
+    color: var(--color-white);
     font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.03em;
@@ -177,7 +174,7 @@
 }
 
 .public-team-member-arrow {
-    color: rgba(15, 23, 42, 0.45);
+    color: var(--color-subtle);
     font-size: 0.92rem;
 }
 
@@ -195,5 +192,61 @@
 
     .public-team-hero {
         border-radius: 16px;
+    }
+}
+
+.public-team-hero,
+.public-team-card {
+    border: 0;
+    background: var(--color-surface-raised);
+    box-shadow: none;
+}
+
+.public-team-card {
+    display: grid;
+    gap: 1rem;
+}
+
+.public-team-member-list,
+.public-team-tournament-list {
+    margin-top: 0;
+}
+
+.public-team-member-link,
+.public-team-tournament-link {
+    border: 0;
+    background: var(--color-surface-muted);
+}
+
+.public-team-member-link:hover,
+.public-team-tournament-link:hover {
+    border-color: transparent;
+    background: var(--color-success-soft);
+}
+
+.public-team-member-avatar {
+    background: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+.public-team-captain-badge {
+    border: 0;
+    background: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+.public-team-tournament-link .bi {
+    color: var(--color-info);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .public-team-member-link,
+    .public-team-tournament-link {
+        transition: none;
+    }
+
+    .public-team-member-link:hover,
+    .public-team-tournament-link:hover {
+        transform: none;
     }
 }
