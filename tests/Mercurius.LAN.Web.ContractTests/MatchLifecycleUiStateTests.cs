@@ -98,13 +98,13 @@ public sealed class MatchLifecycleUiStateTests
     [Theory]
     [InlineData(
         "ConfirmEnded",
-        "Match-end confirmation is no longer available in the authoritative match state.")]
+        "Match-end confirmation is no longer available.")]
     [InlineData(
         "SubmitScore",
-        "Score submission is no longer available in the authoritative match state.")]
+        "Score submission is no longer available.")]
     [InlineData(
         "Forfeit",
-        "Forfeiting this match is no longer available for your side in the authoritative state.")]
+        "Forfeiting is no longer available for your side.")]
     public void BlockedReason_ForParticipantActions_IsActionSpecific(
         string actionName,
         string expectedMessage)

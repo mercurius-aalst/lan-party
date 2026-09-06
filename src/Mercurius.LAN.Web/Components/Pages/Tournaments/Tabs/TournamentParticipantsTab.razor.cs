@@ -33,6 +33,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     [Parameter] public EventCallback<TournamentExtended> OnTournamentUpdated { get; set; }
     [Parameter] public bool RegistrationDialogOpen { get; set; }
     [Parameter] public EventCallback<bool> RegistrationDialogOpenChanged { get; set; }
+    [Parameter] public bool PopupOnly { get; set; }
 
     [Inject] private ITeamService TeamService { get; set; } = null!;
     [Inject] private ITournamentService TournamentService { get; set; } = null!;
@@ -480,9 +481,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             }
             catch(Exception)
             {
-                // Registration remains usable through the explicit refresh and mutation paths.
-                if(IsCurrentRequest(tournamentId, generation))
-                    _teamError ??= "Live team updates are unavailable; registration state still refreshes after actions.";
+                // Registration remains usable through its normal load and mutation paths.
             }
 
             if(!IsCurrentRequest(tournamentId, generation))
@@ -1032,7 +1031,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     if(IsCurrentRequest(tournamentId, requestGeneration))
                     {
                         _registrationError =
-                            "The registration was saved, but the displayed registration state could not be refreshed. Try again.";
+                            "Your registration was saved. Updated details are temporarily unavailable.";
                         ToastService.ShowWarning(_registrationError);
                     }
                 }
@@ -1041,7 +1040,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _registrationError = $"The registration was saved, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
+                    _registrationError = $"Your registration was saved. Updated details are temporarily unavailable. ({GetErrorMessage(exception, "loading failed")})";
                     ToastService.ShowWarning(_registrationError);
                 }
             }
@@ -1131,7 +1130,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _adminError = $"The registration was removed, but this page could not refresh. Try again. ({GetErrorMessage(exception, "refresh failed")})";
+                    _adminError = $"The registration was removed. The updated participant list is temporarily unavailable. ({GetErrorMessage(exception, "loading failed")})";
                     ToastService.ShowWarning(_adminError);
                 }
             }
@@ -1303,12 +1302,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = "Your account is not authorized to re-check registration state.";
+                _registrationError = "Your account is not authorized to manage this registration.";
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = GetErrorMessage(exception, "Registration state could not be revalidated. Try again.");
+                _registrationError = GetErrorMessage(exception, "Registration options are unavailable right now.");
         }
         finally
         {
@@ -1339,12 +1338,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = "Your account is not authorized to re-check registration state.";
+                _registrationError = "Your account is not authorized to manage this registration.";
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = GetErrorMessage(exception, "Registration state could not be revalidated. Try again.");
+                _registrationError = GetErrorMessage(exception, "Registration options are unavailable right now.");
         }
         finally
         {
@@ -1356,36 +1355,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         }
 
         return false;
-    }
-
-    private async Task RetryRegistrationContextAsync()
-    {
-        if(_isSubmitting || _isLoadingRegistration || Tournament.Id == Guid.Empty)
-            return;
-
-        _hasLoadedForTournament = true;
-        await LoadRegistrationContextAsync(preserveRosterDraft: true);
-    }
-
-    private async Task RetryTeamRegistrationAsync()
-    {
-        if(_isSubmitting || _isLoadingRegistration || Tournament.Id == Guid.Empty)
-            return;
-
-        _hasLoadedForTournament = true;
-        await LoadRegistrationContextAsync(preserveRosterDraft: true);
-    }
-
-    private async Task RetryRosterEligibilityAsync()
-    {
-        if(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || SelectedTeam is null)
-            return;
-
-        var tournamentId = Tournament.Id;
-        var generation = ++_requestGeneration;
-        _teamError = null;
-        _rosterEligibilityUnavailable = false;
-        await RefreshRosterEligibilityAsync(tournamentId, generation, includeCandidateReasons: true);
     }
 
     private async Task<bool> ConfirmMutationAsync(
@@ -1451,7 +1420,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _teamError = GetErrorMessage(exception, "Team registration state could not be refreshed. Try again.");
+                _teamError = GetErrorMessage(exception, "Your team options are unavailable right now.");
         }
         finally
         {

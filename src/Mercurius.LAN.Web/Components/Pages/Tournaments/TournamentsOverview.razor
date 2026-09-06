@@ -1,5 +1,6 @@
 @page "/tournaments"
 @using Mercurius.LAN.Web.Components.Shared
+@using Mercurius.LAN.Web.Components.Pages.Tournaments.Tabs
 @using Mercurius.LAN.Web.Extensions
 @using Mercurius.LAN.Web.Models.Tournaments
 @using Microsoft.AspNetCore.Components.Authorization
@@ -149,7 +150,7 @@ else
 
                     <div class="brand-tournament-card-actions tournaments-card-actions grid gap-3">
                         <button type="button" class="button-secondary" @onclick="() => NavigateToTournamentDetail(tournament.Id)">View Details</button>
-                        <button type="button" class="button-primary" disabled="@(!CanRegister(tournament))" @onclick="() => NavigateToRegister(tournament)">
+                        <button type="button" class="button-primary" disabled="@(!CanRegister(tournament))" @onclick="() => OpenRegistration(tournament)">
                             @(CanRegister(tournament) ? "Register" : "Registration Closed")
                         </button>
                     </div>
@@ -174,6 +175,15 @@ else
         @if(_isAddTournamentDialogOpen)
         {
             <AddTournamentDialog OnClose="CloseAddTournamentDialog" />
+        }
+
+        @if(_registrationTournament is not null)
+        {
+            <TournamentParticipantsTab @key="_registrationTournament.Id"
+                                       Tournament="_registrationTournament"
+                                       PopupOnly="true"
+                                       RegistrationDialogOpen="_isRegistrationDialogOpen"
+                                       RegistrationDialogOpenChanged="HandleRegistrationDialogOpenChanged" />
         }
 
     </section>

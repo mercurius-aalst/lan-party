@@ -1170,6 +1170,39 @@ html[data-theme="dark"] .home-hero-wordmark {
     content: url("/img/lan_logo_wide_light.svg");
 }
 
+/* Keep the packing priorities legible without changing their light-theme palette. */
+html[data-theme="dark"] .info-page .packing-item--hardware {
+    --packing-accent: #8bd6ad;
+    --packing-tint: rgba(139, 214, 173, 0.18);
+}
+
+html[data-theme="dark"] .info-page .packing-item--basic {
+    --packing-accent: #f2c36e;
+    --packing-tint: rgba(242, 195, 110, 0.18);
+}
+
+html[data-theme="dark"] .info-page .packing-item--optional {
+    --packing-accent: #9cc4e5;
+    --packing-tint: rgba(156, 196, 229, 0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .info-page .packing-item--hardware {
+        --packing-accent: #8bd6ad;
+        --packing-tint: rgba(139, 214, 173, 0.18);
+    }
+
+    :root:not([data-theme]) .info-page .packing-item--basic {
+        --packing-accent: #f2c36e;
+        --packing-tint: rgba(242, 195, 110, 0.18);
+    }
+
+    :root:not([data-theme]) .info-page .packing-item--optional {
+        --packing-accent: #9cc4e5;
+        --packing-tint: rgba(156, 196, 229, 0.18);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
