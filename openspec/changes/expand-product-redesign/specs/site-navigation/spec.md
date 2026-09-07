@@ -66,6 +66,35 @@ existing route, anchor, search, and keyboard contracts.
 - **AND** the links MUST target existing route fragments or callbacks rather
   than inventing an unimplemented destination
 
+### Requirement: Temporary organizer menus dismiss predictably
+
+The administrator menu MUST close when an organizer destination is selected,
+when the pointer interacts outside the menu, or when the user presses Escape.
+The menu MUST expose accurate expanded and controlled semantics without
+changing administrator authorization or destination routes.
+
+#### Scenario: Admin selects the current organizer destination
+
+- **WHEN** an administrator selects an organizer menu item, including while
+  already on that item's route
+- **THEN** the menu MUST close after the selection
+- **AND** the existing route and authorization behavior MUST remain unchanged
+
+#### Scenario: Admin interacts outside the menu
+
+- **WHEN** an administrator presses or clicks outside the Admin trigger and
+  menu
+- **THEN** the menu MUST close
+- **AND** pressing or clicking inside the trigger or menu MUST NOT be treated as
+  an outside interaction
+
+#### Scenario: Admin dismisses with Escape
+
+- **WHEN** the Admin menu is open and the administrator presses Escape
+- **THEN** the menu MUST close
+- **AND** focus SHOULD return to the Admin trigger
+- **AND** the trigger's `aria-expanded` state MUST return to `false`
+
 ### Requirement: Theme preference supports system default and explicit modes
 
 The shell SHALL provide an accessible light/dark theme choice while keeping one

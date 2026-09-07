@@ -282,3 +282,10 @@
        deletion confirmation. Verify trim/case behavior, unsaved-edit isolation,
        accessibility, preserved handlers, responsive layout, build, and focused
        tests.
+- [x] 11.22 Make the authorized Admin dropdown close after organizer-item
+       activation, outside pointer interaction, and Escape, with accurate
+       `aria-expanded`/`aria-controls` semantics and focus restoration to the
+       trigger where supported. Preserve authorization, route behavior, and all
+       other navigation, search, account, Info, and mobile interactions. Add
+       focused markup/JavaScript contract coverage and validate the web build,
+       tests, OpenSpec, and diff.

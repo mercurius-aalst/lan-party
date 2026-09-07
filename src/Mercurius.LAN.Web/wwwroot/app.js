@@ -66,6 +66,35 @@ function addNavMenuOutsideClickListener(elementId, dotNetHelper) {
     };
 }
 
+function addNavAdminMenuListener(elementId, dotNetHelper) {
+    const listener = (event) => {
+        const element = document.getElementById(elementId);
+
+        if (event.type === 'keydown' && event.key === 'Escape') {
+            event.preventDefault();
+            dotNetHelper.invokeMethodAsync('CloseAdminDropdown', true).catch(() => {});
+            return;
+        }
+
+        const eventPath = event.composedPath ? event.composedPath() : [];
+        if (!element || element.contains(event.target) || eventPath.includes(element)) {
+            return;
+        }
+
+        dotNetHelper.invokeMethodAsync('CloseAdminDropdown', false).catch(() => {});
+    };
+
+    document.addEventListener('pointerdown', listener, true);
+    document.addEventListener('keydown', listener, true);
+
+    return {
+        dispose: () => {
+            document.removeEventListener('pointerdown', listener, true);
+            document.removeEventListener('keydown', listener, true);
+        }
+    };
+}
+
 function activateTeamModalFocusTrap(dialog) {
     if (!dialog) {
         return { dispose: () => {} };

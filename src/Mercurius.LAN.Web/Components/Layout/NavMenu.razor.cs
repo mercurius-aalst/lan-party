@@ -16,6 +16,9 @@ public partial class NavMenu : IAsyncDisposable
     private const int MinimumSearchQueryLength = 3;
     private const string SearchContainerElementId = "global-nav-search-container";
     private const string AccountMenuContainerElementId = "account-nav-menu-container";
+    private const string AdminMenuContainerElementId = "admin-nav-menu-container";
+    private const string AdminMenuTriggerElementId = "admin-nav-menu-trigger";
+    private const string AdminMenuElementId = "admin-nav-menu";
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
@@ -53,7 +56,9 @@ public partial class NavMenu : IAsyncDisposable
     private CancellationTokenSource? _searchCancellationTokenSource;
     private IJSObjectReference? _searchOutsideClickListener;
     private IJSObjectReference? _accountMenuOutsideClickListener;
+    private IJSObjectReference? _adminMenuOutsideClickListener;
     private DotNetObjectReference<NavMenu>? _searchOutsideClickReference;
+    private ElementReference _adminMenuTrigger;
     private string? _loadedIdentityKey;
     private string? _currentProfileUsername;
 
@@ -133,6 +138,19 @@ public partial class NavMenu : IAsyncDisposable
         else if(!_isUserMenuVisible && !_isNotificationMenuVisible && _accountMenuOutsideClickListener != null)
         {
             await DisposeAccountMenuOutsideClickListenerAsync();
+        }
+
+        if(_isDropdownVisible && _adminMenuOutsideClickListener == null)
+        {
+            _searchOutsideClickReference ??= DotNetObjectReference.Create(this);
+            _adminMenuOutsideClickListener = await JSRuntime.InvokeAsync<IJSObjectReference>(
+                "addNavAdminMenuListener",
+                AdminMenuContainerElementId,
+                _searchOutsideClickReference);
+        }
+        else if(!_isDropdownVisible && _adminMenuOutsideClickListener != null)
+        {
+            await DisposeAdminMenuOutsideClickListenerAsync();
         }
     }
 
@@ -366,6 +384,22 @@ public partial class NavMenu : IAsyncDisposable
         });
     }
 
+    [JSInvokable]
+    public async Task CloseAdminDropdown(bool restoreFocus = false)
+    {
+        if(!_isDropdownVisible)
+            return;
+
+        await InvokeAsync(async () =>
+        {
+            _isDropdownVisible = false;
+            StateHasChanged();
+
+            if(restoreFocus)
+                await _adminMenuTrigger.FocusAsync();
+        });
+    }
+
     private void CloseSearchDropdown(bool clearResults, bool clearQuery)
     {
         CancelPendingSearch();
@@ -537,6 +571,24 @@ public partial class NavMenu : IAsyncDisposable
         }
     }
 
+    private async ValueTask DisposeAdminMenuOutsideClickListenerAsync()
+    {
+        var listener = _adminMenuOutsideClickListener;
+        _adminMenuOutsideClickListener = null;
+
+        if(listener == null)
+            return;
+
+        try
+        {
+            await listener.InvokeVoidAsync("dispose");
+            await listener.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
     public async ValueTask DisposeAsync()
     {
         NotificationService.Changed -= HandleNotificationsChangedAsync;
@@ -544,6 +596,7 @@ public partial class NavMenu : IAsyncDisposable
         CancelPendingSearch();
         await DisposeSearchOutsideClickListenerAsync();
         await DisposeAccountMenuOutsideClickListenerAsync();
+        await DisposeAdminMenuOutsideClickListenerAsync();
         _searchOutsideClickReference?.Dispose();
     }
 
