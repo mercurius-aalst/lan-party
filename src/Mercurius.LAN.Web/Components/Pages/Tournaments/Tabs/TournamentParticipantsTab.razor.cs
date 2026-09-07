@@ -1646,7 +1646,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         {
             return _registrationState?.IndividualRegistration is not null
                 ? "Your individual registration is active."
-                : "Register yourself while the tournament is scheduled.";
+                : "Join the tournament.";
         }
 
         if(HasCaptainManagedRegistration)
@@ -1654,7 +1654,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
         return CurrentTeamRegistration?.Team is { } team
             ? $"You are registered on {team.Name}; roster changes belong to its captain."
-            : "Team captains can submit an eligible roster. Every selected non-captain must confirm.";
+            : "Choose your team and lineup to join the tournament.";
     }
 
     private static string GetCurrentTeamRegistrationStatusText(TournamentRegistrationStatus status) => status switch
