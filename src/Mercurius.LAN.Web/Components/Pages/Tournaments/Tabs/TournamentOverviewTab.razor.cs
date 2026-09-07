@@ -69,7 +69,7 @@ public partial class TournamentOverviewTab
     private string GetRegistrationStateLabel()
     {
         if(Tournament.Status != TournamentStatus.Scheduled)
-            return "Closed after tournament start";
+            return "Closed";
 
         var activeRegistrationCount = Tournament.Registrations?.Count(registration =>
             registration.Status == TournamentRegistrationStatus.Active) ?? 0;
