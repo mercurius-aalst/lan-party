@@ -1274,6 +1274,30 @@ html[data-theme="dark"] .home-hero-wordmark {
     color: var(--color-muted-text);
 }
 
+#home-sponsors .home-sponsors-cta {
+    --brand-button-secondary-background: transparent;
+    --brand-button-secondary-border: transparent;
+    --brand-button-secondary-color: var(--color-link);
+    --brand-button-secondary-shadow: none;
+    --brand-button-secondary-hover-background: var(--color-neutral-soft);
+    --brand-button-secondary-hover-border: transparent;
+    --brand-button-secondary-hover-color: var(--color-ink);
+    --brand-button-secondary-hover-shadow: none;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+#home-sponsors .home-sponsors-cta:focus-visible {
+    border-color: transparent;
+    box-shadow: 0 0 0 3px var(--color-focus);
+}
+
+html[data-theme="light"] #home-sponsors .sponsor-scroller__logo {
+    padding: 0;
+    background: var(--color-surface);
+}
+
 /* Keep the packing priorities legible without changing their light-theme palette. */
 html[data-theme="dark"] .info-page .packing-item--hardware {
     --packing-accent: #8bd6ad;
