@@ -13,7 +13,7 @@
 .Tournament-editor-modal-dialog {
     position: relative;
     display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     gap: 1.35rem;
     width: min(56rem, calc(100vw - 2rem));
     max-height: min(92vh, 58rem);
@@ -55,17 +55,6 @@
 .Tournament-editor-form-container::-webkit-scrollbar-thumb:hover {
     background: var(--color-subtle);
     background-clip: content-box;
-}
-
-.Tournament-editor-modal-header {
-    display: grid;
-    gap: 0.35rem;
-    padding-inline: clamp(0.35rem, 1.5vw, 0.85rem);
-}
-
-.Tournament-editor-modal-header h3,
-.Tournament-editor-modal-header p {
-    margin: 0;
 }
 
 .Tournament-editor-modal-close {
@@ -274,8 +263,7 @@
         max-height: calc(100vh - 1.5rem);
     }
 
-    .Tournament-editor-form-container,
-    .Tournament-editor-modal-header {
+    .Tournament-editor-form-container {
         padding-inline: 0.65rem;
     }
 
