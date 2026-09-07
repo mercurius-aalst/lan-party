@@ -33,7 +33,7 @@
 
 .participant-score {
     font-size: 1.1em;
-    color: var(--color-link);
+    color: var(--color-ink);
     margin-left: 0.5em;
     text-align: right;
 }
