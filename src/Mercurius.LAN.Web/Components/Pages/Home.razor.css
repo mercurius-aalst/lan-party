@@ -31,10 +31,10 @@
             rgba(5, 1, 11, 0.02) 12%,
             rgba(7, 12, 24, 0.08) 28%,
             rgba(16, 28, 42, 0.22) 46%,
-            rgba(78, 97, 116, 0.42) 64%,
-            rgba(164, 180, 195, 0.66) 80%,
-            rgba(226, 231, 237, 0.9) 94%,
-            #f3f4f6 100%);
+            color-mix(in srgb, var(--color-canvas) 42%, transparent) 64%,
+            color-mix(in srgb, var(--color-canvas) 66%, transparent) 80%,
+            color-mix(in srgb, var(--color-canvas) 90%, transparent) 94%,
+            var(--color-canvas) 100%);
     pointer-events: none;
     z-index: 1;
 }
@@ -50,8 +50,8 @@
         linear-gradient(
             180deg,
             rgba(243, 244, 246, 0) 0%,
-            rgba(243, 244, 246, 0.18) 48%,
-            rgba(243, 244, 246, 0.82) 100%);
+            color-mix(in srgb, var(--color-canvas) 18%, transparent) 48%,
+            color-mix(in srgb, var(--color-canvas) 82%, transparent) 100%);
     animation: home-hero-fade-breathe 5.8s ease-in-out infinite;
     filter: blur(30px);
     opacity: 0.78;
