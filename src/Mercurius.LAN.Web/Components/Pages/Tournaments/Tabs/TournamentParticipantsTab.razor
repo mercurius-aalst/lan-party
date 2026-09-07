@@ -281,16 +281,13 @@
                                             <div class="registration-roster-list">
                                                 @foreach(var member in EditableRosterCandidates)
                                                 {
-                                                    var candidate = GetRosterCandidate(member.Id);
                                                     var selected = _selectedRosterUserIds.Contains(member.Id);
-                                                    var isCurrentTeamMember = IsCurrentTeamMember(member.Id);
                                                     var isCaptain = member.Id == SelectedTeam.CaptainUserId;
-                                                    var blocked = candidate is { Eligible: false } && !IsExistingRosterConflictAllowed(member.Id, candidate);
-                                                    var unavailable = blocked || !isCurrentTeamMember;
-                                                    <label class="registration-roster-member @(blocked ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
+                                                    var unavailable = !_isLoadingRoster && !CanSelectRosterMember(member.Id);
+                                                    <label class="registration-roster-member @(unavailable ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
                                                         <input type="checkbox"
                                                                checked="@selected"
-                                                               disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || isCaptain || (!selected && blocked))"
+                                                               disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || isCaptain || unavailable)"
                                                                aria-label="@($"{GetUserLabel(member)}{(isCaptain ? ", captain" : string.Empty)}{(unavailable ? ", unavailable" : string.Empty)}")"
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
@@ -341,6 +338,7 @@
                                 <div class="registration-step-content">
                                     @if(SelectedTeam is not null)
                                     {
+                                        var reviewRosterUserIds = BuildRosterRequest().UserIds.ToHashSet();
                                         <h4>Review @SelectedTeam.Name</h4>
                                         <dl class="registration-review-list">
                                             <div>
@@ -349,7 +347,7 @@
                                             </div>
                                             <div>
                                                 <dt>Selected roster</dt>
-                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => _selectedRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
+                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => reviewRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
                                             </div>
                                             <div>
                                                 <dt>Confirmation</dt>

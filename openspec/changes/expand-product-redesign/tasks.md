@@ -263,3 +263,9 @@
 - [ ] 11.18 Run focused computed-style, copy, spacing, responsive, contrast,
        route/API/auth, and form-order checks for this batch. Keep fonts, brand
        palette, useful content, Home hero, and all existing contracts intact.
+- [x] 11.19 Preserve unavailable roster members in the team-registration list as
+       visible, initially unchecked, non-selectable/disabled `Unavailable`
+       options; exclude them from restored or realtime-preserved drafts and
+       submitted rosters while preserving eligible-member, captain, and team
+       selection semantics. Verify accessibility, build/tests, static checks,
+       draft restoration, realtime refresh, and submission exclusion.

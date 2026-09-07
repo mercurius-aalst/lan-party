@@ -163,8 +163,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private bool HasLocalRosterShape =>
         SelectedTeam is not null &&
         RequiredTeamSize > 0 &&
-        _selectedRosterUserIds.Count == RequiredTeamSize &&
-        _selectedRosterUserIds.Contains(SelectedTeam.CaptainUserId);
+        GetNormalizedRosterSelection().Count == RequiredTeamSize &&
+        GetNormalizedRosterSelection().Contains(SelectedTeam.CaptainUserId);
 
     private bool IsRosterEligibleForWorkflow =>
         _rosterEligibility is not null &&
@@ -173,7 +173,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
           _rosterEligibility.ReasonCodes.Count > 0 &&
           _rosterEligibility.ReasonCodes.All(IsExistingRegistrationConflictCode) &&
           _rosterEligibility.Candidates.All(candidate =>
-              candidate.Eligible || IsExistingRosterConflictAllowed(candidate.UserId, candidate))));
+              candidate.Eligible || IsExistingRosterConflictAllowed(candidate.UserId, candidate, GetExistingRosterUserIds()))));
 
     private bool CanSubmitRoster =>
         IsRegistrationOpen &&
@@ -209,9 +209,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private bool HasPublicParticipants => _participants.Count > 0;
 
     private bool HasDirtyRosterDraft => _hasDirtyRosterDraft;
-
-    private bool IsCurrentTeamMember(Guid userId) =>
-        (SelectedTeam?.Members ?? []).Any(member => member.Id == userId);
 
     private string LoginUrl =>
         $"/account/login?returnUrl={Uri.EscapeDataString($"/tournaments/{Tournament.Id}#tournament-participants")}";
@@ -599,10 +596,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 var teamMembers = SelectedTeam.Members ?? [];
                 if(teamMembers.Any(member => member.Id == SelectedTeam.CaptainUserId))
                     _selectedRosterUserIds.Add(SelectedTeam.CaptainUserId);
-
-                var remainingSlots = Math.Max(RequiredTeamSize - _selectedRosterUserIds.Count, 0);
-                foreach(var member in teamMembers.Where(member => member.Id != SelectedTeam.CaptainUserId).Take(remainingSlots))
-                    _selectedRosterUserIds.Add(member.Id);
             }
 
             if((keepDraft || CaptainManagedRegistration is not null) && SelectedTeam.CaptainUserId != Guid.Empty)
@@ -620,7 +613,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                         RequiredTeamSize);
             }
 
-            await RefreshRosterEligibilityAsync(tournamentId, generation, includeCandidateReasons: true);
+            await RefreshRosterEligibilityAsync(
+                tournamentId,
+                generation,
+                includeCandidateReasons: true,
+                autofillEligibleMembers: !keepDraft && CaptainManagedRegistration is null);
         }
         catch(Exception exception) when(IsUnauthorized(exception))
         {
@@ -643,7 +640,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private async Task RefreshRosterEligibilityAsync(
         Guid tournamentId,
         long generation,
-        bool includeCandidateReasons = false)
+        bool includeCandidateReasons = false,
+        bool autofillEligibleMembers = false)
     {
         if(!IsCurrentRequest(tournamentId, generation))
             return;
@@ -697,6 +695,24 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
                         MergeRosterCandidateEligibility(candidateEligibility.Candidates);
                     }
+                }
+            }
+
+            if(autofillEligibleMembers)
+            {
+                var selectedBeforeAutofill = _selectedRosterUserIds.ToHashSet();
+                NormalizeSelectedRoster(autofillEligibleMembers: true);
+                if(!selectedBeforeAutofill.SetEquals(_selectedRosterUserIds))
+                {
+                    var autofilledEligibility = await TournamentService.CheckTeamRosterEligibilityAsync(
+                        tournamentId,
+                        SelectedTeam.Id,
+                        BuildRosterRequest());
+                    if(!IsCurrentRequest(tournamentId, generation))
+                        return;
+
+                    _rosterEligibility = autofilledEligibility;
+                    MergeRosterCandidateEligibility(autofilledEligibility.Candidates);
                 }
             }
         }
@@ -1188,7 +1204,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
     private async Task ToggleRosterMemberAsync(Guid userId, ChangeEventArgs args)
     {
-        if(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || SelectedTeam?.CaptainUserId == userId)
+        NormalizeSelectedRoster();
+        if(_isSubmitting ||
+           _isLoadingRegistration ||
+           _isLoadingRoster ||
+           SelectedTeam?.CaptainUserId == userId ||
+           !CanSelectRosterMember(userId))
             return;
 
         if(args.Value is bool selected && selected)
@@ -1266,7 +1287,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private SubmitTeamRosterDTO BuildRosterRequest() => new()
     {
         TeamId = SelectedTeam?.Id ?? Guid.Empty,
-        UserIds = _selectedRosterUserIds.ToArray()
+        UserIds = GetNormalizedRosterSelection().ToArray()
     };
 
     private async Task<bool> RevalidateRosterBeforeSubmitAsync(
@@ -1523,15 +1544,23 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
     private void MergeRosterCandidateEligibility(IEnumerable<RosterCandidateEligibilityDTO>? candidates)
     {
+        MergeRosterCandidateEligibility(_rosterCandidatesById, candidates);
+        NormalizeSelectedRoster();
+    }
+
+    internal static void MergeRosterCandidateEligibility(
+        IDictionary<Guid, RosterCandidateEligibilityDTO> candidatesById,
+        IEnumerable<RosterCandidateEligibilityDTO>? candidates)
+    {
         foreach(var candidate in (candidates ?? []).OrderBy(candidate => candidate.UserId))
         {
-            if(!_rosterCandidatesById.TryGetValue(candidate.UserId, out var existing))
+            if(!candidatesById.TryGetValue(candidate.UserId, out var existing))
             {
-                _rosterCandidatesById[candidate.UserId] = candidate;
+                candidatesById[candidate.UserId] = candidate;
                 continue;
             }
 
-            _rosterCandidatesById[candidate.UserId] = new RosterCandidateEligibilityDTO
+            candidatesById[candidate.UserId] = new RosterCandidateEligibilityDTO
             {
                 UserId = candidate.UserId,
                 User = existing.User ?? candidate.User,
@@ -1584,16 +1613,111 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         (_registrationState?.CaptainManagedRegistrations ?? [])
             .Any(registration => registration.Team?.Id == teamId);
 
-    private RosterCandidateEligibilityDTO? GetRosterCandidate(Guid userId) =>
-        _rosterCandidatesById.TryGetValue(userId, out var candidate) ? candidate : null;
-
-    private bool IsExistingRosterConflictAllowed(Guid userId, RosterCandidateEligibilityDTO candidate)
+    private bool CanSelectRosterMember(Guid userId)
     {
-        var existingUserIds = (CaptainManagedRegistration?.RosterMembers ?? [])
+        if(SelectedTeam is null)
+            return false;
+
+        return IsRosterMemberSelectable(
+            userId,
+            SelectedTeam.CaptainUserId,
+            (SelectedTeam.Members ?? []).Select(member => member.Id).ToHashSet(),
+            _rosterCandidatesById,
+            GetExistingRosterUserIds());
+    }
+
+    private IReadOnlyList<Guid> GetNormalizedRosterSelection(bool autofillEligibleMembers = false)
+    {
+        if(SelectedTeam is null)
+            return [];
+
+        return NormalizeRosterSelection(
+            _selectedRosterUserIds,
+            (SelectedTeam.Members ?? []).Select(member => member.Id).ToArray(),
+            SelectedTeam.CaptainUserId,
+            _rosterCandidatesById,
+            GetExistingRosterUserIds(),
+            autofillEligibleMembers ? RequiredTeamSize : null);
+    }
+
+    private void NormalizeSelectedRoster(bool autofillEligibleMembers = false)
+    {
+        var normalized = GetNormalizedRosterSelection(autofillEligibleMembers);
+        _selectedRosterUserIds.Clear();
+        _selectedRosterUserIds.UnionWith(normalized);
+    }
+
+    private IReadOnlySet<Guid> GetExistingRosterUserIds() =>
+        (CaptainManagedRegistration?.RosterMembers ?? [])
             .Where(member => member.User is not null)
             .Select(member => member.User.Id)
             .ToHashSet();
-        return existingUserIds.Contains(userId) &&
+
+    internal static IReadOnlyList<Guid> NormalizeRosterSelection(
+        IEnumerable<Guid> selectedUserIds,
+        IReadOnlyList<Guid> currentTeamMemberIds,
+        Guid captainUserId,
+        IReadOnlyDictionary<Guid, RosterCandidateEligibilityDTO> candidatesById,
+        IReadOnlySet<Guid> existingRosterUserIds,
+        int? autofillToSize = null)
+    {
+        var currentTeamMembers = currentTeamMemberIds.ToHashSet();
+        var normalized = selectedUserIds
+            .Distinct()
+            .Where(userId => IsRosterMemberSelectable(
+                userId,
+                captainUserId,
+                currentTeamMembers,
+                candidatesById,
+                existingRosterUserIds))
+            .ToList();
+
+        if(captainUserId != Guid.Empty && !normalized.Contains(captainUserId))
+            normalized.Insert(0, captainUserId);
+
+        if(autofillToSize is > 0)
+        {
+            foreach(var userId in currentTeamMemberIds.Where(userId =>
+                        normalized.Count < autofillToSize &&
+                        !normalized.Contains(userId) &&
+                        IsRosterMemberSelectable(
+                            userId,
+                            captainUserId,
+                            currentTeamMembers,
+                            candidatesById,
+                            existingRosterUserIds)))
+            {
+                normalized.Add(userId);
+            }
+        }
+
+        return normalized;
+    }
+
+    internal static bool IsRosterMemberSelectable(
+        Guid userId,
+        Guid captainUserId,
+        IReadOnlySet<Guid> currentTeamMemberIds,
+        IReadOnlyDictionary<Guid, RosterCandidateEligibilityDTO> candidatesById,
+        IReadOnlySet<Guid> existingRosterUserIds)
+    {
+        if(userId == captainUserId)
+            return captainUserId != Guid.Empty;
+
+        if(!currentTeamMemberIds.Contains(userId) ||
+           !candidatesById.TryGetValue(userId, out var candidate))
+            return false;
+
+        return candidate.Eligible ||
+               IsExistingRosterConflictAllowed(userId, candidate, existingRosterUserIds);
+    }
+
+    private static bool IsExistingRosterConflictAllowed(
+        Guid userId,
+        RosterCandidateEligibilityDTO candidate,
+        IReadOnlySet<Guid> existingRosterUserIds)
+    {
+        return existingRosterUserIds.Contains(userId) &&
                candidate.ReasonCodes.Count > 0 &&
                candidate.ReasonCodes.All(code => code == "duplicate_participation");
     }

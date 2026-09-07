@@ -112,3 +112,18 @@ page content.
   styling and an icon or label, not explanatory validation text
 - **AND** the accessible label MUST communicate `Unavailable` without exposing
   raw backend reason codes or technical refresh terminology
+
+#### Scenario: Unavailable roster members remain visible but excluded
+
+- **WHEN** a roster member is marked unavailable or ineligible for the
+  tournament
+- **THEN** the member MUST remain visible in the roster selection
+- **AND** the member's selection control MUST initialize unchecked and render
+  as non-selectable/disabled with the accessible state `Unavailable`
+- **AND** the member MUST be excluded from any restored or realtime-preserved
+  roster draft
+- **AND** the member MUST be excluded from the submitted roster even if a
+  stale draft or client state previously contained that member
+- **AND** eligible roster members MUST retain their existing selectable and
+  checked-state semantics
+- **AND** captain and team selection semantics MUST remain unchanged

@@ -78,4 +78,150 @@ public sealed class TournamentParticipantsEligibilityTests
             new RosterCandidateEligibilityResponseDTO { Eligible = false },
             new HashSet<Guid>()));
     }
+
+    [Fact]
+    public void FreshRosterAutofillKeepsCaptainAndSelectsOnlyEligibleMembersToExactSize()
+    {
+        var captainId = Guid.NewGuid();
+        var eligibleMemberId = Guid.NewGuid();
+        var secondEligibleMemberId = Guid.NewGuid();
+        var unavailableMemberId = Guid.NewGuid();
+        var members = new[] { captainId, unavailableMemberId, eligibleMemberId, secondEligibleMemberId };
+        var candidates = new Dictionary<Guid, RosterCandidateEligibilityDTO>
+        {
+            [unavailableMemberId] = Candidate(unavailableMemberId, false, "duplicate_participation"),
+            [eligibleMemberId] = Candidate(eligibleMemberId, true),
+            [secondEligibleMemberId] = Candidate(secondEligibleMemberId, true)
+        };
+
+        var selection = TournamentParticipantsTab.NormalizeRosterSelection(
+            [captainId],
+            members,
+            captainId,
+            candidates,
+            new HashSet<Guid>(),
+            autofillToSize: 3);
+
+        Assert.Equal([captainId, eligibleMemberId, secondEligibleMemberId], selection);
+        Assert.DoesNotContain(unavailableMemberId, selection);
+    }
+
+    [Fact]
+    public void RestoredRosterDropsUnavailableAndStaleMembersButKeepsAllowedSavedConflict()
+    {
+        var captainId = Guid.NewGuid();
+        var eligibleMemberId = Guid.NewGuid();
+        var savedConflictMemberId = Guid.NewGuid();
+        var unavailableMemberId = Guid.NewGuid();
+        var staleMemberId = Guid.NewGuid();
+        var members = new[] { captainId, eligibleMemberId, savedConflictMemberId, unavailableMemberId };
+        var candidates = new Dictionary<Guid, RosterCandidateEligibilityDTO>
+        {
+            [eligibleMemberId] = Candidate(eligibleMemberId, true),
+            [savedConflictMemberId] = Candidate(savedConflictMemberId, false, "duplicate_participation"),
+            [unavailableMemberId] = Candidate(unavailableMemberId, false, "user_not_team_member")
+        };
+
+        var selection = TournamentParticipantsTab.NormalizeRosterSelection(
+            [captainId, eligibleMemberId, savedConflictMemberId, unavailableMemberId, staleMemberId],
+            members,
+            captainId,
+            candidates,
+            new HashSet<Guid> { savedConflictMemberId });
+
+        Assert.Equal([captainId, eligibleMemberId, savedConflictMemberId], selection);
+    }
+
+    [Fact]
+    public void ExistingSavedRosterMemberAllowsOnlyDuplicateParticipationConflict()
+    {
+        var captainId = Guid.NewGuid();
+        var savedConflictMemberId = Guid.NewGuid();
+        var broaderConflictMemberId = Guid.NewGuid();
+        var members = new HashSet<Guid> { captainId, savedConflictMemberId, broaderConflictMemberId };
+        var candidates = new Dictionary<Guid, RosterCandidateEligibilityDTO>
+        {
+            [savedConflictMemberId] = Candidate(savedConflictMemberId, false, "duplicate_participation"),
+            [broaderConflictMemberId] = Candidate(broaderConflictMemberId, false, "team_already_registered")
+        };
+        var existingRoster = new HashSet<Guid> { savedConflictMemberId, broaderConflictMemberId };
+
+        Assert.True(TournamentParticipantsTab.IsRosterMemberSelectable(
+            savedConflictMemberId,
+            captainId,
+            members,
+            candidates,
+            existingRoster));
+        Assert.False(TournamentParticipantsTab.IsRosterMemberSelectable(
+            broaderConflictMemberId,
+            captainId,
+            members,
+            candidates,
+            existingRoster));
+    }
+
+    [Fact]
+    public void EligibilityMergeRemovesARealtimeInvalidatedMemberFromNormalizedSelection()
+    {
+        var captainId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var candidates = new Dictionary<Guid, RosterCandidateEligibilityDTO>
+        {
+            [memberId] = Candidate(memberId, true)
+        };
+
+        TournamentParticipantsTab.MergeRosterCandidateEligibility(
+            candidates,
+            [Candidate(memberId, false, "duplicate_participation")]);
+
+        var selection = TournamentParticipantsTab.NormalizeRosterSelection(
+            [captainId, memberId],
+            [captainId, memberId],
+            captainId,
+            candidates,
+            new HashSet<Guid>());
+
+        Assert.Equal([captainId], selection);
+        Assert.False(candidates[memberId].Eligible);
+    }
+
+    [Fact]
+    public void UnavailableMemberIsRejectedByTogglePredicateAndReviewRequestFiltering()
+    {
+        var captainId = Guid.NewGuid();
+        var eligibleMemberId = Guid.NewGuid();
+        var unavailableMemberId = Guid.NewGuid();
+        var members = new HashSet<Guid> { captainId, eligibleMemberId, unavailableMemberId };
+        var candidates = new Dictionary<Guid, RosterCandidateEligibilityDTO>
+        {
+            [eligibleMemberId] = Candidate(eligibleMemberId, true),
+            [unavailableMemberId] = Candidate(unavailableMemberId, false, "user_not_team_member")
+        };
+
+        Assert.False(TournamentParticipantsTab.IsRosterMemberSelectable(
+            unavailableMemberId,
+            captainId,
+            members,
+            candidates,
+            new HashSet<Guid>()));
+
+        var filteredForReviewAndRequest = TournamentParticipantsTab.NormalizeRosterSelection(
+            [captainId, eligibleMemberId, unavailableMemberId],
+            members.ToArray(),
+            captainId,
+            candidates,
+            new HashSet<Guid>());
+
+        Assert.Equal([captainId, eligibleMemberId], filteredForReviewAndRequest);
+    }
+
+    private static RosterCandidateEligibilityDTO Candidate(
+        Guid userId,
+        bool eligible,
+        params string[] reasons) => new()
+        {
+            UserId = userId,
+            Eligible = eligible,
+            ReasonCodes = reasons
+        };
 }
