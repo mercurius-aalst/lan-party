@@ -1224,6 +1224,14 @@ html[data-theme="dark"] .info-page .packing-item--optional {
     --packing-tint: rgba(156, 196, 229, 0.18);
 }
 
+html[data-theme="dark"] .info-page .packing-guide {
+    background: var(--color-canvas);
+}
+
+html[data-theme="dark"] .info-page .packing-item {
+    background: color-mix(in srgb, var(--packing-accent) 16%, var(--color-surface-raised));
+}
+
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) .info-page .packing-item--hardware {
         --packing-accent: #8bd6ad;
@@ -1238,6 +1246,14 @@ html[data-theme="dark"] .info-page .packing-item--optional {
     :root:not([data-theme]) .info-page .packing-item--optional {
         --packing-accent: #9cc4e5;
         --packing-tint: rgba(156, 196, 229, 0.18);
+    }
+
+    :root:not([data-theme]) .info-page .packing-guide {
+        background: var(--color-canvas);
+    }
+
+    :root:not([data-theme]) .info-page .packing-item {
+        background: color-mix(in srgb, var(--packing-accent) 16%, var(--color-surface-raised));
     }
 }
 
