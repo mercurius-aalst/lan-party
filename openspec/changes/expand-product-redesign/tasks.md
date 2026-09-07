@@ -269,3 +269,10 @@
        submitted rosters while preserving eligible-member, captain, and team
        selection semantics. Verify accessibility, build/tests, static checks,
        draft restoration, realtime refresh, and submission exclusion.
+- [x] 11.20 Make user details dialogs opened from participant or team-roster
+       dialogs topmost and keyboard-safe: move focus into the user dialog,
+       support close/Escape, keep the underlying surface below and interactive
+       only after dismissal, and restore a coherent focus/state destination.
+       Remove only zero-value eyebrow/summary copy, retain the team name as the
+       accessible dialog heading, and run focused tests, build, and static
+       checks.

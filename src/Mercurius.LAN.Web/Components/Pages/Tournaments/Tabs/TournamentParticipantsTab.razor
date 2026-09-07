@@ -490,24 +490,22 @@
         }
     </div>
 
-    @if(!PopupOnly && _selectedParticipant is not null)
+    @if(ShouldRenderParticipantDialog(PopupOnly, _selectedParticipant, _selectedUser))
     {
         <div class="participants-modal-overlay" @onclick="HidePopup">
             <div class="participants-modal-dialog participants-modal-dialog--detail"
                  role="dialog"
                  aria-modal="true"
                  aria-labelledby="participant-details-title"
-                 aria-describedby="participant-details-summary"
                  tabindex="-1"
+                 @ref="_participantDialogElement"
                  @onkeydown="HandleParticipantDialogKeyDown"
                  @onclick:stopPropagation>
                 <button type="button" class="participants-modal-close" aria-label="Close participant details" @onclick="HidePopup">&times;</button>
                 <div class="participants-modal-header">
-                    <span class="section-eyebrow">Participant</span>
-                    <h3 id="participant-details-title">@_selectedParticipant.DisplayName</h3>
-                    <p id="participant-details-summary">@GetParticipantModalSummary()</p>
+                    <h3 id="participant-details-title">@_selectedParticipant!.DisplayName</h3>
                 </div>
-                <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" OnUserSelected="DisplayUserPopup" />
+                <ParticipantComponent Participant="_selectedParticipant!" ShowIdentityHeader="false" OnUserSelected="DisplayUserPopup" />
             </div>
         </div>
     }

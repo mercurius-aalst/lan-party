@@ -110,6 +110,23 @@ navigating to the public user route.
   and no enrichment request MUST be issued
 - **AND** focus, Escape, close, and focus restoration MUST be keyboard usable
 
+#### Scenario: User details dialog opens above an existing participant surface
+
+- **WHEN** a visitor selects a user from an already open participant or
+  team-roster dialog
+- **THEN** the user details dialog MUST become the active topmost surface
+- **AND** keyboard focus MUST move into the user details dialog
+- **AND** the user details dialog MUST be dismissible through its close action
+  or Escape
+- **AND** the underlying participant or team-roster surface MUST remain below
+  the user details dialog without covering it or trapping interaction
+- **AND** closing the user details dialog MUST leave a coherent focus and state
+  destination in the underlying participant surface
+- **AND** a zero-value eyebrow or summary line that merely repeats the dialog
+  context MAY be omitted
+- **AND** the team name MUST remain the accessible dialog heading wherever the
+  participant or team-roster surface identifies a team
+
 ### Requirement: Tournament detail match cards are breathable and aligned
 
 Match cards and match-summary cards on tournament detail MUST provide

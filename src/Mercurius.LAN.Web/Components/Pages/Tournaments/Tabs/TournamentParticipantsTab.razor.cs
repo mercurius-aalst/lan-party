@@ -51,6 +51,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
     private ParticipantViewModel? _selectedParticipant;
     private PublicUserDTO? _selectedUser;
+    private ElementReference _participantDialogElement;
+    private bool _restoreParticipantDialogFocus;
     private bool _isRegistrationDialogOpen;
     private ElementReference _registrationDialogElement;
     private IJSObjectReference? _registrationFocusTrap;
@@ -242,6 +244,13 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(_restoreParticipantDialogFocus &&
+           ShouldRenderParticipantDialog(PopupOnly, _selectedParticipant, _selectedUser))
+        {
+            _restoreParticipantDialogFocus = false;
+            await _participantDialogElement.FocusAsync();
+        }
+
         if(_isRegistrationDialogOpen && _registrationFocusTrap is null)
         {
             _registrationFocusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>(
@@ -768,7 +777,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         }
     }
 
-    private void DisplayParticipantPopup(ParticipantViewModel participant)
+    internal void DisplayParticipantPopup(ParticipantViewModel participant)
     {
         if(participant.User is { } user)
         {
@@ -781,23 +790,25 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _selectedParticipant = participant;
     }
 
-    private void DisplayUserPopup(PublicUserDTO user)
+    internal void DisplayUserPopup(PublicUserDTO user)
     {
         _selectedUser = user;
     }
 
-    private void HidePopup()
+    internal void HidePopup()
     {
         _selectedParticipant = null;
         _selectedUser = null;
+        _restoreParticipantDialogFocus = false;
     }
 
-    private void HideUserInfoPopup()
+    internal void HideUserInfoPopup()
     {
         _selectedUser = null;
+        _restoreParticipantDialogFocus = _selectedParticipant is not null;
     }
 
-    private Task HandleParticipantDialogKeyDown(KeyboardEventArgs args)
+    internal Task HandleParticipantDialogKeyDown(KeyboardEventArgs args)
     {
         if(!string.Equals(args.Key, "Escape", StringComparison.Ordinal))
             return Task.CompletedTask;
@@ -805,6 +816,15 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         HidePopup();
         return Task.CompletedTask;
     }
+
+    internal static bool ShouldRenderParticipantDialog(
+        bool popupOnly,
+        ParticipantViewModel? selectedParticipant,
+        PublicUserDTO? selectedUser) =>
+        !popupOnly && selectedParticipant is not null && selectedUser is null;
+
+    internal (ParticipantViewModel? Participant, PublicUserDTO? User, bool RestoreParticipantFocus) GetParticipantDialogState() =>
+        (_selectedParticipant, _selectedUser, _restoreParticipantDialogFocus);
 
     private string GetRegistrationActionLabel() =>
         _registrationState?.IndividualRegistration is not null ||
@@ -1879,11 +1899,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             }
         }
     }
-
-    private string GetParticipantModalSummary() =>
-        _selectedParticipant?.ParticipationMode == ParticipationMode.Team
-            ? "Team roster, captain, and registered members."
-            : "Player profile and connected account details.";
 
     private void ResetRegistrationContext()
     {
