@@ -1261,6 +1261,19 @@ html[data-theme="dark"] .home-hero-wordmark {
     color: var(--color-muted-text);
 }
 
+#home-sponsors .home-sponsors-panel.brand-panel-dark {
+    background: var(--color-surface);
+    color: var(--color-ink);
+}
+
+#home-sponsors .home-sponsors-heading h2 {
+    color: var(--color-ink);
+}
+
+#home-sponsors .home-sponsors-empty {
+    color: var(--color-muted-text);
+}
+
 /* Keep the packing priorities legible without changing their light-theme palette. */
 html[data-theme="dark"] .info-page .packing-item--hardware {
     --packing-accent: #8bd6ad;
