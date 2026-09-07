@@ -233,6 +233,10 @@
     margin-bottom: 0.35rem;
 }
 
+.Tournament-section-header h2.section-eyebrow {
+    margin-bottom: 0;
+}
+
 .Tournament-detail-section-count {
     display: inline-flex;
     align-items: center;

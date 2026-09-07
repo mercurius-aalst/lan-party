@@ -93,29 +93,6 @@ else
             </aside>
         </header>
 
-        <SectionNav AdditionalClass="Tournament-detail-section-nav" AriaLabel="Tournament sections">
-            <a href="@GetPageAnchorUrl("tournament-overview")" class="button-secondary">Overview</a>
-            <a href="@GetPageAnchorUrl("tournament-schedule")" class="button-secondary">Schedule</a>
-            <a href="@GetPageAnchorUrl("tournament-participants")" class="button-secondary">Participants</a>
-            <a href="@GetPageAnchorUrl("registration")" class="button-secondary">Registration</a>
-            <a href="@GetPageAnchorUrl("tournament-bracket")" class="button-secondary">Bracket</a>
-            <a href="@GetPageAnchorUrl("tournament-results")" class="button-secondary">Results</a>
-        </SectionNav>
-
-        <AuthorizeView Roles="admin">
-            <Authorized>
-                <SectionNav AdditionalClass="Tournament-organizer-nav" AriaLabel="Organizer tools">
-                    <span class="section-eyebrow">Organizer tools</span>
-                    <a href="@GetPageAnchorUrl("tournament-overview")" class="button-secondary">Tournament setup</a>
-                    <a href="@GetPageAnchorUrl("tournament-schedule")" class="button-secondary">Schedule</a>
-                    <a href="@GetPageAnchorUrl("admin-registration")" class="button-secondary">Registration oversight</a>
-                    <a href="@GetPageAnchorUrl("tournament-sponsor-admin")" class="button-secondary">Sponsor placement</a>
-                    <a href="/admin/sponsors" class="button-secondary">Sponsor administration</a>
-                    <a href="/teams/manage" class="button-secondary">Team management</a>
-                </SectionNav>
-            </Authorized>
-        </AuthorizeView>
-
         <div class="Tournament-detail-layout">
             <div class="Tournament-detail-top">
                 <section id="tournament-overview" class="brand-card Tournament-detail-section Tournament-detail-top-section Tournament-detail-top-section--overview brand-section-anchor">
@@ -125,8 +102,7 @@ else
                 <section id="tournament-schedule" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section Tournament-detail-top-section--schedule brand-section-anchor">
                     <div class="Tournament-section-header">
                         <div>
-                            <span class="section-eyebrow">Schedule</span>
-                            <h2>Upcoming matches</h2>
+                            <h2 class="section-eyebrow">Upcoming</h2>
                         </div>
                     </div>
 

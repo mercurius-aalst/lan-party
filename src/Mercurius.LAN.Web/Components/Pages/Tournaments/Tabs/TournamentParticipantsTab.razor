@@ -7,9 +7,8 @@
     {
         <div class="participants-tab-header">
             <div>
-                <span class="section-eyebrow">Participants</span>
-                <h2>Registered @(Tournament.ParticipationMode == ParticipationMode.Team ? "teams" : "players")</h2>
-                <p>@_participants.Count currently registered for this tournament.</p>
+                <h2 class="section-eyebrow">Participants</h2>
+                <p>@_participants.Count @(Tournament.ParticipationMode == ParticipationMode.Team ? (_participants.Count == 1 ? "team" : "teams") : (_participants.Count == 1 ? "player" : "players")) currently registered for this tournament.</p>
             </div>
         </div>
     }

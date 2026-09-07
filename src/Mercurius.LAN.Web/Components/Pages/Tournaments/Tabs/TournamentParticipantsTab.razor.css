@@ -10,6 +10,10 @@
     margin: 0.35rem 0 0;
 }
 
+.participants-tab-header h2.section-eyebrow {
+    margin-bottom: 0;
+}
+
 .participants-modal-overlay {
     position: fixed;
     inset: 0;
