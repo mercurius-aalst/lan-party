@@ -205,8 +205,17 @@
 }
 
 .team-selector-heading {
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.team-selector-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
 }
 
 .team-selector-heading h2 {
@@ -796,6 +805,7 @@
     }
 
     .team-manage-header,
+    .team-selector-heading,
     .team-invite-inbox-heading,
     .team-panel-heading,
     .team-membership-note {

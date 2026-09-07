@@ -23,17 +23,6 @@ else if(!string.IsNullOrWhiteSpace(_loadError))
 else
 {
     <section class="team-manage-page">
-        <header class="team-manage-header">
-            <div class="team-manage-heading">
-                <span class="section-eyebrow">Teams</span>
-                <h1>Manage your teams</h1>
-            </div>
-            <button type="button" class="button-primary team-create-action" @onclick="OpenCreateTeamDialogAsync">
-                <span class="bi bi-plus-lg" aria-hidden="true"></span>
-                Create team
-            </button>
-        </header>
-
         @if(_summary.ReceivedPendingInvites.Count > 0)
         {
             <section class="team-invite-inbox" aria-labelledby="team-invite-heading">
@@ -80,11 +69,17 @@ else
         <section class="team-workspace" aria-label="Team workspace">
             <aside class="team-selector" aria-label="Your teams">
                 <div class="team-selector-heading">
-                    <h2>Your teams</h2>
-                    @if(ManageableTeams.Count > 0)
-                    {
-                        <span class="team-selector-count">@ManageableTeams.Count</span>
-                    }
+                    <div class="team-selector-title">
+                        <h2>Your teams</h2>
+                        @if(ManageableTeams.Count > 0)
+                        {
+                            <span class="team-selector-count">@ManageableTeams.Count</span>
+                        }
+                    </div>
+                    <button type="button" class="button-primary team-create-action" @onclick="OpenCreateTeamDialogAsync">
+                        <span class="bi bi-plus-lg" aria-hidden="true"></span>
+                        Create team
+                    </button>
                 </div>
 
                 @if(ManageableTeams.Count == 0)
