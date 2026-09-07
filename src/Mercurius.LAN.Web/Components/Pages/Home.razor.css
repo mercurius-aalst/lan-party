@@ -551,6 +551,10 @@
     box-shadow: var(--shadow-brand);
 }
 
+.home-tickets {
+    padding-top: clamp(1rem, 1.7vw, 1.35rem);
+}
+
 .home-action-copy {
     display: grid;
     align-content: start;
