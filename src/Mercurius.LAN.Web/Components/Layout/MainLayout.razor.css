@@ -120,9 +120,12 @@ html[data-theme="dark"] .footer-logo-image--theme-dark {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.45rem;
-    min-height: 2.5rem;
-    padding: 0.55rem 0.8rem;
+    flex: 0 0 2.75rem;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-button);
     background: var(--color-surface-raised);
