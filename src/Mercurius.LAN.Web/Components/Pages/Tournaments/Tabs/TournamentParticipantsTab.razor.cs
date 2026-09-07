@@ -1758,20 +1758,13 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _ => status.ToString()
     };
 
-    private string GetRegistrationStateMessage()
+    private string GetTeamRegistrationStateMessage()
     {
         if(!IsRegistrationOpen)
             return "Registration is closed because this tournament is no longer scheduled.";
 
         if(!_isAuthenticated)
             return "Sign in to check eligibility and manage your registration.";
-
-        if(Tournament.ParticipationMode == ParticipationMode.Individual)
-        {
-            return _registrationState?.IndividualRegistration is not null
-                ? "Your individual registration is active."
-                : "Join the tournament.";
-        }
 
         if(HasCaptainManagedRegistration)
             return "Review or edit your captain-managed team registration.";

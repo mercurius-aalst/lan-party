@@ -335,6 +335,12 @@
     gap: 0.8rem;
 }
 
+.registration-individual-action {
+    justify-self: start;
+    max-width: 100%;
+    width: auto;
+}
+
 .registration-form-grid {
     grid-template-columns: minmax(0, 1fr) minmax(8rem, auto);
     align-items: end;
@@ -668,6 +674,7 @@
 
     .registration-stepper-actions > div,
     .registration-stepper-actions button,
+    .registration-individual-action,
     .registration-open-button {
         width: 100%;
     }

@@ -40,7 +40,10 @@
                     <div>
                         <span class="section-eyebrow">Registration</span>
                         <h3 id="registration-panel-heading">Join this tournament</h3>
-                        <p>@GetRegistrationStateMessage()</p>
+                        @if(Tournament.ParticipationMode == ParticipationMode.Team)
+                        {
+                            <p>@GetTeamRegistrationStateMessage()</p>
+                        }
                     </div>
                     @if(_isLoadingRegistration)
                     {
@@ -79,7 +82,7 @@
                      role="dialog"
                      aria-modal="true"
                      aria-labelledby="registration-dialog-title"
-                     aria-describedby="registration-dialog-description"
+                     aria-describedby="@(Tournament.ParticipationMode == ParticipationMode.Team ? "registration-dialog-description" : null)"
                      tabindex="-1"
                      @ref="_registrationDialogElement"
                      @onclick:stopPropagation>
@@ -94,7 +97,10 @@
                     <header class="participants-modal-header registration-dialog-header">
                         <span class="section-eyebrow">Registration</span>
                         <h2 id="registration-dialog-title" class="visually-hidden">Registration for @Tournament.Name</h2>
-                        <p id="registration-dialog-description">@GetRegistrationStateMessage()</p>
+                        @if(Tournament.ParticipationMode == ParticipationMode.Team)
+                        {
+                            <p id="registration-dialog-description">@GetTeamRegistrationStateMessage()</p>
+                        }
                     </header>
 
                     <div class="registration-dialog-body">
@@ -136,7 +142,7 @@
                     }
                     else if(_registrationState?.CanRegisterIndividual == true)
                     {
-                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">Register as an individual</button>
+                        <button type="button" class="button-primary registration-individual-action" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">Register as an individual</button>
                     }
                     else
                     {
