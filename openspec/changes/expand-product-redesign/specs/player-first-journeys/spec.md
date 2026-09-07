@@ -98,3 +98,34 @@ the actions already available to it.
   by the public resource
 - **AND** invites, email, Auth0 identifiers, roles, and other private fields MUST
   remain unavailable
+
+### Requirement: Authenticated profile keeps account actions concise and safe
+
+The authenticated profile MUST present editable profile information as its
+primary surface without a redundant page header, section-navigation rail, or
+separate security card. Existing email-verification and password-reset actions
+MUST remain available within the profile-details surface, and account deletion
+MUST require the username from the last backend-confirmed profile state.
+
+#### Scenario: Authenticated player opens profile settings
+
+- **WHEN** an authenticated player opens `/profile`
+- **THEN** `profile-details` MUST use the heading `Your information`
+- **AND** the existing conditional resend-verification and password-reset
+  actions MUST remain available within that profile-details surface
+- **AND** `profile-security` MUST remain as a stable, neutral wrapper for those
+  actions without rendering a separate security card or redundant heading
+- **AND** `profile-danger`, existing profile fields and order, validation,
+  save behavior, loading, and error states MUST remain available
+
+#### Scenario: Player confirms account deletion
+
+- **WHEN** the player enters a deletion confirmation
+- **THEN** the input MUST be trimmed and compared case-insensitively with the
+  username returned by the last successful profile load or save
+- **AND** unsaved username edits MUST NOT change the expected confirmation
+- **AND** an empty or incorrect confirmation MUST keep deletion disabled
+- **AND** the visible instruction and accessible input description MUST ask the
+  player to type their username without exposing technical wording
+- **AND** the existing self-delete request, duplicate-submit guard, failure
+  feedback, and logout redirect MUST remain unchanged

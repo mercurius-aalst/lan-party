@@ -25,7 +25,9 @@ public partial class Profile
     private bool _isSendingVerification;
     private bool _isSendingPasswordReset;
     private bool _isDeleting;
-    private bool _canDelete => string.Equals(_deleteConfirmation, "DELETE", StringComparison.Ordinal);
+    private bool _canDelete =>
+        !string.IsNullOrWhiteSpace(_originalUsername) &&
+        string.Equals(_deleteConfirmation?.Trim(), _originalUsername, StringComparison.OrdinalIgnoreCase);
     private string? _loadError;
 
     [Inject] private IUserClient UserClient { get; set; } = null!;
@@ -88,7 +90,7 @@ public partial class Profile
             }
 
             var profile = await UserClient.UpdateCurrentUserProfileAsync(_model);
-            _originalUsername = profile.Username ?? string.Empty;
+            _originalUsername = (profile.Username ?? string.Empty).Trim();
             ToastService.ShowSuccess("Profile saved.");
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict)
@@ -204,7 +206,7 @@ public partial class Profile
         _model.DiscordId = profile?.DiscordId;
         _model.SteamId = profile?.SteamId;
         _model.RiotId = profile?.RiotId;
-        _originalUsername = _model.Username;
+        _originalUsername = _model.Username.Trim();
 
         _emailDisplay = response.Email ?? profile?.Email ?? string.Empty;
         _emailVerified = response.EmailVerified || profile?.EmailVerified == true;

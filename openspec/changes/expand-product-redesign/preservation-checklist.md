@@ -16,7 +16,7 @@ move ownership of API-coupled actions or alter their contracts.
 | Public user | `/users/{Username}` | `profile-details`, `profile-matches`, canonical username link, and public match-summary tournament links |
 | Public team | `/teams/{TeamName}` | `team-roster`, `team-tournaments`, `team-matches`, canonical team/member/tournament links |
 | Team hub | `/teams/manage` | `received-invites`, `team-workspace`, `team-{guid}`, `invite-search`, `invite-search-results` |
-| Authenticated profile | `/profile` | `profile-details`, `profile-security`, `profile-danger`, profile field ids, security/delete confirmation ids |
+| Authenticated profile | `/profile` | `profile-details`, inline action wrapper `profile-security`, `profile-danger`, profile field ids, and `deleteConfirm` |
 | Profile completion | `/complete-profile` | step form ids and field order |
 | Organizer sponsors | `/admin/sponsors` | sponsor search and editor field ids |
 

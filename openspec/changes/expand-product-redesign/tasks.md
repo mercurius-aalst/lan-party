@@ -276,3 +276,9 @@
        Remove only zero-value eyebrow/summary copy, retain the team name as the
        accessible dialog heading, and run focused tests, build, and static
        checks.
+- [x] 11.21 Simplify the authenticated profile hierarchy, keep verification and
+       password-reset actions inline within `profile-details`, retain stable
+       profile anchors, and require the last backend-confirmed username for
+       deletion confirmation. Verify trim/case behavior, unsaved-edit isolation,
+       accessibility, preserved handlers, responsive layout, build, and focused
+       tests.
