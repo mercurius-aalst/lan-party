@@ -1208,6 +1208,45 @@ html[data-theme="dark"] .home-hero-wordmark {
     content: url("/img/lan_logo_wide_light.svg");
 }
 
+/* Keep the Home partner marquee image-led while leaving the shared scroller unchanged elsewhere. */
+#home-sponsors .sponsor-scroller__logo {
+    width: clamp(11rem, 18vw, 15rem);
+    min-width: clamp(11rem, 18vw, 15rem);
+    height: clamp(7rem, 10vw, 8.5rem);
+    padding: 0.45rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+#home-sponsors .sponsor-scroller__logo:hover,
+#home-sponsors .sponsor-scroller__logo:focus-visible {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: 2px solid var(--color-focus);
+    outline-offset: -0.2rem;
+}
+
+#home-sponsors .sponsor-scroller__logo img {
+    max-width: 100%;
+    max-height: clamp(5rem, 8vw, 7.5rem);
+}
+
+@media (max-width: 640px) {
+    #home-sponsors .sponsor-scroller__logo {
+        width: clamp(9.25rem, 42vw, 11.5rem);
+        min-width: clamp(9.25rem, 42vw, 11.5rem);
+        height: clamp(6.25rem, 28vw, 7.25rem);
+        padding: 0.35rem;
+    }
+
+    #home-sponsors .sponsor-scroller__logo img {
+        max-height: clamp(4.5rem, 18vw, 5.5rem);
+    }
+}
+
 /* Keep the packing priorities legible without changing their light-theme palette. */
 html[data-theme="dark"] .info-page .packing-item--hardware {
     --packing-accent: #8bd6ad;
