@@ -1213,7 +1213,7 @@ html[data-theme="dark"] .home-hero-wordmark {
     width: clamp(11rem, 18vw, 15rem);
     min-width: clamp(11rem, 18vw, 15rem);
     height: clamp(7rem, 10vw, 8.5rem);
-    padding: 0.45rem;
+    padding: 0;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -1230,8 +1230,11 @@ html[data-theme="dark"] .home-hero-wordmark {
 }
 
 #home-sponsors .sponsor-scroller__logo img {
+    width: 100%;
+    height: 100%;
     max-width: 100%;
     max-height: clamp(5rem, 8vw, 7.5rem);
+    object-fit: contain;
 }
 
 @media (max-width: 640px) {
@@ -1239,7 +1242,7 @@ html[data-theme="dark"] .home-hero-wordmark {
         width: clamp(9.25rem, 42vw, 11.5rem);
         min-width: clamp(9.25rem, 42vw, 11.5rem);
         height: clamp(6.25rem, 28vw, 7.25rem);
-        padding: 0.35rem;
+        padding: 0;
     }
 
     #home-sponsors .sponsor-scroller__logo img {
