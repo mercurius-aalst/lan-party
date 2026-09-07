@@ -1220,13 +1220,25 @@ html[data-theme="dark"] .home-hero-wordmark {
     box-shadow: none;
 }
 
-#home-sponsors .sponsor-scroller__logo:hover,
+#home-sponsors .sponsor-scroller__logo:hover {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+}
+
+#home-sponsors .sponsor-scroller__logo:hover img {
+    outline: 2px solid var(--color-focus);
+    outline-offset: -0.2rem;
+    border-radius: var(--radius-control);
+}
+
 #home-sponsors .sponsor-scroller__logo:focus-visible {
     border: 0;
     background: transparent;
     box-shadow: none;
     outline: 2px solid var(--color-focus);
-    outline-offset: -0.2rem;
+    outline-offset: 0.22rem;
 }
 
 #home-sponsors .sponsor-scroller__logo img {
@@ -1299,6 +1311,35 @@ html[data-theme="dark"] .home-hero-wordmark {
 html[data-theme="light"] #home-sponsors .sponsor-scroller__logo {
     padding: 0;
     background: var(--color-surface);
+}
+
+/* Keep the Home hero's breathing fade continuous with the page canvas at every width. */
+.home-hero {
+    background: var(--color-canvas);
+}
+
+.home-sponsors {
+    position: relative;
+    isolation: isolate;
+}
+
+.home-sponsors::before {
+    content: "";
+    position: absolute;
+    inset: clamp(-8rem, -12vh, -4rem) 0 auto;
+    height: clamp(8rem, 18vh, 13rem);
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(in srgb, var(--color-canvas) 42%, transparent) 46%,
+        var(--color-canvas) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.home-sponsors > .home-sponsors-panel {
+    position: relative;
+    z-index: 1;
 }
 
 /* Keep the packing priorities legible without changing their light-theme palette. */
