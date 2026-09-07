@@ -1247,6 +1247,20 @@ html[data-theme="dark"] .home-hero-wordmark {
     }
 }
 
+#contact.home-contact {
+    background: var(--color-surface);
+    color: var(--color-ink);
+}
+
+#contact.home-contact h2,
+#contact.home-contact .section-eyebrow {
+    color: var(--color-ink);
+}
+
+#contact.home-contact p {
+    color: var(--color-muted-text);
+}
+
 /* Keep the packing priorities legible without changing their light-theme palette. */
 html[data-theme="dark"] .info-page .packing-item--hardware {
     --packing-accent: #8bd6ad;
