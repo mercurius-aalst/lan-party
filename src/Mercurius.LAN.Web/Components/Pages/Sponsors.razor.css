@@ -136,22 +136,22 @@
 }
 
 .sponsor-grid--presenting {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 25rem), 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.25rem;
 }
 
 .sponsor-grid--gold {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 1rem;
 }
 
 .sponsor-grid--silver {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.9rem;
 }
 
 .sponsor-grid--bronze {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0.85rem;
 }
 
@@ -198,6 +198,13 @@
 
 @media (max-width: 960px) {
     .sponsors-impact-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sponsor-grid--presenting,
+    .sponsor-grid--gold,
+    .sponsor-grid--silver,
+    .sponsor-grid--bronze {
         grid-template-columns: 1fr;
     }
 }
