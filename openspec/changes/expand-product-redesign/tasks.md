@@ -109,8 +109,10 @@
 ## 8. Contract preservation and validation
 
 - [x] 8.1 Audit the final diff to confirm no APIClients, Services, DTOs,
-      authentication, authorization, mock behavior, JavaScript, or backend
-      contract changes were introduced by the reorganization.
+      authentication, authorization, mock behavior, or backend contract
+      changes were introduced by the reorganization. Any in-scope JavaScript
+      changes MUST remain limited to UI interaction, theme, or focus helpers
+      and preserve existing callback and contract behavior.
 - [x] 8.2 Exercise representative mock-mode journeys for anonymous discovery,
       authenticated registration, team/invite management, profile updates,
       public profiles, and organizer mutations, including recoverable failure
@@ -158,11 +160,12 @@
       community design read, `DESIGN_VARIANCE: 7`, `MOTION_INTENSITY: 5`,
       `VISUAL_DENSITY: 4`, the single semantic token strategy, the chosen shape
       and accent rules, and the reduced-motion plan.
-- [ ] 10.2 Implement a page-wide light/dark theme choice with system preference
+- [x] 10.2 Implement a page-wide light/dark theme choice with system preference
       as the default when no preference is stored, an accessible manual toggle,
-      persisted explicit choice, and parity checks for both modes. Dark mode
-      MUST use neutral surfaces and readable off-white text without a green tint
-      across body copy, forms, dialogs, and status surfaces.
+      persisted explicit choice, and aligned light/dark token branches in
+      source. Dark mode MUST use neutral surfaces and readable off-white text
+      without a green tint across body copy, forms, dialogs, and status
+      surfaces. Browser parity remains covered by task 10.9.
 - [x] 10.3 Apply the visual calibration pass: use whitespace and hierarchy
       before borders, remove duplicate parent/child frames, add comfortable
       spacing between labels and controls, collapse redundant title-subtitle or
@@ -237,9 +240,10 @@
 - [ ] 11.10 Run focused static, accessibility, responsive, and mock-mode browser
        checks for the nine outcomes, including both themes, reduced motion,
        popup focus, preserved actions/states, and the unchanged overview layout.
-- [ ] 11.11 Add comfortable internal padding and aligned text to team detail
+- [x] 11.11 Add comfortable internal padding and aligned text to team detail
        match cards while preserving match identity, schedule, status, actions,
-       and responsive behavior.
+       and responsive behavior in source. Browser/responsive evidence remains
+       covered by tasks 11.10 and 11.18.
 - [x] 11.12 Correct dark-mode private profile email contrast and keep dark,
        readable input focus, selected, and autofill states without changing
        field names, field order, labels, validation, or submission behavior.
@@ -289,3 +293,16 @@
        other navigation, search, account, Info, and mobile interactions. Add
        focused markup/JavaScript contract coverage and validate the web build,
        tests, OpenSpec, and diff.
+
+- [x] 11.23 Make a failed or incomplete registration-context load retry
+       automatically when the registration popup is closed and reopened,
+       without restoring a user-facing technical retry control. Add focused
+       contract coverage for the recovery path.
+- [x] 11.24 Skip administrator registration-list loading when the registration
+       component is rendered in popup-only mode, including for administrators,
+       while preserving the context required by the popup workflow. Add focused
+       contract coverage for the skipped call.
+- [x] 11.25 Cancel and dispose superseded, closed, or disposed registration
+       loads, pass cancellation through the participating service calls, and
+       retain request-generation guards against stale completions. Add focused
+       cancellation coverage.

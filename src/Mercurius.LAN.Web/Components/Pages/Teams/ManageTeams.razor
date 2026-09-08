@@ -23,6 +23,7 @@ else if(!string.IsNullOrWhiteSpace(_loadError))
 else
 {
     <section class="team-manage-page">
+        <div id="received-invites" class="brand-section-anchor" aria-hidden="true"></div>
         @if(_summary.ReceivedPendingInvites.Count > 0)
         {
             <section class="team-invite-inbox" aria-labelledby="team-invite-heading">
@@ -66,7 +67,7 @@ else
             </section>
         }
 
-        <section class="team-workspace" aria-label="Team workspace">
+        <section id="team-workspace" class="team-workspace brand-section-anchor" aria-label="Team workspace">
             <aside class="team-selector" aria-label="Your teams">
                 <div class="team-selector-heading">
                     <div class="team-selector-title">
@@ -132,7 +133,7 @@ else
                 {
                     var team = SelectedTeam;
                     var isCaptain = IsCaptain(team);
-                    <header class="team-detail-header">
+                    <header id="@($"team-{team.Id:N}")" class="team-detail-header brand-section-anchor">
                         <div class="team-detail-identity">
                             <TeamIdentityDisplay Name="@team.Name"
                                                  LogoUrl="@team.LogoUrl"

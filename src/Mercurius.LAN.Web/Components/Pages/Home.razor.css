@@ -543,8 +543,7 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: 1.5rem;
-    min-height: 13rem;
+    min-height: 10rem;
     padding: clamp(1.35rem, 3vw, 2.25rem);
     border-radius: var(--radius-card);
     background: var(--color-surface-raised);

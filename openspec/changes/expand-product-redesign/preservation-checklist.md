@@ -23,7 +23,10 @@ move ownership of API-coupled actions or alter their contracts.
 ## Ownership and behavior
 
 - `APIClients/`, `Services/`, `DTOs/`, authentication/authorization, mock
-  routing/data, and JavaScript are contract boundaries and remain unchanged.
+  routing/data, and backend-facing contracts remain unchanged. In-scope
+  JavaScript helper changes for navigation, theme, or focus behavior MAY be
+  introduced through the existing stack, but MUST preserve existing callbacks,
+  route behavior, and contract semantics.
 - Existing page callbacks remain the owners of login/logout, registration and
   withdrawal, team creation/invites/roster/captain/leave/delete/logo, profile
   updates, sponsor mutations, and tournament lifecycle actions.

@@ -17,14 +17,9 @@ public partial class UserInfoDialog
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var jsRuntime = ServiceProvider.GetService(typeof(IJSRuntime)) as IJSRuntime;
-
         if(User is not null && _focusTrap is null)
         {
-            if(jsRuntime is null)
-                return;
-
-            _focusTrap = await jsRuntime.InvokeAsync<IJSObjectReference>(
+            _focusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>(
                 "activateTeamModalFocusTrap",
                 _dialogElement);
         }

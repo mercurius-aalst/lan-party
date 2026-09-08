@@ -127,3 +127,55 @@ page content.
 - **AND** eligible roster members MUST retain their existing selectable and
   checked-state semantics
 - **AND** captain and team selection semantics MUST remain unchanged
+
+### Requirement: Registration context recovers when the popup is reopened
+
+The registration popup MUST automatically request the current registration
+context again when a previous popup load failed or ended incomplete and the
+player closes and reopens the popup. The recovery MUST remain behind the
+existing popup entry point and MUST NOT add a user-facing technical retry
+control.
+
+#### Scenario: Player reopens after a failed popup load
+
+- **WHEN** the registration context cannot be loaded completely and the player
+  closes and reopens the registration popup
+- **THEN** the popup MUST start a fresh registration-context load
+- **AND** the popup MUST show the confirmed result of that fresh load rather
+  than requiring a full page reload
+- **AND** the UI MUST NOT render `Check again`, `Retry`, `Refresh`, or equivalent
+  technical availability controls for this recovery
+
+### Requirement: Popup-only registration loads avoid hidden administrator work
+
+The registration component MUST avoid loading administrator-only registration
+data when it is rendered as a popup-only surface. Public participants and the
+authenticated registration context MUST keep their existing loading and state
+semantics.
+
+#### Scenario: Popup-only registration is opened by an administrator
+
+- **WHEN** the registration component is rendered with popup-only behavior,
+  including for an administrator, and its registration context loads
+- **THEN** the component MUST NOT request the administrator registration list
+- **AND** it MUST continue to load only the context required by the popup
+  workflow
+
+### Requirement: Superseded registration loads are cancellable and stale-safe
+
+Registration-context loads MUST be cancellable when a newer load supersedes
+them, the popup closes, or the component is disposed. The cancellation MUST be
+passed through the existing registration, team, eligibility, roster, realtime,
+and administrator service calls that participate in that load, while request
+generation guards continue to prevent late results from changing current state.
+
+#### Scenario: A registration load is superseded or disposed
+
+- **WHEN** a newer registration load starts, the registration popup closes, or
+  the component is disposed while a registration-context request is pending
+- **THEN** the pending load MUST be cancelled and its cancellation token MUST
+  reach the participating service calls
+- **AND** a late completion from the cancelled load MUST NOT change loading,
+  submission, error, or toast state for the current load
+- **AND** the next supported popup load MUST remain available as the source of
+  truth
