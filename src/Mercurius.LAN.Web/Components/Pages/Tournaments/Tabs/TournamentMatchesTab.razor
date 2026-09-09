@@ -5,15 +5,15 @@
 <div class="matches-tab-shell">
     <div class="matches-tab-header">
         <div>
-            <h2 class="section-eyebrow">Brackets</h2>
+        <h2 class="section-eyebrow">@Localization["tournament.matches"]</h2>
         </div>
     </div>
 
     @if(!Tournament.Matches.Any())
     {
         <div class="matches-empty-state">
-            <h3>No bracket data yet</h3>
-            <p>Bracket progression will appear here once the tournament has been seeded.</p>
+            <h3>@Localization["Feature.tournaments.bracketEmptyHeading"]</h3>
+            <p>@Localization["Feature.tournaments.bracketEmptyText"]</p>
         </div>
     }
     else
@@ -27,7 +27,7 @@
                 <SingleEliminationTournamentBracketComponent OnDataReload="OnDataReload" OnMatchRefreshed="OnMatchRefreshed" Tournament="@Tournament" />
                 break;
             default:
-                <p>Bracket type not supported.</p>
+                <p>@Localization["Feature.tournaments.bracketUnsupported"]</p>
                 break;
         }
     }

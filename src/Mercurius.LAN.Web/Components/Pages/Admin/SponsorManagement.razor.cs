@@ -17,6 +17,7 @@ public partial class SponsorManagement
     private bool _isCreateMode = true;
     private bool _isLoading = true;
     private EditContext? _editContext;
+    private ValidationMessageStore? _validationMessages;
     private CustomInputFile? _imageInputRef;
 
     private CustomAutocomplete<SponsorManagementDTO> _autoCompleteComponent = null!;
@@ -42,7 +43,7 @@ public partial class SponsorManagement
             }
             catch(Exception)
             {
-                ToastService.ShowError("Sponsors could not be loaded.");
+                ToastService.ShowError(Localization["Admin.loadFailed"]);
             }
             finally
             {
@@ -54,12 +55,47 @@ public partial class SponsorManagement
 
     private void ReInitEditContext()
     {
-        _editContext = new(_selectedSponsor);
-        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
-        _editContext.OnFieldChanged += (sender, args) =>
+        if(_editContext is not null)
         {
-            _editContext.Validate();
-        };
+            _editContext.OnValidationRequested -= HandleValidationRequested;
+            _editContext.OnFieldChanged -= HandleFieldChanged;
+        }
+
+        _editContext = new(_selectedSponsor);
+        _validationMessages = new(_editContext);
+        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.OnValidationRequested += HandleValidationRequested;
+        _editContext.OnFieldChanged += HandleFieldChanged;
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        _editContext?.Validate();
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args)
+    {
+        if(_validationMessages is null)
+            return;
+
+        _validationMessages.Clear();
+        AddRequiredMessage(nameof(SponsorManagementDTO.Name), _selectedSponsor.Name, "Admin.name");
+        AddRequiredMessage(nameof(SponsorManagementDTO.InfoUrl), _selectedSponsor.InfoUrl, "Admin.infoUrl");
+
+        if(_selectedSponsor.IsCreateMode && _selectedSponsor.Logo is null)
+        {
+            var field = new FieldIdentifier(_selectedSponsor, nameof(SponsorManagementDTO.Logo));
+            _validationMessages.Add(field, Localization.Get("form.requiredField", Localization["Admin.logo"]));
+        }
+    }
+
+    private void AddRequiredMessage(string propertyName, string? value, string labelKey)
+    {
+        if(!string.IsNullOrWhiteSpace(value))
+            return;
+
+        var field = new FieldIdentifier(_selectedSponsor, propertyName);
+        _validationMessages?.Add(field, Localization.Get("form.requiredField", Localization[labelKey]));
     }
     private void OnSponsorSelected(SponsorManagementDTO sponsor)
     {
@@ -100,7 +136,7 @@ public partial class SponsorManagement
             fileName);
                 _sponsors.Add(sponsor);
                 SyncDisplaySponsors();
-                ToastService.ShowSuccess("Sponsor created successfully.");
+                ToastService.ShowSuccess(Localization["Admin.created"]);
             }
             else
             {
@@ -122,7 +158,7 @@ public partial class SponsorManagement
                     existingSponsor.Description = _selectedSponsor.Description;
                 }
                 SyncDisplaySponsors();
-                ToastService.ShowSuccess("Sponsor updated successfully.");
+                ToastService.ShowSuccess(Localization["Admin.updated"]);
             }
         }
         catch(ApiException ex)
@@ -140,7 +176,7 @@ public partial class SponsorManagement
             await SponsorService.DeleteSponsorAsync(_selectedSponsor.Id);
             _sponsors.Remove(_sponsors.SingleOrDefault(_sponsors => _sponsors.Id == _selectedSponsor.Id)!);
             SyncDisplaySponsors();
-            ToastService.ShowSuccess("Sponsor deleted successfully.");
+            ToastService.ShowSuccess(Localization["Admin.deleted"]);
             ClearForm();
         }
         catch(ApiException ex)
@@ -160,5 +196,17 @@ public partial class SponsorManagement
             Id = sponsor.Id,
             IsCreateMode = _isCreateMode
         }).ToList();
+    }
+
+    private string GetTierLabel(SponsorTier tier)
+    {
+        return tier switch
+        {
+            SponsorTier.Presenting => Localization["Admin.tier.presenting"],
+            SponsorTier.Gold => Localization["Admin.tier.gold"],
+            SponsorTier.Silver => Localization["Admin.tier.silver"],
+            SponsorTier.Bronze => Localization["Admin.tier.bronze"],
+            _ => tier.ToString()
+        };
     }
 }

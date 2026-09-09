@@ -19,7 +19,7 @@ public sealed class ProfileDeletionConfirmationTests
     [InlineData("CaptainOne")]
     public void ConfirmedUsername_AllowsTrimmedCaseInsensitiveMatch(string confirmation)
     {
-        var page = new Profile();
+        var page = CreatePage();
         SetField(page, "_originalUsername", "CaptainOne");
         SetField(page, "_deleteConfirmation", confirmation);
 
@@ -32,7 +32,7 @@ public sealed class ProfileDeletionConfirmationTests
     [InlineData("DifferentPlayer")]
     public void EmptyOrIncorrectConfirmation_KeepsDeletionDisabled(string confirmation)
     {
-        var page = new Profile();
+        var page = CreatePage();
         SetField(page, "_originalUsername", "CaptainOne");
         SetField(page, "_deleteConfirmation", confirmation);
 
@@ -42,7 +42,7 @@ public sealed class ProfileDeletionConfirmationTests
     [Fact]
     public void UnsavedUsernameEdit_DoesNotChangeExpectedConfirmation()
     {
-        var page = new Profile();
+        var page = CreatePage();
         SetField(page, "_originalUsername", "CaptainOne");
         SetField(page, "_deleteConfirmation", "UnsavedName");
         ReadModel(page).Username = "UnsavedName";
@@ -86,7 +86,7 @@ public sealed class ProfileDeletionConfirmationTests
 
     private static Profile CreateSavePage(out RecordingUserClientProxy userClient)
     {
-        var page = new Profile();
+        var page = CreatePage();
         SetField(page, "_originalUsername", "CaptainOne");
         ReadModel(page).Username = "EditedName";
 
@@ -97,6 +97,13 @@ public sealed class ProfileDeletionConfirmationTests
         var toastProxy = DispatchProxy.Create<IToastService, RecordingToastServiceProxy>();
         SetPrivateProperty(page, "ToastService", toastProxy);
 
+        return page;
+    }
+
+    private static Profile CreatePage()
+    {
+        var page = new Profile();
+        SetPrivateProperty(page, "Localization", TestLocalizationService.Instance);
         return page;
     }
 

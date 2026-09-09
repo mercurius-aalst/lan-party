@@ -43,6 +43,6 @@ public sealed class ParticipantViewModel
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value!.Trim()));
 
-        return string.IsNullOrWhiteSpace(fullName) ? "Participant" : fullName;
+        return fullName;
     }
 }

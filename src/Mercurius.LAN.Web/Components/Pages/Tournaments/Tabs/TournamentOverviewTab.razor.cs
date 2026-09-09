@@ -32,6 +32,26 @@ public partial class TournamentOverviewTab
         BracketType.DoubleElimination
     ];
 
+    private static readonly IReadOnlyDictionary<string, string> ValidationFieldLabelKeys = new Dictionary<string, string>
+    {
+        [nameof(UpdateTournamentDTO.Name)] = "shared.name",
+        [nameof(UpdateTournamentDTO.BracketType)] = "Feature.tournament.bracketType",
+        [nameof(UpdateTournamentDTO.Format)] = "Feature.tournaments.matchFormat",
+        [nameof(UpdateTournamentDTO.FinalsFormat)] = "Feature.tournaments.finalsFormat",
+        [nameof(UpdateTournamentDTO.ParticipationMode)] = "tournament.participation",
+        [nameof(UpdateTournamentDTO.Image)] = "Feature.tournaments.tournamentImage",
+        [nameof(UpdateTournamentDTO.TeamSize)] = "tournament.teamSize",
+        [nameof(UpdateTournamentDTO.PlannedStartTime)] = "Feature.tournaments.plannedStartTime",
+        [nameof(UpdateTournamentDTO.AverageGameDurationMinutes)] = "Feature.tournaments.averageGameDuration",
+        [nameof(UpdateTournamentDTO.RoundBreakDurationMinutes)] = "Feature.tournaments.roundBreakDuration"
+    };
+
+    private static readonly IReadOnlyDictionary<string, string> ValidationMessageKeys = new Dictionary<string, string>
+    {
+        ["Planned start time is required."] = "form.plannedStartTimeRequired",
+        ["Team tournaments require a team size between 1 and 50."] = "form.teamSizeRange"
+    };
+
     private void EnableEditMode()
     {
         _isEditMode = true;
@@ -61,22 +81,24 @@ public partial class TournamentOverviewTab
         FormatDateTime(Tournament.PlannedStartTime);
 
     private string GetEstimatedEndLabel() =>
-        Tournament.EstimatedEndTime.HasValue ? FormatDateTime(Tournament.EstimatedEndTime.Value) : "Estimate unavailable";
+        Tournament.EstimatedEndTime.HasValue ? FormatDateTime(Tournament.EstimatedEndTime.Value) : Localization["Feature.tournamentsOverview.estimateUnavailable"];
 
-    private static string FormatDateTime(DateTime dateTime) =>
-        dateTime.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
+    private string FormatDateTime(DateTime dateTime) =>
+        Localization.FormatDateTime(dateTime.ToLocalDisplayTime());
 
     private string GetRegistrationStateLabel()
     {
         if(Tournament.Status != TournamentStatus.Scheduled)
-            return "Closed";
+            return Localization["Feature.tournaments.registrationClosed"];
 
         var activeRegistrationCount = Tournament.Registrations?.Count(registration =>
             registration.Status == TournamentRegistrationStatus.Active) ?? 0;
-        var participantLabel = Tournament.ParticipationMode == ParticipationMode.Team ? "teams" : "players";
+        var participantLabel = Tournament.ParticipationMode == ParticipationMode.Team
+            ? Localization["Feature.tournament.participationTeamPlural"]
+            : Localization["Feature.tournament.participationIndividualPlural"];
         return activeRegistrationCount == 0
-            ? "Open · no registrations yet"
-            : $"Open · {activeRegistrationCount} {participantLabel} registered";
+            ? Localization["Feature.tournaments.registrationOpenEmpty"]
+            : Localization.Get("Feature.tournaments.registrationOpenCount", activeRegistrationCount, participantLabel);
     }
 
     private async Task SubmitEditAsync()
@@ -105,23 +127,23 @@ public partial class TournamentOverviewTab
             Tournament.EstimatedEndTime = updatedTournament.EstimatedEndTime;
             Tournament.ImageUrl = updatedTournament.ImageUrl;
             _isEditMode = false;
-            ToastService.ShowSuccess("Edit successful");
+            ToastService.ShowSuccess(Localization["Feature.tournaments.editSuccess"]);
             await OnTournamentUpdated.InvokeAsync(Tournament);
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException ex)
         {
-            _saveError = string.IsNullOrWhiteSpace(ex.Content) ? "The tournament could not be updated." : ex.Content;
+            _saveError = string.IsNullOrWhiteSpace(ex.Content) ? Localization["Feature.tournaments.updateFailed"] : ex.Content;
             ToastService.ShowError(_saveError);
         }
         catch(UnauthorizedAccessException)
         {
-            _saveError = "You are not authorized to update this tournament.";
+            _saveError = Localization["Feature.tournaments.updateUnauthorized"];
             ToastService.ShowError(_saveError);
         }
         catch(Exception)
         {
-            _saveError = "The tournament could not be updated right now.";
+            _saveError = Localization["Feature.tournaments.updateFailedNow"];
             ToastService.ShowError(_saveError);
         }
         finally
@@ -129,4 +151,37 @@ public partial class TournamentOverviewTab
             _isSaving = false;
         }
     }
+
+    private string GetStatusLabel(TournamentStatus status) => status switch
+    {
+        TournamentStatus.Scheduled => Localization["Feature.tournament.statusScheduled"],
+        TournamentStatus.InProgress => Localization["Feature.tournament.statusInProgress"],
+        TournamentStatus.Completed => Localization["Feature.tournament.statusCompleted"],
+        TournamentStatus.Canceled => Localization["Feature.tournament.statusCanceled"],
+        _ => status.ToString()
+    };
+
+    private string GetBracketLabel(BracketType bracketType) => bracketType switch
+    {
+        BracketType.SingleElimination => Localization["Feature.tournament.bracketSingle"],
+        BracketType.DoubleElimination => Localization["Feature.tournament.bracketDouble"],
+        BracketType.RoundRobin => Localization["Feature.tournament.bracketRoundRobin"],
+        BracketType.Swiss => Localization["Feature.tournament.bracketSwiss"],
+        _ => bracketType.ToString()
+    };
+
+    private string GetParticipationLabel(ParticipationMode mode) => mode switch
+    {
+        ParticipationMode.Individual => Localization["Feature.tournament.participationIndividual"],
+        ParticipationMode.Team => Localization["Feature.tournament.participationTeam"],
+        _ => mode.ToString()
+    };
+
+    private string GetFormatLabel(TournamentFormat format) => format switch
+    {
+        TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+        TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+        TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+        _ => format.ToString()
+    };
 }

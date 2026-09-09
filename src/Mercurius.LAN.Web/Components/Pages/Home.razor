@@ -3,19 +3,19 @@
 @using Mercurius.LAN.Web.Extensions
 @rendermode InteractiveServer
 
-<PageTitle>Mercurius LAN</PageTitle>
+<PageTitle>@Localization["General.Home.PageTitle"]</PageTitle>
 
 @if(_tournaments == null && _loadError is null)
 {
-    <LoadingScreen Message="Loading..." />
+    <LoadingScreen Message='@Localization["common.loading"]' />
 }
 else if(_loadError is not null)
 {
     <section class="brand-section">
         <div class="brand-card home-empty-state" role="alert">
-            <h1>Unable to load tournament highlights</h1>
+            <h1>@Localization["General.Home.LoadErrorTitle"]</h1>
             <p>@_loadError</p>
-            <button type="button" class="button-primary" @onclick="RetryLoadAsync">Try again</button>
+            <button type="button" class="button-primary" @onclick="RetryLoadAsync">@Localization["status.tryAgain"]</button>
         </div>
     </section>
 }
@@ -53,29 +53,29 @@ else
             <div class="home-hero-content">
                 <img src="/img/lan_logo_wide_light.svg" alt="Mercurius LAN" class="home-hero-wordmark" />
 
-                <h1 class="home-hero-title">The student LAN weekend with real atmosphere.</h1>
+                <h1 class="home-hero-title">@Localization["General.Home.HeroTitle"]</h1>
 
                 <div class="home-hero-actions">
-                    <a href="/info#tickets" class="button-primary">Get Your Tickets</a>
-                    <a href="/info" class="button-secondary">Event Info</a>
+                    <a href="/info#tickets" class="button-primary">@Localization["General.Home.GetTickets"]</a>
+                    <a href="/info" class="button-secondary">@Localization["General.Home.EventInfo"]</a>
                 </div>
 
                 <div class="home-hero-info-group">
                     <div class="home-hero-date-card">
-                        <span class="home-hero-date-label">Event date</span>
+                        <span class="home-hero-date-label">@Localization["General.Home.EventDate"]</span>
                         <span class="home-hero-date-value">@EventWindow</span>
                     </div>
 
                     <div class="home-hero-detail-row">
                         <div class="home-hero-detail-card home-hero-location-card">
-                            <span class="home-hero-detail-label">Location</span>
+                            <span class="home-hero-detail-label">@Localization["General.Home.Location"]</span>
                             <span class="home-hero-detail-value home-hero-location-value">@HeroLocation</span>
                         </div>
                     </div>
                 </div>
 
-                <a href="@(_sponsors.Any() ? "#home-sponsors" : "#home-content")" class="home-hero-scroll-link" aria-label="Scroll to the rest of the home page">
-                    <span class="home-hero-scroll-label">Explore the event</span>
+                <a href="@(_sponsors.Any() ? "#home-sponsors" : "#home-content")" class="home-hero-scroll-link" aria-label='@Localization["General.Home.ScrollToContent"]'>
+                    <span class="home-hero-scroll-label">@Localization["General.Home.ExploreEvent"]</span>
                     <span class="home-hero-scroll-indicator" aria-hidden="true"></span>
                 </a>
             </div>           
@@ -86,19 +86,19 @@ else
         <section id="home-sponsors" class="brand-section home-sponsors" aria-labelledby="home-sponsors-title">
             <div class="home-sponsors-panel brand-panel-dark">
                 <div class="home-section-heading home-sponsors-heading">
-                    <h2 id="home-sponsors-title">Our sponsors</h2>
-                    <a href="/sponsors" class="button-secondary home-sponsors-cta">View all partners</a>
+                    <h2 id="home-sponsors-title">@Localization["General.Home.OurSponsors"]</h2>
+                    <a href="/sponsors" class="button-secondary home-sponsors-cta">@Localization["General.Home.ViewAllPartners"]</a>
                 </div>
 
                 @if(_sponsors.Any())
                 {
                     <div class="home-sponsors-slider">
-                        <SponsorScroller Sponsors="_sponsors" AriaLabel="Home page sponsor logos" />
+                        <SponsorScroller Sponsors="_sponsors" AriaLabel='@Localization["General.Home.SponsorLogosAria"]' />
                     </div>
                 }
                 else
                 {
-                    <p class="home-empty-copy home-sponsors-empty">Our event partners will appear here soon.</p>
+                    <p class="home-empty-copy home-sponsors-empty">@Localization["General.Home.SponsorsEmpty"]</p>
                 }
             </div>
         </section>
@@ -107,13 +107,13 @@ else
             <span id="schedule" class="home-anchor-target" aria-hidden="true"></span>
             <div class="home-section-shell">
                 <div class="home-section-heading">
-                    <h2 id="featured-tournaments-title">Featured tournaments</h2>
-                    <a href="/tournaments" class="button-secondary">View all tournaments</a>
+                    <h2 id="featured-tournaments-title">@Localization["General.Home.FeaturedTournaments"]</h2>
+                    <a href="/tournaments" class="button-secondary">@Localization["General.Home.ViewAllTournaments"]</a>
                 </div>
 
                 @if(FeaturedTournaments.Count == 0)
                 {
-                    <p class="home-empty-copy">No tournaments are currently published.</p>
+                    <p class="home-empty-copy">@Localization["General.Home.NoPublishedTournaments"]</p>
                 }
                 else
                 {
@@ -153,18 +153,18 @@ else
         <div class="home-actions">
             <section id="tickets" class="home-action-panel home-tickets" aria-labelledby="home-tickets-title">
                 <div class="home-action-copy">
-                    <h2 id="home-tickets-title">Join the LAN</h2>
-                    <p>Compare visitor and gamer passes for the weekend.</p>
+                    <h2 id="home-tickets-title">@Localization["General.Home.JoinLan"]</h2>
+                    <p>@Localization["General.Home.ComparePasses"]</p>
                 </div>
-                <a href="/info#tickets" class="button-primary">View ticket info</a>
+                <a href="/info#tickets" class="button-primary">@Localization["General.Home.ViewTicketInfo"]</a>
             </section>
 
             <section id="contact" class="home-action-panel home-contact" aria-labelledby="home-contact-title">
                 <div class="home-action-copy">
-                    <h2 id="home-contact-title">Need more info?</h2>
-                    <p>Find venue, packing, catering, and community details.</p>
+                    <h2 id="home-contact-title">@Localization["General.Home.NeedMoreInfo"]</h2>
+                    <p>@Localization["General.Home.FindDetails"]</p>
                 </div>
-                <a href="/info#contact-info" class="button-secondary">Contact us</a>
+                <a href="/info#contact-info" class="button-secondary">@Localization["General.Home.ContactUs"]</a>
             </section>
         </div>
     </div>

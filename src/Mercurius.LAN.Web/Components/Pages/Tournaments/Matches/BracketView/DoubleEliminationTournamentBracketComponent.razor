@@ -2,12 +2,12 @@
 
 @if(Tournament.Matches == null || !Tournament.Matches.Any())
 {
-    <p>Geen matches gevonden.</p>
+    <p>@Localization["status.noMatches"]</p>
 }
 else
 {
     <div class="double-elimination-shell">
-        <div class="double-elimination-tabs" role="tablist" aria-label="Bracket views">
+        <div class="double-elimination-tabs" role="tablist" aria-label='@Localization["Feature.tournaments.bracketViewsAria"]'>
             @foreach(var option in _viewOptions)
             {
                 <button

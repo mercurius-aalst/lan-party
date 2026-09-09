@@ -109,34 +109,44 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;
 
-    private string GetStageLabel() => Match.IsLowerBracketMatch ? "Lower bracket" : "Main bracket";
+    private string GetStageLabel() => Match.IsLowerBracketMatch
+        ? Localization["Feature.match.lowerBracket"]
+        : Localization["Feature.match.mainBracket"];
 
-    private string GetRoundLabel() => $"Round {Match.RoundNumber}";
+    private string GetRoundLabel() => Localization.Get("Feature.match.round", Match.RoundNumber);
+
+    private string GetFormatLabel() => Match.Format switch
+    {
+        TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+        TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+        TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+        _ => Match.Format.ToString()
+    };
 
     private string GetStatusLabel() => Match.LifecycleState switch
     {
-        MatchLifecycleState.AwaitingEndedConfirmation => "Awaiting confirmation",
-        MatchLifecycleState.AwaitingScore => "Ready for score",
-        MatchLifecycleState.ScoreConfirmation => "Score confirmation",
-        MatchLifecycleState.Disputed => "Score disputed",
-        MatchLifecycleState.AdminResolutionRequired => "Admin resolution required",
-        MatchLifecycleState.Completed => "Completed",
-        MatchLifecycleState.Forfeited => "Forfeited",
-        MatchLifecycleState.Reversed => "Reversed",
-        _ => "Awaiting match result"
+        MatchLifecycleState.AwaitingEndedConfirmation => Localization["Feature.match.statusAwaitingConfirmation"],
+        MatchLifecycleState.AwaitingScore => Localization["Feature.match.statusReadyForScore"],
+        MatchLifecycleState.ScoreConfirmation => Localization["Feature.match.statusScoreConfirmation"],
+        MatchLifecycleState.Disputed => Localization["Feature.match.statusDisputed"],
+        MatchLifecycleState.AdminResolutionRequired => Localization["Feature.match.statusAdminResolution"],
+        MatchLifecycleState.Completed => Localization["Feature.match.statusCompleted"],
+        MatchLifecycleState.Forfeited => Localization["Feature.match.statusForfeited"],
+        MatchLifecycleState.Reversed => Localization["Feature.match.statusReversed"],
+        _ => Localization["Feature.match.statusAwaitingResult"]
     };
 
     private string GetStatusDescription() => Match.LifecycleState switch
     {
-        MatchLifecycleState.AwaitingEndedConfirmation => "Both sides must confirm that the match has ended.",
-        MatchLifecycleState.AwaitingScore => "Both sides have confirmed the end. Either eligible participant or captain may submit the score.",
-        MatchLifecycleState.ScoreConfirmation => "The first score report is saved. The opponent has five minutes to agree or report a correction.",
-        MatchLifecycleState.Disputed => "The reports do not match. Each side has one correction opportunity before administrator resolution.",
-        MatchLifecycleState.AdminResolutionRequired => "The correction window expired. An authorized tournament administrator must resolve this result.",
-        MatchLifecycleState.Completed => "The result is official and has advanced the bracket.",
-        MatchLifecycleState.Forfeited => "The result is official after a side forfeited.",
-        MatchLifecycleState.Reversed => "The result was reversed. The match can be played again when both sides are assigned.",
-        _ => "Match details are loading."
+        MatchLifecycleState.AwaitingEndedConfirmation => Localization["Feature.match.descriptionAwaitingConfirmation"],
+        MatchLifecycleState.AwaitingScore => Localization["Feature.match.descriptionAwaitingScore"],
+        MatchLifecycleState.ScoreConfirmation => Localization["Feature.match.descriptionScoreConfirmation"],
+        MatchLifecycleState.Disputed => Localization["Feature.match.descriptionDisputed"],
+        MatchLifecycleState.AdminResolutionRequired => Localization["Feature.match.descriptionAdminResolution"],
+        MatchLifecycleState.Completed => Localization["Feature.match.descriptionCompleted"],
+        MatchLifecycleState.Forfeited => Localization["Feature.match.descriptionForfeited"],
+        MatchLifecycleState.Reversed => Localization["Feature.match.descriptionReversed"],
+        _ => Localization["Feature.match.descriptionLoading"]
     };
 
     private string GetStatusClass() => Match.LifecycleState switch
@@ -149,14 +159,14 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private string GetStartDateTimeLabel() =>
         Match.EstimatedStartTime.HasValue
-            ? Match.EstimatedStartTime.Value.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm")
-            : "Unavailable";
+            ? Localization.FormatDateTime(Match.EstimatedStartTime.Value.ToLocalDisplayTime())
+            : Localization["Feature.match.unavailable"];
 
     private string GetDeadlineLabel()
     {
         var deadline = GetDeadlineUtc();
         return deadline.HasValue
-            ? $"Window closes {deadline.Value.ToLocalDisplayTime():dd MMM yyyy · HH:mm}"
+            ? Localization.Get("Feature.match.windowCloses", Localization.FormatDateTime(deadline.Value.ToLocalDisplayTime()))
             : string.Empty;
     }
 
@@ -168,13 +178,13 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
         var remaining = deadline.Value.ToUniversalTime() - DateTime.UtcNow;
         if(remaining <= TimeSpan.Zero)
-            return "Window closed.";
+            return Localization["Feature.match.windowClosed"];
 
         var minutes = (int)remaining.TotalMinutes;
         var seconds = remaining.Seconds;
         return minutes > 0
-            ? $"About {minutes}m {seconds:00}s remaining"
-            : $"About {seconds}s remaining";
+            ? Localization.Get("Feature.match.remainingMinutes", minutes, seconds)
+            : Localization.Get("Feature.match.remainingSeconds", seconds);
     }
 
     private DateTime? GetDeadlineUtc() => Match.LifecycleState == MatchLifecycleState.Disputed
@@ -263,8 +273,8 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             : null;
 
     private string ActionSubjectLabel => Match.ParticipationMode == ParticipationMode.Team
-        ? "Your captain actions"
-        : "Your player actions";
+        ? Localization["Feature.match.yourCaptainActions"]
+        : Localization["Feature.match.yourPlayerActions"];
 
     private string SignInHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
 
@@ -294,10 +304,31 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         _ => "This administrator action is unavailable."
     };
 
-    private static string FormatReport(int? participant1Score, int? participant2Score) =>
+    private string GetLocalizedAdminBlockedReason(string? reason) => reason switch
+    {
+        "tournament_not_in_progress" => Localization["Feature.match.blockedTournamentNotInProgress"],
+        "match_not_completed" => Localization["Feature.match.blockedMatchNotCompleted"],
+        "match_already_completed" => Localization["Feature.match.blockedMatchAlreadyCompleted"],
+        "match_not_ready" => Localization["Feature.match.blockedMatchNotReady"],
+        "match_not_forfeitable" => Localization["Feature.match.blockedMatchNotForfeitable"],
+        "match_not_disputed" => Localization["Feature.match.blockedMatchNotDisputed"],
+        "match_requires_admin_resolution" => Localization["Feature.match.blockedAdminResolution"],
+        "match_reversal_blocked" => Localization["Feature.match.blockedReversal"],
+        "downstream_graph_too_large" => Localization["Feature.match.blockedDownstreamGraph"],
+        "admin_required" => Localization["Feature.match.blockedAdminRequired"],
+        _ => Localization["Feature.match.blockedUnavailable"]
+    };
+
+    private string FormatReport(int? participant1Score, int? participant2Score) =>
         participant1Score.HasValue && participant2Score.HasValue
             ? $"{participant1Score}-{participant2Score}"
-            : "Not submitted";
+            : Localization["Feature.match.notSubmitted"];
+
+    private string GetEmptyParticipantLabel(bool isBye) =>
+        isBye ? Localization["Feature.match.bye"] : Localization["Feature.match.tbd"];
+
+    private string GetEndedStatusLabel(bool ended) =>
+        ended ? Localization["Feature.match.confirmed"] : Localization["Feature.match.waiting"];
 
     private async Task<bool> RefreshAsync(Guid expectedMatchId)
     {
@@ -351,9 +382,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             {
                 if(generation == _refreshGeneration && Match.Id == expectedMatchId)
                 {
-                    _errorMessage = GetErrorMessage(
+                    _errorMessage = GetLocalizedErrorMessage(
                         fallbackException,
-                        "Match details are temporarily unavailable.");
+                        "Feature.match.detailsUnavailable");
                     _hasFreshActionState = false;
                     _hasLoaded = true;
                     StopDeadlineRefresh();
@@ -366,7 +397,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         {
             if(generation == _refreshGeneration && Match.Id == expectedMatchId)
             {
-                _errorMessage = "This match is no longer available.";
+                _errorMessage = Localization["Feature.match.noLongerAvailable"];
                 _hasFreshActionState = false;
                 _hasLoaded = true;
             }
@@ -376,7 +407,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         {
             if(generation == _refreshGeneration && Match.Id == expectedMatchId)
             {
-                _errorMessage = GetErrorMessage(exception, "Match details are temporarily unavailable.");
+                _errorMessage = GetLocalizedErrorMessage(exception, "Feature.match.detailsUnavailable");
                 _hasFreshActionState = false;
                 _hasLoaded = true;
             }
@@ -403,9 +434,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         }
         catch(Exception exception)
         {
-            ToastService.ShowWarning(GetErrorMessage(
+            ToastService.ShowWarning(GetLocalizedErrorMessage(
                 exception,
-                "The latest match state could not be shared with the bracket."));
+                "Feature.match.bracketUpdateUnavailable"));
         }
     }
 
@@ -478,7 +509,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.ConfirmMatchEndedAsync(matchId),
-            "Your match-end confirmation was saved.",
+            Localization["Feature.match.confirmEndedSaved"],
             state => state.CanConfirmEnded,
             MatchMutationAction.ConfirmEnded);
     }
@@ -499,7 +530,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     Participant1Score = participant1Score,
                     Participant2Score = participant2Score
                 }),
-            "Your score report was saved.",
+            Localization["Feature.match.scoreReportSaved"],
             state => state.CanSubmitScore,
             MatchMutationAction.SubmitScore);
     }
@@ -516,7 +547,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
-            "The forfeit was saved.",
+            Localization["Feature.match.forfeitSaved"],
             state => state.CanForfeit,
             MatchMutationAction.Forfeit);
         _forfeitConfirmationRequested = false;
@@ -539,7 +570,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.ForfeitMatchAsync(matchId, new ForfeitMatchDTO { Participant = side }),
-            "The administrator forfeit was saved.",
+            Localization["Feature.match.adminForfeitSaved"],
             state => state.CanForceForfeit,
             MatchMutationAction.ForceForfeit);
         _adminForfeitConfirmationSide = null;
@@ -561,7 +592,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     Participant1Score = participant1Score,
                     Participant2Score = participant2Score
                 }),
-            "The match was resolved and the result is official.",
+            Localization["Feature.match.resultResolved"],
             state => state.CanResolve,
             MatchMutationAction.Resolve);
     }
@@ -574,7 +605,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         var matchId = Match.Id;
         await RunMutationAsync(
             () => TournamentService.ReverseMatchAsync(matchId),
-            "The match result was reversed.",
+            Localization["Feature.match.resultReversed"],
             state => state.CanReverse,
             MatchMutationAction.Reverse);
     }
@@ -612,7 +643,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             await NotifyMatchRefreshedAsync();
             if(!capability(latestState))
             {
-                _errorMessage = GetBlockedReason(latestState, action);
+                _errorMessage = GetLocalizedBlockedReason(latestState, action);
                 return;
             }
 
@@ -627,7 +658,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(refreshed)
             {
                 if(_requiresAuthentication)
-                    ToastService.ShowWarning("Saved. Sign in to manage this match.");
+                    ToastService.ShowWarning(Localization["Feature.match.savedSignInToManage"]);
                 else
                     ToastService.ShowSuccess(successMessage);
 
@@ -639,15 +670,15 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 {
                     // The command and protected match refresh succeeded. Keep that fresh
                     // projection visible even when the surrounding tournament reload fails.
-                    _errorMessage = GetErrorMessage(
+                    _errorMessage = GetLocalizedErrorMessage(
                         exception,
-                        "Saved. The tournament display is temporarily unavailable.");
+                        "Feature.match.savedTournamentUnavailable");
                     ToastService.ShowWarning(_errorMessage);
                 }
             }
             else
             {
-                ToastService.ShowWarning("Saved. Updated match details are temporarily unavailable.");
+                ToastService.ShowWarning(Localization["Feature.match.savedDetailsUnavailable"]);
             }
         }
         catch(Exception exception)
@@ -655,7 +686,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(expectedMatchId == Match.Id)
             {
                 _hasFreshActionState = false;
-                _errorMessage = GetErrorMessage(exception, "The match action could not be saved. Try again.");
+                _errorMessage = GetLocalizedErrorMessage(exception, "Feature.match.actionSaveFailed");
                 ToastService.ShowError(_errorMessage);
             }
         }
@@ -681,6 +712,43 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             MatchMutationAction.Forfeit => "Forfeiting is no longer available for your side.",
             _ => "The match changed while you were working. Try again."
         };
+    }
+
+    private string GetLocalizedBlockedReason(MatchActionStateDTO state, MatchMutationAction action) => action switch
+    {
+        MatchMutationAction.ForceForfeit => GetLocalizedAdminBlockedReason(state.ForceForfeitBlockedReason),
+        MatchMutationAction.Resolve => GetLocalizedAdminBlockedReason(state.ResolveBlockedReason),
+        MatchMutationAction.Reverse => GetLocalizedAdminBlockedReason(state.ReverseBlockedReason),
+        MatchMutationAction.ConfirmEnded => Localization["Feature.match.confirmEndedUnavailable"],
+        MatchMutationAction.SubmitScore => Localization["Feature.match.scoreSubmissionUnavailable"],
+        MatchMutationAction.Forfeit => Localization["Feature.match.forfeitUnavailable"],
+        _ => Localization["Feature.match.changedTryAgain"]
+    };
+
+    private string GetLocalizedErrorMessage(Exception exception, string fallbackKey)
+    {
+        if(exception is ApiException apiException)
+        {
+            if(apiException.StatusCode == HttpStatusCode.Unauthorized)
+                return Localization["Feature.match.signInToManageShort"];
+
+            if(apiException.StatusCode == HttpStatusCode.Forbidden)
+                return Localization["Feature.match.notAuthorized"];
+
+            if(apiException.StatusCode == HttpStatusCode.Conflict)
+            {
+                var apiError = apiException.GetApiError();
+                return apiError?.Code switch
+                {
+                    "match_reversal_blocked" => Localization["Feature.match.blockedReversal"],
+                    "downstream_graph_too_large" => Localization["Feature.match.blockedDownstreamGraph"],
+                    "match_requires_admin_resolution" => Localization["Feature.match.blockedAdminResolution"],
+                    _ => Localization["Feature.match.changedTryAgain"]
+                };
+            }
+        }
+
+        return Localization[fallbackKey];
     }
 
     private static string GetErrorMessage(Exception exception, string fallback)

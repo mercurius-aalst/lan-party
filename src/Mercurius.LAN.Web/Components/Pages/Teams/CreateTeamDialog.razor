@@ -15,16 +15,16 @@
              @ref="_dialogElement"
              @onkeydown="HandleKeyDown"
             @onclick:stopPropagation>
-            <button type="button" class="team-modal-close" aria-label="Close create team dialog" @onclick="CancelAsync">&times;</button>
+            <button type="button" class="team-modal-close" aria-label='@Localization["General.Team.CloseCreateDialog"]' @onclick="CancelAsync">&times;</button>
             <div class="team-modal-header">
-                <span class="section-eyebrow">New team</span>
-                <h3 id="create-team-dialog-title">Create team</h3>
-                <p id="create-team-dialog-description">Choose a name and add a logo if you have one.</p>
+                <span class="section-eyebrow">@Localization["General.Team.NewTeam"]</span>
+                <h3 id="create-team-dialog-title">@Localization["team.create"]</h3>
+                <p id="create-team-dialog-description">@Localization["General.Team.CreateDescription"]</p>
             </div>
 
             <div class="team-dialog-form-container">
                 <EditForm Model="_model" OnValidSubmit="SubmitAsync" class="team-dialog-form">
-                    <DataAnnotationsValidator />
+                    <LocalizedDataAnnotationsValidator FieldLabelKeys="@ValidationFieldLabelKeys" />
 
                     @if(!string.IsNullOrWhiteSpace(_error))
                     {
@@ -32,7 +32,7 @@
                     }
 
                     <div class="form-group">
-                        <label for="team-name" class="form-label">Team name</label>
+                        <label for="team-name" class="form-label">@Localization["General.Team.TeamName"]</label>
                         <InputText id="team-name" class="form-control" @bind-Value="_model.Name" maxlength="100" />
                         <ValidationMessage For="@(() => _model.Name)" />
                     </div>
@@ -41,7 +41,7 @@
                         <div class="team-dialog-logo-preview">
                             @if(_logo is { } logo)
                             {
-                                <img src="@logo.PreviewDataUrl" alt="Selected logo preview" />
+                                <img src="@logo.PreviewDataUrl" alt='@Localization["General.Team.SelectedLogoPreview"]' />
                             }
                             else
                             {
@@ -51,19 +51,19 @@
                         <div class="team-file-picker-group">
                             <label class="team-file-picker">
                                 <span class="bi bi-image" aria-hidden="true"></span>
-                                <span>Choose logo</span>
+                                <span>@Localization["form.chooseFile"]</span>
                                 <InputFile OnChange="SelectLogoAsync" accept="image/png,image/jpeg,image/webp,image/gif" />
                             </label>
-                            <small>@(_logo?.FileName ?? "No file selected")</small>
+                            <small>@(_logo?.FileName ?? Localization["form.noFile"])</small>
                         </div>
                     </div>
 
                     <div class="team-dialog-actions">
                         <button type="submit" class="button-primary">
                             <span class="bi bi-people-fill" aria-hidden="true"></span>
-                            Create team
+                            @Localization["team.create"]
                         </button>
-                        <button type="button" class="button-secondary" @onclick="CancelAsync">Cancel</button>
+                        <button type="button" class="button-secondary" @onclick="CancelAsync">@Localization["common.cancel"]</button>
                     </div>
                 </EditForm>
             </div>
@@ -73,6 +73,10 @@
 
 @code {
     private const long MaximumLogoBytes = 5 * 1024 * 1024;
+    private static readonly IReadOnlyDictionary<string, string> ValidationFieldLabelKeys = new Dictionary<string, string>
+    {
+        [nameof(CreateTeamFormModel.Name)] = "General.Team.TeamName"
+    };
 
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public EventCallback<CreateTeamDialogResult> TeamCreated { get; set; }
@@ -117,14 +121,14 @@
         var file = args.File;
         if(file.Size > MaximumLogoBytes)
         {
-            _error = "Choose a logo no larger than 5 MB.";
+            _error = Localization["General.Team.LogoTooLarge"];
             _logo = null;
             return;
         }
 
         if(!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
-            _error = "Choose an image file for the team logo.";
+            _error = Localization["General.Team.ImageFileRequired"];
             _logo = null;
             return;
         }

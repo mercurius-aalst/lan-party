@@ -1,0 +1,88 @@
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
+@inject Mercurius.LAN.Web.Localization.ILocalizationService Localization
+
+@code {
+    [CascadingParameter]
+    private EditContext? CurrentEditContext { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string>? FieldLabelKeys { get; set; }
+
+    [Parameter]
+    public IReadOnlyDictionary<string, string>? ValidationMessageKeys { get; set; }
+
+    private ValidationMessageStore? _messages;
+    private LocalizedValidationMessageFormatter? _formatter;
+
+    protected override void OnInitialized()
+    {
+        if(CurrentEditContext is null)
+            throw new InvalidOperationException($"{nameof(LocalizedDataAnnotationsValidator)} requires a cascading {nameof(EditContext)}.");
+
+        _messages = new ValidationMessageStore(CurrentEditContext);
+        _formatter = new LocalizedValidationMessageFormatter(Localization);
+        CurrentEditContext.OnValidationRequested += HandleValidationRequested;
+        CurrentEditContext.OnFieldChanged += HandleFieldChanged;
+    }
+
+    private void HandleValidationRequested(object? sender, ValidationRequestedEventArgs args) => Validate();
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs args) => Validate(args.FieldIdentifier.FieldName);
+
+    private void Validate(string? fieldName = null)
+    {
+        if(CurrentEditContext is null || _messages is null || _formatter is null)
+            return;
+
+        if(string.IsNullOrWhiteSpace(fieldName))
+            _messages.Clear();
+        else
+            _messages.Clear(new FieldIdentifier(CurrentEditContext.Model, fieldName));
+
+        var results = new List<ValidationResult>();
+        var validationContext = new ValidationContext(CurrentEditContext.Model);
+        Validator.TryValidateObject(CurrentEditContext.Model, validationContext, results, validateAllProperties: true);
+
+        foreach(var result in results)
+        {
+            var resultMembers = result.MemberNames?.Where(static member => !string.IsNullOrWhiteSpace(member)).ToArray() ?? [];
+            var members = resultMembers;
+            if(!string.IsNullOrWhiteSpace(fieldName))
+                members = members.Where(member => string.Equals(member, fieldName, StringComparison.Ordinal)).ToArray();
+
+            if(members.Length == 0)
+            {
+                if(!string.IsNullOrWhiteSpace(fieldName))
+                    continue;
+
+                _messages.Add(
+                    new FieldIdentifier(CurrentEditContext.Model, string.Empty),
+                    _formatter.Format(CurrentEditContext.Model, result, FieldLabelKeys, ValidationMessageKeys));
+                continue;
+            }
+
+            foreach(var member in members)
+            {
+                var memberResult = resultMembers.Length == 1
+                    ? result
+                    : new ValidationResult(result.ErrorMessage, [member]);
+                _messages.Add(
+                    new FieldIdentifier(CurrentEditContext.Model, member),
+                    _formatter.Format(CurrentEditContext.Model, memberResult, FieldLabelKeys, ValidationMessageKeys));
+            }
+        }
+
+        CurrentEditContext.NotifyValidationStateChanged();
+    }
+
+    public void Dispose()
+    {
+        if(CurrentEditContext is null)
+            return;
+
+        CurrentEditContext.OnValidationRequested -= HandleValidationRequested;
+        CurrentEditContext.OnFieldChanged -= HandleFieldChanged;
+    }
+}

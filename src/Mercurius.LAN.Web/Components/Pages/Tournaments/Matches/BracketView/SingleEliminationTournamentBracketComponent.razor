@@ -4,7 +4,7 @@
 <div class="bracket-root" id="bracket-root">
     @if(Tournament.Matches == null || !Tournament.Matches.Any())
     {
-        <p>Geen matches gevonden.</p>
+        <p>@Localization["status.noMatches"]</p>
     }
     else
     {

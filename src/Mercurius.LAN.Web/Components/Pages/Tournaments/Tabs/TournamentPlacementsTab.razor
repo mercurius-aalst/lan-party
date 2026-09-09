@@ -6,13 +6,13 @@
 
 <div class="placements-container">
     <div class="placements-header-block">
-        <h2 class="section-eyebrow">Results</h2>
+        <h2 class="section-eyebrow">@Localization["tournament.placements"]</h2>
     </div>
 
     @if(Placements == null || !Placements.Any())
     {
         <div class="brand-card placements-empty-state">
-            <p>No results found.</p>
+            <p>@Localization["status.noResults"]</p>
         </div>
     }
     else
@@ -38,7 +38,7 @@
                             }
                         }
                     </div>
-                    <div class="placement-title">@GetOrdinalSuffix(placement.Place)</div>
+                    <div class="placement-title">@GetOrdinalLabel(placement.Place)</div>
                 </div>
             }
         </div>
@@ -46,7 +46,7 @@
             @foreach(var placement in Placements.OrderBy(p => p.Place).Skip(3))
             {
                 <li class="placement-item">
-                    <span class="placement-title">@GetOrdinalSuffix(placement.Place) Place:</span>
+                    <span class="placement-title">@Localization.Get("Feature.tournaments.placementPlace", GetOrdinalLabel(placement.Place))</span>
                     <ul class="participant-list">
                         @if(ParticipationMode == ParticipationMode.Team)
                         {

@@ -16,6 +16,10 @@ public partial class ParticipantCardComponent
 
     private bool IsTeamParticipant => Participant.Team is not null;
 
+    private string ParticipantLabel => string.IsNullOrWhiteSpace(Participant.DisplayName)
+        ? Localization[IsTeamParticipant ? "shared.team" : "shared.user"]
+        : Participant.DisplayName.Trim();
+
     private Task ShowParticipantPopup(ParticipantViewModel participant)
     {
         return OnParticipantSelected.InvokeAsync(participant);
@@ -27,7 +31,7 @@ public partial class ParticipantCardComponent
             : Task.CompletedTask;
 
     private string GetParticipantInitial() =>
-        string.IsNullOrWhiteSpace(Participant.DisplayName)
+        string.IsNullOrWhiteSpace(ParticipantLabel)
             ? "?"
-            : Participant.DisplayName.Trim()[0].ToString().ToUpperInvariant();
+            : ParticipantLabel[0].ToString().ToUpperInvariant();
 }

@@ -4,7 +4,7 @@
         <span class="@AvatarClass">
             @if(HasLogo)
             {
-                <img src="@LogoUrl" alt="@($"{DisplayName} logo")" class="team-identity-logo" />
+                <img src="@LogoUrl" alt='@Localization.Get("shared.teamLogo", DisplayName)' class="team-identity-logo" />
             }
             else
             {
@@ -23,7 +23,7 @@ else
         <span class="@AvatarClass">
             @if(HasLogo)
             {
-                <img src="@LogoUrl" alt="@($"{DisplayName} logo")" class="team-identity-logo" />
+                <img src="@LogoUrl" alt='@Localization.Get("shared.teamLogo", DisplayName)' class="team-identity-logo" />
             }
             else
             {

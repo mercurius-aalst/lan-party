@@ -12,11 +12,11 @@ public partial class TeamIdentityDisplay
     [Parameter] public string Size { get; set; } = "medium";
     [Parameter] public string? AdditionalClass { get; set; }
 
-    private string DisplayName => string.IsNullOrWhiteSpace(Name) ? "Team" : Name.Trim();
+    private string DisplayName => string.IsNullOrWhiteSpace(Name) ? Localization["shared.team"] : Name.Trim();
     private bool HasLogo => !string.IsNullOrWhiteSpace(LogoUrl);
     private bool HasHref => !string.IsNullOrWhiteSpace(Href);
     private string Initial => string.IsNullOrWhiteSpace(DisplayName) ? "?" : DisplayName[0].ToString().ToUpperInvariant();
-    private string LinkLabel => $"Open {DisplayName} team profile";
+    private string LinkLabel => Localization.Get("shared.openTeamProfile", DisplayName);
 
     private string ContainerClass
     {

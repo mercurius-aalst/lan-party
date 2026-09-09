@@ -3,6 +3,7 @@ using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Pages.Tournaments.Tabs;
 using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.DTOs.Users;
+using Mercurius.LAN.Web.Localization;
 using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -142,6 +143,7 @@ public sealed class TournamentParticipantsMutationTests
     private static TestableTournamentParticipantsTab CreateTab(out RecordingToastServiceProxy toastService)
     {
         var tab = new TestableTournamentParticipantsTab();
+        SetPrivateProperty(tab, "Localization", TestLocalizationService.Instance);
         var toast = DispatchProxy.Create<IToastService, RecordingToastServiceProxy>();
         toastService = (RecordingToastServiceProxy)(object)toast;
         SetPrivateProperty(tab, "ToastService", toast);
@@ -278,6 +280,7 @@ public sealed class TournamentParticipantsMutationTests
         public TestRenderer()
             : base(new ServiceCollection()
                 .AddSingleton<IJSRuntime, TestJsRuntime>()
+                .AddSingleton<ILocalizationService>(TestLocalizationService.Instance)
                 .BuildServiceProvider(), NullLoggerFactory.Instance)
         {
         }

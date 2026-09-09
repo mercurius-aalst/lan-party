@@ -1,6 +1,6 @@
 @if(Sponsors.Count > 0)
 {
-    <div class="sponsor-scroller" aria-label="@AriaLabel">
+    <div class="sponsor-scroller" aria-label="@(string.IsNullOrWhiteSpace(AriaLabel) ? Localization["shared.sponsorLogos"] : AriaLabel)">
         <div class="sponsor-scroller__viewport">
             <div class="sponsor-scroller__track">
                 @for(var loopIndex = 0; loopIndex < LoopCount; loopIndex++)
@@ -14,9 +14,9 @@
                                href="@sponsor.InfoUrl"
                                target="_blank"
                                rel="noopener noreferrer"
-                               aria-label="@(isPrimaryLoop ? $"Visit {sponsor.Name}" : null)"
+                               aria-label="@(isPrimaryLoop ? Localization.Get("shared.visitSponsor", sponsor.Name) : null)"
                                tabindex="@(isPrimaryLoop ? null : "-1")">
-                                <img src="@sponsor.LogoUrl" alt="@(isPrimaryLoop ? $"{sponsor.Name} logo" : string.Empty)" />
+                               <img src="@sponsor.LogoUrl" alt="@(isPrimaryLoop ? Localization.Get("shared.sponsorLogo", sponsor.Name) : string.Empty)" />
                             </a>
                         }
                     </div>

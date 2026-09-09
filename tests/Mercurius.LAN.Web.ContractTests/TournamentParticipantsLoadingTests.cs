@@ -116,6 +116,7 @@ public sealed class TournamentParticipantsLoadingTests
         bool isAdmin = false)
     {
         var tab = new TestableTournamentParticipantsTab();
+        SetPrivateProperty(tab, "Localization", TestLocalizationService.Instance);
         tab.Tournament = CreateTournament();
         tab.PopupOnly = popupOnly;
         tab.RegistrationDialogOpen = dialogOpen;

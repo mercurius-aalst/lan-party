@@ -36,7 +36,7 @@ public partial class UserInfoDialog
 
     private Task CloseAsync() => OnClose.InvokeAsync();
 
-    private static string GetDialogTitle(PublicUserDTO user)
+    private string GetDialogTitle(PublicUserDTO user)
     {
         var fullName = string.Join(" ", new[] { user.Firstname, user.Lastname }
             .Where(HasValue)
@@ -45,7 +45,7 @@ public partial class UserInfoDialog
         if(!string.IsNullOrWhiteSpace(fullName))
             return fullName;
 
-        return HasValue(user.Username) ? user.Username!.Trim() : "Player details";
+        return HasValue(user.Username) ? user.Username!.Trim() : Localization["shared.playerDetails"];
     }
 
     private static bool HasPublicDetails(PublicUserDTO user) =>

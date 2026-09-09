@@ -15,11 +15,11 @@
 
         if(string.Equals(loginStatus, "cancelled", StringComparison.OrdinalIgnoreCase))
         {
-            ToastService.ShowInfo(isRegistration ? "Registration was cancelled." : "Login was cancelled.");
+            ToastService.ShowInfo(isRegistration ? Localization["auth.registrationCancelled"] : Localization["auth.loginCancelled"]);
         }
         else if(string.Equals(loginStatus, "failed", StringComparison.OrdinalIgnoreCase))
         {
-            ToastService.ShowError(isRegistration ? "Registration failed. Please try again." : "Login failed. Please try again.");
+            ToastService.ShowError(isRegistration ? Localization["auth.registrationFailed"] : Localization["auth.loginFailed"]);
         }
 
         var cleanUri = RemoveLoginQueryParameter();

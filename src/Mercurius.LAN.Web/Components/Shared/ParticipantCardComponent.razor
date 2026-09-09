@@ -4,7 +4,7 @@
      role="button"
      tabindex="0"
      aria-haspopup="dialog"
-     aria-label="View participant details for @Participant.DisplayName"
+     aria-label='@Localization.Get("shared.viewParticipantDetails", ParticipantLabel)'
      @onmouseover="() => _showDeleteIcon = true"
      @onmouseout="() => _showDeleteIcon = false"
      @onclick="() => ShowParticipantPopup(Participant)"
@@ -13,7 +13,7 @@
     {
         <AuthorizeView Roles="admin">
             <Authorized>
-                <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label="Delete" @onclick:stopPropagation="true" @onkeydown:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
+                <button class="btn btn-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2" aria-label='@Localization["shared.delete"]' @onclick:stopPropagation="true" @onkeydown:stopPropagation="true" @onclick="async () => await OnParticipantDeleted.InvokeAsync(Participant)">
                     <i class="bi bi-trash"></i>
                 </button>
             </Authorized>
@@ -28,6 +28,6 @@
         <div class="participant-avatar player-avatar">
             @GetParticipantInitial()
         </div>
-        <div class="participant-overview-name">@Participant.DisplayName</div>
+        <div class="participant-overview-name">@ParticipantLabel</div>
     }
 </div>

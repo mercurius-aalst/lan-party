@@ -5,19 +5,19 @@
 @using Mercurius.LAN.Web.Models.Tournaments
 @using Microsoft.AspNetCore.Components.Authorization
 @rendermode InteractiveServer
-<PageTitle>Tournaments</PageTitle>
+<PageTitle>@Localization["tournaments.pageTitle"]</PageTitle>
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading tournaments..." />
+    <LoadingScreen Message='@Localization["status.loadingTournaments"]' />
 }
 else if(_loadError is not null)
 {
     <section class="brand-section">
         <div class="brand-card tournament-empty-state" role="alert">
-            <h1>Unable to load tournaments</h1>
+            <h1>@Localization["Feature.tournamentsOverview.loadTitle"]</h1>
             <p>@_loadError</p>
-            <button type="button" class="button-primary" @onclick="RetryLoadAsync">Try again</button>
+            <button type="button" class="button-primary" @onclick="RetryLoadAsync">@Localization["status.tryAgain"]</button>
         </div>
     </section>
 }
@@ -27,14 +27,14 @@ else
         <div class="brand-card brand-page-hero tournaments-browse-shell">
             <div class="tournaments-browse-lead">
                 <div class="brand-page-hero-copy tournaments-browse-copy">
-                    <h1>Tournaments</h1>
-                    <p>Find the next event to join by name, status, or play style.</p>
+                    <h1>@Localization["tournaments.pageTitle"]</h1>
+                    <p>@Localization["Feature.tournamentsOverview.intro"]</p>
                 </div>
-                <SectionNav AdditionalClass="tournaments-browse-links" AriaLabel="Tournament page sections">
-                    <a href="/tournaments#process" class="button-secondary">How It Works</a>
+                <SectionNav AdditionalClass="tournaments-browse-links" AriaLabel='@Localization["Feature.tournamentsOverview.sectionsAria"]'>
+                    <a href="/tournaments#process" class="button-secondary">@Localization["Feature.tournamentsOverview.howItWorks"]</a>
                     <AuthorizeView Roles="admin">
                         <Authorized>
-                            <a href="/admin/sponsors" class="button-secondary">Sponsor admin</a>
+                            <a href="/admin/sponsors" class="button-secondary">@Localization["Feature.tournamentsOverview.sponsorAdmin"]</a>
                         </Authorized>
                     </AuthorizeView>
                 </SectionNav>
@@ -42,22 +42,22 @@ else
 
             <div class="tournaments-browse-controls">
                 <div class="tournaments-control-field tournaments-control-field--search">
-                    <label for="tournaments-search">Search tournaments</label>
-                    <input id="tournaments-search" type="text" class="tournaments-search-input" placeholder="Search by name" @bind="_searchTerm" @bind:event="oninput" />
+                    <label for="tournaments-search">@Localization["Feature.tournamentsOverview.searchLabel"]</label>
+                    <input id="tournaments-search" type="text" class="tournaments-search-input" placeholder='@Localization["Feature.tournamentsOverview.searchPlaceholder"]' @bind="_searchTerm" @bind:event="oninput" />
                 </div>
 
                 <div class="tournaments-control-field tournaments-control-field--sort">
-                    <label for="tournaments-sort">Sort by</label>
+                    <label for="tournaments-sort">@Localization["Feature.tournamentsOverview.sortLabel"]</label>
                     <select id="tournaments-sort" class="tournaments-sort-select" @bind="_sortOption">
-                        <option value="@TournamentSortOption.StartTime">Start time</option>
-                        <option value="@TournamentSortOption.Name">Name</option>
-                        <option value="@TournamentSortOption.Status">Status</option>
+                        <option value="@TournamentSortOption.StartTime">@Localization["Feature.tournamentsOverview.sortStartTime"]</option>
+                        <option value="@TournamentSortOption.Name">@Localization["shared.name"]</option>
+                        <option value="@TournamentSortOption.Status">@Localization["tournament.status"]</option>
                     </select>
                 </div>
 
                 <div class="tournaments-filter-group">
                     <div class="tournaments-filter-group-header">
-                        <span class="section-eyebrow">Status</span>
+                        <span class="section-eyebrow">@Localization["tournament.status"]</span>
                     </div>
                     <div class="tournaments-filter-chip-row flex flex-wrap gap-3">
                         @foreach(var filter in StatusFilters)
@@ -71,7 +71,7 @@ else
 
                 <div class="tournaments-filter-group">
                     <div class="tournaments-filter-group-header">
-                        <span class="section-eyebrow">Mode</span>
+                        <span class="section-eyebrow">@Localization["tournament.participation"]</span>
                     </div>
                     <div class="tournaments-filter-chip-row flex flex-wrap gap-3">
                         @foreach(var filter in ParticipationFilters)
@@ -91,9 +91,9 @@ else
             <AuthorizeView Roles="admin">
                 <Authorized>
                     <button type="button" class="brand-card tournaments-add-card" @onclick="ShowAddTournamentDialog">
-                        <span class="brand-section-number">Admin</span>
-                        <h3>Add Tournament</h3>
-                        <p>Create a new Tournament entry without leaving the overview page.</p>
+                        <span class="brand-section-number">@Localization["tournament.admin"]</span>
+                        <h3>@Localization["Feature.tournamentsOverview.addTournament"]</h3>
+                        <p>@Localization["Feature.tournamentsOverview.addTournamentDescription"]</p>
                         <span class="tournaments-add-card-icon" aria-hidden="true">+</span>
                     </button>
                 </Authorized>
@@ -102,8 +102,8 @@ else
             @if(FilteredTournaments.Count == 0)
             {
                 <div class="brand-card tournaments-empty-state">
-                    <h3>No tournaments match the current filters.</h3>
-                    <p>Adjust the search, status, or mode filters to see more tournaments on this page.</p>
+                    <h3>@Localization["Feature.tournamentsOverview.noFilterMatches"]</h3>
+                    <p>@Localization["Feature.tournamentsOverview.adjustFilters"]</p>
                 </div>
             }
 
@@ -115,43 +115,43 @@ else
                     <div class="brand-tournament-card-body tournaments-card-body">
                         <div class="brand-tournament-card-topline tournaments-card-topline">
                             <span class="brand-tournament-card-date tournaments-card-date">@GetPlannedStartLabel(tournament)</span>
-                            <span class="tournament-status @tournament.Status.GetStatusClass()">@tournament.Status.GetStatusLabel()</span>
+                            <span class="tournament-status @tournament.Status.GetStatusClass()">@GetStatusLabel(tournament.Status)</span>
                         </div>
 
                         <h3>@tournament.Name</h3>
 
                         <div class="brand-tournament-card-badges tournaments-card-badges">
-                            <span class="badge">@tournament.ParticipationMode.GetLabel()</span>
-                            <span class="badge">@tournament.BracketType.GetLabel()</span>
+                            <span class="badge">@GetParticipationLabel(tournament.ParticipationMode)</span>
+                            <span class="badge">@GetBracketLabel(tournament.BracketType)</span>
                         </div>
 
                         <dl class="brand-tournament-card-meta tournaments-card-meta">
                             <div>
-                                <dt>Format</dt>
-                                <dd>@tournament.Format.GetLabel()</dd>
+                                <dt>@Localization["tournament.format"]</dt>
+                                <dd>@GetFormatLabel(tournament.Format)</dd>
                             </div>
                             <div>
-                                <dt>Finals</dt>
-                                <dd>@tournament.FinalsFormat.GetLabel()</dd>
+                                <dt>@Localization["Feature.tournamentsOverview.finals"]</dt>
+                                <dd>@GetFormatLabel(tournament.FinalsFormat)</dd>
                             </div>
                             <div>
-                                <dt>Estimated end</dt>
+                                <dt>@Localization["Feature.tournamentsOverview.estimatedEnd"]</dt>
                                 <dd>@GetEstimatedEndLabel(tournament)</dd>
                             </div>
                             @if(tournament.ParticipationMode == ParticipationMode.Team && tournament.TeamSize.HasValue)
                             {
                                 <div>
-                                    <dt>Team size</dt>
-                                    <dd>@tournament.TeamSize</dd>
+                                    <dt>@Localization["tournament.teamSize"]</dt>
+                                    <dd>@Localization.Get("Feature.tournament.teamSizePlayers", tournament.TeamSize)</dd>
                                 </div>
                             }
                         </dl>
                     </div>
 
                     <div class="brand-tournament-card-actions tournaments-card-actions grid gap-3">
-                        <button type="button" class="button-secondary" @onclick="() => NavigateToTournamentDetail(tournament.Id)">View Details</button>
+                        <button type="button" class="button-secondary" @onclick="() => NavigateToTournamentDetail(tournament.Id)">@Localization["Feature.tournamentsOverview.viewDetails"]</button>
                         <button type="button" class="button-primary" disabled="@(!CanRegister(tournament))" @onclick="() => OpenRegistration(tournament)">
-                            @(CanRegister(tournament) ? "Register" : "Registration Closed")
+                            @(CanRegister(tournament) ? Localization["tournament.register"] : Localization["Feature.tournamentsOverview.registrationClosed"])
                         </button>
                     </div>
                 </article>
@@ -160,15 +160,15 @@ else
 
         @if(_isLoadingPage)
         {
-            <p class="tournament-empty-copy" role="status">Loading tournaments...</p>
+            <p class="tournament-empty-copy" role="status">@Localization["status.loadingTournaments"]</p>
         }
 
         @if(_page > 1 || _hasNextPage)
         {
-            <nav class="tournaments-pagination flex items-center justify-center gap-3" aria-label="Tournament pages">
-                <button type="button" class="button-secondary" disabled="@(_page == 1 || _isLoadingPage)" @onclick="() => ChangePageAsync(_page - 1)">Previous</button>
-                <span aria-current="page">Page @_page</span>
-                <button type="button" class="button-secondary" disabled="@(!_hasNextPage || _isLoadingPage)" @onclick="() => ChangePageAsync(_page + 1)">Next</button>
+            <nav class="tournaments-pagination flex items-center justify-center gap-3" aria-label='@Localization["Feature.tournamentsOverview.paginationAria"]'>
+                <button type="button" class="button-secondary" disabled="@(_page == 1 || _isLoadingPage)" @onclick="() => ChangePageAsync(_page - 1)">@Localization["common.back"]</button>
+                <span aria-current="page">@Localization.Get("Feature.tournamentsOverview.page", _page)</span>
+                <button type="button" class="button-secondary" disabled="@(!_hasNextPage || _isLoadingPage)" @onclick="() => ChangePageAsync(_page + 1)">@Localization["common.next"]</button>
             </nav>
         }
 
@@ -191,27 +191,27 @@ else
     <section class="brand-section tournaments-process-section">
         <div id="process" class="tournaments-results-header tournaments-process-anchor brand-section-anchor flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
-                <h2>How it works</h2>
+                <h2>@Localization["Feature.tournamentsOverview.howItWorks"]</h2>
             </div>
         </div>
 
         <div class="tournaments-process-grid grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             <article class="brand-card tournaments-process-card">
                 <span class="brand-section-number">01</span>
-                <h3>Pick your tournament</h3>
-                <p>Use the filters to compare Tournament formats, bracket structure, and whether the event is solo or team-based.</p>
+                <h3>@Localization["Feature.tournamentsOverview.processPickHeading"]</h3>
+                <p>@Localization["Feature.tournamentsOverview.processPickText"]</p>
             </article>
 
             <article class="brand-card tournaments-process-card">
                 <span class="brand-section-number">02</span>
-                <h3>Register while it is open</h3>
-                <p>Open a scheduled tournament to check eligibility and register yourself or submit an eligible team roster.</p>
+                <h3>@Localization["Feature.tournamentsOverview.processRegisterHeading"]</h3>
+                <p>@Localization["Feature.tournamentsOverview.processRegisterText"]</p>
             </article>
 
             <article class="brand-card tournaments-process-card">
                 <span class="brand-section-number">03</span>
-                <h3>Show up ready to play</h3>
-                <p>Bring your setup, keep your profile current, and watch the bracket once the event moves into progress.</p>
+                <h3>@Localization["Feature.tournamentsOverview.processPlayHeading"]</h3>
+                <p>@Localization["Feature.tournamentsOverview.processPlayText"]</p>
             </article>
         </div>
     </section>
@@ -219,7 +219,7 @@ else
     @if(_sponsors.Any())
     {
         <section class="brand-section tournaments-sponsors">
-            <SponsorScroller Sponsors="_sponsors" AriaLabel="Tournament overview sponsor logos" />
+            <SponsorScroller Sponsors="_sponsors" AriaLabel='@Localization["Feature.tournamentsOverview.sponsorLogosAria"]' />
         </section>
     }
 }

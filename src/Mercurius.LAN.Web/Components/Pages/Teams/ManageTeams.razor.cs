@@ -28,7 +28,7 @@ public partial class ManageTeams : IAsyncDisposable
     private bool _isCreateTeamDialogOpen;
     private bool _isInviteDialogOpen;
     private Guid? _inviteTeamId;
-    private string _inviteTeamName = "this team";
+    private string _inviteTeamName = string.Empty;
     private PublicUserDTO? _selectedUser;
     private ElementReference _confirmationDialogElement;
     private IJSObjectReference? _confirmationFocusTrap;
@@ -61,7 +61,7 @@ public partial class ManageTeams : IAsyncDisposable
         }
         catch(Exception)
         {
-            ToastService.ShowWarning("Live updates are unavailable. Your changes will still appear after each action.");
+            ToastService.ShowWarning(Localization["General.TeamManage.LiveUpdatesUnavailable"]);
         }
     }
 
@@ -150,7 +150,7 @@ public partial class ManageTeams : IAsyncDisposable
         {
             await RefreshSummaryAsync();
             _isCreateTeamDialogOpen = false;
-            ToastService.ShowSuccess("Team created.");
+            ToastService.ShowSuccess(Localization["General.TeamManage.TeamCreated"]);
             return;
         }
 
@@ -159,12 +159,12 @@ public partial class ManageTeams : IAsyncDisposable
             await using var stream = new MemoryStream(createResult.Logo.Content);
             await TeamService.UploadLogoAsync(createdTeam.Id, stream, createResult.Logo.ContentType, createResult.Logo.FileName);
             await RefreshSummaryAsync();
-            ToastService.ShowSuccess("Team created.");
+            ToastService.ShowSuccess(Localization["General.TeamManage.TeamCreated"]);
         }
         catch(Exception exception)
         {
             await RefreshSummaryAsync();
-            ShowActionToast($"Team created, but the logo could not be saved. {GetErrorMessage(exception)}", TeamActionSeverity.Error);
+            ShowActionToast(Localization.Get("General.TeamManage.TeamCreatedLogoFailed", GetErrorMessage(exception)), TeamActionSeverity.Error);
         }
         finally
         {
@@ -176,7 +176,7 @@ public partial class ManageTeams : IAsyncDisposable
     {
         var team = ManageableTeams.FirstOrDefault(candidate => candidate.Id == teamId);
         _inviteTeamId = teamId;
-        _inviteTeamName = team?.Name ?? "this team";
+        _inviteTeamName = team?.Name ?? string.Empty;
         _isInviteDialogOpen = true;
         return Task.CompletedTask;
     }
@@ -185,7 +185,7 @@ public partial class ManageTeams : IAsyncDisposable
     {
         _isInviteDialogOpen = false;
         _inviteTeamId = null;
-        _inviteTeamName = "this team";
+        _inviteTeamName = string.Empty;
     }
 
     private async Task InviteUserAsync(InviteUserDialogResult inviteResult)
@@ -199,7 +199,7 @@ public partial class ManageTeams : IAsyncDisposable
         {
             await TeamService.InviteUserAsync(teamId, inviteResult.UserId);
             await RefreshSummaryAsync();
-            ShowActionToast("Invite sent.", TeamActionSeverity.Success);
+            ShowActionToast(Localization["General.TeamManage.InviteSent"], TeamActionSeverity.Success);
         });
     }
 
@@ -209,7 +209,7 @@ public partial class ManageTeams : IAsyncDisposable
         {
             await TeamService.CancelInviteAsync(teamId, inviteId);
             await RefreshSummaryAsync();
-            ShowActionToast("Invite canceled.", TeamActionSeverity.Success);
+            ShowActionToast(Localization["General.TeamManage.InviteCanceled"], TeamActionSeverity.Success);
         });
     }
 
@@ -219,17 +219,17 @@ public partial class ManageTeams : IAsyncDisposable
         {
             await TeamService.RespondToInviteAsync(inviteId, accept);
             await RefreshSummaryAsync();
-            ShowActionToast(accept ? "Invite accepted." : "Invite declined.", TeamActionSeverity.Success);
+            ShowActionToast(accept ? Localization["General.TeamManage.InviteAccepted"] : Localization["General.TeamManage.InviteDeclined"], TeamActionSeverity.Success);
         });
     }
 
     private async Task ConfirmLeaveAsync(Guid teamId, string teamName)
     {
         _confirmation = new TeamConfirmation(
-            "Membership",
-            "Leave team",
-            $"Leave {teamName}? You can join again if the captain invites you.",
-            "Leave",
+            Localization["General.TeamManage.Membership"],
+            Localization["team.leave"],
+            Localization.Get("General.TeamManage.LeaveConfirmation", teamName),
+            Localization["General.TeamManage.Leave"],
             async () =>
             {
                 await MutateAsync(async () =>
@@ -239,7 +239,7 @@ public partial class ManageTeams : IAsyncDisposable
                         _selectedTeamId = null;
 
                     await RefreshSummaryAsync();
-                    ShowActionToast("You left the team.", TeamActionSeverity.Success);
+                    ShowActionToast(Localization["General.TeamManage.LeftTeam"], TeamActionSeverity.Success);
                 });
             });
         await Task.CompletedTask;
@@ -248,10 +248,10 @@ public partial class ManageTeams : IAsyncDisposable
     private async Task ConfirmDeleteTeamAsync(Guid teamId, string teamName)
     {
         _confirmation = new TeamConfirmation(
-            "Danger Zone",
-            "Delete team",
-            $"Delete {teamName}? This removes the team from your managed teams.",
-            "Delete team",
+            Localization["General.TeamManage.DangerZone"],
+            Localization["General.TeamManage.DeleteTeam"],
+            Localization.Get("General.TeamManage.DeleteConfirmation", teamName),
+            Localization["General.TeamManage.DeleteTeam"],
             async () =>
             {
                 await MutateAsync(async () =>
@@ -263,7 +263,7 @@ public partial class ManageTeams : IAsyncDisposable
                         _selectedTeamId = null;
 
                     await RefreshSummaryAsync();
-                    ShowActionToast("Team deleted.", TeamActionSeverity.Success);
+                    ShowActionToast(Localization["General.TeamManage.TeamDeleted"], TeamActionSeverity.Success);
                 });
             });
         await Task.CompletedTask;
@@ -272,10 +272,10 @@ public partial class ManageTeams : IAsyncDisposable
     private async Task ConfirmRemoveMemberAsync(Guid teamId, string teamName, Guid userId, string memberName)
     {
         _confirmation = new TeamConfirmation(
-            "Roster",
-            "Remove member",
-            $"Remove {memberName} from {teamName}?",
-            "Remove member",
+            Localization["team.members"],
+            Localization["General.TeamManage.RemoveMember"],
+            Localization.Get("General.TeamManage.RemoveMemberConfirmation", memberName, teamName),
+            Localization["General.TeamManage.RemoveMember"],
             async () =>
             {
                 await MutateAsync(async () =>
@@ -285,7 +285,7 @@ public partial class ManageTeams : IAsyncDisposable
                         _transferSelections.Remove(teamId);
 
                     await RefreshSummaryAsync();
-                    ShowActionToast($"{memberName} removed from the team.", TeamActionSeverity.Success);
+                    ShowActionToast(Localization.Get("General.TeamManage.MemberRemoved", memberName), TeamActionSeverity.Success);
                 });
             });
         await Task.CompletedTask;
@@ -324,7 +324,7 @@ public partial class ManageTeams : IAsyncDisposable
             await TeamService.TransferCaptainAsync(teamId, newCaptainUserId.Value);
             _transferSelections.Remove(teamId);
             await RefreshSummaryAsync();
-            ShowActionToast("Captainship transferred.", TeamActionSeverity.Success);
+            ShowActionToast(Localization["General.TeamManage.CaptainTransferred"], TeamActionSeverity.Success);
         });
     }
 
@@ -333,13 +333,13 @@ public partial class ManageTeams : IAsyncDisposable
         var file = args.File;
         if(file.Size > MaximumLogoBytes)
         {
-            ShowActionToast("Choose a logo no larger than 5 MB.", TeamActionSeverity.Warning);
+            ShowActionToast(Localization["General.Team.LogoTooLarge"], TeamActionSeverity.Warning);
             return;
         }
 
         if(!file.ContentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
         {
-            ShowActionToast("Choose an image file for the team logo.", TeamActionSeverity.Warning);
+            ShowActionToast(Localization["General.Team.ImageFileRequired"], TeamActionSeverity.Warning);
             return;
         }
 
@@ -361,7 +361,7 @@ public partial class ManageTeams : IAsyncDisposable
             await TeamService.UploadLogoAsync(teamId, stream, logo.ContentType, logo.FileName);
             _selectedLogos.Remove(teamId);
             await RefreshSummaryAsync();
-            ShowActionToast("Team logo saved.", TeamActionSeverity.Success);
+            ShowActionToast(Localization["General.TeamManage.LogoSaved"], TeamActionSeverity.Success);
         });
     }
 
@@ -372,7 +372,7 @@ public partial class ManageTeams : IAsyncDisposable
             await TeamService.RemoveLogoAsync(teamId);
             _selectedLogos.Remove(teamId);
             await RefreshSummaryAsync();
-            ShowActionToast("Team logo removed.", TeamActionSeverity.Success);
+            ShowActionToast(Localization["General.TeamManage.LogoRemoved"], TeamActionSeverity.Success);
         });
     }
 
@@ -435,6 +435,17 @@ public partial class ManageTeams : IAsyncDisposable
         return _activeTab == tab ? $"{classes} team-tab-button--active" : classes;
     }
 
+    private string GetMemberCountLabel(int count) =>
+        Localization.Get(count == 1 ? "General.TeamManage.MemberCountOne" : "General.TeamManage.MemberCountMany", count);
+
+    private string GetTeamSummary(TeamManagementSummaryDTO team, bool isCaptain)
+    {
+        var memberCount = GetMemberCountLabel(team.Members.Count);
+        return isCaptain
+            ? Localization.Get("General.TeamManage.TeamSummaryCaptain", memberCount)
+            : memberCount;
+    }
+
     private static string BuildTeamProfileHref(string teamName) =>
         string.IsNullOrWhiteSpace(teamName)
             ? string.Empty
@@ -464,7 +475,7 @@ public partial class ManageTeams : IAsyncDisposable
         _selectedLogos.TryGetValue(teamId, out var logo) ? logo.PreviewDataUrl : null;
 
     private string GetLogoFileName(Guid teamId) =>
-        _selectedLogos.TryGetValue(teamId, out var logo) ? logo.FileName : "No file selected";
+        _selectedLogos.TryGetValue(teamId, out var logo) ? logo.FileName : Localization["form.noFile"];
 
     private void ShowActionToast(string message, TeamActionSeverity severity)
     {
@@ -485,7 +496,7 @@ public partial class ManageTeams : IAsyncDisposable
         }
     }
 
-    private static string GetMemberName(PublicUserDTO member)
+    private string GetMemberName(PublicUserDTO member)
     {
         if(!string.IsNullOrWhiteSpace(member.Username))
             return member.Username.Trim();
@@ -493,7 +504,7 @@ public partial class ManageTeams : IAsyncDisposable
         if(!string.IsNullOrWhiteSpace(member.DisplayName))
             return member.DisplayName.Trim();
 
-        return "Player";
+        return Localization["General.TeamManage.Player"];
     }
 
     private static string GetInitials(string value)
@@ -502,10 +513,10 @@ public partial class ManageTeams : IAsyncDisposable
         return string.Concat(parts.Take(2).Select(part => char.ToUpperInvariant(part[0])));
     }
 
-    private static string GetErrorMessage(Exception exception) =>
+    private string GetErrorMessage(Exception exception) =>
         exception is TeamServiceException serviceException
             ? serviceException.Message
-            : "The team action could not be completed right now.";
+            : Localization["General.TeamManage.ActionFailed"];
 
     private async ValueTask DisposeConfirmationFocusTrapAsync()
     {

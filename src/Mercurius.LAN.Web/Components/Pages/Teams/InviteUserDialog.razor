@@ -15,11 +15,11 @@
              @ref="_dialogElement"
              @onkeydown="HandleKeyDown"
             @onclick:stopPropagation>
-            <button type="button" class="team-modal-close" aria-label="Close invite player dialog" @onclick="CancelAsync">&times;</button>
+            <button type="button" class="team-modal-close" aria-label='@Localization["General.Team.CloseInviteDialog"]' @onclick="CancelAsync">&times;</button>
             <div class="team-modal-header">
-                <span class="section-eyebrow">Team invite</span>
-                <h3 id="invite-user-dialog-title">Invite player</h3>
-                <p id="invite-user-dialog-description">Select a user to invite to @TeamName.</p>
+                <span class="section-eyebrow">@Localization["General.Team.TeamInvite"]</span>
+                <h3 id="invite-user-dialog-title">@Localization["General.Team.InvitePlayer"]</h3>
+                <p id="invite-user-dialog-description">@Localization.Get("General.Team.InviteDescription", DisplayTeamName)</p>
             </div>
 
             <div class="team-dialog-form-container">
@@ -30,7 +30,7 @@
                     }
 
                     <div class="form-group team-search-field">
-                        <label for="invite-search" class="form-label">Search username</label>
+                        <label for="invite-search" class="form-label">@Localization["General.Team.SearchUsername"]</label>
                         <div class="team-search-input-shell">
                             <span class="bi bi-search" aria-hidden="true"></span>
                             <input id="invite-search"
@@ -46,18 +46,18 @@
 
                         @if(HasSearchDropdown)
                         {
-                            <div id="invite-search-results" class="team-search-results" role="listbox" aria-label="User search results">
+                            <div id="invite-search-results" class="team-search-results" role="listbox" aria-label='@Localization["General.Team.UserSearchResults"]'>
                                 @if(_isSearching)
                                 {
                                     <div class="team-search-state" aria-live="polite">
                                         <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                                        <span>Searching...</span>
+                                        <span>@Localization["nav.searching"]</span>
                                     </div>
                                 }
                                 else if(_results.Count == 0)
                                 {
                                     <div class="team-search-state" aria-live="polite">
-                                        No matching players found.
+                                        @Localization["General.Team.NoMatchingPlayers"]
                                     </div>
                                 }
                                 else
@@ -87,9 +87,9 @@
                     <div class="team-dialog-actions">
                         <button type="button" class="button-primary" disabled="@(!CanSubmit)" @onclick="SubmitAsync">
                             <span class="bi bi-send-fill" aria-hidden="true"></span>
-                            Send invite
+                            @Localization["General.Team.SendInvite"]
                         </button>
-                        <button type="button" class="button-secondary" @onclick="CancelAsync">Cancel</button>
+                        <button type="button" class="button-secondary" @onclick="CancelAsync">@Localization["common.cancel"]</button>
                     </div>
                 </div>
             </div>
@@ -101,7 +101,7 @@
     [Inject] private IUserSearchService UserSearchService { get; set; } = null!;
 
     [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public string TeamName { get; set; } = "this team";
+    [Parameter] public string TeamName { get; set; } = string.Empty;
     [Parameter] public IReadOnlySet<Guid> DisabledUserIds { get; set; } = new HashSet<Guid>();
     [Parameter] public EventCallback<InviteUserDialogResult> UserSelected { get; set; }
     [Parameter] public EventCallback Canceled { get; set; }
@@ -118,6 +118,7 @@
     private IJSObjectReference? _focusTrap;
 
     private bool CanSubmit => _selected?.UserId.HasValue == true;
+    private string DisplayTeamName => string.IsNullOrWhiteSpace(TeamName) ? Localization["General.Team.ThisTeam"] : TeamName;
     private bool HasSearchDropdown => _query.Trim().Length >= 3 && _selected is null && string.IsNullOrWhiteSpace(_error);
 
     protected override void OnParametersSet()
@@ -185,7 +186,7 @@
             if(cancellationToken.IsCancellationRequested || requestVersion != _searchRequestVersion)
                 return;
 
-            _error = "User search is unavailable right now.";
+            _error = Localization["General.Team.SearchUnavailable"];
         }
         finally
         {
@@ -258,6 +259,6 @@
 
     private string? GetDisabledCandidateText(GlobalSearchResultDTO result) =>
         result.UserId.HasValue && DisabledUserIds.Contains(result.UserId.Value)
-            ? "Already in this team"
+            ? Localization["General.Team.AlreadyInTeam"]
             : null;
 }

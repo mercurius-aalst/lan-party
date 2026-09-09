@@ -34,7 +34,7 @@ namespace Mercurius.LAN.Web.Components.Pages
             }
             catch(Exception)
             {
-                ToastService.ShowError("Failed to load sponsors.");
+                ToastService.ShowError(Localization["status.failedToLoadSponsors"]);
             }
             finally
             {

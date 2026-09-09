@@ -32,20 +32,20 @@ public partial class TournamentsOverview
         Team
     }
 
-    private static readonly (OverviewStatusFilter Value, string Label)[] StatusFilters =
+    private IReadOnlyList<(OverviewStatusFilter Value, string Label)> StatusFilters =>
     [
-        (OverviewStatusFilter.All, "All"),
-        (OverviewStatusFilter.Open, "Open"),
-        (OverviewStatusFilter.Ongoing, "Ongoing"),
-        (OverviewStatusFilter.Finished, "Finished"),
-        (OverviewStatusFilter.Cancelled, "Cancelled")
+        (OverviewStatusFilter.All, Localization["Feature.tournamentsOverview.filterAll"]),
+        (OverviewStatusFilter.Open, Localization["Feature.tournamentsOverview.filterOpen"]),
+        (OverviewStatusFilter.Ongoing, Localization["Feature.tournamentsOverview.filterOngoing"]),
+        (OverviewStatusFilter.Finished, Localization["Feature.tournamentsOverview.filterFinished"]),
+        (OverviewStatusFilter.Cancelled, Localization["Feature.tournamentsOverview.filterCancelled"])
     ];
 
-    private static readonly (OverviewParticipationFilter Value, string Label)[] ParticipationFilters =
+    private IReadOnlyList<(OverviewParticipationFilter Value, string Label)> ParticipationFilters =>
     [
-        (OverviewParticipationFilter.All, "All"),
-        (OverviewParticipationFilter.Solo, "Solo"),
-        (OverviewParticipationFilter.Team, "Team")
+        (OverviewParticipationFilter.All, Localization["Feature.tournamentsOverview.filterAll"]),
+        (OverviewParticipationFilter.Solo, Localization["Feature.tournamentsOverview.filterSolo"]),
+        (OverviewParticipationFilter.Team, Localization["Feature.tournamentsOverview.filterTeam"])
     ];
 
     private List<Tournament> _tournaments = [];
@@ -74,16 +74,16 @@ public partial class TournamentsOverview
     private List<Tournament> FilteredTournaments => ApplySort(ApplyFilters()).ToList();
     private int OpenRegistrationCount => FilteredTournaments.Count(CanRegister);
 
-    private string ResultsHeading => $"{FilteredTournaments.Count} tournament{(FilteredTournaments.Count == 1 ? string.Empty : "s")}";
+    private string ResultsHeading => Localization.Get("Feature.tournamentsOverview.resultsHeading", FilteredTournaments.Count);
 
     private string ResultsSummary
     {
         get
         {
             if(FilteredTournaments.Count == 0)
-                return "No tournaments currently match the selected filters.";
+                return Localization["Feature.tournamentsOverview.noSelectedMatches"];
 
-            return $"{OpenRegistrationCount} still accepting registrations across {_tournaments.Select(Tournament => Tournament.Format).Distinct().Count()} match formats.";
+            return Localization.Get("Feature.tournamentsOverview.resultsSummary", OpenRegistrationCount, _tournaments.Select(Tournament => Tournament.Format).Distinct().Count());
         }
     }
 
@@ -122,8 +122,8 @@ public partial class TournamentsOverview
         catch(Exception exception)
         {
             _loadError = exception is UnauthorizedAccessException
-                ? "Sign in to load the tournament list."
-                : "Could not load tournaments right now.";
+                ? Localization["Feature.tournamentsOverview.signInToLoad"]
+                : Localization["Feature.tournamentsOverview.loadError"];
             ToastService.ShowError(_loadError);
         }
         finally
@@ -173,7 +173,7 @@ public partial class TournamentsOverview
     {
         if(tournament.Status != TournamentStatus.Scheduled)
         {
-            ToastService.ShowWarning("Registrations are closed, the tournament has already started.");
+            ToastService.ShowWarning(Localization["tournament.registrationClosedShort"]);
             return;
         }
 
@@ -273,9 +273,9 @@ public partial class TournamentsOverview
         };
     }
 
-    private static string FormatDateTime(DateTime dateTime)
+    private string FormatDateTime(DateTime dateTime)
     {
-        return dateTime.ToLocalDisplayTime().ToString("dd MMM · HH:mm");
+        return Localization.FormatDateTime(dateTime.ToLocalDisplayTime());
     }
 
     private static DateTime GetPlannedStartForSort(Tournament tournament)
@@ -283,17 +283,50 @@ public partial class TournamentsOverview
         return tournament.PlannedStartTime;
     }
 
-    private static string GetPlannedStartLabel(Tournament tournament)
+    private string GetPlannedStartLabel(Tournament tournament)
     {
         return FormatDateTime(tournament.PlannedStartTime);
     }
 
-    private static string GetEstimatedEndLabel(Tournament tournament)
+    private string GetEstimatedEndLabel(Tournament tournament)
     {
         return tournament.EstimatedEndTime.HasValue
             ? FormatDateTime(tournament.EstimatedEndTime.Value)
-            : "Estimate unavailable";
+            : Localization["Feature.tournamentsOverview.estimateUnavailable"];
     }
 
     private static bool CanRegister(Tournament tournament) => tournament.Status == TournamentStatus.Scheduled;
+
+    private string GetStatusLabel(TournamentStatus status) => status switch
+    {
+        TournamentStatus.Scheduled => Localization["Feature.tournament.statusScheduled"],
+        TournamentStatus.InProgress => Localization["Feature.tournament.statusInProgress"],
+        TournamentStatus.Completed => Localization["Feature.tournament.statusCompleted"],
+        TournamentStatus.Canceled => Localization["Feature.tournament.statusCanceled"],
+        _ => status.ToString()
+    };
+
+    private string GetParticipationLabel(ParticipationMode mode) => mode switch
+    {
+        ParticipationMode.Individual => Localization["Feature.tournament.participationIndividual"],
+        ParticipationMode.Team => Localization["Feature.tournament.participationTeam"],
+        _ => mode.ToString()
+    };
+
+    private string GetBracketLabel(BracketType bracketType) => bracketType switch
+    {
+        BracketType.SingleElimination => Localization["Feature.tournament.bracketSingle"],
+        BracketType.DoubleElimination => Localization["Feature.tournament.bracketDouble"],
+        BracketType.RoundRobin => Localization["Feature.tournament.bracketRoundRobin"],
+        BracketType.Swiss => Localization["Feature.tournament.bracketSwiss"],
+        _ => bracketType.ToString()
+    };
+
+    private string GetFormatLabel(TournamentFormat format) => format switch
+    {
+        TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+        TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+        TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+        _ => format.ToString()
+    };
 }

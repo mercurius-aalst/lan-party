@@ -503,21 +503,21 @@ public partial class NavMenu : IAsyncDisposable
             ?? user.Identity?.Name
             ?? user.FindFirst("name")?.Value
             ?? user.FindFirst("email")?.Value
-            ?? "Account";
+            ?? Localization["nav.account"];
     }
 
     private string GetUserMenuAriaLabel(ClaimsPrincipal user)
     {
         var displayName = GetDisplayName(user);
 
-        return $"{displayName} account menu";
+        return Localization.Get("nav.accountMenu", displayName);
     }
 
     private string GetNotificationAriaLabel()
     {
         return NotificationCount == 0
-            ? "Team notifications"
-            : $"Team notifications with {NotificationCount} unread";
+            ? Localization["nav.teamNotifications"]
+            : Localization.Get("nav.teamNotificationsUnread", NotificationCount);
     }
 
     private static string GetIdentityKey(ClaimsPrincipal user)

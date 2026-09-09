@@ -1,26 +1,26 @@
 @page "/info"
 @rendermode InteractiveServer
 
-<PageTitle>LAN Info</PageTitle>
+<PageTitle>@Localization["info.pageTitle"]</PageTitle>
 
 <section class="info-page">
     <header class="brand-page-hero info-hero brand-section">
         <div class="brand-page-hero-copy info-hero-copy">
-            <h1>Everything for the Mercurius LAN weekend</h1>
-            <p>Use this page as your LAN weekend briefing: see what to bring for your setup, where to go, which ticket fits your visit, what food and drinks are available, and how to reach the Mercurius crew if anything is unclear.</p>
+            <h1>@Localization["General.Info.Heading"]</h1>
+            <p>@Localization["General.Info.Intro"]</p>
 
-            <SectionNav AdditionalClass="info-jump-links" AriaLabel="LAN information sections">
-                <a href="/info#packing" class="button-secondary"><span class="bi bi-backpack2" aria-hidden="true"></span> Pack</a>
-                <a href="/info#where" class="button-secondary"><span class="bi bi-geo-alt" aria-hidden="true"></span> Where</a>
-                <a href="/info#tickets" class="button-secondary"><span class="bi bi-ticket-perforated" aria-hidden="true"></span> Tickets</a>
-                <a href="/info#catering" class="button-secondary"><span class="bi bi-cup-straw" aria-hidden="true"></span> Menu</a>
-                <a href="/info#contact-info" class="button-secondary"><span class="bi bi-chat-dots" aria-hidden="true"></span> Contact</a>
+            <SectionNav AdditionalClass="info-jump-links" AriaLabel='@Localization["General.Info.SectionsAria"]'>
+                <a href="/info#packing" class="button-secondary"><span class="bi bi-backpack2" aria-hidden="true"></span> @Localization["General.Info.Pack"]</a>
+                <a href="/info#where" class="button-secondary"><span class="bi bi-geo-alt" aria-hidden="true"></span> @Localization["General.Info.Where"]</a>
+                <a href="/info#tickets" class="button-secondary"><span class="bi bi-ticket-perforated" aria-hidden="true"></span> @Localization["General.Info.Tickets"]</a>
+                <a href="/info#catering" class="button-secondary"><span class="bi bi-cup-straw" aria-hidden="true"></span> @Localization["General.Info.Menu"]</a>
+                <a href="/info#contact-info" class="button-secondary"><span class="bi bi-chat-dots" aria-hidden="true"></span> @Localization["General.Info.Contact"]</a>
             </SectionNav>
         </div>
 
-        <aside class="brand-page-hero-panel info-hero-card" aria-label="LAN weekend quick facts">
+        <aside class="brand-page-hero-panel info-hero-card" aria-label='@Localization["General.Info.QuickFactsAria"]'>
             <div class="brand-page-hero-panel-glow info-hero-card-glow" aria-hidden="true"></div>
-            <span class="brand-page-hero-panel-kicker info-hero-card-kicker">Event briefing</span>
+            <span class="brand-page-hero-panel-kicker info-hero-card-kicker">@Localization["General.Info.EventBriefing"]</span>
             <strong>@Event.EventWindow</strong>
             <div class="brand-page-hero-panel-row info-hero-card-row">
                 <span class="bi bi-geo-alt-fill" aria-hidden="true"></span>
@@ -28,24 +28,24 @@
             </div>
             <div class="brand-page-hero-panel-row info-hero-card-row">
                 <span class="bi bi-ticket-perforated-fill" aria-hidden="true"></span>
-                <span>Gamer passes from @GamerTicketPrice</span>
+                <span>@Localization.Get("General.Info.GamerPassesFrom", GamerTicketPrice)</span>
             </div>
-            <a href="/info#tickets" class="button-primary">Compare tickets</a>
+            <a href="/info#tickets" class="button-primary">@Localization["General.Info.CompareTickets"]</a>
         </aside>
     </header>
 
     <section id="packing" class="brand-section brand-section-shell info-section brand-section-anchor">
         <div class="brand-section-shell info-section-header">
-            <h2>Pack list</h2>
+            <h2>@Localization["General.Info.PackList"]</h2>
         </div>
 
-        <div class="packing-guide" aria-label="LAN party packing guide">
+        <div class="packing-guide" aria-label='@Localization["General.Info.PackingGuideAria"]'>
             @foreach(var item in Event.PackingItems)
             {
-                <article class="packing-item packing-item--@item.GroupKey" style="--item-index: @item.Index" aria-label="@item.Name">
+                <article class="packing-item packing-item--@item.GroupKey" style="--item-index: @item.Index" aria-label="@GetPackingItemName(item)">
                     <span class="packing-item-icon bi @item.Icon" aria-hidden="true"></span>
-                    <span class="packing-item-name">@item.Name</span>
-                    <span class="packing-item-group">@item.Group</span>
+                    <span class="packing-item-name">@GetPackingItemName(item)</span>
+                    <span class="packing-item-group">@GetPackingItemGroup(item)</span>
                 </article>
             }
         </div>
@@ -57,7 +57,7 @@
                 <h2>@Event.EventWindow</h2>
                 <div class="info-time-chip">
                     <span class="bi bi-calendar-event" aria-hidden="true"></span>
-                    <span>LAN party schedule</span>
+                    <span>@Localization["General.Info.Schedule"]</span>
                 </div>
             </article>
 
@@ -66,7 +66,7 @@
                 <p>@Event.Address</p>
                 <a href="@Event.DirectionsUrl" target="_blank" rel="noopener noreferrer" class="button-primary">
                     <span class="bi bi-map" aria-hidden="true"></span>
-                    Open directions
+                    @Localization["General.Info.OpenDirections"]
                 </a>
             </article>
         </div>
@@ -76,7 +76,7 @@
                 <span class="bi bi-geo-alt-fill"></span>
                 <span>Kwalestraat 154, Aalst</span>
             </div>
-            <iframe title="Map to Odisee Aalst at Kwalestraat 154, 9320 Aalst"
+            <iframe title='@Localization["General.Info.MapTitle"]'
                     src="@Event.MapEmbedUrl"
                     loading="lazy"
                     referrerpolicy="no-referrer-when-downgrade"
@@ -87,7 +87,7 @@
 
     <section id="tickets" class="brand-section brand-section-shell info-section brand-section-anchor">
         <div class="brand-section-shell info-section-header">
-            <h2>Pick your pass.</h2>
+            <h2>@Localization["General.Info.PickPass"]</h2>
         </div>
 
         <div class="ticket-grid">
@@ -96,11 +96,11 @@
                 <article class="lan-ticket lan-ticket--@ticket.Kind">
                     <div class="lan-ticket-main">
                         <span class="lan-ticket-kicker">Mercurius LAN</span>
-                        <h3>@ticket.Name</h3>
-                        <p>@ticket.Description</p>
+                        <h3>@GetTicketName(ticket)</h3>
+                        <p>@GetTicketDescription(ticket)</p>
                     </div>
                     <div class="lan-ticket-stub">
-                        <strong>@ticket.Price</strong>
+                        <strong>@GetTicketPrice(ticket.Price)</strong>
                     </div>
                 </article>
             }
@@ -110,8 +110,8 @@
     <section id="catering" class="brand-section brand-section-shell info-section brand-section-anchor">
         <div class="menu-board">
             <div class="menu-board-header">
-                <h2>Our menu</h2>
-                <p>Grab a drink, pick a warm snack, and keep your squad fueled between matches.</p>
+                <h2>@Localization["General.Info.OurMenu"]</h2>
+                <p>@Localization["General.Info.MenuIntro"]</p>
             </div>
 
             <div class="menu-columns">
@@ -120,13 +120,13 @@
                     <article class="menu-column">
                         <div class="menu-column-title">
                             <span class="bi @menuSection.Icon" aria-hidden="true"></span>
-                            <h3>@menuSection.Name</h3>
+                            <h3>@GetMenuSectionName(menuSection.Name)</h3>
                         </div>
 
                         @foreach(var item in menuSection.Items)
                         {
                             <div class="menu-item">
-                                <span>@item.Name</span>
+                                <span>@GetMenuItemName(item.Name)</span>
                                 <span class="menu-dots" aria-hidden="true"></span>
                                 <strong>@FormatMenuPrice(item.Price)</strong>
                             </div>
@@ -140,41 +140,41 @@
     <section id="contact-info" class="brand-section brand-section-shell info-section brand-section-anchor">
         <div class="contact-grid">
             <article class="brand-card contact-card">
-                <h2>Contact us</h2>
+                <h2>@Localization["General.Info.ContactUs"]</h2>
                 <EditForm Model="_contactModel" OnValidSubmit="SendContactAsync" FormName="lan-info-contact" class="info-contact-form">
-                    <DataAnnotationsValidator />
+                    <LocalizedDataAnnotationsValidator FieldLabelKeys="@ValidationFieldLabelKeys" />
                     <ValidationSummary />
 
                     <label>
-                        Name
+                        @Localization["General.Info.Name"]
                         <InputText id="contact-name" @bind-Value="_contactModel.Name" autocomplete="name" class="form-control" />
                         <ValidationMessage For="@(() => _contactModel.Name)" />
                     </label>
                     <label>
-                        Email or Discord
+                        @Localization["General.Info.EmailOrDiscord"]
                         <InputText id="contact-contact" @bind-Value="_contactModel.Contact" autocomplete="email" class="form-control" />
                         <ValidationMessage For="@(() => _contactModel.Contact)" />
                     </label>
                     <label>
-                        Message
+                        @Localization["General.Info.Message"]
                         <InputTextArea id="contact-message" @bind-Value="_contactModel.Message" rows="5" class="form-control" />
                         <ValidationMessage For="@(() => _contactModel.Message)" />
                     </label>
                     <button type="submit" class="button-primary" disabled="@_isSendingContact">
                         <span class="bi bi-send" aria-hidden="true"></span>
-                        @(_isSendingContact ? "Sending..." : "Send message")
+                        @(_isSendingContact ? Localization["General.Info.Sending"] : Localization["General.Info.SendMessage"])
                     </button>
                 </EditForm>
             </article>
 
             <aside class="social-panel">
-                <h2>Stay close to the updates.</h2>
+                <h2>@Localization["General.Info.StayUpdated"]</h2>
                 <div class="social-links">
                     @foreach(var link in Event.SocialLinks)
                     {
-                        <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="@link.AriaLabel">
+                        <a href="@link.Url" target="_blank" rel="noopener noreferrer" class="social-link" aria-label="@GetSocialLinkAriaLabel(link.AriaLabel)">
                             <span class="bi @link.Icon" aria-hidden="true"></span>
-                            <span>@link.Label</span>
+                            <span>@GetSocialLinkLabel(link.Label)</span>
                         </a>
                     }
                 </div>

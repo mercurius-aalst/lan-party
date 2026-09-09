@@ -87,6 +87,11 @@
     font-size: 1rem;
 }
 
+.footer-language-control select {
+    width: 100%;
+    max-width: 12rem;
+}
+
 .footer-column a:hover {
     color: var(--color-link);
 }

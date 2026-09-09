@@ -11,5 +11,5 @@ public partial class SponsorScroller
     public IReadOnlyList<Sponsor> Sponsors { get; set; } = [];
 
     [Parameter]
-    public string AriaLabel { get; set; } = "Sponsor logos";
+    public string AriaLabel { get; set; } = string.Empty;
 }

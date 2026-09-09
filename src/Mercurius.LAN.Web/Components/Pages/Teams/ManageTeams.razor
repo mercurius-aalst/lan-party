@@ -4,21 +4,21 @@
 @using Microsoft.AspNetCore.Components.Forms
 @rendermode InteractiveServer
 
-<PageTitle>Manage Teams</PageTitle>
+<PageTitle>@Localization["team.manage"]</PageTitle>
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading your teams..." />
+    <LoadingScreen Message='@Localization["General.TeamManage.Loading"]' />
 }
 else if(!string.IsNullOrWhiteSpace(_loadError))
 {
-    <StatusPage Eyebrow="Teams"
-                Title="Team management unavailable"
+    <StatusPage Eyebrow='@Localization["General.TeamManage.Teams"]'
+                Title='@Localization["General.TeamManage.Unavailable"]'
                 Message="@_loadError"
                 PrimaryHref="/teams/manage"
-                PrimaryLabel="Try Again"
+                PrimaryLabel='@Localization["status.tryAgain"]'
                 SecondaryHref="/tournaments"
-                SecondaryLabel="Browse Tournaments" />
+                SecondaryLabel='@Localization["common.browseTournaments"]' />
 }
 else
 {
@@ -29,9 +29,9 @@ else
             <section class="team-invite-inbox" aria-labelledby="team-invite-heading">
                 <div class="team-invite-inbox-heading">
                     <div>
-                        <h2 id="team-invite-heading">Team invites</h2>
+                        <h2 id="team-invite-heading">@Localization["General.TeamManage.TeamInvites"]</h2>
                     </div>
-                    <span class="team-count-badge">@_summary.ReceivedPendingInvites.Count pending</span>
+                    <span class="team-count-badge">@Localization.Get("General.TeamManage.PendingCount", _summary.ReceivedPendingInvites.Count)</span>
                 </div>
                 <div class="team-invite-rows">
                     @foreach(var invite in _summary.ReceivedPendingInvites)
@@ -43,20 +43,20 @@ else
                                                      Href="@BuildTeamProfileHref(invite.TeamName)"
                                                      Variant="inline"
                                                      Size="small" />
-                                <small>Expires @invite.ExpiresAt.ToLocalTime().ToString("g")</small>
+                                <small>@Localization.Get("General.TeamManage.Expires", Localization.FormatDateTime(invite.ExpiresAt.ToLocalTime()))</small>
                             </div>
                             <div class="team-invite-actions">
                                 <button type="button"
                                         class="team-icon-button team-icon-button--success"
-                                        title="Accept invite"
-                                        aria-label="Accept invite from @invite.TeamName"
+                                        title='@Localization["team.accept"]'
+                                        aria-label='@Localization.Get("General.TeamManage.AcceptInviteFrom", invite.TeamName)'
                                         @onclick="@(() => RespondInviteAsync(invite.Id, true))">
                                     <span class="bi bi-check-lg" aria-hidden="true"></span>
                                 </button>
                                 <button type="button"
                                         class="team-icon-button team-icon-button--danger"
-                                        title="Decline invite"
-                                        aria-label="Decline invite from @invite.TeamName"
+                                        title='@Localization["team.decline"]'
+                                        aria-label='@Localization.Get("General.TeamManage.DeclineInviteFrom", invite.TeamName)'
                                         @onclick="@(() => RespondInviteAsync(invite.Id, false))">
                                     <span class="bi bi-x-lg" aria-hidden="true"></span>
                                 </button>
@@ -67,11 +67,11 @@ else
             </section>
         }
 
-        <section id="team-workspace" class="team-workspace brand-section-anchor" aria-label="Team workspace">
-            <aside class="team-selector" aria-label="Your teams">
+        <section id="team-workspace" class="team-workspace brand-section-anchor" aria-label='@Localization["General.TeamManage.WorkspaceAria"]'>
+            <aside class="team-selector" aria-label='@Localization["General.TeamManage.YourTeamsAria"]'>
                 <div class="team-selector-heading">
                     <div class="team-selector-title">
-                        <h2>Your teams</h2>
+                        <h2>@Localization["General.TeamManage.YourTeams"]</h2>
                         @if(ManageableTeams.Count > 0)
                         {
                             <span class="team-selector-count">@ManageableTeams.Count</span>
@@ -79,7 +79,7 @@ else
                     </div>
                     <button type="button" class="button-primary team-create-action" @onclick="OpenCreateTeamDialogAsync">
                         <span class="bi bi-plus-lg" aria-hidden="true"></span>
-                        Create team
+                        @Localization["team.create"]
                     </button>
                 </div>
 
@@ -87,7 +87,7 @@ else
                 {
                     <div class="team-selector-empty">
                         <span class="bi bi-people" aria-hidden="true"></span>
-                        <p>You do not have a team yet.</p>
+                        <p>@Localization["General.TeamManage.NoTeam"]</p>
                     </div>
                 }
                 else
@@ -107,11 +107,11 @@ else
                                                          Size="large" />
                                     <span class="team-selector-copy">
                                         <strong>@team.Name</strong>
-                                        <small>@team.Members.Count @(team.Members.Count == 1 ? "member" : "members")</small>
+                                        <small>@GetMemberCountLabel(team.Members.Count)</small>
                                     </span>
                                     @if(IsCaptain(team))
                                     {
-                                        <span class="team-role-chip">Captain</span>
+                                        <span class="team-role-chip">@Localization["team.captain"]</span>
                                     }
                                 </button>
                             </div>
@@ -125,8 +125,8 @@ else
                 {
                     <section class="team-detail-empty">
                         <span class="bi bi-people" aria-hidden="true"></span>
-                        <h2>Start with a team</h2>
-                        <p>Create a team or accept an invite to see your roster here.</p>
+                        <h2>@Localization["General.TeamManage.StartWithTeam"]</h2>
+                        <p>@Localization["General.TeamManage.StartWithTeamDescription"]</p>
                     </section>
                 }
                 else
@@ -142,16 +142,16 @@ else
                                                  Size="large" />
                             <div>
                                 <h2>@team.Name</h2>
-                                <p>@team.Members.Count @(team.Members.Count == 1 ? "member" : "members")@(isCaptain ? ", you are captain" : string.Empty)</p>
+                                <p>@GetTeamSummary(team, isCaptain)</p>
                             </div>
                         </div>
-                        <nav class="team-tabs" aria-label="Team sections" role="tablist">
+                        <nav class="team-tabs" aria-label='@Localization["General.TeamManage.TeamSectionsAria"]' role="tablist">
                             <button type="button"
                                     class="@GetTabClass(TeamManagementTab.Members)"
                                     role="tab"
                                     aria-selected="@(_activeTab == TeamManagementTab.Members)"
                                     aria-controls="team-roster-panel"
-                                    @onclick="() => SelectTab(TeamManagementTab.Members)">Roster</button>
+                                        @onclick="() => SelectTab(TeamManagementTab.Members)">@Localization["team.members"]</button>
                             @if(isCaptain)
                             {
                                 <button type="button"
@@ -159,7 +159,7 @@ else
                                         role="tab"
                                         aria-selected="@(_activeTab == TeamManagementTab.Management)"
                                         aria-controls="team-tools-panel"
-                                        @onclick="() => SelectTab(TeamManagementTab.Management)">Team tools</button>
+                                        @onclick="() => SelectTab(TeamManagementTab.Management)">@Localization["General.TeamManage.TeamTools"]</button>
                             }
                         </nav>
                     </header>
@@ -169,20 +169,20 @@ else
                         <section id="team-roster-panel" class="team-members-panel" role="tabpanel" tabindex="0" aria-labelledby="team-roster-heading">
                             <div class="team-panel-heading">
                                 <div>
-                                    <h3 id="team-roster-heading">Team members</h3>
+                                    <h3 id="team-roster-heading">@Localization["General.TeamManage.TeamMembers"]</h3>
                                 </div>
                                 @if(isCaptain)
                                 {
                                     <button type="button" class="button-primary team-toolbar-action" @onclick="() => OpenInviteDialogAsync(team.Id)">
                                         <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
-                                        Invite player
+                                        @Localization["General.Team.InvitePlayer"]
                                     </button>
                                 }
                             </div>
 
                             @if(team.Members.Count == 0)
                             {
-                                <p class="team-inline-empty">No teammates yet. Invite someone to join your roster.</p>
+                                <p class="team-inline-empty">@Localization["General.TeamManage.NoTeammates"]</p>
                             }
                             else
                             {
@@ -191,13 +191,13 @@ else
                                     {
                                         <div class="team-member-row" role="listitem">
                                             <ParticipantCardComponent Participant="ParticipantViewModel.FromUser(member)" OnParticipantSelected="SelectMemberParticipant" />
-                                            <span class="team-member-role">@(member.Id == team.CaptainUserId ? "Captain" : "Member")</span>
+                                            <span class="team-member-role">@(member.Id == team.CaptainUserId ? Localization["team.captain"] : Localization["General.TeamManage.Member"])</span>
                                             @if(member.Id != team.CaptainUserId && isCaptain)
                                             {
                                                 <button type="button"
                                                         class="team-member-remove-button"
-                                                        aria-label="Remove @GetMemberName(member) from @team.Name"
-                                                        title="Remove @GetMemberName(member)"
+                                                        aria-label='@Localization.Get("General.TeamManage.RemoveMemberAria", GetMemberName(member), team.Name)'
+                                                        title='@Localization.Get("General.TeamManage.RemoveMemberTitle", GetMemberName(member))'
                                                         @onclick="@(() => ConfirmRemoveMemberAsync(team.Id, team.Name, member.Id, GetMemberName(member)))">
                                                     <span class="bi bi-person-dash" aria-hidden="true"></span>
                                                 </button>
@@ -212,12 +212,12 @@ else
                         {
                             <section class="team-membership-note" aria-labelledby="team-membership-heading">
                                 <div>
-                                    <h3 id="team-membership-heading">Your membership</h3>
-                                    <p>You are part of this team. You can leave whenever you need to.</p>
+                                    <h3 id="team-membership-heading">@Localization["General.TeamManage.YourMembership"]</h3>
+                                    <p>@Localization["General.TeamManage.MembershipDescription"]</p>
                                 </div>
                                 <button type="button" class="button-secondary team-danger-button" @onclick="@(() => ConfirmLeaveAsync(team.Id, team.Name))">
                                     <span class="bi bi-box-arrow-right" aria-hidden="true"></span>
-                                    Leave team
+                                    @Localization["team.leave"]
                                 </button>
                             </section>
                         }
@@ -227,11 +227,11 @@ else
                         <section id="team-tools-panel" class="team-tools-panel" role="tabpanel" tabindex="0" aria-labelledby="team-tools-heading">
                             <div class="team-panel-heading">
                                 <div>
-                                    <h3 id="team-tools-heading">Captain tools</h3>
+                                    <h3 id="team-tools-heading">@Localization["General.TeamManage.CaptainTools"]</h3>
                                 </div>
                                 <button type="button" class="button-primary team-toolbar-action" @onclick="@(() => OpenInviteDialogAsync(team.Id))">
                                     <span class="bi bi-person-plus-fill" aria-hidden="true"></span>
-                                    Invite player
+                                    @Localization["General.Team.InvitePlayer"]
                                 </button>
                             </div>
 
@@ -239,12 +239,12 @@ else
                                 <section class="team-tool" aria-labelledby="team-captain-heading">
                                     <div class="team-tool-heading">
                                         <span class="team-tool-icon team-tool-icon--accent" aria-hidden="true"><span class="bi bi-arrow-left-right"></span></span>
-                                        <h4 id="team-captain-heading">Captain</h4>
+                                        <h4 id="team-captain-heading">@Localization["team.captain"]</h4>
                                     </div>
                                     <label class="team-form-field" for="team-captain-select-@team.Id">
-                                        <span>Choose a new captain</span>
+                                        <span>@Localization["General.TeamManage.ChooseCaptain"]</span>
                                         <select id="team-captain-select-@team.Id" class="team-form-control" value="@GetTransferSelection(team.Id)" @onchange="args => SetTransferSelection(team.Id, args.Value?.ToString())">
-                                            <option value="">Select a teammate</option>
+                                            <option value="">@Localization["General.TeamManage.SelectTeammate"]</option>
                                             @foreach(var member in team.Members.Where(member => member.Id != team.CaptainUserId))
                                             {
                                                 <option value="@member.Id">@GetMemberName(member)</option>
@@ -252,24 +252,24 @@ else
                                         </select>
                                     </label>
                                     <button type="button" class="button-secondary team-tool-action" disabled="@(!GetTransferSelection(team.Id).HasValue)" @onclick="@(() => TransferCaptainAsync(team.Id))">
-                                        Transfer captainship
+                                        @Localization["General.TeamManage.TransferCaptain"]
                                     </button>
                                 </section>
 
                                 <section class="team-tool" aria-labelledby="team-logo-heading">
                                     <div class="team-tool-heading">
                                         <span class="team-tool-icon team-tool-icon--soft" aria-hidden="true"><span class="bi bi-image"></span></span>
-                                        <h4 id="team-logo-heading">Team logo</h4>
+                                        <h4 id="team-logo-heading">@Localization["General.TeamManage.TeamLogo"]</h4>
                                     </div>
                                     <div class="team-logo-editor">
                                         <div class="team-logo-preview-shell">
                                             @if(GetLogoPreview(team.Id) is { } preview)
                                             {
-                                                <img src="@preview" alt="Selected logo preview" class="team-logo-preview" />
+                                                <img src="@preview" alt='@Localization["General.Team.SelectedLogoPreview"]' class="team-logo-preview" />
                                             }
                                             else if(!string.IsNullOrWhiteSpace(team.LogoUrl))
                                             {
-                                                <img src="@team.LogoUrl" alt="@($"{team.Name} saved logo")" class="team-logo-preview" />
+                                                <img src="@team.LogoUrl" alt='@Localization.Get("General.TeamManage.SavedLogoAlt", team.Name)' class="team-logo-preview" />
                                             }
                                             else
                                             {
@@ -279,7 +279,7 @@ else
                                         <div class="team-file-picker-group">
                                             <label class="team-file-picker">
                                                 <span class="bi bi-upload" aria-hidden="true"></span>
-                                                <span>Choose logo</span>
+                                                <span>@Localization["form.chooseFile"]</span>
                                                 <InputFile OnChange="@((args) => SelectLogoAsync(team.Id, args))" accept="image/png,image/jpeg,image/webp,image/gif" />
                                             </label>
                                             <small>@GetLogoFileName(team.Id)</small>
@@ -288,11 +288,11 @@ else
                                     <div class="team-logo-actions">
                                         <button type="button" class="button-primary" disabled="@(!HasSelectedLogo(team.Id))" @onclick="@(() => UploadLogoAsync(team.Id))">
                                             <span class="bi bi-check-lg" aria-hidden="true"></span>
-                                            Save logo
+                                            @Localization["General.TeamManage.SaveLogo"]
                                         </button>
                                         <button type="button" class="button-secondary team-danger-button" disabled="@string.IsNullOrWhiteSpace(team.LogoUrl)" @onclick="@(() => RemoveLogoAsync(team.Id))">
                                             <span class="bi bi-trash3" aria-hidden="true"></span>
-                                            Remove logo
+                                            @Localization["General.TeamManage.RemoveLogo"]
                                         </button>
                                     </div>
                                 </section>
@@ -300,11 +300,11 @@ else
                                 <section class="team-tool" aria-labelledby="team-sent-invites-heading">
                                     <div class="team-tool-heading">
                                         <span class="team-tool-icon team-tool-icon--soft" aria-hidden="true"><span class="bi bi-send"></span></span>
-                                        <h4 id="team-sent-invites-heading">Sent invites</h4>
+                                        <h4 id="team-sent-invites-heading">@Localization["General.TeamManage.SentInvites"]</h4>
                                     </div>
                                     @if(GetSentInvites(team.Id).Count == 0)
                                     {
-                                        <p class="team-inline-empty">No pending invites.</p>
+                                        <p class="team-inline-empty">@Localization["team.noInvites"]</p>
                                     }
                                     else
                                     {
@@ -312,10 +312,10 @@ else
                                             @foreach(var invite in GetSentInvites(team.Id))
                                             {
                                                 <li>
-                                                    <span>@(invite.Username ?? "Invited player")</span>
+                                                    <span>@(invite.Username ?? Localization["General.TeamManage.InvitedPlayer"])</span>
                                                     <button type="button" class="team-text-button team-text-button--danger" @onclick="@(() => CancelInviteAsync(team.Id, invite.Id))">
                                                         <span class="bi bi-x-circle" aria-hidden="true"></span>
-                                                        Cancel
+                                                        @Localization["common.cancel"]
                                                     </button>
                                                 </li>
                                             }
@@ -326,10 +326,10 @@ else
                                 <section class="team-tool team-danger-zone" aria-labelledby="team-danger-heading">
                                     <div class="team-tool-heading">
                                         <span class="team-tool-icon team-tool-icon--danger" aria-hidden="true"><span class="bi bi-trash3"></span></span>
-                                        <h4 id="team-danger-heading">Delete team</h4>
+                                        <h4 id="team-danger-heading">@Localization["General.TeamManage.DeleteTeam"]</h4>
                                     </div>
                                     <button type="button" class="button-secondary team-danger-button team-tool-action" @onclick="@(() => ConfirmDeleteTeamAsync(team.Id, team.Name))">
-                                        Delete team
+                                        @Localization["General.TeamManage.DeleteTeam"]
                                     </button>
                                 </section>
                             </div>
@@ -355,14 +355,14 @@ else
                      @ref="_confirmationDialogElement"
                      @onkeydown="HandleConfirmationKeyDown"
                      @onclick:stopPropagation>
-                    <button type="button" class="team-modal-close" aria-label="Close confirmation dialog" @onclick="CancelConfirmation">&times;</button>
+                    <button type="button" class="team-modal-close" aria-label='@Localization["General.TeamManage.CloseConfirmation"]' @onclick="CancelConfirmation">&times;</button>
                     <div class="team-modal-header">
                         <span class="section-eyebrow">@confirmation.Eyebrow</span>
                         <h3 id="team-confirmation-title">@confirmation.Title</h3>
                         <p id="team-confirmation-description">@confirmation.Message</p>
                     </div>
                     <div class="team-dialog-actions">
-                        <button type="button" class="button-secondary" @onclick="CancelConfirmation">Cancel</button>
+                        <button type="button" class="button-secondary" @onclick="CancelConfirmation">@Localization["common.cancel"]</button>
                         <button type="button" class="button-primary team-danger-confirm-button" @onclick="ConfirmPendingActionAsync">
                             @confirmation.ConfirmLabel
                         </button>
