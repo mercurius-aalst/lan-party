@@ -327,10 +327,6 @@
                                         {
                                             <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label='@Localization["Feature.tournaments.rosterUnavailable"]'>@Localization["Feature.tournaments.unavailable"]</span>
                                         }
-                                        else if(_rosterEligibility is { Eligible: false })
-                                        {
-                                            <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label='@Localization["Feature.tournaments.someRosterUnavailable"]'>@Localization["Feature.tournaments.unavailable"]</span>
-                                        }
                                         else if(_rosterEligibility is { Eligible: true })
                                         {
                                             <p class="registration-message registration-message--success">@Localization["Feature.tournaments.selectedRosterEligible"]</p>
