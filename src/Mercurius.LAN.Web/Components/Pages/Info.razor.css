@@ -50,7 +50,13 @@
 }
 
 .info-hero-card {
-    background: var(--color-dark-navy);
+    background: var(--color-surface-raised);
+    color: var(--color-ink);
+}
+
+.info-hero-card-kicker,
+.info-hero-card strong {
+    color: var(--color-ink);
 }
 
 .info-hero-card-glow {

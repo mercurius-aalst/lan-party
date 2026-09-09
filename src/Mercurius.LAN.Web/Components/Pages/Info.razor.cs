@@ -54,11 +54,11 @@ public partial class Info
     };
 
     private string GetTicketName(TicketOption ticket) =>
-        string.Equals(ticket.Kind, "chair", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Gamer + gaming chair"
+        string.Equals(ticket.Kind, "chair", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Comfort"
             ? Localization["General.Info.Ticket.GamerChair"]
-            : string.Equals(ticket.Kind, "gamer", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Gamer"
+            : string.Equals(ticket.Kind, "gamer", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Basic"
                 ? Localization["General.Info.Ticket.Gamer"]
-                : string.Equals(ticket.Kind, "visitor", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Visitor"
+                : string.Equals(ticket.Kind, "visitor", StringComparison.OrdinalIgnoreCase) && ticket.Name == "Fun"
                     ? Localization["General.Info.Ticket.Visitor"]
                     : ticket.Name;
 
