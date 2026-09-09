@@ -53,10 +53,11 @@
             const normalizeLanguage = value => supportedLanguages.has(value) ? value : "en-US";
             const getStoredLanguage = () => {
                 try {
-                    return normalizeLanguage(localStorage.getItem(languageStorageKey));
+                    const storedLanguage = localStorage.getItem(languageStorageKey);
+                    return storedLanguage === null ? null : normalizeLanguage(storedLanguage);
                 }
                 catch {
-                    return "en-US";
+                    return null;
                 }
             };
             const applyLanguage = language => {
