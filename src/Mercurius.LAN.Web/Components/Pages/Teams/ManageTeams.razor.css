@@ -764,24 +764,6 @@
     justify-content: flex-end;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .team-manage-page {
-        animation: team-page-in 220ms ease-out both;
-    }
-}
-
-@keyframes team-page-in {
-    from {
-        opacity: 0;
-        transform: translateY(0.4rem);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 @media (max-width: 900px) {
     .team-workspace {
         grid-template-columns: 1fr;
