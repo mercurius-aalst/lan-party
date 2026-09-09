@@ -277,7 +277,7 @@
 
                                         @if(HasCaptainManagedRegistration)
                                         {
-                                            <p class="registration-message registration-message--success">Your team registration is @CaptainManagedRegistration!.Status.ToString().ToLowerInvariant() and can be edited while registration is open.</p>
+                                            <p class="registration-message registration-message--success">@(CaptainManagedRegistration!.Status == TournamentRegistrationStatus.PendingConfirmation ? "Your team registration is awaiting confirmation. You can update your lineup until registration closes." : "Your team is registered. You can update your lineup until registration closes.")</p>
                                         }
 
                                         <fieldset class="registration-roster-fieldset">
