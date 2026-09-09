@@ -82,15 +82,17 @@
                 <a href="/info#contact-info">@Localization["footer.contact"]</a>
             </section>
 
-            <section class="footer-column footer-language-control" aria-labelledby="footer-language-label">
-                <h3 id="footer-language-label">@Localization["language.label"]</h3>
+            <section class="footer-column footer-language-control" aria-label='@Localization["language.label"]'>
                 <label class="visually-hidden" for="footer-language-select">@Localization["language.select"]</label>
-                <select id="footer-language-select"
-                        value="@Localization.CurrentLanguage"
-                        @onchange="async args => await ChangeLanguageAsync(args.Value?.ToString() ?? ILocalizationService.DefaultLanguage)">
-                    <option value="en-US">@Localization["language.english"]</option>
-                    <option value="nl-BE">@Localization["language.dutch"]</option>
-                </select>
+                <div class="footer-language-select-shell">
+                    <span class="bi bi-translate footer-language-icon" aria-hidden="true"></span>
+                    <select id="footer-language-select"
+                            value="@Localization.CurrentLanguage"
+                            @onchange="async args => await ChangeLanguageAsync(args.Value?.ToString() ?? ILocalizationService.DefaultLanguage)">
+                        <option value="en-US">@Localization["language.english"]</option>
+                        <option value="nl-BE">@Localization["language.dutch"]</option>
+                    </select>
+                </div>
             </section>
         </div>
     </footer>
