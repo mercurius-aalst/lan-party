@@ -269,6 +269,41 @@
     grid-template-columns: minmax(0, 1fr) 8rem;
     --ticket-stub-width: 8rem;
     --ticket-perforation-x: calc(var(--ticket-stub-width) - 1px);
+    --ticket-notch-radius: 0.75rem;
+    -webkit-mask-image:
+        linear-gradient(#000 0 0),
+        radial-gradient(
+            circle at calc(100% - var(--ticket-perforation-x)) 0,
+            #000 0,
+            #000 var(--ticket-notch-radius),
+            transparent calc(var(--ticket-notch-radius) + 1px)
+        ),
+        radial-gradient(
+            circle at calc(100% - var(--ticket-perforation-x)) 100%,
+            #000 0,
+            #000 var(--ticket-notch-radius),
+            transparent calc(var(--ticket-notch-radius) + 1px)
+        );
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+    -webkit-mask-composite: xor, xor;
+    mask-image:
+        linear-gradient(#000 0 0),
+        radial-gradient(
+            circle at calc(100% - var(--ticket-perforation-x)) 0,
+            #000 0,
+            #000 var(--ticket-notch-radius),
+            transparent calc(var(--ticket-notch-radius) + 1px)
+        ),
+        radial-gradient(
+            circle at calc(100% - var(--ticket-perforation-x)) 100%,
+            #000 0,
+            #000 var(--ticket-notch-radius),
+            transparent calc(var(--ticket-notch-radius) + 1px)
+        );
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    mask-composite: exclude, exclude;
     min-height: 12rem;
     overflow: hidden;
     border-radius: 14px;
@@ -297,22 +332,7 @@
 
 .lan-ticket::before,
 .lan-ticket::after {
-    content: "";
-    position: absolute;
-    right: calc(var(--ticket-perforation-x) - 0.75rem);
-    width: 1.5rem;
-    height: 1.5rem;
-    border-radius: 999px;
-    background: var(--color-surface-muted);
-    box-shadow: inset 0 0 0 1px var(--color-border);
-}
-
-.lan-ticket::before {
-    top: -0.75rem;
-}
-
-.lan-ticket::after {
-    bottom: -0.75rem;
+    content: none;
 }
 
 .lan-ticket-main,
@@ -588,6 +608,8 @@
 
     .lan-ticket {
         grid-template-columns: 1fr;
+        -webkit-mask-image: none;
+        mask-image: none;
     }
 
     .lan-ticket::before,
