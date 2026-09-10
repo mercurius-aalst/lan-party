@@ -398,13 +398,12 @@
 
 .home-tournament-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.85fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(1.25rem, 3vw, 2.5rem);
-    align-items: start;
+    align-items: stretch;
 }
 
-.home-tournament-lead,
-.home-tournament-row {
+.home-tournament-card {
     appearance: none;
     margin: 0;
     border: 0;
@@ -412,9 +411,6 @@
     text-align: left;
     color: inherit;
     cursor: pointer;
-}
-
-.home-tournament-lead {
     display: grid;
     grid-template-rows: auto 1fr;
     overflow: hidden;
@@ -425,14 +421,13 @@
     transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.home-tournament-lead:hover,
-.home-tournament-lead:focus-visible {
+.home-tournament-card:hover,
+.home-tournament-card:focus-visible {
     transform: translateY(-3px);
     box-shadow: var(--shadow-brand-hover);
 }
 
-.home-tournament-lead:focus-visible,
-.home-tournament-row:focus-visible {
+.home-tournament-card:focus-visible {
     outline: 3px solid var(--color-focus);
     outline-offset: 4px;
 }
@@ -441,9 +436,6 @@
     display: block;
     width: 100%;
     object-fit: cover;
-}
-
-.home-tournament-image--lead {
     aspect-ratio: 16 / 9;
 }
 
@@ -460,8 +452,7 @@
     gap: 0.9rem;
 }
 
-.home-tournament-meta strong,
-.home-tournament-row-copy strong {
+.home-tournament-meta strong {
     font-family: "Saira", system-ui, sans-serif;
     font-size: clamp(1.15rem, 2.2vw, 1.65rem);
     font-weight: 800;
@@ -474,60 +465,6 @@
     color: var(--color-muted-text);
     font-size: 0.95rem;
     line-height: 1.45;
-}
-
-.home-tournament-list {
-    display: grid;
-    align-content: start;
-}
-
-.home-tournament-row {
-    display: grid;
-    grid-template-columns: 5rem minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.9rem;
-    width: 100%;
-    padding: 0.9rem 0;
-    border-bottom: 1px solid var(--color-border);
-    background: transparent;
-    transition: transform 180ms ease, color 180ms ease;
-}
-
-.home-tournament-row:first-child {
-    padding-top: 0;
-}
-
-.home-tournament-row:last-child {
-    border-bottom: 0;
-}
-
-.home-tournament-row:hover,
-.home-tournament-row:focus-visible {
-    color: var(--color-link);
-    transform: translateX(0.25rem);
-}
-
-.home-tournament-image--row {
-    width: 5rem;
-    height: 4.5rem;
-    border-radius: 0.7rem;
-}
-
-.home-tournament-row-copy {
-    display: grid;
-    gap: 0.25rem;
-    min-width: 0;
-}
-
-.home-tournament-row-copy strong {
-    overflow: hidden;
-    font-size: 1.05rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.home-tournament-row .tournament-status {
-    flex-shrink: 0;
 }
 
 .home-actions {
@@ -785,16 +722,7 @@
 
 @media (max-width: 900px) {
     .home-tournament-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .home-tournament-list {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 1.5rem;
-    }
-
-    .home-tournament-row:first-child {
-        padding-top: 0.9rem;
     }
 }
 
@@ -814,7 +742,7 @@
         min-height: 0;
     }
 
-    .home-tournament-list {
+    .home-tournament-layout {
         grid-template-columns: 1fr;
     }
 
@@ -825,8 +753,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .home-tournament-lead,
-    .home-tournament-row,
+    .home-tournament-card,
     .home-action-panel {
         animation: none !important;
         transition: none !important;
