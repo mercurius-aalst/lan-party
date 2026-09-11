@@ -86,18 +86,6 @@ public partial class TournamentDetail : IDisposable
             ? _availableSponsors.FirstOrDefault(sponsor => sponsor.Id == _selectedSponsorId.Value)
             : null;
 
-    private string TournamentSummary
-    {
-        get
-        {
-            if(_tournament == null)
-                return string.Empty;
-
-            var competitionType = _tournament.ParticipationMode == ParticipationMode.Team ? "team-based" : "solo";
-            return $"Mercurius LAN {competitionType} competition with {_tournament.BracketType.GetLabel().ToLowerInvariant()} structure and {_tournament.Format.GetLabel().ToLowerInvariant()} match format.";
-        }
-    }
-
     private string ScheduleSummary
     {
         get
@@ -461,10 +449,10 @@ public partial class TournamentDetail : IDisposable
 
     private string GetScheduleEmptyMessage()
     {
-        if(_tournament?.PlannedStartTime is DateTime plannedStart)
-            return $"No estimated match times are available yet. Tournament planning starts {FormatDateTime(plannedStart)}.";
+        if(_tournament?.PlannedStartTime is not null)
+            return "No matches are scheduled yet.";
 
-        return "No estimated match times are available yet.";
+        return "No matches are scheduled yet.";
     }
 
     private string GetMatchTitle(Match match)
