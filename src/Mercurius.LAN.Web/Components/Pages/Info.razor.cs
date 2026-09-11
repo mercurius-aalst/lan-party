@@ -63,11 +63,11 @@ public partial class Info
                     : ticket.Name;
 
     private string GetTicketDescription(TicketOption ticket) =>
-        string.Equals(ticket.Kind, "chair", StringComparison.OrdinalIgnoreCase) && ticket.Description == "Competition access with a gaming chair"
+        string.Equals(ticket.Kind, "chair", StringComparison.OrdinalIgnoreCase) && ticket.Description == "Access to all competitions + a gaming chair"
             ? Localization["General.Info.Ticket.GamerChairDescription"]
-            : string.Equals(ticket.Kind, "gamer", StringComparison.OrdinalIgnoreCase) && ticket.Description == "Bring your setup and join competitions"
+            : string.Equals(ticket.Kind, "gamer", StringComparison.OrdinalIgnoreCase) && ticket.Description == "Access to all competitions"
                 ? Localization["General.Info.Ticket.GamerDescription"]
-                : string.Equals(ticket.Kind, "visitor", StringComparison.OrdinalIgnoreCase) && ticket.Description == "No competition participation"
+                : string.Equals(ticket.Kind, "visitor", StringComparison.OrdinalIgnoreCase) && ticket.Description == "Access to the fun and console tournaments"
                     ? Localization["General.Info.Ticket.VisitorDescription"]
                     : ticket.Description;
 
