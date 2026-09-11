@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.4.0...frontend-v0.5.0) (2026-09-11)
+
+
+### Features
+
+* Add English and Dutch Localization ([#64](https://github.com/mercurius-aalst/lan-party/issues/64)) ([8796d32](https://github.com/mercurius-aalst/lan-party/commit/8796d32257ac237d1e0167d81e6dd32b4b4e0aae))
+* Redesign the Mercurius LAN Front End ([#63](https://github.com/mercurius-aalst/lan-party/issues/63)) ([5da0be9](https://github.com/mercurius-aalst/lan-party/commit/5da0be9425550357de1ee4155cb9dc20a29b1081))
+
 ## [0.4.0](https://github.com/mercurius-aalst/lan-party/compare/frontend-v0.3.3...frontend-v0.4.0) (2025-11-19)
 
 
