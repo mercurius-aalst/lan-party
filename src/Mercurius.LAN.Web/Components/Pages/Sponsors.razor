@@ -15,38 +15,32 @@ else
         <div class="brand-card brand-page-hero sponsors-hero">
             <div class="sponsors-hero-lead">
                 <div class="brand-page-hero-copy sponsors-hero-copy">
-                    <span class="section-eyebrow">Sponsors & Partners</span>
                     <h1>Partners powering every corner of Mercurius LAN</h1>
                     <p>Discover the brands helping us level up tournaments, production, and the full LAN weekend atmosphere for every player and visitor.</p>
                 </div>
                 <div class="sponsors-hero-actions">
-                    <a href="@GetBrowsePartnersHref()" class="button-primary">Browse Partners</a>
                     <a href="/#contact" class="button-secondary">Become a Sponsor</a>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section">
+    <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section brand-section-anchor">
         <div class="brand-section-shell sponsors-impact-header">
-            <span class="section-eyebrow">Sponsors & Partners</span>
             <h2>Why sponsors matter to the event</h2>
             <p>Partner support helps us run a better LAN for everyone: stronger tournaments, better on-site comfort, and a more memorable community weekend.</p>
         </div>
 
         <div class="sponsors-impact-grid">
             <article class="brand-card sponsors-impact-card">
-                <span class="brand-section-number">01</span>
                 <h3>Stronger tournament experience</h3>
                 <p>Partners help us support prizes, stage quality, and better player-facing tournament moments.</p>
             </article>
             <article class="brand-card sponsors-impact-card">
-                <span class="brand-section-number">02</span>
                 <h3>More comfort across the weekend</h3>
                 <p>Sponsorship support helps improve venue setup, connectivity, and practical on-site quality for participants.</p>
             </article>
             <article class="brand-card sponsors-impact-card">
-                <span class="brand-section-number">03</span>
                 <h3>Community momentum</h3>
                 <p>Long-term partnerships help Mercurius LAN keep growing while staying accessible to returning and new visitors.</p>
             </article>
@@ -69,7 +63,7 @@ else
     }
     else
     {
-        <div id="current-partners" class="sponsors-tier-list">
+        <div id="current-partners" class="sponsors-tier-list brand-section-anchor">
             @foreach(var tier in TierOrder.Where(HasSponsorsInTier))
             {
                 <section class="@GetTierSectionClass(tier)">

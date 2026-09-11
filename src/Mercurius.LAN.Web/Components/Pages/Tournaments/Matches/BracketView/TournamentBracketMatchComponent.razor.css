@@ -1,18 +1,18 @@
 /* Styling for TournamentBracketMatchComponent */
 .bracket-match {
-    background: #fff;
-    border: 2px solid #4caf50;
-    border-radius: 8px;
+    background: var(--color-surface) !important;
+    border: 1px solid var(--color-primary-green) !important;
+    border-radius: var(--radius-control);
     width: 220px;
     height: 60px;
-    box-shadow: 0 2px 8px rgba(76,175,80,0.08);
+    box-shadow: none;
     position: absolute;
     text-align: center;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: center;
-    color: #333;
+    color: var(--color-ink);
     padding: 0.75rem 0.2rem !important;
     box-sizing: border-box;
     overflow: hidden;

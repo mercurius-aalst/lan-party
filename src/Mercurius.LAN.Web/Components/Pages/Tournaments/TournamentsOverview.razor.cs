@@ -54,6 +54,8 @@ public partial class TournamentsOverview
     private bool _isAddTournamentDialogOpen;
     private bool _isLoading = true;
     private bool _isLoadingPage;
+    private bool _isRegistrationDialogOpen;
+    private TournamentExtended? _registrationTournament;
     private string? _loadError;
     private int _page = 1;
     private const int PageSize = 24;
@@ -167,7 +169,7 @@ public partial class TournamentsOverview
         }
     }
 
-    private void NavigateToRegister(Tournament tournament)
+    private void OpenRegistration(Tournament tournament)
     {
         if(tournament.Status != TournamentStatus.Scheduled)
         {
@@ -175,7 +177,32 @@ public partial class TournamentsOverview
             return;
         }
 
-        NavigationManager.NavigateTo($"/tournaments/{tournament.Id}#tournament-participants");
+        _registrationTournament = new TournamentExtended
+        {
+            Id = tournament.Id,
+            Name = tournament.Name,
+            StartTime = tournament.StartTime,
+            EndTime = tournament.EndTime,
+            PlannedStartTime = tournament.PlannedStartTime,
+            AverageGameDurationMinutes = tournament.AverageGameDurationMinutes,
+            RoundBreakDurationMinutes = tournament.RoundBreakDurationMinutes,
+            EstimatedEndTime = tournament.EstimatedEndTime,
+            ImageUrl = tournament.ImageUrl,
+            Status = tournament.Status,
+            BracketType = tournament.BracketType,
+            Format = tournament.Format,
+            FinalsFormat = tournament.FinalsFormat,
+            ParticipationMode = tournament.ParticipationMode,
+            TeamSize = tournament.TeamSize
+        };
+        _isRegistrationDialogOpen = true;
+    }
+
+    private void HandleRegistrationDialogOpenChanged(bool isOpen)
+    {
+        _isRegistrationDialogOpen = isOpen;
+        if(!isOpen)
+            _registrationTournament = null;
     }
 
     private void SetStatusFilter(OverviewStatusFilter filter)

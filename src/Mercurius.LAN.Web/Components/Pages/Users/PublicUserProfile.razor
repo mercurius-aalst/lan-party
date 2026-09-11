@@ -50,10 +50,9 @@ else
                 </div>
             </header>
 
-            <section class="brand-card public-user-card">
+            <section id="profile-details" class="brand-card public-user-card brand-section-anchor">
                 <div class="public-user-card-heading">
                     <h2>Profile details</h2>
-                    <p>Only privacy-approved fields are shown on this public page.</p>
                 </div>
 
                 <div class="public-user-identity-grid">
@@ -110,10 +109,12 @@ else
                 }
             </section>
 
-            <PublicProfileMatchSummaries Summaries="@_matchSummaries"
-                                         IsLoading="@_isMatchSummariesLoading"
-                                         HasError="@_hasMatchSummariesError"
-                                         OnRetry="RetryMatchSummariesAsync" />
+            <div id="profile-matches" class="brand-section-anchor">
+                <PublicProfileMatchSummaries Summaries="@_matchSummaries"
+                                             IsLoading="@_isMatchSummariesLoading"
+                                             HasError="@_hasMatchSummariesError"
+                                             OnRetry="RetryMatchSummariesAsync" />
+            </div>
         </div>
     </section>
 }

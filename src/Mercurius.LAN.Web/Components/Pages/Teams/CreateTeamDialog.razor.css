@@ -6,8 +6,8 @@
     align-items: center;
     justify-content: center;
     padding: 1rem;
-    background: rgba(15, 23, 42, 0.48);
-    backdrop-filter: blur(8px);
+    background: var(--color-overlay);
+    backdrop-filter: blur(4px);
 }
 
 .team-modal-dialog {
@@ -19,11 +19,11 @@
     max-height: min(92vh, 42rem);
     overflow: hidden;
     padding: clamp(1.25rem, 3vw, 2rem);
-    border: 1px solid var(--color-border);
-    border-radius: 28px;
-    background: rgba(255, 255, 255, 0.99);
-    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
-    color: var(--color-dark-navy);
+    border: 0;
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised) !important;
+    box-shadow: var(--shadow-brand-hover);
+    color: var(--color-ink) !important;
 }
 
 .team-modal-close {
@@ -32,17 +32,16 @@
     right: 1rem;
     width: 2.6rem;
     height: 2.6rem;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
+    border: 0;
+    border-radius: var(--radius-button);
+    background: var(--color-neutral-soft);
+    color: var(--color-ink);
     font-size: 1.4rem;
     line-height: 1;
 }
 
 .team-modal-close:hover {
-    border-color: rgba(34, 197, 94, 0.4);
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    background: var(--color-surface-muted);
 }
 
 .team-modal-header {
@@ -90,26 +89,26 @@
     width: 100%;
     min-height: 3rem;
     padding: 0.75rem 0.9rem;
-    border: 1px solid var(--color-border);
-    border-radius: 16px;
-    background: var(--color-white);
-    color: var(--color-dark-navy);
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
+    color: var(--color-ink);
+    box-shadow: none;
     font: inherit;
 }
 
 .form-group ::deep .form-control:focus {
-    border-color: rgba(34, 197, 94, 0.52);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    border-color: var(--color-primary-green);
+    box-shadow: 0 0 0 3px var(--color-focus);
     outline: none;
 }
 
 .team-dialog-alert {
     padding: 0.75rem 0.9rem;
-    border: 1px solid rgba(245, 158, 11, 0.26);
-    border-radius: 14px;
-    background: rgba(255, 251, 235, 0.95);
-    color: #92400e;
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-warning-soft);
+    color: var(--color-warning);
     font-weight: 800;
 }
 
@@ -128,8 +127,8 @@
     height: 4.8rem;
     overflow: hidden;
     border-radius: 999px;
-    background: rgba(34, 197, 94, 0.14);
-    color: var(--color-deep-green);
+    background: var(--color-neutral-soft);
+    color: var(--color-link);
     font-size: 1.6rem;
 }
 
@@ -163,10 +162,10 @@
     gap: 0.45rem;
     min-height: 2.6rem;
     padding: 0.65rem 0.85rem;
-    border: 1px dashed rgba(21, 128, 61, 0.42);
-    border-radius: 14px;
-    background: rgba(240, 253, 244, 0.78);
-    color: var(--color-deep-green);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: var(--color-neutral-soft);
+    color: var(--color-link);
     cursor: pointer;
     font-weight: 800;
 }

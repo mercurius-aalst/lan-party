@@ -23,7 +23,7 @@
                         {
                             @Participant1Name
                         }
-                        <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "—")]</span>
+                        <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "?")]</span>
                     </span>
                     <span class="match-header-vs">vs</span>
                     <span class="match-header-name">
@@ -35,7 +35,7 @@
                         {
                             @Participant2Name
                         }
-                        <span class="match-header-score">[@(Match.Participant2Score?.ToString() ?? "—")]</span>
+                        <span class="match-header-score">[@(Match.Participant2Score?.ToString() ?? "?")]</span>
                     </span>
                 </h2>
                 <div class="match-summary-badges">
@@ -52,7 +52,6 @@
 
             <section class="match-lifecycle-panel">
                 <div>
-                    <span class="section-eyebrow">Authoritative result state</span>
                     <h3>@GetStatusLabel()</h3>
                     <p>@GetStatusDescription()</p>
                 </div>
@@ -68,7 +67,7 @@
 
             @if(_isLoading && !_hasLoaded)
             {
-                <div class="match-state-message" role="status">Loading the latest match state...</div>
+                <div class="match-state-message" role="status">Loading match...</div>
             }
             else if(_errorMessage is not null)
             {
@@ -80,7 +79,7 @@
 
             @if(_isLoading && _hasLoaded)
             {
-                <div class="match-refresh-message" role="status">Refreshing the authoritative state...</div>
+                <div class="match-refresh-message" role="status">Updating match...</div>
             }
 
             <div class="participants-grid">
@@ -98,7 +97,7 @@
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
@@ -121,7 +120,7 @@
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
@@ -137,12 +136,6 @@
                 <div class="match-state-message" role="note">
                     <p>Sign in to confirm your side, report a score, or forfeit. Match results remain publicly viewable.</p>
                     <a class="button-secondary" href="@SignInHref">Sign in</a>
-                </div>
-            }
-            else if(_authorizationDenied)
-            {
-                <div class="match-state-message" role="note">
-                    <p>This match is read-only for your account. Only an assigned participant, team captain, or authorized tournament administrator can manage the result.</p>
                 </div>
             }
             else if(_hasFreshActionState && _actionState?.AuthorizedParticipant.HasValue == true)
@@ -209,13 +202,6 @@
                     }
                 </section>
             }
-            else if(_hasFreshActionState && _actionState is not null)
-            {
-                <div class="match-state-message" role="note">
-                    <p>This match is read-only for your account. Only the assigned player or team captain can submit result actions.</p>
-                </div>
-            }
-
             <AuthorizeView Roles="admin">
                 <Authorized>
                     @if(_hasFreshActionState && _actionState is not null)
@@ -310,8 +296,9 @@
 
             @if(_isSubmitting)
             {
-                <div class="match-refresh-message" role="status">Saving and reloading the authoritative result...</div>
+                <div class="match-refresh-message" role="status">Saving result...</div>
             }
         </div>
     </div>
+    <UserInfoDialog User="_selectedUser" OnClose="HideUserInfoPopup" />
 </CascadingValue>

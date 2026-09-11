@@ -60,11 +60,6 @@ namespace Mercurius.LAN.Web.Components.Pages
             return tier is SponsorTier.Presenting or SponsorTier.Gold;
         }
 
-        private string GetBrowsePartnersHref()
-        {
-            return _sponsors.Any() ? "/sponsors#current-partners" : "/sponsors#why-partners";
-        }
-
         private static string GetTierSectionClass(SponsorTier tier)
         {
             var tierName = tier.ToString().ToLowerInvariant();

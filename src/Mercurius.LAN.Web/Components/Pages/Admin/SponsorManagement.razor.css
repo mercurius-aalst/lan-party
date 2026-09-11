@@ -4,12 +4,6 @@
     padding-block: 1.5rem 3rem;
 }
 
-.sponsor-admin-header {
-    display: grid;
-    gap: 0.75rem;
-}
-
-.sponsor-admin-header p,
 .sponsor-admin-side-card ul {
     margin: 0;
 }

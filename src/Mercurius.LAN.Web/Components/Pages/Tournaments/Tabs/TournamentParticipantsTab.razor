@@ -3,54 +3,115 @@
 @using Mercurius.LAN.Web.Models.Tournaments
 
 <div class="participants-tab-shell">
-    <div class="participants-tab-header">
-        <div>
-            <span class="section-eyebrow">Participants</span>
-            <h2>Registered @(Tournament.ParticipationMode == ParticipationMode.Team ? "teams" : "players")</h2>
-            <p>@_participants.Count currently registered for this tournament.</p>
+    @if(!PopupOnly)
+    {
+        <div class="participants-tab-header">
+            <div>
+                <h2 class="section-eyebrow">Participants</h2>
+                <p>@_participants.Count @(Tournament.ParticipationMode == ParticipationMode.Team ? (_participants.Count == 1 ? "team" : "teams") : (_participants.Count == 1 ? "player" : "players")) currently registered for this tournament.</p>
+            </div>
         </div>
-    </div>
+    }
 
     <div class="participants-overview-body">
-        @if(!HasPublicParticipants)
+        @if(!PopupOnly)
         {
-            <div class="participants-state-card" role="status">
-                <h3>No participants yet</h3>
-                <p>Registrations will appear here after the backend confirms them.</p>
-            </div>
-        }
-        else
-        {
-            <div class="participants-overview-grid">
-                @foreach(var participant in _participants)
+            @if(!HasPublicParticipants)
+            {
+                <div class="participants-state-card" role="status">
+                    <h3>No participants yet</h3>
+                    <p>There are no registrations for this tournament yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="participants-overview-grid">
+                    @foreach(var participant in _participants)
+                    {
+                        <ParticipantCardComponent Participant="participant" OnParticipantSelected="DisplayParticipantPopup" />
+                    }
+                </div>
+            }
+
+        <section id="registration" class="registration-panel brand-section-anchor" aria-labelledby="registration-panel-heading">
+            <div class="registration-entry">
+                <div class="registration-panel-header">
+                    <div>
+                        <span class="section-eyebrow">Registration</span>
+                        <h3 id="registration-panel-heading">Join this tournament</h3>
+                        @if(Tournament.ParticipationMode == ParticipationMode.Team)
+                        {
+                            <p>@GetTeamRegistrationStateMessage()</p>
+                        }
+                    </div>
+                    @if(_isLoadingRegistration)
+                    {
+                        <span class="registration-loading" role="status">Checking options...</span>
+                    }
+                </div>
+
+                @if(IsRegistrationOpen)
                 {
-                    <ParticipantCardComponent Participant="participant" OnParticipantSelected="DisplayParticipantPopup" />
+                    <button type="button"
+                            class="button-primary registration-open-button"
+                            disabled="@(_isSubmitting || _isLoadingRegistration)"
+                            @onclick="OpenRegistrationDialog">
+                        <span class="bi bi-arrow-up-right-circle" aria-hidden="true"></span>
+                        <span>@GetRegistrationActionLabel()</span>
+                    </button>
+                }
+                else
+                {
+                    <span class="registration-closed-badge" role="status">
+                        <span class="bi bi-lock" aria-hidden="true"></span>
+                        Registration closed
+                    </span>
                 }
             </div>
+        </section>
         }
 
-        <section class="registration-panel" aria-labelledby="registration-panel-heading">
-            <div class="registration-panel-header">
-                <div>
-                    <span class="section-eyebrow">Registration</span>
-                    <h3 id="registration-panel-heading">Join this tournament</h3>
-                    <p>@GetRegistrationStateMessage()</p>
-                </div>
-                @if(_isLoadingRegistration)
-                {
-                    <span class="registration-loading" role="status">Checking options...</span>
-                }
-                @if(_isAuthenticated && IsRegistrationOpen)
-                {
-                    <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)" @onclick="RetryRegistrationContextAsync">Refresh registration state</button>
-                }
-            </div>
+        @if(_isRegistrationDialogOpen)
+        {
+            <div class="registration-dialog-overlay"
+                 role="presentation"
+                 @onclick="CloseRegistrationDialogAsync"
+                 @onkeydown="HandleRegistrationDialogKeyDown">
+                <div class="participants-modal-dialog registration-dialog"
+                     role="dialog"
+                     aria-modal="true"
+                     aria-labelledby="registration-dialog-title"
+                     aria-describedby="@(Tournament.ParticipationMode == ParticipationMode.Team ? "registration-dialog-description" : null)"
+                     tabindex="-1"
+                     @ref="_registrationDialogElement"
+                     @onclick:stopPropagation>
+                    <button type="button"
+                            class="participants-modal-close"
+                            aria-label="Close registration"
+                            autofocus
+                            @onclick="CloseRegistrationDialogAsync">
+                        <span class="bi bi-x-lg" aria-hidden="true"></span>
+                    </button>
+
+                    <header class="participants-modal-header registration-dialog-header">
+                        <span class="section-eyebrow">Registration</span>
+                        <h2 id="registration-dialog-title" class="visually-hidden">Registration for @Tournament.Name</h2>
+                        @if(Tournament.ParticipationMode == ParticipationMode.Team)
+                        {
+                            <p id="registration-dialog-description">@GetTeamRegistrationStateMessage()</p>
+                        }
+                    </header>
+
+                    <div class="registration-dialog-body">
+                        @if(_isLoadingRegistration)
+                        {
+                            <p class="registration-message" role="status">Checking your options...</p>
+                        }
 
             @if(_registrationError is not null)
             {
                 <div class="registration-message registration-message--error" role="alert">
                     <p>@_registrationError</p>
-                    <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRegistrationContextAsync">Try again</button>
                 </div>
             }
 
@@ -80,11 +141,11 @@
                     }
                     else if(_registrationState?.CanRegisterIndividual == true)
                     {
-                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">Register as an individual</button>
+                        <button type="button" class="button-primary registration-individual-action" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">Register as an individual</button>
                     }
                     else
                     {
-                        <p class="registration-message registration-message--warning">Your account is not currently eligible to register. Refresh to re-check the backend state.</p>
+                        <p class="registration-message registration-message--warning">Registration is unavailable.</p>
                     }
                 </div>
             }
@@ -95,18 +156,6 @@
                     {
                         <div class="registration-message registration-message--error" role="alert">
                             <p>@_teamError</p>
-                            @if(_teamSummaryUnavailable || _teamEligibilityUnavailable)
-                            {
-                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryTeamRegistrationAsync">Retry team checks</button>
-                            }
-                            @if(_rosterEligibilityUnavailable)
-                            {
-                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="RetryRosterEligibilityAsync">Retry roster check</button>
-                            }
-                            @if(!_teamSummaryUnavailable && !_teamEligibilityUnavailable && !_rosterEligibilityUnavailable)
-                            {
-                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRegistrationContextAsync">Refresh registration state</button>
-                            }
                         </div>
                     }
 
@@ -116,10 +165,7 @@
                     }
                     else if(_teamSummaryUnavailable)
                     {
-                        <div class="registration-message registration-message--error" role="alert">
-                            <p>Your team summary is unavailable, so team registration cannot be loaded yet.</p>
-                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryTeamRegistrationAsync">Retry team summary</button>
-                        </div>
+                        <p class="registration-message registration-message--error" role="alert">Your teams are unavailable right now.</p>
                     }
                     else if(!CaptainedTeams.Any())
                     {
@@ -138,7 +184,7 @@
                         }
                         else
                         {
-                            <p class="registration-message registration-message--warning">You do not captain a team that can submit a roster. Team membership alone cannot submit a registration.</p>
+                            <p class="registration-message registration-message--warning">You don't have a team available to register.</p>
                         }
                     }
                     else
@@ -165,18 +211,17 @@
                             <ChildContent>
                                 <MudStep Title="Select team" SecondaryText="Captain-owned team" Completed="@(_activeTeamStep > 0)">
                                 <div class="registration-step-content">
-                                    <p class="registration-help">Choose a team you captain. Eligibility is checked by the backend before the roster can be edited.</p>
+                                    <p class="registration-help">Choose a team to continue.</p>
                                     <div class="registration-team-options" role="listbox" aria-label="Teams you captain">
                                         @foreach(var team in CaptainedTeams)
                                         {
                                             var teamEligibility = GetTeamEligibility(team.Id);
                                             var teamSelectable = CanSelectTeam(team.Id);
-                                            var teamReasonId = $"team-reason-{team.Id:N}";
                                             <button type="button"
-                                                    class="registration-team-option @(team.Id == _selectedTeamId ? "is-selected" : null)"
+                                                    class="registration-team-option @(team.Id == _selectedTeamId ? "is-selected" : null) @(teamEligibility is { Eligible: false } ? "is-unavailable" : null)"
                                                     role="option"
                                                     aria-selected="@(team.Id == _selectedTeamId)"
-                                                    aria-describedby="@(teamEligibility is { Eligible: false } ? teamReasonId : null)"
+                                                    aria-label="@(teamEligibility is { Eligible: false } ? $"{team.Name}, unavailable" : team.Name)"
                                                     disabled="@(!teamSelectable || _isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)"
                                                     @onclick="() => SelectTeamAsync(team.Id)">
                                                 <span>
@@ -185,7 +230,7 @@
                                                 </span>
                                                 @if(teamEligibility is null)
                                                 {
-                                                    <small class="registration-team-status">Eligibility will be checked when selected.</small>
+                                                    <small class="registration-team-status">Select to continue</small>
                                                 }
                                                 else if(teamSelectable && IsCurrentCaptainManagedTeam(team.Id))
                                                 {
@@ -193,7 +238,7 @@
                                                 }
                                                 else if(!teamEligibility.Eligible)
                                                 {
-                                                    <small id="@teamReasonId" class="registration-team-status registration-team-status--error">Unavailable: @GetReasonText(teamEligibility.ReasonCodes)</small>
+                                                    <small class="registration-team-status registration-team-status--error">Unavailable</small>
                                                 }
                                                 else
                                                 {
@@ -207,14 +252,10 @@
                                     {
                                         <p class="registration-message registration-message--warning">Select an eligible team to continue.</p>
                                     }
-                                        else if(!CanAdvanceFromTeamSelection)
-                                        {
-                                            <p class="registration-message registration-message--warning">This team cannot be used for this tournament: @GetReasonText(_selectedTeamEligibility?.ReasonCodes ?? [])</p>
-                                        }
-                                        @if(_teamEligibilityUnavailable && !_isLoadingTeams)
-                                        {
-                                            <p class="registration-message registration-message--error" role="alert">Team eligibility is unavailable. Retry the team checks before continuing.</p>
-                                        }
+                                    else if(!CanAdvanceFromTeamSelection || (_teamEligibilityUnavailable && !_isLoadingTeams))
+                                    {
+                                        <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label="Team unavailable">Unavailable</span>
+                                    }
                                 </div>
                                 </MudStep>
 
@@ -236,54 +277,33 @@
 
                                         @if(HasCaptainManagedRegistration)
                                         {
-                                            <p class="registration-message registration-message--success">Your team registration is @CaptainManagedRegistration!.Status.ToString().ToLowerInvariant() and can be edited while registration is open.</p>
-                                        }
-
-                                        @if(_selectedTeamEligibility is { Eligible: false } && !IsCurrentCaptainManagedTeam(SelectedTeam.Id))
-                                        {
-                                            <p class="registration-message registration-message--warning">This team cannot register: @GetReasonText(_selectedTeamEligibility.ReasonCodes)</p>
-                                        }
-                                        else if(_selectedTeamEligibility is { Eligible: false })
-                                        {
-                                            <p class="registration-message registration-message--warning">The eligibility response includes the existing registration conflict. The current captain can edit this roster; the backend will revalidate the replacement on save.</p>
+                                            <p class="registration-message registration-message--success">@(CaptainManagedRegistration!.Status == TournamentRegistrationStatus.PendingConfirmation ? "Your team registration is awaiting confirmation. You can update your lineup until registration closes." : "Your team is registered. You can update your lineup until registration closes.")</p>
                                         }
 
                                         <fieldset class="registration-roster-fieldset">
                                             <legend>Roster members</legend>
-                                            <p class="registration-help">The captain must remain selected. A checked member with a blocking reason can be removed, but cannot be added back until eligible.</p>
+                                            <p class="registration-help">The captain remains selected. Choose the remaining players.</p>
                                             <div class="registration-roster-list">
                                                 @foreach(var member in EditableRosterCandidates)
                                                 {
-                                                    var candidate = GetRosterCandidate(member.Id);
-                                                    var reasonId = $"roster-reason-{member.Id:N}";
                                                     var selected = _selectedRosterUserIds.Contains(member.Id);
-                                                    var isCurrentTeamMember = IsCurrentTeamMember(member.Id);
                                                     var isCaptain = member.Id == SelectedTeam.CaptainUserId;
-                                                    var blocked = candidate is { Eligible: false } && !IsExistingRosterConflictAllowed(member.Id, candidate);
-                                                    <label class="registration-roster-member @(blocked ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
+                                                    var unavailable = !_isLoadingRoster && !CanSelectRosterMember(member.Id);
+                                                    <label class="registration-roster-member @(unavailable ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
                                                         <input type="checkbox"
                                                                checked="@selected"
-                                                               disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || isCaptain || (!selected && blocked))"
-                                                               aria-describedby="@((!isCurrentTeamMember || candidate is { Eligible: false }) ? reasonId : null)"
+                                                               disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster || isCaptain || unavailable)"
+                                                               aria-label="@($"{GetUserLabel(member)}{(isCaptain ? ", captain" : string.Empty)}{(unavailable ? ", unavailable" : string.Empty)}")"
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
                                                             <strong>@GetUserLabel(member)</strong>@(isCaptain ? " (captain)" : string.Empty)
-                                                            @if(!isCurrentTeamMember || candidate is { Eligible: false })
+                                                            @if(unavailable)
                                                             {
-                                                                <small id="@reasonId" class="registration-candidate-reason">
-                                                                    @if(!isCurrentTeamMember)
-                                                                    {
-                                                                        <span>Former team member; remove before saving this roster.</span>
-                                                                    }
-                                                                    @if(candidate is { Eligible: false })
-                                                                    {
-                                                                        <span>@GetReasonText(candidate.ReasonCodes)</span>
-                                                                    }
-                                                                </small>
+                                                                <span class="registration-status-chip registration-status-chip--unavailable">Unavailable</span>
                                                             }
                                                             else if(_isLoadingRoster)
                                                             {
-                                                                <small class="registration-candidate-reason">Checking eligibility...</small>
+                                                                <small class="registration-candidate-reason">Checking...</small>
                                                             }
                                                         </span>
                                                     </label>
@@ -293,14 +313,11 @@
 
                                         @if(_isLoadingRoster)
                                         {
-                                            <p class="registration-message" role="status">Checking the selected roster with the backend...</p>
+                                            <p class="registration-message" role="status">Checking whether this roster can join...</p>
                                         }
                                         else if(_rosterEligibilityUnavailable)
                                         {
-                                            <div class="registration-message registration-message--error" role="alert">
-                                                <p>Selected roster eligibility is unavailable. The roster cannot be submitted until it is checked.</p>
-                                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RetryRosterEligibilityAsync">Retry roster check</button>
-                                            </div>
+                                            <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label="Roster unavailable">Unavailable</span>
                                         }
                                         else if(RequiredTeamSize <= 0)
                                         {
@@ -308,11 +325,7 @@
                                         }
                                         else if(_rosterEligibility is { Eligible: false } && !IsRosterEligibleForWorkflow)
                                         {
-                                            <p class="registration-message registration-message--warning">This roster cannot be submitted: @GetReasonText(_rosterEligibility.ReasonCodes)</p>
-                                        }
-                                        else if(_rosterEligibility is { Eligible: false })
-                                        {
-                                            <p class="registration-message registration-message--warning">The eligibility service is reporting the current registration as a duplicate. Existing roster members may be kept while editing; all other reasons must be resolved.</p>
+                                            <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label="Roster unavailable">Unavailable</span>
                                         }
                                         else if(_rosterEligibility is { Eligible: true })
                                         {
@@ -326,6 +339,7 @@
                                 <div class="registration-step-content">
                                     @if(SelectedTeam is not null)
                                     {
+                                        var reviewRosterUserIds = BuildRosterRequest().UserIds.ToHashSet();
                                         <h4>Review @SelectedTeam.Name</h4>
                                         <dl class="registration-review-list">
                                             <div>
@@ -334,7 +348,7 @@
                                             </div>
                                             <div>
                                                 <dt>Selected roster</dt>
-                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => _selectedRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
+                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => reviewRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
                                             </div>
                                             <div>
                                                 <dt>Confirmation</dt>
@@ -352,7 +366,6 @@
                                                 }
                                             </div>
                                         }
-                                        <p class="registration-help">The backend performs the final eligibility and authorization check when you save.</p>
                                     }
                                 </div>
                                 </MudStep>
@@ -414,16 +427,18 @@
                     <div>
                         <span class="section-eyebrow">Roster confirmation</span>
                         <p>Your place for <strong>@GetUserLabel(pending.User)</strong>@(currentTeam is null ? string.Empty : $" on {currentTeam.Name}") in <strong>@Tournament.Name</strong> is waiting for your confirmation.</p>
-                        <small class="registration-help">Confirming is still subject to the backend's latest roster and tournament checks.</small>
                     </div>
                     <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">Confirm roster place</button>
                 </div>
             }
-        </section>
+                    </div>
+                </div>
+            </div>
+        }
 
-        @if(_isAdmin)
+        @if(!PopupOnly && _isAdmin)
         {
-            <section class="registration-panel registration-panel--admin" aria-labelledby="admin-registration-heading">
+            <section id="admin-registration" class="registration-panel registration-panel--admin brand-section-anchor" aria-labelledby="admin-registration-heading">
                 <div class="registration-panel-header">
                     <div>
                         <span class="section-eyebrow">Admin</span>
@@ -470,24 +485,28 @@
         }
     </div>
 
-    @if(_selectedParticipant is not null)
+    @if(ShouldRenderParticipantDialog(PopupOnly, _selectedParticipant, _selectedUser))
     {
         <div class="participants-modal-overlay" @onclick="HidePopup">
             <div class="participants-modal-dialog participants-modal-dialog--detail"
                  role="dialog"
                  aria-modal="true"
                  aria-labelledby="participant-details-title"
-                 aria-describedby="participant-details-summary"
                  tabindex="-1"
+                 @ref="_participantDialogElement"
+                 @onkeydown="HandleParticipantDialogKeyDown"
                  @onclick:stopPropagation>
                 <button type="button" class="participants-modal-close" aria-label="Close participant details" @onclick="HidePopup">&times;</button>
                 <div class="participants-modal-header">
-                    <span class="section-eyebrow">Participant</span>
-                    <h3 id="participant-details-title">@_selectedParticipant.DisplayName</h3>
-                    <p id="participant-details-summary">@GetParticipantModalSummary()</p>
+                    <h3 id="participant-details-title">@_selectedParticipant!.DisplayName</h3>
                 </div>
-                <ParticipantComponent Participant="_selectedParticipant" ShowIdentityHeader="false" />
+                <ParticipantComponent Participant="_selectedParticipant!" ShowIdentityHeader="false" OnUserSelected="DisplayUserPopup" />
             </div>
         </div>
+    }
+
+    @if(!PopupOnly)
+    {
+        <UserInfoDialog User="_selectedUser" OnClose="HideUserInfoPopup" />
     }
 </div>

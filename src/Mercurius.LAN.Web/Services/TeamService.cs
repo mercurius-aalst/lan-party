@@ -261,18 +261,12 @@ public class TeamService : ITeamService
     private static TeamServiceException CreateServiceException(string operation, ApiException exception)
     {
         var message = GetUserFacingMessage(exception);
-        var status = exception.StatusCode == 0
-            ? "unknown status"
-            : $"{(int)exception.StatusCode} {exception.StatusCode}";
 
-        return new TeamServiceException($"{operation} failed ({status}): {message}", operation, exception.StatusCode, exception.Content, exception);
+        return new TeamServiceException(message, operation, exception.StatusCode, exception.Content, exception);
     }
 
     private static string GetUserFacingMessage(ApiException exception)
     {
-        if(!string.IsNullOrWhiteSpace(exception.Content))
-            return exception.Content.Trim();
-
         return exception.StatusCode switch
         {
             HttpStatusCode.Unauthorized => "You need to sign in before managing teams.",

@@ -52,11 +52,11 @@
     padding: 1rem 1.1rem;
     border: 1px solid var(--color-border);
     border-radius: 16px;
-    background: var(--color-soft-white);
+    background: var(--color-surface-raised);
 }
 
 .data-label {
-    color: var(--color-dark-navy);
+    color: var(--color-ink);
     font-weight: 700;
 }
 
@@ -77,27 +77,27 @@
 }
 
 .tag-req {
-    background: rgba(220, 38, 38, 0.12);
+    background: var(--color-danger-soft);
     color: var(--color-danger);
 }
 
 .tag-opt {
-    background: rgba(34, 197, 94, 0.12);
-    color: var(--color-deep-green);
+    background: var(--color-success-soft);
+    color: var(--color-success);
 }
 
 .tag-tech {
-    background: rgba(15, 23, 42, 0.1);
-    color: var(--color-dark-navy);
+    background: var(--color-info-soft);
+    color: var(--color-info);
 }
 
 .warning-box {
     display: grid;
     gap: 0.75rem;
     padding: 1rem 1.1rem;
-    border: 1px solid rgba(245, 158, 11, 0.25);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 32%, transparent);
     border-radius: 18px;
-    background: rgba(245, 158, 11, 0.08);
+    background: var(--color-warning-soft);
 }
 
 @media (max-width: 640px) {

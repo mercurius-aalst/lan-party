@@ -22,33 +22,33 @@
     gap: 0.45rem;
     min-height: 2.6rem;
     padding: 0.65rem 0.85rem;
-    border: 1px dashed rgba(21, 128, 61, 0.42);
+    border: 1px dashed color-mix(in srgb, var(--color-success) 42%, transparent);
     border-radius: 14px;
-    background: rgba(240, 253, 244, 0.78);
-    color: var(--color-deep-green);
+    background: var(--color-success-soft);
+    color: var(--color-success);
     cursor: pointer;
     font-weight: 800;
 }
 
 .image-upload-picker:hover {
-    border-color: rgba(21, 128, 61, 0.58);
-    background: rgba(220, 252, 231, 0.82);
+    border-color: color-mix(in srgb, var(--color-success) 58%, transparent);
+    background: color-mix(in srgb, var(--color-success) 18%, var(--color-surface-raised));
 }
 
 .image-upload-picker:focus-within {
-    border-color: rgba(34, 197, 94, 0.52);
-    box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
+    border-color: var(--color-electric-lime);
+    box-shadow: 0 0 0 4px var(--color-focus);
     outline: none;
 }
 
 .image-upload-picker.modified.is-valid {
-    border-color: rgba(21, 128, 61, 0.58);
+    border-color: color-mix(in srgb, var(--color-success) 58%, transparent);
 }
 
 .image-upload-picker.modified.is-invalid {
-    border-color: rgba(220, 38, 38, 0.48);
-    background: rgba(254, 242, 242, 0.84);
-    color: #991b1b;
+    border-color: color-mix(in srgb, var(--color-danger) 48%, transparent);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
 }
 
 ::deep .image-upload-native {

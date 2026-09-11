@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.RenderTree;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.JSInterop;
 using Xunit;
 
 namespace Mercurius.LAN.Web.ContractTests;
@@ -275,7 +276,9 @@ public sealed class TournamentParticipantsMutationTests
     private sealed class TestRenderer : Renderer
     {
         public TestRenderer()
-            : base(new ServiceCollection().BuildServiceProvider(), NullLoggerFactory.Instance)
+            : base(new ServiceCollection()
+                .AddSingleton<IJSRuntime, TestJsRuntime>()
+                .BuildServiceProvider(), NullLoggerFactory.Instance)
         {
         }
 
@@ -286,6 +289,40 @@ public sealed class TournamentParticipantsMutationTests
         protected override void HandleException(Exception exception) => throw exception;
 
         protected override Task UpdateDisplayAsync(in RenderBatch renderBatch) => Task.CompletedTask;
+    }
+
+    private sealed class TestJsRuntime : IJSRuntime
+    {
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            CreateResult<TValue>();
+
+        public ValueTask<TValue> InvokeAsync<TValue>(
+            string identifier,
+            CancellationToken cancellationToken,
+            object?[]? args) =>
+            CreateResult<TValue>();
+
+        private static ValueTask<TValue> CreateResult<TValue>()
+        {
+            if(typeof(TValue) == typeof(IJSObjectReference))
+                return ValueTask.FromResult((TValue)(object)new TestJsObjectReference());
+
+            return ValueTask.FromResult(default(TValue)!);
+        }
+    }
+
+    private sealed class TestJsObjectReference : IJSObjectReference
+    {
+        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
+            ValueTask.FromResult(default(TValue)!);
+
+        public ValueTask<TValue> InvokeAsync<TValue>(
+            string identifier,
+            CancellationToken cancellationToken,
+            object?[]? args) =>
+            ValueTask.FromResult(default(TValue)!);
+
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
     }
 
     public class RecordingToastServiceProxy : DispatchProxy

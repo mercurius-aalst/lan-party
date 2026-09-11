@@ -16,18 +16,11 @@
 else
 {
     <section class="sponsor-admin-page">
-        <header class="sponsor-admin-header brand-section">
-            <span class="section-eyebrow">Admin</span>
-            <h1>Manage Sponsors</h1>
-            <p>Update sponsor metadata, tier placement, and logo assets used across the public site.</p>
-        </header>
-
         <div class="sponsor-admin-layout">
             <section class="brand-card sponsor-admin-form-card">
                 <div class="sponsor-admin-card-header">
                     <div>
-                        <span class="section-eyebrow">Search sponsors</span>
-                        <h2>Find an existing sponsor</h2>
+                        <h2>Manage sponsors</h2>
                     </div>
                 </div>
 
@@ -92,12 +85,11 @@ else
 
             <aside class="sponsor-admin-sidebar">
                 <section class="brand-card sponsor-admin-side-card">
-                    <span class="section-eyebrow">Summary</span>
-                    <h2>Current data</h2>
+                    <h2>Sponsor overview</h2>
                     <ul class="sponsor-admin-points">
-                        <li>@_sponsors.Count sponsor@(_sponsors.Count == 1 ? string.Empty : "s") loaded</li>
-                        <li>@(_isCreateMode ? "Create mode is active." : "Editing selected sponsor.")</li>
-                        <li>Tier hierarchy is shown publicly across Home, Sponsors, and tournament pages.</li>
+                        <li>@_sponsors.Count sponsor@(_sponsors.Count == 1 ? string.Empty : "s") currently listed.</li>
+                        <li>@(_isCreateMode ? "Adding a new sponsor." : $"Editing {_selectedSponsor.Name}.")</li>
+                        <li>Sponsor placement follows its selected tier.</li>
                     </ul>
                 </section>
             </aside>

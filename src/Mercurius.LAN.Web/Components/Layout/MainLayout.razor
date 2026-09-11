@@ -2,19 +2,20 @@
 
 @inherits LayoutComponentBase
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@SiteTheme" IsDarkMode="@_isDarkMode" ObserveSystemDarkModeChange="false" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<div class="layout-shell flex min-h-screen flex-col">
-    <header class="brand-header sticky top-0 z-[1100]">
-        <div class="brand-header-inner brand-container flex min-h-[5.5rem] items-center justify-between gap-4">
+<div class="layout-shell flex min-h-[100dvh] flex-col" data-theme-state="@(_isDarkMode ? "dark" : "light")">
+    <header class="brand-header sticky top-0 z-[1100]" @onkeydown="HandleHeaderKeyDown">
+        <div class="brand-header-inner brand-container flex items-center justify-between gap-4">
             <a class="brand-logo-link inline-flex shrink-0 items-center" href="/" aria-label="Mercurius LAN home">
-                <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="brand-logo-image" />
+                <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="brand-logo-image brand-logo-image--theme-light" />
+                <img src="/img/lan_logo_wide_light.svg" alt="" aria-hidden="true" class="brand-logo-image brand-logo-image--theme-dark" />
             </a>
 
-            <button class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle navigation">
+            <button @ref="_menuToggle" class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle navigation" aria-expanded="@(_sidebarOpen ? "true" : "false")" aria-controls="primary-navigation">
                 <span class="menu-toggle-inner">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -22,9 +23,18 @@
                 </span>
             </button>
 
-            <div class="brand-nav-panel flex flex-1 items-center justify-end @(_sidebarOpen ? "open" : null)">
+            <div id="primary-navigation" class="brand-nav-panel flex flex-1 items-center justify-end @(_sidebarOpen ? "open" : null)">
                 <NavMenu OnNavigationSelected="OnNavigationSelected" />
             </div>
+
+            <button type="button"
+                    class="theme-toggle"
+                    @onclick="ToggleThemeAsync"
+                    aria-pressed="@_isDarkMode"
+                    aria-label="@ThemeToggleLabel"
+                    title="@ThemeToggleLabel">
+                <span class="bi @(_isDarkMode ? "bi-sun" : "bi-moon-stars")" aria-hidden="true"></span>
+            </button>
         </div>
     </header>
 
@@ -43,7 +53,8 @@
         <div class="brand-container footer-grid grid gap-7 lg:grid-cols-2 xl:[grid-template-columns:1.25fr_repeat(3,minmax(0,1fr))]">
             <section class="footer-brand">
                 <div class="footer-logo-panel">
-                    <img src="/img/lan_logo_wide_light.svg" alt="Mercurius LAN" class="footer-logo-image" />
+                    <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="footer-logo-image footer-logo-image--theme-light" />
+                    <img src="/img/lan_logo_wide_light.svg" alt="" aria-hidden="true" class="footer-logo-image footer-logo-image--theme-dark" />
                 </div>
                 <p>Mercurius LAN brings students together for tournaments, BYOC setups, and a full weekend of competitive play.</p>
             </section>

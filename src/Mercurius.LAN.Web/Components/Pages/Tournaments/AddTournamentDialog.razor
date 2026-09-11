@@ -8,13 +8,12 @@
     @if(_isDialogOpen)
     {
         <div class="Tournament-editor-modal-overlay" @onclick="() => CloseDialog(null)">
-            <div class="Tournament-editor-modal-dialog" @onclick:stopPropagation>
+            <div class="Tournament-editor-modal-dialog"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-label="Add tournament"
+                 @onclick:stopPropagation>
                 <button type="button" class="Tournament-editor-modal-close" aria-label="Close add tournament dialog" @onclick="() => CloseDialog(null)">&times;</button>
-                <div class="Tournament-editor-modal-header">
-                    <span class="section-eyebrow">Admin</span>
-                    <h3>Add tournament</h3>
-                    <p>Create a new tournament entry without leaving the overview page.</p>
-                </div>
 
                 <div class="form-container Tournament-editor-form-container">
                     <EditForm EditContext="_editContext" OnValidSubmit="SubmitTournamentAsync" class="Tournament-editor-form">

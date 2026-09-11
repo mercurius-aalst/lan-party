@@ -45,13 +45,12 @@ else
                     <div>
                         <span class="section-eyebrow">Team profile</span>
                         <h1>@_team.TeamName</h1>
-                        <p>Public roster for this team. Select a member to open their user profile.</p>
                     </div>
                 </div>
             </header>
 
             <div class="public-team-content-grid">
-                <section class="brand-card public-team-card">
+                <section id="team-roster" class="brand-card public-team-card brand-section-anchor">
                     <div class="public-team-card-heading">
                         <h2>Roster</h2>
                         <p>Members are shown by public username only.</p>
@@ -89,10 +88,9 @@ else
                     }
                 </section>
 
-                <section class="brand-card public-team-card public-team-tournaments-card">
+                <section id="team-tournaments" class="brand-card public-team-card public-team-tournaments-card brand-section-anchor">
                     <div class="public-team-card-heading">
                         <h2>Playing in</h2>
-                        <p>Tournaments where this team is currently participating.</p>
                     </div>
 
                     @if(_team.Tournaments.Count == 0)
@@ -126,10 +124,12 @@ else
                 </section>
             </div>
 
-            <PublicProfileMatchSummaries Summaries="@_matchSummaries"
-                                         IsLoading="@_isMatchSummariesLoading"
-                                         HasError="@_hasMatchSummariesError"
-                                         OnRetry="RetryMatchSummariesAsync" />
+            <div id="team-matches" class="brand-section-anchor">
+                <PublicProfileMatchSummaries Summaries="@_matchSummaries"
+                                             IsLoading="@_isMatchSummariesLoading"
+                                             HasError="@_hasMatchSummariesError"
+                                             OnRetry="RetryMatchSummariesAsync" />
+            </div>
         </div>
     </section>
 }

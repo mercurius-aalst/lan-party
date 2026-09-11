@@ -1,7 +1,7 @@
 .loading-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(255,255,255,0.85);
+    background: rgba(3, 8, 12, 0.86);
     z-index: 3000;
     display: flex;
     flex-direction: column;
@@ -17,8 +17,8 @@
 .spinner-ring {
     width: 54px;
     height: 54px;
-    border: 6px solid #e0e0e0;
-    border-top: 6px solid #4caf50;
+    border: 6px solid var(--color-border-strong);
+    border-top: 6px solid var(--color-primary-green);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -28,7 +28,7 @@
 }
 .loading-message {
     font-size: 1.25em;
-    color: #388e3c;
+    color: var(--color-link);
     font-weight: 600;
     text-align: center;
     letter-spacing: 0.01em;

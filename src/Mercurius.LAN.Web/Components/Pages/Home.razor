@@ -83,109 +83,89 @@ else
     </section>
 
     <div id="home-content" class="home-flow">
-        @if(_sponsors.Any())
-        {
-            <section id="home-sponsors" class="brand-section home-sponsors">
-                <div class="home-sponsors-panel brand-panel-dark">
-                    <div class="home-sponsors-header">                  
-                        <span class="section-eyebrow">Our partners</span>
-                        <a href="/sponsors" class="button-secondary home-sponsors-cta">View All Partners</a>
+        <section id="home-sponsors" class="brand-section home-sponsors" aria-labelledby="home-sponsors-title">
+            <div class="home-sponsors-panel brand-panel-dark">
+                <div class="home-section-heading home-sponsors-heading">
+                    <h2 id="home-sponsors-title">Our sponsors</h2>
+                    <a href="/sponsors" class="button-secondary home-sponsors-cta">View all partners</a>
+                </div>
+
+                @if(_sponsors.Any())
+                {
+                    <div class="home-sponsors-slider">
+                        <SponsorScroller Sponsors="_sponsors" AriaLabel="Home page sponsor logos" />
                     </div>
-
-                <div class="home-sponsors-slider">
-                    <SponsorScroller Sponsors="_sponsors" AriaLabel="Home page sponsor logos" />
-                </div>
-                </div>
-            </section>
-        }
-
-        <section class="brand-section home-features">
-            <article class="brand-card feature-card">
-                <span class="brand-section-number">01</span>
-                <h2>Tournaments</h2>
-                <p>Compete across multiple tournaments, climb the bracket, and chase the weekend highlight.</p>
-            </article>
-            <article class="brand-card feature-card">
-                <span class="brand-section-number">02</span>
-                <h2>BYOC Setup</h2>
-                <p>Bring your own gear and settle in for long sessions with friends, rivals, and new teammates.</p>
-            </article>
-            <article class="brand-card feature-card">
-                <span class="brand-section-number">03</span>
-                <h2>Community</h2>
-                <p>Meet students who care about good tournaments, good setups, and a strong event atmosphere.</p>
-            </article>
+                }
+                else
+                {
+                    <p class="home-empty-copy home-sponsors-empty">Our event partners will appear here soon.</p>
+                }
+            </div>
         </section>
 
-        <section class="brand-section">
-            <div class="home-section-header">
-                <div>
-                    <span class="section-eyebrow">Compete in your favorite tournaments</span>
-                    <h2>Featured Tournaments</h2>
+        <section id="featured-tournaments" class="brand-section home-tournaments" aria-labelledby="featured-tournaments-title">
+            <span id="schedule" class="home-anchor-target" aria-hidden="true"></span>
+            <div class="home-section-shell">
+                <div class="home-section-heading">
+                    <h2 id="featured-tournaments-title">Featured tournaments</h2>
+                    <a href="/tournaments" class="button-secondary">View all tournaments</a>
                 </div>
-                <a href="/tournaments" class="button-secondary">View All Tournaments</a>
-            </div>
 
-            <div class="home-tournament-grid">
                 @if(FeaturedTournaments.Count == 0)
                 {
                     <p class="home-empty-copy">No tournaments are currently published.</p>
                 }
-                @foreach(var tournament in FeaturedTournaments)
+                else
                 {
-                    var imageUrl = AssetUrlResolver.Resolve(Configuration, tournament.ImageUrl);
-                    <article class="brand-card home-tournament-card" @onclick="() => NavigateToTournament(tournament.Id)">
-                        <img src="@imageUrl" alt="@tournament.Name" class="home-tournament-image" />
-                        <div class="home-tournament-body">
-                            <div class="home-tournament-meta">
-                                <h3>@tournament.Name</h3>
-                                <span class="tournament-status @tournament.Status.GetStatusClass()">@tournament.Status.GetStatusLabel()</span>
-                            </div>
-                            <p>@tournament.BracketType.GetLabel() · @tournament.Format.GetLabel()</p>
+                    var leadTournament = FeaturedTournaments[0];
+                    var leadImageUrl = AssetUrlResolver.Resolve(Configuration, leadTournament.ImageUrl);
+                    <div class="home-tournament-layout">
+                        <button type="button" class="home-tournament-lead" @onclick="() => NavigateToTournament(leadTournament.Id)">
+                            <img src="@leadImageUrl" alt="@leadTournament.Name" class="home-tournament-image home-tournament-image--lead" />
+                            <span class="home-tournament-body">
+                                <span class="home-tournament-meta">
+                                    <strong>@leadTournament.Name</strong>
+                                    <span class="tournament-status @leadTournament.Status.GetStatusClass()">@leadTournament.Status.GetStatusLabel()</span>
+                                </span>
+                                <span class="home-tournament-detail">@leadTournament.BracketType.GetLabel() · @leadTournament.Format.GetLabel()</span>
+                            </span>
+                        </button>
+
+                        <div class="home-tournament-list">
+                            @foreach(var tournament in FeaturedTournaments.Skip(1))
+                            {
+                                var imageUrl = AssetUrlResolver.Resolve(Configuration, tournament.ImageUrl);
+                                <button type="button" class="home-tournament-row" @onclick="() => NavigateToTournament(tournament.Id)">
+                                    <img src="@imageUrl" alt="" class="home-tournament-image home-tournament-image--row" />
+                                    <span class="home-tournament-row-copy">
+                                        <strong>@tournament.Name</strong>
+                                        <span class="home-tournament-detail">@tournament.BracketType.GetLabel() · @tournament.Format.GetLabel()</span>
+                                    </span>
+                                    <span class="tournament-status @tournament.Status.GetStatusClass()">@tournament.Status.GetStatusLabel()</span>
+                                </button>
+                            }
                         </div>
-                    </article>
+                    </div>
                 }
             </div>
         </section>
 
-        <section id="schedule" class="brand-section">
-            <div class="brand-card schedule-strip">
-                <div>
-                    <span class="section-eyebrow">Mark your calendar</span>
-                    <h2>@EventWindow</h2>
-                    <p>Official event window managed with the LAN party information.</p>
+        <div class="home-actions">
+            <section id="tickets" class="home-action-panel home-tickets" aria-labelledby="home-tickets-title">
+                <div class="home-action-copy">
+                    <h2 id="home-tickets-title">Join the LAN</h2>
+                    <p>Compare visitor and gamer passes for the weekend.</p>
                 </div>
-                <div class="schedule-points">
-                    <div>
-                        <h3>Play</h3>
-                        <p>Non-stop gaming sessions across the weekend.</p>
-                    </div>
-                    <div>
-                        <h3>Compete</h3>
-                        <p>Bracket-driven matches with data-backed registrations.</p>
-                    </div>
-                    <div>
-                        <h3>Connect</h3>
-                        <p>Find teammates, rivals, and new communities.</p>
-                    </div>
+                <a href="/info#tickets" class="button-primary">View ticket info</a>
+            </section>
+
+            <section id="contact" class="home-action-panel home-contact" aria-labelledby="home-contact-title">
+                <div class="home-action-copy">
+                    <h2 id="home-contact-title">Need more info?</h2>
+                    <p>Find venue, packing, catering, and community details.</p>
                 </div>
-            </div>
-        </section>
-
-        <section id="tickets" class="brand-section home-callout-grid">
-            <article class="brand-card home-callout">
-                <span class="section-eyebrow">Tickets</span>
-                <h2>Join the LAN</h2>
-                <p>Compare visitor and gamer passes, then use the tournament list to explore competitions and registration options.</p>
-                <a href="/info#tickets" class="button-primary">View Ticket Info</a>
-            </article>
-
-            <article id="contact" class="brand-card home-callout">
-                <span class="section-eyebrow">Contact</span>
-                <h2>Need more info?</h2>
-                <p>Find the venue, packing guide, catering menu, and community links on the dedicated info page.</p>
-                <a href="/info#contact-info" class="button-secondary">Contact Us</a>
-            </article>
-        </section>
+                <a href="/info#contact-info" class="button-secondary">Contact us</a>
+            </section>
+        </div>
     </div>
 }

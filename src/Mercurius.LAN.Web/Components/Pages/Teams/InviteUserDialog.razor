@@ -1,15 +1,25 @@
 @using Mercurius.LAN.Web.DTOs.Search
 @using Mercurius.LAN.Web.Services
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 @if(IsOpen)
 {
     <div class="team-modal-overlay" @onclick="CancelAsync">
-        <div class="team-modal-dialog" @onclick:stopPropagation>
+        <div class="team-modal-dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="invite-user-dialog-title"
+             aria-describedby="invite-user-dialog-description"
+             tabindex="-1"
+             @ref="_dialogElement"
+             @onkeydown="HandleKeyDown"
+            @onclick:stopPropagation>
             <button type="button" class="team-modal-close" aria-label="Close invite player dialog" @onclick="CancelAsync">&times;</button>
             <div class="team-modal-header">
-                <span class="section-eyebrow">Recruit</span>
-                <h3>Invite player</h3>
-                <p>Select a user to invite to @TeamName.</p>
+                <span class="section-eyebrow">Team invite</span>
+                <h3 id="invite-user-dialog-title">Invite player</h3>
+                <p id="invite-user-dialog-description">Select a user to invite to @TeamName.</p>
             </div>
 
             <div class="team-dialog-form-container">
@@ -104,6 +114,8 @@
     private GlobalSearchResultDTO? _selected;
     private CancellationTokenSource? _searchCancellationTokenSource;
     private long _searchRequestVersion;
+    private ElementReference _dialogElement;
+    private IJSObjectReference? _focusTrap;
 
     private bool CanSubmit => _selected?.UserId.HasValue == true;
     private bool HasSearchDropdown => _query.Trim().Length >= 3 && _selected is null && string.IsNullOrWhiteSpace(_error);
@@ -114,6 +126,18 @@
             Reset();
 
         _wasOpen = IsOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(IsOpen && _focusTrap is null)
+        {
+            _focusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>("activateTeamModalFocusTrap", _dialogElement);
+        }
+        else if(!IsOpen && _focusTrap is not null)
+        {
+            await DisposeFocusTrapAsync();
+        }
     }
 
     private void Reset()
@@ -200,10 +224,34 @@
         await UserSelected.InvokeAsync(new InviteUserDialogResult(userId, _selected.DisplayLabel));
     }
 
+    private Task HandleKeyDown(KeyboardEventArgs args) =>
+        string.Equals(args.Key, "Escape", StringComparison.Ordinal)
+            ? CancelAsync()
+            : Task.CompletedTask;
+
     private async Task CancelAsync()
     {
         await Canceled.InvokeAsync();
     }
+
+    private async ValueTask DisposeFocusTrapAsync()
+    {
+        var focusTrap = _focusTrap;
+        _focusTrap = null;
+        if(focusTrap is null)
+            return;
+
+        try
+        {
+            await focusTrap.InvokeVoidAsync("dispose");
+            await focusTrap.DisposeAsync();
+        }
+        catch(JSDisconnectedException)
+        {
+        }
+    }
+
+    public ValueTask DisposeAsync() => DisposeFocusTrapAsync();
 
     private bool IsDisabledCandidate(GlobalSearchResultDTO result) =>
         !result.UserId.HasValue || DisabledUserIds.Contains(result.UserId.Value);

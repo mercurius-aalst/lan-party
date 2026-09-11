@@ -11,9 +11,12 @@
                     User
                 </span>
                 <h4 class="participant-name">
-                    @if(HasPublicUsername(user))
+                    @if(CanOpenUserInfo)
                     {
-                        <a class="participant-profile-link" href="@GetUserProfileHref(user)">@GetUserLabel(user)</a>
+                        <button type="button"
+                                class="participant-profile-link participant-profile-button"
+                                aria-label="@($"View details for {GetUserLabel(user)}")"
+                                @onclick="() => SelectUserAsync(user)">@GetUserLabel(user)</button>
                     }
                     else
                     {
@@ -26,9 +29,12 @@
             <div class="participant-detail-row">
                 <dt>Username</dt>
                 <dd>
-                    @if(HasPublicUsername(user))
+                    @if(CanOpenUserInfo)
                     {
-                        <a class="participant-profile-link" href="@GetUserProfileHref(user)">@GetUserLabel(user)</a>
+                        <button type="button"
+                                class="participant-profile-link participant-profile-button"
+                                aria-label="@($"View details for {GetUserLabel(user)}")"
+                                @onclick="() => SelectUserAsync(user)">@GetUserLabel(user)</button>
                     }
                     else
                     {
@@ -98,15 +104,18 @@ else if(Participant?.Team is Models.Participants.Team team)
                     {
                         var isCaptain = member.Id == team.CaptainUserId;
 
-                        @if(HasPublicUsername(member))
+                        @if(CanOpenUserInfo)
                         {
-                            <a class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)" href="@GetUserProfileHref(member)">
+                            <button type="button"
+                                    class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)"
+                                    aria-label="@($"View details for {GetUserLabel(member)}")"
+                                    @onclick="() => SelectUserAsync(member)">
                                 <span>@GetUserLabel(member)</span>
                                 @if(isCaptain)
                                 {
                                     <span class="participant-captain-badge">Captain</span>
                                 }
-                            </a>
+                            </button>
                         }
                         else
                         {

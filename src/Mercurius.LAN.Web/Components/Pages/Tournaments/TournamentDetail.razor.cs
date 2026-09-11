@@ -53,6 +53,7 @@ public partial class TournamentDetail : IDisposable
     private long _tournamentActionGeneration;
     private long _sponsorActionGeneration;
     private bool _isDisposed;
+    private bool _isRegistrationDialogOpen;
 
     private IReadOnlyList<Match> ScheduledMatches =>
         _tournament?.Matches
@@ -84,18 +85,6 @@ public partial class TournamentDetail : IDisposable
         _selectedSponsorId.HasValue
             ? _availableSponsors.FirstOrDefault(sponsor => sponsor.Id == _selectedSponsorId.Value)
             : null;
-
-    private string TournamentSummary
-    {
-        get
-        {
-            if(_tournament == null)
-                return string.Empty;
-
-            var competitionType = _tournament.ParticipationMode == ParticipationMode.Team ? "team-based" : "solo";
-            return $"Mercurius LAN {competitionType} competition with {_tournament.BracketType.GetLabel().ToLowerInvariant()} structure and {_tournament.Format.GetLabel().ToLowerInvariant()} match format.";
-        }
-    }
 
     private string ScheduleSummary
     {
@@ -218,14 +207,12 @@ public partial class TournamentDetail : IDisposable
 
             _loadError = "Sign in to load this tournament.";
         }
-        catch(ApiException exception)
+        catch(ApiException)
         {
             if(!IsCurrentLoad(tournamentId, loadGeneration))
                 return;
 
-            _loadError = string.IsNullOrWhiteSpace(exception.Content)
-                ? "Could not load this tournament right now."
-                : exception.Content;
+            _loadError = "Could not load this tournament right now.";
             ToastService.ShowError(_loadError);
         }
         catch(Exception)
@@ -334,12 +321,12 @@ public partial class TournamentDetail : IDisposable
             ToastService.ShowSuccess($"{tournamentName} successfully deleted.");
             Navigation.NavigateTo("/tournaments");
         }
-        catch(ApiException ex)
+        catch(ApiException)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError(string.IsNullOrWhiteSpace(ex.Content) ? "The tournament could not be deleted." : ex.Content);
+            ToastService.ShowError("The tournament could not be deleted right now.");
         }
         catch(UnauthorizedAccessException)
         {
@@ -378,12 +365,12 @@ public partial class TournamentDetail : IDisposable
             ToastService.ShowSuccess(successMessage);
             await LoadTournamentDataAsync(tournamentId);
         }
-        catch(ApiException ex)
+        catch(ApiException)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError(string.IsNullOrWhiteSpace(ex.Content) ? "The tournament action could not be completed." : ex.Content);
+            ToastService.ShowError("The tournament action could not be completed right now.");
         }
         catch(UnauthorizedAccessException)
         {
@@ -446,7 +433,13 @@ public partial class TournamentDetail : IDisposable
             return;
         }
 
-        Navigation.NavigateTo($"/tournaments/{_tournament.Id}#tournament-participants");
+        _isRegistrationDialogOpen = true;
+    }
+
+    private Task HandleRegistrationDialogOpenChanged(bool isOpen)
+    {
+        _isRegistrationDialogOpen = isOpen;
+        return Task.CompletedTask;
     }
 
     private static string FormatDateTime(DateTime dateTime)
@@ -456,10 +449,10 @@ public partial class TournamentDetail : IDisposable
 
     private string GetScheduleEmptyMessage()
     {
-        if(_tournament?.PlannedStartTime is DateTime plannedStart)
-            return $"No estimated match times are available yet. Tournament planning starts {FormatDateTime(plannedStart)}.";
+        if(_tournament?.PlannedStartTime is not null)
+            return "No matches are scheduled yet.";
 
-        return "No estimated match times are available yet.";
+        return "No matches are scheduled yet.";
     }
 
     private string GetMatchTitle(Match match)
@@ -699,14 +692,12 @@ public partial class TournamentDetail : IDisposable
             ToastService.ShowSuccess("Tournament sponsor updated.");
             await InvokeAsync(StateHasChanged);
         }
-        catch(ApiException ex)
+        catch(ApiException)
         {
             if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
-            _sponsorError = string.IsNullOrWhiteSpace(ex.Content)
-                ? "The tournament sponsor could not be updated."
-                : ex.Content;
+            _sponsorError = "The tournament sponsor could not be updated right now.";
             ToastService.ShowError(_sponsorError);
         }
         catch(UnauthorizedAccessException)

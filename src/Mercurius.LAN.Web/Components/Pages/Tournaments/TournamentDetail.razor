@@ -52,15 +52,13 @@ else
 
         <header class="brand-page-hero Tournament-detail-hero brand-section">
             <div class="brand-page-hero-copy Tournament-detail-hero-copy">
-                <span class="section-eyebrow">Tournament</span>
                 <h1>@_tournament.Name</h1>
-                <p>@TournamentSummary</p>
 
                 <div class="Tournament-detail-badges">
                     <span class="badge">@_tournament.ParticipationMode.GetLabel()</span>
                     <span class="badge">@_tournament.BracketType.GetLabel()</span>
                     <span class="badge">@_tournament.Format.GetLabel()</span>
-                    <span class="Tournament-status @_tournament.Status.GetStatusClass()">@_tournament.Status.GetStatusLabel()</span>
+                    <span class="badge Tournament-status @_tournament.Status.GetStatusClass()">@_tournament.Status.GetStatusLabel()</span>
                 </div>
 
                 <div class="Tournament-detail-hero-actions">
@@ -95,15 +93,14 @@ else
 
         <div class="Tournament-detail-layout">
             <div class="Tournament-detail-top">
-                <section id="tournament-overview" class="brand-card Tournament-detail-section Tournament-detail-top-section Tournament-detail-top-section--overview">
+                <section id="tournament-overview" class="brand-card Tournament-detail-section Tournament-detail-top-section Tournament-detail-top-section--overview brand-section-anchor">
                     <TournamentOverviewTab Tournament="@_tournament" OnTournamentUpdated="HandleTournamentUpdated" />
                 </section>
 
-                <section id="tournament-schedule" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section Tournament-detail-top-section--schedule">
+                <section id="tournament-schedule" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section Tournament-detail-top-section--schedule brand-section-anchor">
                     <div class="Tournament-section-header">
                         <div>
-                            <span class="section-eyebrow">Schedule</span>
-                            <h2>Upcoming matches</h2>
+                            <h2 class="section-eyebrow">Upcoming</h2>
                         </div>
                     </div>
 
@@ -198,23 +195,26 @@ else
                     </section>
                 }
 
-                <section id="tournament-participants" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section @(FeaturedPartner is null ? "Tournament-detail-top-section--participants-no-sponsor" : "Tournament-detail-top-section--participants")">
-                    <TournamentParticipantsTab Tournament="@_tournament" OnTournamentUpdated="HandleTournamentUpdated" />
+                <section id="tournament-participants" class="brand-card Tournament-detail-section Tournament-detail-section--dense Tournament-detail-top-section @(FeaturedPartner is null ? "Tournament-detail-top-section--participants-no-sponsor" : "Tournament-detail-top-section--participants") brand-section-anchor">
+                    <TournamentParticipantsTab Tournament="@_tournament"
+                                                OnTournamentUpdated="HandleTournamentUpdated"
+                                                RegistrationDialogOpen="@_isRegistrationDialogOpen"
+                                                RegistrationDialogOpenChanged="HandleRegistrationDialogOpenChanged" />
                 </section>
             </div>
 
-            <section id="tournament-bracket" class="brand-card Tournament-detail-section Tournament-detail-section--full-span">
+            <section id="tournament-bracket" class="brand-card Tournament-detail-section Tournament-detail-section--full-span brand-section-anchor">
                 <TournamentMatchesTab OnDataReload="HandleMatchDataReloadAsync" OnMatchRefreshed="HandleMatchRefreshedAsync" Tournament="@_tournament" />
             </section>
 
             <div class="Tournament-detail-secondary">
-                <section id="tournament-results" class="brand-card Tournament-detail-section">
+                <section id="tournament-results" class="brand-card Tournament-detail-section brand-section-anchor">
                     <TournamentPlacementsTab Placements="@_tournament.Placements" ParticipationMode="@_tournament.ParticipationMode" />
                 </section>
 
                 <AuthorizeView Roles="admin">
                     <Authorized>
-                        <section class="brand-card Tournament-detail-section Tournament-sponsor-admin-card">
+                        <section id="tournament-sponsor-admin" class="brand-card Tournament-detail-section Tournament-sponsor-admin-card brand-section-anchor">
                             <div class="Tournament-section-header">
                                 <div>
                                     <span class="section-eyebrow">Admin</span>

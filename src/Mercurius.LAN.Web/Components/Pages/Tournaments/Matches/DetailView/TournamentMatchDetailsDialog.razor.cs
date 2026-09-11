@@ -2,6 +2,7 @@ using System.Net;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Matches;
+using Mercurius.LAN.Web.DTOs.Users;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Tournaments;
@@ -50,7 +51,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private bool _isLoading = true;
     private bool _isSubmitting;
     private bool _requiresAuthentication;
-    private bool _authorizationDenied;
     private bool _hasFreshActionState;
     private bool _forfeitConfirmationRequested;
     private MatchParticipantSide? _adminForfeitConfirmationSide;
@@ -63,6 +63,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
     private DateTime? _deadlineRefreshTriggeredFor;
     private Task? _deadlineRefreshTask;
     private Match? _freshMatchProjection;
+    private PublicUserDTO? _selectedUser;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -85,7 +86,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         _actionState = null;
         _errorMessage = null;
         _requiresAuthentication = false;
-        _authorizationDenied = false;
         _hasFreshActionState = false;
         _forfeitConfirmationRequested = false;
         _adminForfeitConfirmationSide = null;
@@ -96,6 +96,16 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
     private ParticipantViewModel? GetParticipantById(Guid? participantId) =>
         _participantLookup.Resolve(Match.ParticipationMode, participantId);
+
+    private void DisplayUserPopup(PublicUserDTO user)
+    {
+        _selectedUser = user;
+    }
+
+    private void HideUserInfoPopup()
+    {
+        _selectedUser = null;
+    }
 
     private bool IsWinner(Guid? participantId) => WinnerId != null && participantId == WinnerId;
 
@@ -126,7 +136,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         MatchLifecycleState.Completed => "The result is official and has advanced the bracket.",
         MatchLifecycleState.Forfeited => "The result is official after a side forfeited.",
         MatchLifecycleState.Reversed => "The result was reversed. The match can be played again when both sides are assigned.",
-        _ => "The authoritative match state is loading."
+        _ => "Match details are loading."
     };
 
     private string GetStatusClass() => Match.LifecycleState switch
@@ -158,7 +168,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
 
         var remaining = deadline.Value.ToUniversalTime() - DateTime.UtcNow;
         if(remaining <= TimeSpan.Zero)
-            return "Window closed; refreshing authoritative state...";
+            return "Window closed.";
 
         var minutes = (int)remaining.TotalMinutes;
         var seconds = remaining.Seconds;
@@ -281,7 +291,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         "match_reversal_blocked" => "This result cannot be reversed because a linked downstream match has already been played or resolved.",
         "downstream_graph_too_large" => "This result cannot be reversed until the linked bracket is reviewed by an administrator.",
         "admin_required" => "An authorized tournament administrator is required for this action.",
-        _ => "This administrator action is unavailable in the authoritative match state."
+        _ => "This administrator action is unavailable."
     };
 
     private static string FormatReport(int? participant1Score, int? participant2Score) =>
@@ -296,7 +306,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         _hasFreshActionState = false;
         _errorMessage = null;
         _requiresAuthentication = false;
-        _authorizationDenied = false;
         await InvokeAsync(StateHasChanged);
 
         try
@@ -333,7 +342,6 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 _participant1Score = publicMatch.Participant1Score;
                 _participant2Score = publicMatch.Participant2Score;
                 _requiresAuthentication = exception.StatusCode == HttpStatusCode.Unauthorized;
-                _authorizationDenied = exception.StatusCode == HttpStatusCode.Forbidden;
                 _hasLoaded = true;
                 StartDeadlineRefresh();
                 await NotifyMatchRefreshedAsync();
@@ -345,7 +353,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                 {
                     _errorMessage = GetErrorMessage(
                         fallbackException,
-                        "The public match state is unavailable. Retry to continue.");
+                        "Match details are temporarily unavailable.");
                     _hasFreshActionState = false;
                     _hasLoaded = true;
                     StopDeadlineRefresh();
@@ -368,7 +376,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
         {
             if(generation == _refreshGeneration && Match.Id == expectedMatchId)
             {
-                _errorMessage = GetErrorMessage(exception, "The authoritative match state is unavailable.");
+                _errorMessage = GetErrorMessage(exception, "Match details are temporarily unavailable.");
                 _hasFreshActionState = false;
                 _hasLoaded = true;
             }
@@ -619,7 +627,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(refreshed)
             {
                 if(_requiresAuthentication)
-                    ToastService.ShowWarning("Saved, but only the public match state could be refreshed. Sign in to manage this match.");
+                    ToastService.ShowWarning("Saved. Sign in to manage this match.");
                 else
                     ToastService.ShowSuccess(successMessage);
 
@@ -633,13 +641,13 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     // projection visible even when the surrounding tournament reload fails.
                     _errorMessage = GetErrorMessage(
                         exception,
-                        "Saved, but the tournament display could not be refreshed. Retry to verify the bracket.");
+                        "Saved. The tournament display is temporarily unavailable.");
                     ToastService.ShowWarning(_errorMessage);
                 }
             }
             else
             {
-                ToastService.ShowWarning("Saved, but the latest match state could not be refreshed. Retry to verify the result.");
+                ToastService.ShowWarning("Saved. Updated match details are temporarily unavailable.");
             }
         }
         catch(Exception exception)
@@ -647,7 +655,7 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             if(expectedMatchId == Match.Id)
             {
                 _hasFreshActionState = false;
-                _errorMessage = GetErrorMessage(exception, "The match action could not be saved. Refresh and try again.");
+                _errorMessage = GetErrorMessage(exception, "The match action could not be saved. Try again.");
                 ToastService.ShowError(_errorMessage);
             }
         }
@@ -668,10 +676,10 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
             MatchMutationAction.ForceForfeit => GetAdminBlockedReason(state.ForceForfeitBlockedReason),
             MatchMutationAction.Resolve => GetAdminBlockedReason(state.ResolveBlockedReason),
             MatchMutationAction.Reverse => GetAdminBlockedReason(state.ReverseBlockedReason),
-            MatchMutationAction.ConfirmEnded => "Match-end confirmation is no longer available in the authoritative match state.",
-            MatchMutationAction.SubmitScore => "Score submission is no longer available in the authoritative match state.",
-            MatchMutationAction.Forfeit => "Forfeiting this match is no longer available for your side in the authoritative state.",
-            _ => "The match changed while you were working. Refresh the authoritative state and try again."
+            MatchMutationAction.ConfirmEnded => "Match-end confirmation is no longer available.",
+            MatchMutationAction.SubmitScore => "Score submission is no longer available.",
+            MatchMutationAction.Forfeit => "Forfeiting is no longer available for your side.",
+            _ => "The match changed while you were working. Try again."
         };
     }
 
@@ -694,15 +702,9 @@ public partial class TournamentMatchDetailsDialog : IAsyncDisposable
                     return "This result cannot be reversed until the linked bracket is reviewed by an administrator.";
                 if(apiError?.Code == "match_requires_admin_resolution")
                     return "This match already requires administrator resolution.";
-                return apiError?.Message
-                    ?? "The match changed while you were working. Refresh the authoritative state and try again.";
+                return "The match changed while you were working. Try again.";
             }
-            if(!string.IsNullOrWhiteSpace(apiException.Content))
-                return apiException.GetApiError()?.Message ?? apiException.Content!;
         }
-
-        if(exception is InvalidOperationException && !string.IsNullOrWhiteSpace(exception.Message))
-            return exception.Message;
 
         return fallback;
     }
