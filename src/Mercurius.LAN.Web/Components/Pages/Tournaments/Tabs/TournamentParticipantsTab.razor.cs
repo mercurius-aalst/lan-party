@@ -936,7 +936,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         HasCaptainManagedRegistration ||
         CurrentTeamRegistration is not null
             ? "Manage registration"
-            : "View registration options";
+            : "Register now";
 
     private async Task OpenRegistrationDialog()
     {
@@ -1956,7 +1956,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             return "Registration is closed because this tournament is no longer scheduled.";
 
         if(!_isAuthenticated)
-            return "Sign in to check eligibility and manage your registration.";
+            return "Sign in to join this tournament.";
 
         if(HasCaptainManagedRegistration)
             return "Review or edit your captain-managed team registration.";
