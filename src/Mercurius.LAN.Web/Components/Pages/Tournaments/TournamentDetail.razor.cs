@@ -86,24 +86,6 @@ public partial class TournamentDetail : IDisposable
             ? _availableSponsors.FirstOrDefault(sponsor => sponsor.Id == _selectedSponsorId.Value)
             : null;
 
-    private string TournamentSummary
-    {
-        get
-        {
-            if(_tournament == null)
-                return string.Empty;
-
-            var competitionType = _tournament.ParticipationMode == ParticipationMode.Team
-                ? Localization["Feature.tournament.participationTeamLower"]
-                : Localization["Feature.tournament.participationIndividualLower"];
-            return Localization.Get(
-                "Feature.tournaments.summary",
-                competitionType,
-                GetBracketLabel(_tournament.BracketType).ToLower(Localization.Culture),
-                GetFormatLabel(_tournament.Format).ToLower(Localization.Culture));
-        }
-    }
-
     private string ScheduleSummary
     {
         get
