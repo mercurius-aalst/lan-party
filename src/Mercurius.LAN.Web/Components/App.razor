@@ -2,7 +2,7 @@
 @using Refit
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 
 <head>
     <meta charset="utf-8" />
@@ -11,6 +11,9 @@
     <script>
         (() => {
             const storageKey = "mercurius-lan-theme";
+            const languageStorageKey = "mercurius-lan-language";
+            const languageCookieName = "mercurius-lan-language";
+            const supportedLanguages = new Set(["en-US", "nl-BE"]);
             const isTheme = value => value === "light" || value === "dark";
             const getSystemTheme = () => window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
             const getStoredTheme = () => {
@@ -44,6 +47,54 @@
                     }
 
                     applyTheme(preference);
+                }
+            };
+
+            const normalizeLanguage = value => supportedLanguages.has(value) ? value : "en-US";
+            const getStoredLanguage = () => {
+                try {
+                    const storedLanguage = localStorage.getItem(languageStorageKey);
+                    return storedLanguage === null ? null : normalizeLanguage(storedLanguage);
+                }
+                catch {
+                    return null;
+                }
+            };
+            const applyLanguage = language => {
+                const normalizedLanguage = normalizeLanguage(language);
+                document.documentElement.lang = normalizedLanguage;
+                return normalizedLanguage;
+            };
+            const syncLanguageCookie = language => {
+                const normalizedLanguage = normalizeLanguage(language);
+                try {
+                    document.cookie = `${languageCookieName}=${encodeURIComponent(normalizedLanguage)}; path=/; max-age=31536000; samesite=lax`;
+                    return document.cookie
+                        .split(";")
+                        .some(cookie => cookie.trim() === `${languageCookieName}=${encodeURIComponent(normalizedLanguage)}`);
+                }
+                catch {
+                    return false;
+                }
+            };
+
+            applyLanguage(getStoredLanguage());
+            window.lanLocalization = {
+                getStored: getStoredLanguage,
+                apply: applyLanguage,
+                syncCookie: syncLanguageCookie,
+                set: language => {
+                    const normalizedLanguage = normalizeLanguage(language);
+                    try {
+                        localStorage.setItem(languageStorageKey, normalizedLanguage);
+                    }
+                    catch {
+                        // Continue with the in-memory language when storage is unavailable.
+                    }
+
+                    const cookiePersisted = syncLanguageCookie(normalizedLanguage);
+                    applyLanguage(normalizedLanguage);
+                    return cookiePersisted;
                 }
             };
         })();

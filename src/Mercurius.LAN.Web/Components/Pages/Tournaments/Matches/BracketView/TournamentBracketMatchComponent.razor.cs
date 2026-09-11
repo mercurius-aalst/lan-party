@@ -29,7 +29,7 @@ public partial class TournamentBracketMatchComponent
     private string RetrieveParticipantName(Guid? participantId, bool isBye)
     {
         if(isBye)
-            return "BYE";
+            return Localization["Feature.tournaments.bye"];
 
         return _participantLookup.ResolveName(Match.ParticipationMode, participantId);
     }

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Components.Forms;
 using Refit;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Reflection;
 using System.Security.Claims;
 
 namespace Mercurius.LAN.Web.Components.Pages.Users;
@@ -18,8 +19,14 @@ public partial class CompleteProfile
     private static readonly string[] AccountFields = [nameof(CompleteUserProfileRequest.Username)];
     private static readonly string[] AboutFields = [nameof(CompleteUserProfileRequest.Firstname), nameof(CompleteUserProfileRequest.Lastname)];
     private static readonly string[][] StepFields = [AccountFields, AboutFields, []];
-    private static readonly string[] StepTitles = ["Account", "About you", "Gaming profiles"];
-    private static readonly string[] StepDescriptions = ["Choose your player name", "Add your required details", "Optional gaming IDs"];
+    private string[] StepTitles => [
+        Localization["General.CompleteProfile.StepAccount"],
+        Localization["General.CompleteProfile.StepAbout"],
+        Localization["General.CompleteProfile.StepGaming"]];
+    private string[] StepDescriptions => [
+        Localization["General.CompleteProfile.StepAccountDescription"],
+        Localization["General.CompleteProfile.StepAboutDescription"],
+        Localization["General.CompleteProfile.StepGamingDescription"]];
     private const int LastStepIndex = 2;
 
     private readonly CompleteUserProfileRequest _model = new();
@@ -80,6 +87,7 @@ public partial class CompleteProfile
 
         _editContext = new EditContext(_model);
         _validationMessageStore = new ValidationMessageStore(_editContext);
+        _editContext.OnFieldChanged += HandleFieldChanged;
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
     }
 
@@ -130,45 +138,92 @@ public partial class CompleteProfile
         return $"/account/login?returnUrl={Uri.EscapeDataString(loginReturnUrl)}";
     }
 
-    private void SetLoadError() => _loadError = "Profile setup is unavailable right now. Please try again.";
+    private void SetLoadError() => _loadError = Localization["General.CompleteProfile.LoadError"];
     private void ContinueAfterCompletion() => NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl), true);
 
     private bool ValidateCurrentStep()
     {
+        return ValidateFields(StepFields[_activeStep]);
+    }
+
+    private bool ValidateAll()
+    {
+        return ValidateFields(StepFields.SelectMany(fields => fields));
+    }
+
+    private bool ValidateFields(IEnumerable<string> propertyNames, bool clearAll = true)
+    {
         if(_editContext is null || _validationMessageStore is null) return false;
-        _validationMessageStore.Clear();
+        if(clearAll) _validationMessageStore.Clear();
         var isValid = true;
-        foreach(var propertyName in StepFields[_activeStep])
+        foreach(var propertyName in propertyNames)
         {
             var property = typeof(CompleteUserProfileRequest).GetProperty(propertyName);
             var field = new FieldIdentifier(_model, propertyName);
             if(property is null) continue;
+            _validationMessageStore.Clear(field);
             var results = new List<ValidationResult>();
             var context = new ValidationContext(_model) { MemberName = propertyName };
             if(Validator.TryValidateProperty(property.GetValue(_model), context, results)) continue;
             isValid = false;
-            foreach(var result in results) _validationMessageStore.Add(field, result.ErrorMessage ?? "This field is invalid.");
+            foreach(var result in results)
+                _validationMessageStore.Add(field, GetLocalizedValidationMessage(property, property.GetValue(_model), context, result));
         }
         _editContext.NotifyValidationStateChanged();
         return isValid;
     }
 
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        if(_validationMessageStore is null || _editContext is null) return;
+
+        ValidateFields([args.FieldIdentifier.FieldName], clearAll: false);
+    }
+
+    private string GetLocalizedValidationMessage(PropertyInfo property, object? value, ValidationContext context, ValidationResult result)
+    {
+        var failedAttribute = property.GetCustomAttributes<ValidationAttribute>()
+            .FirstOrDefault(attribute => string.Equals(
+                attribute.GetValidationResult(value, context)?.ErrorMessage,
+                result.ErrorMessage,
+                StringComparison.Ordinal));
+
+        return failedAttribute switch
+        {
+            RequiredAttribute => Localization.Get("form.requiredField", GetFieldLabel(property.Name)),
+            RegularExpressionAttribute => Localization["form.usernamePattern"],
+            StringLengthAttribute stringLength => Localization.Get("form.maxLengthField", GetFieldLabel(property.Name), stringLength.MaximumLength),
+            _ => Localization["form.invalid"]
+        };
+    }
+
+    private string GetFieldLabel(string propertyName) => propertyName switch
+    {
+        nameof(CompleteUserProfileRequest.Username) => Localization["profile.username"],
+        nameof(CompleteUserProfileRequest.Firstname) => Localization["profile.firstName"],
+        nameof(CompleteUserProfileRequest.Lastname) => Localization["profile.lastName"],
+        nameof(CompleteUserProfileRequest.DiscordId) => Localization["shared.discord"],
+        nameof(CompleteUserProfileRequest.SteamId) => Localization["shared.steam"],
+        nameof(CompleteUserProfileRequest.RiotId) => Localization["shared.riot"],
+        _ => propertyName
+    };
+
     private async Task SaveAsync()
     {
         if(_isSaving || _editContext is null) return;
-        if(!_editContext.Validate()) { _activeStep = GetFirstInvalidStep(); return; }
+        if(!ValidateAll()) { _activeStep = GetFirstInvalidStep(); return; }
         _isSaving = true;
         try
         {
             await CheckUsernameAvailabilityAsync();
             if(_usernameIsAvailable == false) { _activeStep = 0; return; }
             await UserClient.CompleteCurrentUserProfileAsync(_model);
-            ToastService.ShowSuccess(IsRegistrationFlow ? "Account created. Welcome to Mercurius LAN." : "Profile completed.");
+            ToastService.ShowSuccess(IsRegistrationFlow ? Localization["General.CompleteProfile.AccountCreated"] : Localization["General.CompleteProfile.ProfileCompleted"]);
             if(IsRegistrationFlow) _isCompleted = true;
             else NavigationManager.NavigateTo(LocalReturnUrlHelper.GetSafeLocalReturnUrl(ReturnUrl), true);
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict) { ToastService.ShowError(await GetApiErrorAsync(exception)); }
-        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound) { ToastService.ShowError("Your profile could not be created. Please sign in again and retry."); }
+        catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound) { ToastService.ShowError(Localization["General.CompleteProfile.ProfileNotCreated"]); }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
         {
             NavigationManager.NavigateTo(GetLoginHref(), true);
@@ -178,7 +233,7 @@ public partial class CompleteProfile
         {
             NavigationManager.NavigateTo(GetLoginHref(), true);
         }
-        catch(Exception) { ToastService.ShowError("Profile could not be saved. Please try again."); }
+        catch(Exception) { ToastService.ShowError(Localization["General.CompleteProfile.ProfileSaveFailed"]); }
         finally { _isSaving = false; }
     }
 
@@ -192,10 +247,10 @@ public partial class CompleteProfile
         {
             var availability = await UserClient.CheckUsernameAvailabilityAsync(_model.Username);
             _usernameIsAvailable = availability.IsAvailable;
-            _usernameAvailabilityMessage = availability.IsAvailable ? "Username is available." : availability.Reason ?? "Username is unavailable.";
+            _usernameAvailabilityMessage = availability.IsAvailable ? Localization["General.CompleteProfile.UsernameAvailable"] : availability.Reason ?? Localization["General.CompleteProfile.UsernameUnavailable"];
             _usernameAvailabilityClass = availability.IsAvailable ? "form-text text-success" : "form-text text-danger";
         }
-        catch(Exception) { _usernameAvailabilityMessage = "Username availability will be checked when you save."; _usernameAvailabilityClass = "form-text text-warning"; }
+        catch(Exception) { _usernameAvailabilityMessage = Localization["General.CompleteProfile.UsernameCheckOnSave"]; _usernameAvailabilityClass = "form-text text-warning"; }
     }
 
     private int GetFirstInvalidStep()
@@ -225,8 +280,9 @@ public partial class CompleteProfile
         }
     }
 
-    private static async Task<string> GetApiErrorAsync(ApiException exception, string fallback = "Profile could not be saved.")
+    private async Task<string> GetApiErrorAsync(ApiException exception, string? fallback = null)
     {
+        fallback ??= Localization["General.CompleteProfile.ProfileSaveFailed"];
         try { var content = await exception.GetContentAsAsync<string>(); return string.IsNullOrWhiteSpace(content) ? fallback : content; }
         catch { return string.IsNullOrWhiteSpace(exception.Content) ? fallback : exception.Content.Trim('"'); }
     }

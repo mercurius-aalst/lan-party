@@ -6,13 +6,13 @@ namespace Mercurius.LAN.Web.Components.Shared;
 public partial class ParticipantComponent
 {
     [Parameter] public ParticipantViewModel? Participant { get; set; }
-    [Parameter] public string EmptyLabel { get; set; } = "TBD";
+    [Parameter] public string EmptyLabel { get; set; } = string.Empty;
     [Parameter] public bool ShowIdentityHeader { get; set; } = true;
     [Parameter] public EventCallback<PublicUserDTO> OnUserSelected { get; set; }
 
     private bool CanOpenUserInfo => OnUserSelected.HasDelegate;
 
-    private static string GetUserLabel(PublicUserDTO user)
+    private string GetUserLabel(PublicUserDTO user)
     {
         if(!string.IsNullOrWhiteSpace(user.Username))
             return user.Username.Trim();
@@ -21,7 +21,7 @@ public partial class ParticipantComponent
             return user.DisplayName.Trim();
 
         var fullName = GetFullName(user);
-        return string.IsNullOrWhiteSpace(fullName) ? "Participant" : fullName;
+        return string.IsNullOrWhiteSpace(fullName) ? Localization["shared.user"] : fullName;
     }
 
     private Task SelectUserAsync(PublicUserDTO user) => OnUserSelected.InvokeAsync(user);

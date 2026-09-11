@@ -8,14 +8,14 @@
             <header class="participant-header-row">
                 <span class="participant-type">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4" /><path d="M5.5 21a7.5 7.5 0 0 1 13 0" /></svg>
-                    User
+                    @Localization["shared.user"]
                 </span>
                 <h4 class="participant-name">
                     @if(CanOpenUserInfo)
                     {
                         <button type="button"
                                 class="participant-profile-link participant-profile-button"
-                                aria-label="@($"View details for {GetUserLabel(user)}")"
+                                aria-label='@Localization.Get("shared.viewDetails", GetUserLabel(user))'
                                 @onclick="() => SelectUserAsync(user)">@GetUserLabel(user)</button>
                     }
                     else
@@ -27,13 +27,13 @@
         }
         <dl class="participant-details">
             <div class="participant-detail-row">
-                <dt>Username</dt>
+                <dt>@Localization["shared.username"]</dt>
                 <dd>
                     @if(CanOpenUserInfo)
                     {
                         <button type="button"
                                 class="participant-profile-link participant-profile-button"
-                                aria-label="@($"View details for {GetUserLabel(user)}")"
+                                aria-label='@Localization.Get("shared.viewDetails", GetUserLabel(user))'
                                 @onclick="() => SelectUserAsync(user)">@GetUserLabel(user)</button>
                     }
                     else
@@ -45,28 +45,28 @@
             @if(!string.IsNullOrWhiteSpace(GetFullName(user)))
             {
                 <div class="participant-detail-row">
-                    <dt>Name</dt>
+                    <dt>@Localization["shared.name"]</dt>
                     <dd>@GetFullName(user)</dd>
                 </div>
             }
             @if(!string.IsNullOrWhiteSpace(user.DiscordId))
             {
                 <div class="participant-detail-row">
-                    <dt>Discord</dt>
+                    <dt>@Localization["shared.discord"]</dt>
                     <dd>@user.DiscordId</dd>
                 </div>
             }
             @if(!string.IsNullOrWhiteSpace(user.SteamId))
             {
                 <div class="participant-detail-row">
-                    <dt>Steam</dt>
+                    <dt>@Localization["shared.steam"]</dt>
                     <dd>@user.SteamId</dd>
                 </div>
             }
             @if(!string.IsNullOrWhiteSpace(user.RiotId))
             {
                 <div class="participant-detail-row">
-                    <dt>Riot</dt>
+                    <dt>@Localization["shared.riot"]</dt>
                     <dd>@user.RiotId</dd>
                 </div>
             }
@@ -81,7 +81,7 @@ else if(Participant?.Team is Models.Participants.Team team)
             <header class="participant-header-row">
                 <span class="participant-type">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                    Team
+                    @Localization["shared.team"]
                 </span>
                 <h4 class="participant-name">
                     @if(HasTeamName(team))
@@ -98,7 +98,7 @@ else if(Participant?.Team is Models.Participants.Team team)
         @if(team.Members.Any())
         {
             <section class="participant-section">
-                <span class="participant-section-label">Members</span>
+                <span class="participant-section-label">@Localization["shared.members"]</span>
                 <div class="participant-members">
                     @foreach(var member in team.Members)
                     {
@@ -108,12 +108,12 @@ else if(Participant?.Team is Models.Participants.Team team)
                         {
                             <button type="button"
                                     class="participant-member-chip participant-member-link @(isCaptain ? "participant-member-chip--captain" : null)"
-                                    aria-label="@($"View details for {GetUserLabel(member)}")"
+                                    aria-label='@Localization.Get("shared.viewDetails", GetUserLabel(member))'
                                     @onclick="() => SelectUserAsync(member)">
                                 <span>@GetUserLabel(member)</span>
                                 @if(isCaptain)
                                 {
-                                    <span class="participant-captain-badge">Captain</span>
+                                    <span class="participant-captain-badge">@Localization["shared.captain"]</span>
                                 }
                             </button>
                         }
@@ -123,7 +123,7 @@ else if(Participant?.Team is Models.Participants.Team team)
                                 <span>@GetUserLabel(member)</span>
                                 @if(isCaptain)
                                 {
-                                    <span class="participant-captain-badge">Captain</span>
+                                    <span class="participant-captain-badge">@Localization["shared.captain"]</span>
                                 }
                             </span>
                         }
@@ -137,8 +137,8 @@ else
 {
     <article class="participant-surface participant-surface--empty">
         <header class="participant-header-row">
-            <span class="participant-type">@EmptyLabel</span>
+            <span class="participant-type">@(string.IsNullOrWhiteSpace(EmptyLabel) ? Localization["shared.tbd"] : EmptyLabel)</span>
         </header>
-        <p class="participant-empty-copy">This slot has not been filled yet.</p>
+        <p class="participant-empty-copy">@Localization["shared.emptyParticipant"]</p>
     </article>
 }

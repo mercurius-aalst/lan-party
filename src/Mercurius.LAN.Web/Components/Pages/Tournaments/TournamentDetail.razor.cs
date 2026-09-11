@@ -94,16 +94,16 @@ public partial class TournamentDetail : IDisposable
                 return string.Empty;
 
             if(!ScheduledMatches.Any())
-                return "No estimated matches are currently available yet.";
+                return Localization["Feature.tournaments.noEstimatedMatches"];
 
             var visibleMatches = FilteredScheduledMatches;
             var visibleCount = visibleMatches.Count;
-            return $"{visibleCount} match{(visibleCount == 1 ? string.Empty : "es")} currently have estimated timing.";
+            return Localization.Get("Feature.tournaments.scheduleSummary", visibleCount);
         }
     }
 
     private string ScheduleCountLabel =>
-        $"{FilteredScheduledMatches.Count} match{(FilteredScheduledMatches.Count == 1 ? string.Empty : "es")}";
+        Localization.Get("Feature.tournaments.scheduleCount", FilteredScheduledMatches.Count);
 
     protected override Task OnParametersSetAsync()
     {
@@ -205,14 +205,14 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentLoad(tournamentId, loadGeneration))
                 return;
 
-            _loadError = "Sign in to load this tournament.";
+            _loadError = Localization["Feature.tournaments.signInToLoad"];
         }
         catch(ApiException)
         {
             if(!IsCurrentLoad(tournamentId, loadGeneration))
                 return;
 
-            _loadError = "Could not load this tournament right now.";
+            _loadError = Localization["Feature.tournaments.loadError"];
             ToastService.ShowError(_loadError);
         }
         catch(Exception)
@@ -220,7 +220,7 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentLoad(tournamentId, loadGeneration))
                 return;
 
-            _loadError = "Could not load this tournament right now.";
+            _loadError = Localization["Feature.tournaments.loadError"];
             ToastService.ShowError(_loadError);
         }
         finally
@@ -273,7 +273,7 @@ public partial class TournamentDetail : IDisposable
         return ExecuteTournamentActionAsync(
             tournamentId,
             () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Completed),
-            "Tournament successfully finished.");
+            Localization["Feature.tournaments.finished"]);
     }
 
     private Task StartTournamentAsync()
@@ -282,7 +282,7 @@ public partial class TournamentDetail : IDisposable
         return ExecuteTournamentActionAsync(
             tournamentId,
             () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.InProgress),
-            "Tournament successfully started.");
+            Localization["Feature.tournaments.started"]);
     }
 
     private Task CancelTournamentAsync()
@@ -291,7 +291,7 @@ public partial class TournamentDetail : IDisposable
         return ExecuteTournamentActionAsync(
             tournamentId,
             () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Canceled),
-            "Tournament successfully canceled.");
+            Localization["Feature.tournaments.canceled"]);
     }
 
     private Task ResetTournamentAsync()
@@ -300,7 +300,7 @@ public partial class TournamentDetail : IDisposable
         return ExecuteTournamentActionAsync(
             tournamentId,
             () => TournamentService.SetTournamentLifecycleStateAsync(tournamentId, TournamentStatus.Scheduled),
-            "Tournament successfully reset.");
+            Localization["Feature.tournaments.resetDone"]);
     }
 
     private async Task DeleteTournamentAsync()
@@ -309,7 +309,7 @@ public partial class TournamentDetail : IDisposable
             return;
 
         var tournamentId = TournamentId;
-        var tournamentName = _tournament?.Name ?? "Tournament";
+        var tournamentName = _tournament?.Name ?? Localization["Feature.tournaments.tournamentFallback"];
         var actionGeneration = ++_tournamentActionGeneration;
         _isActionRunning = true;
         try
@@ -318,7 +318,7 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowSuccess($"{tournamentName} successfully deleted.");
+            ToastService.ShowSuccess(Localization.Get("Feature.tournaments.deleted", tournamentName));
             Navigation.NavigateTo("/tournaments");
         }
         catch(ApiException)
@@ -326,21 +326,21 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("The tournament could not be deleted right now.");
+            ToastService.ShowError(Localization["Feature.tournaments.deleteFailed"]);
         }
         catch(UnauthorizedAccessException)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("You are not authorized to delete this tournament.");
+            ToastService.ShowError(Localization["Feature.tournaments.deleteUnauthorized"]);
         }
         catch(Exception)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("The tournament could not be deleted right now.");
+            ToastService.ShowError(Localization["Feature.tournaments.deleteFailed"]);
         }
         finally
         {
@@ -370,21 +370,21 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("The tournament action could not be completed right now.");
+            ToastService.ShowError(Localization["Feature.tournaments.actionFailed"]);
         }
         catch(UnauthorizedAccessException)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("You are not authorized to change this tournament.");
+            ToastService.ShowError(Localization["Feature.tournaments.actionUnauthorized"]);
         }
         catch(Exception)
         {
             if(!IsCurrentAction(tournamentId, actionGeneration))
                 return;
 
-            ToastService.ShowError("The tournament action could not be completed right now.");
+            ToastService.ShowError(Localization["Feature.tournaments.actionFailed"]);
         }
         finally
         {
@@ -408,11 +408,11 @@ public partial class TournamentDetail : IDisposable
         return placement.SponsorDescription ?? string.Empty;
     }
 
-    private static string GetPartnerEyebrow(TournamentSponsorPlacement placement)
+    private string GetPartnerEyebrow(TournamentSponsorPlacement placement)
     {
         return placement.SponsorTier == SponsorTier.Presenting
-            ? "Presented by"
-            : $"{placement.SponsorTier.GetShortLabel()} partner";
+            ? Localization["Feature.tournaments.presentedBy"]
+            : Localization.Get("Feature.tournaments.tierPartner", GetSponsorTierShortLabel(placement.SponsorTier));
     }
 
     private string GetPageAnchorUrl(string anchorId)
@@ -429,7 +429,7 @@ public partial class TournamentDetail : IDisposable
 
         if(!CanRegister(_tournament))
         {
-            ToastService.ShowWarning("Registrations are closed, the tournament has already started.");
+            ToastService.ShowWarning(Localization["tournament.registrationClosedShort"]);
             return;
         }
 
@@ -442,52 +442,60 @@ public partial class TournamentDetail : IDisposable
         return Task.CompletedTask;
     }
 
-    private static string FormatDateTime(DateTime dateTime)
+    private string FormatDateTime(DateTime dateTime)
     {
-        return dateTime.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
+        return Localization.FormatDateTime(dateTime.ToLocalDisplayTime());
     }
 
     private string GetScheduleEmptyMessage()
     {
-        if(_tournament?.PlannedStartTime is not null)
-            return "No matches are scheduled yet.";
+        if(_tournament?.PlannedStartTime is DateTime plannedStart)
+            return Localization.Get("Feature.tournaments.scheduleStarts", FormatDateTime(plannedStart));
 
-        return "No matches are scheduled yet.";
+        return Localization["Feature.tournaments.noEstimatedMatchTimes"];
     }
 
     private string GetMatchTitle(Match match)
     {
-        return $"{GetMatchParticipantName(match, true)} vs {GetMatchParticipantName(match, false)}";
+        return Localization.Get(
+            "Feature.tournaments.vs",
+            GetMatchParticipantName(match, true),
+            GetMatchParticipantName(match, false));
     }
 
     private string GetMatchTimeRange(Match match)
     {
         if(!match.EstimatedStartTime.HasValue)
-            return "Estimate unavailable";
+            return Localization["Feature.tournaments.estimateUnavailable"];
 
         if(!match.EstimatedEndTime.HasValue || match.EstimatedEndTime <= match.EstimatedStartTime)
-            return $"Start time {FormatDateTime(match.EstimatedStartTime.Value)}";
+            return Localization.Get("Feature.tournaments.startTimeAt", FormatDateTime(match.EstimatedStartTime.Value));
 
-        return $"Start time {FormatDateTime(match.EstimatedStartTime.Value)} - {match.EstimatedEndTime.Value.ToLocalDisplayTime():HH:mm}";
+        return Localization.Get(
+            "Feature.tournaments.startTimeRange",
+            FormatDateTime(match.EstimatedStartTime.Value),
+            Localization.FormatTime(match.EstimatedEndTime.Value.ToLocalDisplayTime()));
     }
 
     private string GetMatchStageSummary(Match match)
     {
         var bracketLabel = GetScheduleBracketLabel(match);
-        return $"{bracketLabel} · Match {match.MatchNumber}";
+        return Localization.Get("Feature.tournaments.matchStageSummary", bracketLabel, match.MatchNumber);
     }
 
     private string GetRoundLabel(Match match)
     {
-        return $"Round {match.RoundNumber}";
+        return Localization.Get("Feature.tournaments.roundNumber", match.RoundNumber);
     }
 
     private string GetScheduleStatus(Match match)
     {
         if(IsMatchDecided(match))
-            return "Decided";
+            return Localization["Feature.tournaments.decided"];
 
-        return match.EstimatedStartTime.HasValue ? "Estimated" : "Awaiting estimate";
+        return match.EstimatedStartTime.HasValue
+            ? Localization["Feature.tournaments.estimated"]
+            : Localization["Feature.tournaments.awaitingEstimate"];
     }
 
     private string GetScheduleStatusClass(Match match)
@@ -501,19 +509,19 @@ public partial class TournamentDetail : IDisposable
     private string GetMatchParticipantName(Match match, bool firstParticipant)
     {
         if(_tournament == null)
-            return "TBD";
+            return Localization["Feature.tournaments.tbd"];
 
         if(firstParticipant && match.Participant1IsBYE)
-            return "BYE";
+            return Localization["Feature.tournaments.bye"];
 
         if(!firstParticipant && match.Participant2IsBYE)
-            return "BYE";
+            return Localization["Feature.tournaments.bye"];
 
         return _tournament.ParticipationMode switch
         {
             ParticipationMode.Team => _participantLookup.ResolveName(ParticipationMode.Team, firstParticipant ? match.TeamParticipant1Id : match.TeamParticipant2Id),
             ParticipationMode.Individual => _participantLookup.ResolveName(ParticipationMode.Individual, firstParticipant ? match.UserParticipant1Id : match.UserParticipant2Id),
-            _ => "TBD"
+            _ => Localization["Feature.tournaments.tbd"]
         };
     }
 
@@ -532,9 +540,9 @@ public partial class TournamentDetail : IDisposable
     private string GetScheduleBracketLabel(Match match)
     {
         if(IsGrandFinalMatch(match))
-            return "Grand final";
+            return Localization["Feature.tournaments.grandFinal"];
 
-        return match.IsLowerBracketMatch ? "Lower bracket" : "Main bracket";
+        return match.IsLowerBracketMatch ? Localization["Feature.tournaments.lowerBracket"] : Localization["Feature.tournaments.mainBracket"];
     }
 
     private bool IsGrandFinalMatch(Match match)
@@ -575,10 +583,10 @@ public partial class TournamentDetail : IDisposable
     private string GetScheduleBracketFilterLabel(ScheduleBracketFilter bracketFilter) =>
         bracketFilter switch
         {
-            ScheduleBracketFilter.Main => "Main bracket",
-            ScheduleBracketFilter.Lower => "Lower bracket",
-            ScheduleBracketFilter.GrandFinal => "Grand final",
-            _ => "All brackets"
+            ScheduleBracketFilter.Main => Localization["Feature.tournaments.mainBracket"],
+            ScheduleBracketFilter.Lower => Localization["Feature.tournaments.lowerBracket"],
+            ScheduleBracketFilter.GrandFinal => Localization["Feature.tournaments.grandFinal"],
+            _ => Localization["Feature.tournaments.allBrackets"]
         };
 
     private async Task HandleMatchDataReloadAsync(Match refreshedMatch)
@@ -689,7 +697,7 @@ public partial class TournamentDetail : IDisposable
             _tournament = updatedTournament;
             _participantLookup = TournamentParticipantLookup.FromTournament(_tournament);
             SyncSelectedSponsor();
-            ToastService.ShowSuccess("Tournament sponsor updated.");
+            ToastService.ShowSuccess(Localization["Feature.tournaments.sponsorUpdated"]);
             await InvokeAsync(StateHasChanged);
         }
         catch(ApiException)
@@ -697,7 +705,7 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
-            _sponsorError = "The tournament sponsor could not be updated right now.";
+            _sponsorError = Localization["Feature.tournaments.sponsorUpdateFailed"];
             ToastService.ShowError(_sponsorError);
         }
         catch(UnauthorizedAccessException)
@@ -705,7 +713,7 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
-            _sponsorError = "You are not authorized to update this tournament sponsor.";
+            _sponsorError = Localization["Feature.tournaments.sponsorUpdateUnauthorized"];
             ToastService.ShowError(_sponsorError);
         }
         catch(Exception)
@@ -713,7 +721,7 @@ public partial class TournamentDetail : IDisposable
             if(!IsCurrentSponsorAction(tournamentId, actionGeneration))
                 return;
 
-            _sponsorError = "The tournament sponsor could not be updated right now.";
+            _sponsorError = Localization["Feature.tournaments.sponsorUpdateFailed"];
             ToastService.ShowError(_sponsorError);
         }
         finally
@@ -727,6 +735,52 @@ public partial class TournamentDetail : IDisposable
     {
         _selectedSponsorId = _tournament?.SponsorPlacement?.SponsorId;
     }
+
+    private string GetStatusLabel(TournamentStatus status) => status switch
+    {
+        TournamentStatus.Scheduled => Localization["Feature.tournament.statusScheduled"],
+        TournamentStatus.InProgress => Localization["Feature.tournament.statusInProgress"],
+        TournamentStatus.Completed => Localization["Feature.tournament.statusCompleted"],
+        TournamentStatus.Canceled => Localization["Feature.tournament.statusCanceled"],
+        _ => status.ToString()
+    };
+
+    private string GetParticipationLabel(ParticipationMode mode) => mode switch
+    {
+        ParticipationMode.Individual => Localization["Feature.tournament.participationIndividual"],
+        ParticipationMode.Team => Localization["Feature.tournament.participationTeam"],
+        _ => mode.ToString()
+    };
+
+    private string GetBracketLabel(BracketType bracketType) => bracketType switch
+    {
+        BracketType.SingleElimination => Localization["Feature.tournament.bracketSingle"],
+        BracketType.DoubleElimination => Localization["Feature.tournament.bracketDouble"],
+        BracketType.RoundRobin => Localization["Feature.tournament.bracketRoundRobin"],
+        BracketType.Swiss => Localization["Feature.tournament.bracketSwiss"],
+        _ => bracketType.ToString()
+    };
+
+    private string GetFormatLabel(TournamentFormat format) => format switch
+    {
+        TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+        TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+        TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+        _ => format.ToString()
+    };
+
+    private string GetSponsorTierLabel(SponsorTier tier) => Localization.Get(
+        "Feature.tournaments.tierPartner",
+        GetSponsorTierShortLabel(tier));
+
+    private string GetSponsorTierShortLabel(SponsorTier tier) => tier switch
+    {
+        SponsorTier.Presenting => Localization["Feature.sponsors.tierPresenting"],
+        SponsorTier.Gold => Localization["Feature.sponsors.tierGold"],
+        SponsorTier.Silver => Localization["Feature.sponsors.tierSilver"],
+        SponsorTier.Bronze => Localization["Feature.sponsors.tierBronze"],
+        _ => tier.ToString()
+    };
 
     public void Dispose()
     {

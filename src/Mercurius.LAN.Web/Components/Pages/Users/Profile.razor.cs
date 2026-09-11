@@ -5,14 +5,25 @@ using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
+using System.ComponentModel.DataAnnotations;
 using System.Net;
+using System.Reflection;
 
 namespace Mercurius.LAN.Web.Components.Pages.Users;
 
 public partial class Profile
 {
+    private static readonly string[] ProfileFields = [
+        nameof(UpdateUserProfileRequest.Username),
+        nameof(UpdateUserProfileRequest.Firstname),
+        nameof(UpdateUserProfileRequest.Lastname),
+        nameof(UpdateUserProfileRequest.DiscordId),
+        nameof(UpdateUserProfileRequest.SteamId),
+        nameof(UpdateUserProfileRequest.RiotId)];
+
     private readonly UpdateUserProfileRequest _model = new();
     private EditContext? _editContext;
+    private ValidationMessageStore? _validationMessageStore;
     private string _emailDisplay = string.Empty;
     private bool _emailVerified;
     private string _emailStatusText = string.Empty;
@@ -62,7 +73,7 @@ public partial class Profile
         }
         catch(ApiException exception)
         {
-            _loadError = await GetApiErrorAsync(exception, "Your profile could not be loaded right now.");
+            _loadError = await GetApiErrorAsync(exception, Localization["General.Profile.LoadError"]);
         }
         catch(UnauthorizedAccessException)
         {
@@ -83,7 +94,7 @@ public partial class Profile
                 var availability = await UserClient.CheckUsernameAvailabilityAsync(_model.Username);
                 if(!availability.IsAvailable)
                 {
-                    _usernameAvailabilityMessage = availability.Reason ?? "Username is unavailable.";
+                    _usernameAvailabilityMessage = availability.Reason ?? Localization["General.Profile.UsernameUnavailable"];
                     _usernameAvailabilityClass = "form-text text-danger";
                     return;
                 }
@@ -91,7 +102,7 @@ public partial class Profile
 
             var profile = await UserClient.UpdateCurrentUserProfileAsync(_model);
             _originalUsername = (profile.Username ?? string.Empty).Trim();
-            ToastService.ShowSuccess("Profile saved.");
+            ToastService.ShowSuccess(Localization["General.Profile.Saved"]);
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.BadRequest || exception.StatusCode == HttpStatusCode.Conflict)
         {
@@ -130,8 +141,8 @@ public partial class Profile
         {
             var availability = await UserClient.CheckUsernameAvailabilityAsync(_model.Username);
             _usernameAvailabilityMessage = availability.IsAvailable
-                ? "Username is available."
-                : availability.Reason ?? "Username is unavailable.";
+                ? Localization["General.Profile.UsernameAvailable"]
+                : availability.Reason ?? Localization["General.Profile.UsernameUnavailable"];
             _usernameAvailabilityClass = availability.IsAvailable ? "form-text text-success" : "form-text text-danger";
         }
         catch(ApiException)
@@ -210,15 +221,100 @@ public partial class Profile
 
         _emailDisplay = response.Email ?? profile?.Email ?? string.Empty;
         _emailVerified = response.EmailVerified || profile?.EmailVerified == true;
-        _emailStatusText = _emailVerified ? "Verified" : "Unverified";
+        _emailStatusText = _emailVerified ? Localization["General.Profile.Verified"] : Localization["General.Profile.Unverified"];
         _emailStatusClass = _emailVerified ? "form-text text-success" : "form-text text-warning";
 
         _editContext = new EditContext(_model);
+        _validationMessageStore = new ValidationMessageStore(_editContext);
+        _editContext.OnFieldChanged += HandleFieldChanged;
         _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
     }
 
-    private static async Task<string> GetApiErrorAsync(ApiException exception, string fallback = "Request failed.")
+    private async Task HandleSubmitAsync(EditContext editContext)
     {
+        if(!ValidateProfile()) return;
+        await SaveAsync();
+    }
+
+    private bool ValidateProfile()
+    {
+        if(_editContext is null || _validationMessageStore is null) return false;
+        _validationMessageStore.Clear();
+        var isValid = true;
+
+        foreach(var propertyName in ProfileFields)
+        {
+            var property = typeof(UpdateUserProfileRequest).GetProperty(propertyName);
+            var field = new FieldIdentifier(_model, propertyName);
+            if(property is null) continue;
+
+            _validationMessageStore.Clear(field);
+            var value = property.GetValue(_model);
+            var context = new ValidationContext(_model) { MemberName = propertyName };
+            var results = new List<ValidationResult>();
+            if(Validator.TryValidateProperty(value, context, results)) continue;
+
+            isValid = false;
+            foreach(var result in results)
+                _validationMessageStore.Add(field, GetLocalizedValidationMessage(property, value, context, result));
+        }
+
+        _editContext.NotifyValidationStateChanged();
+        return isValid;
+    }
+
+    private void HandleFieldChanged(object? sender, FieldChangedEventArgs args)
+    {
+        if(_validationMessageStore is null || _editContext is null) return;
+
+        var propertyName = args.FieldIdentifier.FieldName;
+        var property = typeof(UpdateUserProfileRequest).GetProperty(propertyName);
+        if(property is null) return;
+
+        _validationMessageStore.Clear(args.FieldIdentifier);
+        var value = property.GetValue(_model);
+        var context = new ValidationContext(_model) { MemberName = propertyName };
+        var results = new List<ValidationResult>();
+        if(!Validator.TryValidateProperty(value, context, results))
+        {
+            foreach(var result in results)
+                _validationMessageStore.Add(args.FieldIdentifier, GetLocalizedValidationMessage(property, value, context, result));
+        }
+
+        _editContext.NotifyValidationStateChanged();
+    }
+
+    private string GetLocalizedValidationMessage(PropertyInfo property, object? value, ValidationContext context, ValidationResult result)
+    {
+        var failedAttribute = property.GetCustomAttributes<ValidationAttribute>()
+            .FirstOrDefault(attribute => string.Equals(
+                attribute.GetValidationResult(value, context)?.ErrorMessage,
+                result.ErrorMessage,
+                StringComparison.Ordinal));
+
+        return failedAttribute switch
+        {
+            RequiredAttribute => Localization.Get("form.requiredField", GetFieldLabel(property.Name)),
+            RegularExpressionAttribute => Localization["form.usernamePattern"],
+            StringLengthAttribute stringLength => Localization.Get("form.maxLengthField", GetFieldLabel(property.Name), stringLength.MaximumLength),
+            _ => Localization["form.invalid"]
+        };
+    }
+
+    private string GetFieldLabel(string propertyName) => propertyName switch
+    {
+        nameof(UpdateUserProfileRequest.Username) => Localization["profile.username"],
+        nameof(UpdateUserProfileRequest.Firstname) => Localization["profile.firstName"],
+        nameof(UpdateUserProfileRequest.Lastname) => Localization["profile.lastName"],
+        nameof(UpdateUserProfileRequest.DiscordId) => Localization["shared.discord"],
+        nameof(UpdateUserProfileRequest.SteamId) => Localization["shared.steam"],
+        nameof(UpdateUserProfileRequest.RiotId) => Localization["shared.riot"],
+        _ => propertyName
+    };
+
+    private async Task<string> GetApiErrorAsync(ApiException exception, string? fallback = null)
+    {
+        fallback ??= Localization["General.Profile.RequestFailed"];
         try
         {
             var content = await exception.GetContentAsAsync<string>();

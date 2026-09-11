@@ -3,38 +3,38 @@
 
 @rendermode InteractiveServer
 
-<PageTitle>Team Profile</PageTitle>
+<PageTitle>@Localization["General.PublicTeam.PageTitle"]</PageTitle>
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading team profile..." />
+    <LoadingScreen Message='@Localization["status.loadingTeam"]' />
 }
 else if(_hasError)
 {
-    <StatusPage Eyebrow="Teams"
-                Title="Team unavailable"
-                Message="This team profile could not be loaded right now."
+    <StatusPage Eyebrow='@Localization["team.members"]'
+                Title='@Localization["General.PublicTeam.Unavailable"]'
+                Message='@Localization["General.PublicTeam.LoadError"]'
                 PrimaryHref="/tournaments"
-                PrimaryLabel="Browse tournaments"
+                PrimaryLabel='@Localization["common.browseTournaments"]'
                 SecondaryHref="/"
-                SecondaryLabel="Back home" />
+                SecondaryLabel='@Localization["common.backHome"]' />
 }
 else if(_team is null)
 {
-    <StatusPage Eyebrow="Teams"
-                Title="Team not found"
-                Message="We could not find a public profile for that team."
+    <StatusPage Eyebrow='@Localization["team.members"]'
+                Title='@Localization["General.PublicTeam.NotFound"]'
+                Message='@Localization["General.PublicTeam.NotFoundMessage"]'
                 PrimaryHref="/tournaments"
-                PrimaryLabel="Browse tournaments"
+                PrimaryLabel='@Localization["common.browseTournaments"]'
                 SecondaryHref="/"
-                SecondaryLabel="Back home" />
+                SecondaryLabel='@Localization["common.backHome"]' />
 }
 else
 {
     <section class="public-team-page py-6 pb-12">
         <div class="public-team-shell">
-            <nav class="public-team-breadcrumb" aria-label="Breadcrumb">
-                <a href="/">Home</a>
+            <nav class="public-team-breadcrumb" aria-label='@Localization["General.PublicTeam.Breadcrumb"]'>
+                <a href="/">@Localization["nav.home"]</a>
                 <span>/</span>
                 <span aria-current="page">@_team.TeamName</span>
             </nav>
@@ -43,7 +43,7 @@ else
                 <div class="public-team-hero-identity">
                     <TeamIdentityDisplay Name="@_team.TeamName" LogoUrl="@_team.LogoUrl" Variant="hero" Size="large" ShowName="false" />
                     <div>
-                        <span class="section-eyebrow">Team profile</span>
+                        <span class="section-eyebrow">@Localization["General.PublicTeam.TeamProfile"]</span>
                         <h1>@_team.TeamName</h1>
                     </div>
                 </div>
@@ -52,13 +52,13 @@ else
             <div class="public-team-content-grid">
                 <section id="team-roster" class="brand-card public-team-card brand-section-anchor">
                     <div class="public-team-card-heading">
-                        <h2>Roster</h2>
-                        <p>Members are shown by public username only.</p>
+                        <h2>@Localization["team.members"]</h2>
+                        <p>@Localization["General.PublicTeam.PublicUsernameNotice"]</p>
                     </div>
 
                     @if(_team.Members.Count == 0)
                     {
-                        <p class="public-team-empty">No public members are listed for this team.</p>
+                        <p class="public-team-empty">@Localization["General.PublicTeam.NoMembers"]</p>
                     }
                     else
                     {
@@ -75,10 +75,10 @@ else
                                                 @member.Username
                                                 @if(isCaptain)
                                                 {
-                                                    <span class="public-team-captain-badge">Captain</span>
+                                                    <span class="public-team-captain-badge">@Localization["team.captain"]</span>
                                                 }
                                             </strong>
-                                            <span>View participant profile</span>
+                                            <span>@Localization["General.PublicTeam.ViewParticipantProfile"]</span>
                                         </span>
                                         <span class="bi bi-arrow-up-right public-team-member-arrow" aria-hidden="true"></span>
                                     </a>
@@ -90,12 +90,12 @@ else
 
                 <section id="team-tournaments" class="brand-card public-team-card public-team-tournaments-card brand-section-anchor">
                     <div class="public-team-card-heading">
-                        <h2>Playing in</h2>
+                        <h2>@Localization["General.PublicTeam.PlayingIn"]</h2>
                     </div>
 
                     @if(_team.Tournaments.Count == 0)
                     {
-                        <p class="public-team-empty">This team is not currently listed in any tournaments.</p>
+                        <p class="public-team-empty">@Localization["General.PublicTeam.NoTournaments"]</p>
                     }
                     else
                     {

@@ -3,11 +3,11 @@
 @using Mercurius.LAN.Web.Models.Sponsors
 @rendermode InteractiveServer
 
-<PageTitle>Sponsors</PageTitle>
+<PageTitle>@Localization["sponsors.pageTitle"]</PageTitle>
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading sponsors..." />
+    <LoadingScreen Message='@Localization["status.loadingSponsors"]' />
 }
 else
 {
@@ -15,11 +15,11 @@ else
         <div class="brand-card brand-page-hero sponsors-hero">
             <div class="sponsors-hero-lead">
                 <div class="brand-page-hero-copy sponsors-hero-copy">
-                    <h1>Partners powering every corner of Mercurius LAN</h1>
-                    <p>Discover the brands helping us level up tournaments, production, and the full LAN weekend atmosphere for every player and visitor.</p>
+                    <h1>@Localization["General.Sponsors.Heading"]</h1>
+                    <p>@Localization["General.Sponsors.Intro"]</p>
                 </div>
                 <div class="sponsors-hero-actions">
-                    <a href="/#contact" class="button-secondary">Become a Sponsor</a>
+                    <a href="/#contact" class="button-secondary">@Localization["General.Sponsors.BecomeSponsor"]</a>
                 </div>
             </div>
         </div>
@@ -27,22 +27,22 @@ else
 
     <section id="why-partners" class="brand-section brand-section-shell sponsors-impact-section brand-section-anchor">
         <div class="brand-section-shell sponsors-impact-header">
-            <h2>Why sponsors matter to the event</h2>
-            <p>Partner support helps us run a better LAN for everyone: stronger tournaments, better on-site comfort, and a more memorable community weekend.</p>
+            <h2>@Localization["General.Sponsors.WhyHeading"]</h2>
+            <p>@Localization["General.Sponsors.WhyIntro"]</p>
         </div>
 
         <div class="sponsors-impact-grid">
             <article class="brand-card sponsors-impact-card">
-                <h3>Stronger tournament experience</h3>
-                <p>Partners help us support prizes, stage quality, and better player-facing tournament moments.</p>
+                <h3>@Localization["General.Sponsors.StrongerExperienceHeading"]</h3>
+                <p>@Localization["General.Sponsors.StrongerExperienceText"]</p>
             </article>
             <article class="brand-card sponsors-impact-card">
-                <h3>More comfort across the weekend</h3>
-                <p>Sponsorship support helps improve venue setup, connectivity, and practical on-site quality for participants.</p>
+                <h3>@Localization["General.Sponsors.ComfortHeading"]</h3>
+                <p>@Localization["General.Sponsors.ComfortText"]</p>
             </article>
             <article class="brand-card sponsors-impact-card">
-                <h3>Community momentum</h3>
-                <p>Long-term partnerships help Mercurius LAN keep growing while staying accessible to returning and new visitors.</p>
+                <h3>@Localization["General.Sponsors.MomentumHeading"]</h3>
+                <p>@Localization["General.Sponsors.MomentumText"]</p>
             </article>
         </div>
     </section>
@@ -51,12 +51,12 @@ else
     {
         <section class="brand-section sponsors-empty-section">
             <div class="brand-card sponsors-empty-state">
-                <span class="section-eyebrow">Partner opportunities</span>
-                <h2>We are currently shaping the partner lineup.</h2>
-                <p>Want your brand featured as part of the next Mercurius LAN weekend? Reach out and let's build something strong together.</p>
+                <span class="section-eyebrow">@Localization["General.Sponsors.Opportunities"]</span>
+                <h2>@Localization["General.Sponsors.EmptyHeading"]</h2>
+                <p>@Localization["General.Sponsors.EmptyText"]</p>
                 <div class="sponsors-empty-actions">
-                    <a href="/#contact" class="button-primary">Become a Sponsor</a>
-                    <a href="/info" class="button-secondary">View Event Info</a>
+                    <a href="/#contact" class="button-primary">@Localization["General.Sponsors.BecomeSponsor"]</a>
+                    <a href="/info" class="button-secondary">@Localization["General.Sponsors.ViewEventInfo"]</a>
                 </div>
             </div>
         </section>
@@ -76,7 +76,7 @@ else
                     <div class="@GetTierGridClass(tier)">
                         @foreach(var sponsor in GetSponsorsByTier(tier))
                         {
-                            <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label="Visit @sponsor.Name">
+                            <a class="@GetSponsorCardClass(tier)" href="@sponsor.InfoUrl" target="_blank" rel="noopener noreferrer" aria-label='@Localization.Get("General.Sponsors.VisitSponsor", sponsor.Name)'>
                                 <div class="@GetSponsorCardLogoClass(tier)">
                                     <img src="@sponsor.LogoUrl" alt="@sponsor.Name logo" />
                                 </div>
@@ -87,7 +87,7 @@ else
                                         <p>@sponsor.Description</p>
                                     }
                                     <span class="sponsor-card-link">
-                                        Visit website
+                                        @Localization["General.Sponsors.VisitWebsite"]
                                         <span class="bi bi-arrow-up-right" aria-hidden="true"></span>
                                     </span>
                                 </div>

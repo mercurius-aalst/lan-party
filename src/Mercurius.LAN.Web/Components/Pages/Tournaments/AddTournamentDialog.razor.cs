@@ -37,6 +37,26 @@ public partial class AddTournamentDialog
         BracketType.DoubleElimination
     ];
 
+    private static readonly IReadOnlyDictionary<string, string> ValidationFieldLabelKeys = new Dictionary<string, string>
+    {
+        [nameof(CreateTournamentDTO.Name)] = "shared.name",
+        [nameof(CreateTournamentDTO.BracketType)] = "Feature.tournament.bracketType",
+        [nameof(CreateTournamentDTO.Format)] = "tournament.format",
+        [nameof(CreateTournamentDTO.FinalsFormat)] = "Feature.tournaments.finalsFormat",
+        [nameof(CreateTournamentDTO.ParticipationMode)] = "tournament.participation",
+        [nameof(CreateTournamentDTO.Image)] = "Feature.tournaments.tournamentImage",
+        [nameof(CreateTournamentDTO.TeamSize)] = "tournament.teamSize",
+        [nameof(CreateTournamentDTO.PlannedStartTime)] = "Feature.tournaments.plannedStartTime",
+        [nameof(CreateTournamentDTO.AverageGameDurationMinutes)] = "Feature.tournaments.averageGameDuration",
+        [nameof(CreateTournamentDTO.RoundBreakDurationMinutes)] = "Feature.tournaments.roundBreakDuration"
+    };
+
+    private static readonly IReadOnlyDictionary<string, string> ValidationMessageKeys = new Dictionary<string, string>
+    {
+        ["Planned start time is required."] = "form.plannedStartTimeRequired",
+        ["Team tournaments require a team size between 1 and 50."] = "form.teamSizeRange"
+    };
+
 
     protected override void OnInitialized() {
 
@@ -64,24 +84,24 @@ public partial class AddTournamentDialog
         try
         {
             var createdTournament = await TournamentService.CreateTournamentAsync(_newTournament, tempFilePath, contentType, fileName);
-            ToastService.ShowSuccess($"{createdTournament.Name} successfully created.");
+            ToastService.ShowSuccess(Localization.Get("Feature.tournaments.created", createdTournament.Name));
             await OnClose.InvokeAsync(createdTournament);
         }
         catch(ApiException ex)
         {
             _submitError = string.IsNullOrWhiteSpace(ex.Content)
-                ? "The tournament could not be created."
+                ? Localization["Feature.tournaments.createFailed"]
                 : ex.Content;
             ToastService.ShowError(_submitError);
         }
         catch(UnauthorizedAccessException)
         {
-            _submitError = "You are not authorized to create tournaments.";
+            _submitError = Localization["Feature.tournaments.createUnauthorized"];
             ToastService.ShowError(_submitError);
         }
         catch(Exception)
         {
-            _submitError = "The tournament could not be created right now.";
+            _submitError = Localization["Feature.tournaments.createFailedNow"];
             ToastService.ShowError(_submitError);
         }
         finally
@@ -96,13 +116,13 @@ public partial class AddTournamentDialog
 
         if(!_plannedStartDate.HasValue)
         {
-            _plannedStartTimeError = "Choose a valid planned start date.";
+            _plannedStartTimeError = Localization["Feature.tournaments.invalidStartDate"];
             return false;
         }
 
         if(!_plannedStartTime.HasValue)
         {
-            _plannedStartTimeError = "Choose a valid planned start time.";
+            _plannedStartTimeError = Localization["Feature.tournaments.invalidStartTime"];
             return false;
         }
 
@@ -135,4 +155,28 @@ public partial class AddTournamentDialog
         _isDialogOpen = false;
         OnClose.InvokeAsync(createdTournament);
     }
+
+    private string GetBracketLabel(BracketType type) => type switch
+    {
+        BracketType.SingleElimination => Localization["Feature.tournament.bracketSingle"],
+        BracketType.DoubleElimination => Localization["Feature.tournament.bracketDouble"],
+        BracketType.RoundRobin => Localization["Feature.tournament.bracketRoundRobin"],
+        BracketType.Swiss => Localization["Feature.tournament.bracketSwiss"],
+        _ => type.ToString()
+    };
+
+    private string GetParticipationLabel(ParticipationMode mode) => mode switch
+    {
+        ParticipationMode.Individual => Localization["Feature.tournament.participationIndividual"],
+        ParticipationMode.Team => Localization["Feature.tournament.participationTeam"],
+        _ => mode.ToString()
+    };
+
+    private string GetFormatLabel(TournamentFormat format) => format switch
+    {
+        TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+        TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+        TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+        _ => format.ToString()
+    };
 }

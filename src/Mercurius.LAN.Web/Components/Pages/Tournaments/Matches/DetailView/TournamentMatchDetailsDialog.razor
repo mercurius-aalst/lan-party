@@ -9,10 +9,10 @@
 <CascadingValue Value="Match">
     <div class="match-modal-overlay" @onclick="OnClose">
         <div class="match-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="match-dialog-title" @onclick:stopPropagation>
-            <button type="button" class="match-modal-close" aria-label="Close match details" @onclick="OnClose">&times;</button>
+            <button type="button" class="match-modal-close" aria-label='@Localization["Feature.match.closeDetails"]' @onclick="OnClose">&times;</button>
 
             <div class="match-modal-header">
-                <span class="section-eyebrow">Match details</span>
+                <span class="section-eyebrow">@Localization["Feature.match.details"]</span>
                 <h2 id="match-dialog-title" class="match-header">
                     <span class="match-header-name">
                         @if(HeaderParticipant1?.Team is { } team1)
@@ -25,7 +25,7 @@
                         }
                         <span class="match-header-score">[@(Match.Participant1Score?.ToString() ?? "?")]</span>
                     </span>
-                    <span class="match-header-vs">vs</span>
+                    <span class="match-header-vs">@Localization["Feature.match.vs"]</span>
                     <span class="match-header-name">
                         @if(HeaderParticipant2?.Team is { } team2)
                         {
@@ -41,11 +41,11 @@
                 <div class="match-summary-badges">
                     <span class="badge">@GetStageLabel()</span>
                     <span class="badge">@GetRoundLabel()</span>
-                    <span class="badge">@Match.Format.GetLabel()</span>
+                    <span class="badge">@GetFormatLabel()</span>
                     <span class="match-status-pill @GetStatusClass()">@GetStatusLabel()</span>
                 </div>
                 <div class="match-start-time">
-                    <span>Start time</span>
+                    <span>@Localization["Feature.match.startTime"]</span>
                     <strong>@GetStartDateTimeLabel()</strong>
                 </div>
             </div>
@@ -57,8 +57,8 @@
                 </div>
                 @if(!string.IsNullOrWhiteSpace(GetDeadlineLabel()))
                 {
-                    <div class="match-deadline" aria-label="Score window deadline">
-                        <span>Deadline</span>
+                    <div class="match-deadline" aria-label='@Localization["Feature.match.deadlineAria"]'>
+                        <span>@Localization["Feature.match.deadline"]</span>
                         <strong>@GetDeadlineLabel()</strong>
                         <small aria-live="off">@GetDeadlineRemainingLabel()</small>
                     </div>
@@ -67,19 +67,19 @@
 
             @if(_isLoading && !_hasLoaded)
             {
-                <div class="match-state-message" role="status">Loading match...</div>
+                <div class="match-state-message" role="status">@Localization["Feature.match.loading"]</div>
             }
             else if(_errorMessage is not null)
             {
                 <div class="match-state-message match-state-message--error" role="alert">
                     <p>@_errorMessage</p>
-                    <button type="button" class="button-secondary" disabled="@_isLoading" @onclick="RetryAsync">Retry</button>
+                    <button type="button" class="button-secondary" disabled="@_isLoading" @onclick="RetryAsync">@Localization["status.tryAgain"]</button>
                 </div>
             }
 
             @if(_isLoading && _hasLoaded)
             {
-                <div class="match-refresh-message" role="status">Updating match...</div>
+                <div class="match-refresh-message" role="status">@Localization["Feature.match.updating"]</div>
             }
 
             <div class="participants-grid">
@@ -89,20 +89,20 @@
                         <div class="match-participant-panel-header">
                             @if(IsWinner(Participant1Id))
                             {
-                                <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                                <span class="match-outcome-chip match-outcome-chip--winner">@Localization["Feature.match.winner"]</span>
                             }
                             else
                             {
-                                <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                                <span class="match-outcome-chip match-outcome-chip--loser">@Localization["Feature.match.loser"]</span>
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@(Match.Participant1IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant1Id)" EmptyLabel="@GetEmptyParticipantLabel(Match.Participant1IsBYE)" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
-                            <span>Match ended</span>
-                            <strong>@(Match.Participant1Ended ? "Confirmed" : "Waiting")</strong>
+                            <span>@Localization["Feature.match.matchEnded"]</span>
+                            <strong>@GetEndedStatusLabel(Match.Participant1Ended)</strong>
                         </div>
                     }
                 </section>
@@ -112,20 +112,20 @@
                         <div class="match-participant-panel-header">
                             @if(IsWinner(Participant2Id))
                             {
-                                <span class="match-outcome-chip match-outcome-chip--winner">Winner</span>
+                                <span class="match-outcome-chip match-outcome-chip--winner">@Localization["Feature.match.winner"]</span>
                             }
                             else
                             {
-                                <span class="match-outcome-chip match-outcome-chip--loser">Loser</span>
+                                <span class="match-outcome-chip match-outcome-chip--loser">@Localization["Feature.match.loser"]</span>
                             }
                         </div>
                     }
-                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@(Match.Participant2IsBYE ? "BYE" : "TBD")" OnUserSelected="DisplayUserPopup" />
+                    <ParticipantComponent Participant="GetParticipantById(Participant2Id)" EmptyLabel="@GetEmptyParticipantLabel(Match.Participant2IsBYE)" OnUserSelected="DisplayUserPopup" />
                     @if(_hasLoaded)
                     {
                         <div class="match-confirmation-status">
-                            <span>Match ended</span>
-                            <strong>@(Match.Participant2Ended ? "Confirmed" : "Waiting")</strong>
+                            <span>@Localization["Feature.match.matchEnded"]</span>
+                            <strong>@GetEndedStatusLabel(Match.Participant2Ended)</strong>
                         </div>
                     }
                 </section>
@@ -134,31 +134,31 @@
             @if(_requiresAuthentication)
             {
                 <div class="match-state-message" role="note">
-                    <p>Sign in to confirm your side, report a score, or forfeit. Match results remain publicly viewable.</p>
-                    <a class="button-secondary" href="@SignInHref">Sign in</a>
+                    <p>@Localization["Feature.match.signInToManage"]</p>
+                    <a class="button-secondary" href="@SignInHref">@Localization["auth.signIn"]</a>
                 </div>
             }
             else if(_hasFreshActionState && _actionState?.AuthorizedParticipant.HasValue == true)
             {
-                <section class="match-action-panel" aria-label="Your match actions">
+                <section class="match-action-panel" aria-label='@Localization["Feature.match.yourActionsAria"]'>
                     <span class="section-eyebrow">@ActionSubjectLabel</span>
                     @if(_actionState.CanConfirmEnded)
                     {
-                        <p>Confirm that the match has ended to unlock score reporting.</p>
-                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="ConfirmEndedAsync">Confirm match ended</button>
+                        <p>@Localization["Feature.match.confirmEndedHelp"]</p>
+                        <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading)" @onclick="ConfirmEndedAsync">@Localization["Feature.match.confirmEnded"]</button>
                     }
                     @if(ShowPrivateReports && (PrivateReport1.HasValue || PrivateReport2.HasValue))
                     {
-                        <div class="match-reports" aria-label="Private score reports">
+                        <div class="match-reports" aria-label='@Localization["Feature.match.privateReportsAria"]'>
                             @if(_actionState.AuthorizedParticipant.HasValue)
                             {
-                                <span>Your report: @FormatReport(OwnReport1, OwnReport2)</span>
-                                <span>Opponent report: @FormatReport(OpponentReport1, OpponentReport2)</span>
+                                <span>@Localization["Feature.match.yourReport"] @FormatReport(OwnReport1, OwnReport2)</span>
+                                <span>@Localization["Feature.match.opponentReport"] @FormatReport(OpponentReport1, OpponentReport2)</span>
                             }
                             else
                             {
-                                <span>Participant 1 report: @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
-                                <span>Participant 2 report: @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
+                                <span>@Localization["Feature.match.participantOneReport"] @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
+                                <span>@Localization["Feature.match.participantTwoReport"] @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
                             }
                         </div>
                     }
@@ -166,8 +166,8 @@
                     {
                         <div class="match-score-editor">
                             <div class="match-score-editor-copy">
-                                <h3>Report the final score</h3>
-                                <p>Use the exact decisive score for this match format.</p>
+                                <h3>@Localization["Feature.match.reportFinalScore"]</h3>
+                                <p>@Localization["Feature.match.reportFinalScoreHelp"]</p>
                             </div>
                             <div class="score-inputs">
                                 <div class="match-score-field">
@@ -179,23 +179,23 @@
                                     <input id="participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
                                 </div>
                             </div>
-                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !HasScoreInputs)" @onclick="SubmitScoreAsync">Submit score report</button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !HasScoreInputs)" @onclick="SubmitScoreAsync">@Localization["Feature.match.submitScore"]</button>
                         </div>
                     }
                     @if(_actionState.CanForfeit)
                     {
                         @if(!_forfeitConfirmationRequested)
                         {
-                            <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _forfeitConfirmationRequested = true)">Forfeit your side</button>
+                            <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _forfeitConfirmationRequested = true)">@Localization["Feature.match.forfeitYourSide"]</button>
                         }
                         else
                         {
-                            <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm match forfeit" aria-modal="true">
-                                <strong>Forfeit this match?</strong>
-                                <p>This is recorded as an official result and cannot be undone by you.</p>
+                            <div class="match-confirmation-box" role="alertdialog" aria-label='@Localization["Feature.match.confirmForfeitAria"]' aria-modal="true">
+                                <strong>@Localization["Feature.match.forfeitThisMatch"]</strong>
+                                <p>@Localization["Feature.match.forfeitWarning"]</p>
                                 <div class="match-modal-actions">
-                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _forfeitConfirmationRequested = false)">Keep playing</button>
-                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ForfeitOwnSideAsync">Confirm forfeit</button>
+                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _forfeitConfirmationRequested = false)">@Localization["Feature.match.keepPlaying"]</button>
+                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ForfeitOwnSideAsync">@Localization["Feature.match.confirmForfeit"]</button>
                                 </div>
                             </div>
                         }
@@ -206,28 +206,28 @@
                 <Authorized>
                     @if(_hasFreshActionState && _actionState is not null)
                     {
-                    <section class="match-action-panel match-action-panel--admin" aria-label="Administrator match actions">
-                        <span class="section-eyebrow">Administrator controls</span>
+                    <section class="match-action-panel match-action-panel--admin" aria-label='@Localization["Feature.match.adminActionsAria"]'>
+                        <span class="section-eyebrow">@Localization["Feature.match.adminControls"]</span>
                         @if(IsAdminResolutionState())
                         {
                             @if(ShouldRenderAdminReports(_actionState))
                             {
-                                <div class="match-reports" aria-label="Private score reports">
-                                    <span>Participant 1 report: @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
-                                    <span>Participant 2 report: @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
+                                <div class="match-reports" aria-label='@Localization["Feature.match.privateReportsAria"]'>
+                                    <span>@Localization["Feature.match.participantOneReport"] @FormatReport(_actionState.Participant1ReportedScore1, _actionState.Participant1ReportedScore2)</span>
+                                    <span>@Localization["Feature.match.participantTwoReport"] @FormatReport(_actionState.Participant2ReportedScore1, _actionState.Participant2ReportedScore2)</span>
                                 </div>
                             }
                             @if(_actionState.CanResolve)
                             {
-                                <p>Resolve the dispute with the verified decisive score. The selected result becomes official.</p>
+                                <p>@Localization["Feature.match.resolveHelp"]</p>
                                 @if(!HasScoreInputs)
                                 {
-                                    <p class="match-admin-blocked-reason">Enter both participant scores before resolving this match.</p>
+                                    <p class="match-admin-blocked-reason">@Localization["Feature.match.enterScoresBeforeResolve"]</p>
                                 }
                             }
                             else
                             {
-                                <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ResolveBlockedReason)</p>
+                                <p class="match-admin-blocked-reason">@GetLocalizedAdminBlockedReason(_actionState.ResolveBlockedReason)</p>
                             }
                             @if(_actionState.CanResolve)
                             {
@@ -241,53 +241,53 @@
                                     <input id="admin-participant2-score" type="number" min="0" class="form-control score-input" disabled="@(_isSubmitting || _isLoading)" @bind="_participant2Score" />
                                 </div>
                             </div>
-                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !_actionState.CanResolve || !HasScoreInputs)" @onclick="ResolveAsync">Resolve result</button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoading || !_actionState.CanResolve || !HasScoreInputs)" @onclick="ResolveAsync">@Localization["Feature.match.resolveResult"]</button>
                             }
                         }
                         @if(_actionState.CanForceForfeit)
                         {
                             <div class="match-admin-forfeit-actions">
-                                <span>Record a forfeit</span>
-                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant1))">Forfeit @Participant1Name</button>
-                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant2))">Forfeit @Participant2Name</button>
+                                <span>@Localization["Feature.match.recordForfeit"]</span>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant1))">@Localization.Get("Feature.match.forfeitParticipant", Participant1Name)</button>
+                                <button type="button" class="button-secondary button-danger" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => RequestAdminForfeitAsync(MatchParticipantSide.Participant2))">@Localization.Get("Feature.match.forfeitParticipant", Participant2Name)</button>
                             </div>
                         }
                         @if(_adminForfeitConfirmationSide is MatchParticipantSide adminForfeitSide)
                         {
-                            <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm administrator forfeit" aria-modal="true">
-                                <strong>Forfeit @GetParticipantName(adminForfeitSide)?</strong>
-                                <p>This records an official result for the selected side and cannot be undone through participant actions.</p>
+                            <div class="match-confirmation-box" role="alertdialog" aria-label='@Localization["Feature.match.confirmAdminForfeitAria"]' aria-modal="true">
+                                <strong>@Localization.Get("Feature.match.forfeitParticipantQuestion", GetParticipantName(adminForfeitSide))</strong>
+                                <p>@Localization["Feature.match.adminForfeitWarning"]</p>
                                 <div class="match-modal-actions">
-                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _adminForfeitConfirmationSide = null)">Cancel</button>
-                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="(() => ForfeitSideAsAdminAsync(adminForfeitSide))">Confirm forfeit</button>
+                                    <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _adminForfeitConfirmationSide = null)">@Localization["common.cancel"]</button>
+                                    <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="(() => ForfeitSideAsAdminAsync(adminForfeitSide))">@Localization["Feature.match.confirmForfeit"]</button>
                                 </div>
                             </div>
                         }
                         @if(_actionState.CanForceForfeit == false && !string.IsNullOrWhiteSpace(_actionState.ForceForfeitBlockedReason) && Match.LifecycleState is not (MatchLifecycleState.Completed or MatchLifecycleState.Forfeited))
                         {
-                            <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ForceForfeitBlockedReason)</p>
+                            <p class="match-admin-blocked-reason">@GetLocalizedAdminBlockedReason(_actionState.ForceForfeitBlockedReason)</p>
                         }
                         @if(_actionState.CanReverse)
                         {
                             @if(!_reverseConfirmationRequested)
                             {
-                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _reverseConfirmationRequested = true)">Reverse official result</button>
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoading)" @onclick="(() => _reverseConfirmationRequested = true)">@Localization["Feature.match.reverseOfficialResult"]</button>
                             }
                             else
                             {
-                                <div class="match-confirmation-box" role="alertdialog" aria-label="Confirm reversal" aria-modal="true">
-                                    <strong>Reverse this official result?</strong>
-                                    <p>This clears downstream assignments and cannot be undone without a new result.</p>
+                                <div class="match-confirmation-box" role="alertdialog" aria-label='@Localization["Feature.match.confirmReversalAria"]' aria-modal="true">
+                                    <strong>@Localization["Feature.match.reverseThisResult"]</strong>
+                                    <p>@Localization["Feature.match.reverseWarning"]</p>
                                     <div class="match-modal-actions">
-                                        <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _reverseConfirmationRequested = false)">Cancel</button>
-                                        <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ReverseAsync">Confirm reversal</button>
+                                        <button type="button" class="button-secondary" disabled="@_isSubmitting" @onclick="(() => _reverseConfirmationRequested = false)">@Localization["common.cancel"]</button>
+                                        <button type="button" class="button-danger" disabled="@_isSubmitting" @onclick="ReverseAsync">@Localization["Feature.match.confirmReversal"]</button>
                                     </div>
                                 </div>
                             }
                         }
                         else if(!string.IsNullOrWhiteSpace(_actionState.ReverseBlockedReason))
                         {
-                            <p class="match-admin-blocked-reason">@GetAdminBlockedReason(_actionState.ReverseBlockedReason)</p>
+                            <p class="match-admin-blocked-reason">@GetLocalizedAdminBlockedReason(_actionState.ReverseBlockedReason)</p>
                         }
                     </section>
                     }
@@ -296,7 +296,7 @@
 
             @if(_isSubmitting)
             {
-                <div class="match-refresh-message" role="status">Saving result...</div>
+                <div class="match-refresh-message" role="status">@Localization["Feature.match.savingResult"]</div>
             }
         </div>
     </div>

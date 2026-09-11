@@ -5,6 +5,7 @@ using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
+using Mercurius.LAN.Web.Localization;
 using Polly;
 using Refit;
 using System.Text.Json;
@@ -130,6 +131,7 @@ public static class DependencyExtensions
 
     public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IContactEmailService, SmtpContactEmailService>();
 
         if(IsMockBackendEnabled(configuration))

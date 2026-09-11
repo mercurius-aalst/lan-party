@@ -125,7 +125,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     candidates.Add(candidateUser ?? new PublicUserDTO
                     {
                         Id = candidateId,
-                        DisplayName = "Former roster member"
+                        DisplayName = Localization["Feature.tournaments.formerRosterMember"]
                     });
                 }
             }
@@ -137,7 +137,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     Id = team.CaptainUserId,
                     Username = team.CaptainUsername,
                     DisplayName = string.IsNullOrWhiteSpace(team.CaptainUsername)
-                        ? "Current captain"
+                        ? Localization["Feature.tournaments.currentCaptain"]
                         : team.CaptainUsername
                 });
             }
@@ -246,7 +246,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             _registrationLoadRequested = true;
             ResetRegistrationContext();
             if(discardedDraft)
-                _registrationWarning = "Tournament registration settings changed, so your unsaved roster draft was cleared. Review the current roster before saving.";
+                _registrationWarning = Localization["tournament.registrationChanged"];
         }
 
         _participants.Clear();
@@ -406,12 +406,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             catch(Exception exception) when(IsUnauthorized(exception))
             {
                 if(IsCurrentRequest(tournamentId, generation))
-                    _registrationError = "Your account is not authorized to view registration status.";
+                    _registrationError = Localization["Feature.tournaments.registrationStatusUnauthorized"];
             }
             catch(Exception exception)
             {
                 if(IsCurrentRequest(tournamentId, generation))
-                    _registrationError = GetErrorMessage(exception, "Registration status is unavailable right now.");
+                    _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationStatusUnavailable");
             }
 
             if(cancellationToken.IsCancellationRequested || !IsCurrentRequest(tournamentId, generation))
@@ -454,7 +454,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, generation))
-                _registrationError = GetErrorMessage(exception, "Registration options are unavailable right now.");
+                _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationOptionsUnavailable");
         }
         finally
         {
@@ -463,7 +463,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 if(draftTeamId.HasValue && _selectedTeamId == draftTeamId)
                 {
                     _hasDirtyRosterDraft = true;
-                    _teamError ??= "A live registration update was received; your unsaved roster draft was kept. Review it before saving.";
+                    _teamError ??= Localization["Feature.tournaments.liveUpdateDraftKept"];
                 }
                 else if(draftTeamId.HasValue)
                 {
@@ -472,7 +472,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                         _selectedRosterUserIds.Clear();
                     _activeTeamStep = 0;
                     _registrationWarning =
-                        "The team from your unsaved roster draft is no longer available, so the draft was cleared. Select an available team and build the roster again.";
+                        Localization["Feature.tournaments.draftTeamUnavailable"];
                 }
                 _isLoadingRegistration = false;
                 if(preserveSubmitting)
@@ -507,12 +507,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, generation))
-                _registrationError ??= "Your account is not authorized to check individual registration eligibility.";
+                _registrationError ??= Localization["Feature.tournaments.individualEligibilityUnauthorized"];
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, generation))
-                _registrationError ??= GetErrorMessage(exception, "Individual registration eligibility is unavailable right now.");
+                _registrationError ??= GetLocalizedErrorMessage(exception, "Feature.tournaments.individualEligibilityUnavailable");
         }
     }
 
@@ -600,7 +600,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _teamSummaryUnavailable = true;
-                _teamError = "Sign in with a team captain account to submit a team roster.";
+                _teamError = Localization["Feature.tournaments.teamCaptainSignIn"];
             }
         }
         catch(Exception exception)
@@ -608,7 +608,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _teamSummaryUnavailable = true;
-                _teamError = GetErrorMessage(exception, "Your team registration options are unavailable right now.");
+                _teamError = GetLocalizedErrorMessage(exception, "Feature.tournaments.teamRegistrationOptionsUnavailable");
             }
         }
         finally
@@ -697,7 +697,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 _selectedRosterUserIds.Clear();
                 _selectedRosterUserIds.UnionWith(reconciledRoster);
                 if(!selectedBeforeCaptainReconciliation.SetEquals(_selectedRosterUserIds))
-                    _registrationWarning = GetCaptainTransferWarning(
+                    _registrationWarning = GetLocalizedCaptainTransferWarning(
                         _selectedRosterUserIds.Count,
                         RequiredTeamSize);
             }
@@ -717,7 +717,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _teamEligibilityUnavailable = true;
-                _teamError = "You are not authorized to manage this team registration.";
+                _teamError = Localization["Feature.tournaments.teamRegistrationUnauthorized"];
             }
         }
         catch(Exception exception)
@@ -725,7 +725,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _teamEligibilityUnavailable = true;
-                _teamError = GetErrorMessage(exception, "Team registration eligibility is unavailable right now.");
+                _teamError = GetLocalizedErrorMessage(exception, "Feature.tournaments.teamEligibilityUnavailable");
             }
         }
     }
@@ -825,7 +825,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _rosterEligibilityUnavailable = true;
-                _teamError = "You are not authorized to validate this roster.";
+                _teamError = Localization["Feature.tournaments.rosterValidationUnauthorized"];
             }
         }
         catch(Exception exception)
@@ -833,7 +833,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             if(IsCurrentRequest(tournamentId, generation))
             {
                 _rosterEligibilityUnavailable = true;
-                _teamError = GetErrorMessage(exception, "Roster eligibility is unavailable right now.");
+                _teamError = GetLocalizedErrorMessage(exception, "Feature.tournaments.rosterEligibilityUnavailable");
             }
         }
         finally
@@ -868,12 +868,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, generation))
-                _adminError = "You are not authorized to view the registration administration list.";
+                _adminError = Localization["Feature.tournaments.adminRegistrationUnauthorized"];
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, generation))
-                _adminError = GetErrorMessage(exception, "The administration registration list is unavailable right now.");
+                _adminError = GetLocalizedErrorMessage(exception, "Feature.tournaments.adminRegistrationUnavailable");
         }
         finally
         {
@@ -935,8 +935,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _registrationState?.IndividualRegistration is not null ||
         HasCaptainManagedRegistration ||
         CurrentTeamRegistration is not null
-            ? "Manage registration"
-            : "Register now";
+            ? Localization["Feature.tournaments.manageRegistration"]
+            : Localization["Feature.tournaments.viewRegistrationOptions"];
 
     private async Task OpenRegistrationDialog()
     {
@@ -984,9 +984,9 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         var requestGeneration = ++_requestGeneration;
 
         if(!await ConfirmMutationAsync(
-               "Confirm individual registration",
-               $"Register your account for {Tournament.Name}?",
-               "Register",
+               Localization["Feature.tournaments.confirmIndividualRegistration"],
+               Localization.Get("Feature.tournaments.confirmIndividualRegistrationMessage", Tournament.Name),
+               Localization["tournament.register"],
                requestGeneration))
             return;
 
@@ -1001,7 +1001,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
         await RunRegistrationActionAsync(
             () => TournamentService.RegisterCurrentUserForTournamentAsync(tournamentId),
-            "You are registered for this tournament.",
+            Localization["Feature.tournaments.individualRegistered"],
             tournamentId,
             requestGeneration);
     }
@@ -1019,9 +1019,9 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         var requestGeneration = ++_requestGeneration;
 
         if(!await ConfirmMutationAsync(
-               "Confirm individual unregister",
-               $"Remove your registration from {Tournament.Name}?",
-               "Unregister",
+               Localization["Feature.tournaments.confirmIndividualUnregister"],
+               Localization.Get("Feature.tournaments.confirmIndividualUnregisterMessage", Tournament.Name),
+               Localization["tournament.unregister"],
                requestGeneration))
             return;
 
@@ -1036,7 +1036,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
         await RunRegistrationActionAsync(
             () => TournamentService.DeleteCurrentUserTournamentRegistrationAsync(tournamentId),
-            "Your tournament registration was removed.",
+            Localization["Feature.tournaments.individualUnregistered"],
             tournamentId,
             requestGeneration);
     }
@@ -1061,7 +1061,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
         await RunRegistrationActionAsync(
             () => TournamentService.ConfirmTournamentRosterMemberAsync(tournamentId, pending.Id),
-            "Your roster place is confirmed.",
+            Localization["Feature.tournaments.rosterPlaceConfirmed"],
             tournamentId,
             requestGeneration);
     }
@@ -1084,8 +1084,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         await RunRegistrationActionAsync(
             () => TournamentService.SubmitTeamTournamentRosterAsync(tournamentId, teamId, request),
             HasCaptainManagedRegistration
-                ? "The team roster changes were saved."
-                : "The team roster was submitted for this tournament.",
+                ? Localization["Feature.tournaments.rosterChangesSaved"]
+                : Localization["Feature.tournaments.rosterSubmitted"],
             tournamentId,
             requestGeneration);
     }
@@ -1099,9 +1099,9 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         var tournamentId = Tournament.Id;
         var requestGeneration = ++_requestGeneration;
         if(!await ConfirmMutationAsync(
-               "Confirm team unregister",
-               $"Remove {SelectedTeam.Name} from {Tournament.Name}? Pending roster confirmations will be removed too.",
-               "Unregister team",
+               Localization["Feature.tournaments.confirmTeamUnregister"],
+               Localization.Get("Feature.tournaments.confirmTeamUnregisterMessage", SelectedTeam.Name, Tournament.Name),
+               Localization["Feature.tournaments.unregisterTeam"],
                requestGeneration))
             return;
 
@@ -1121,7 +1121,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
         await RunRegistrationActionAsync(
             () => TournamentService.DeleteTeamTournamentRegistrationAsync(tournamentId, teamId),
-            "The team registration was removed.",
+            Localization["Feature.tournaments.teamUnregistered"],
             tournamentId,
             requestGeneration);
     }
@@ -1154,7 +1154,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _registrationError = "You are not authorized to change this registration.";
+                    _registrationError = Localization["Feature.tournaments.registrationChangeUnauthorized"];
                     ToastService.ShowError(_registrationError);
                 }
                 return;
@@ -1163,7 +1163,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _registrationError = GetErrorMessage(exception, "The registration could not be changed right now.");
+                    _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationChangeFailed");
                     ToastService.ShowError(_registrationError);
                 }
                 return;
@@ -1183,7 +1183,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     if(IsCurrentRequest(tournamentId, requestGeneration))
                     {
                         _registrationError =
-                            "Your registration was saved. Updated details are temporarily unavailable.";
+                            Localization["Feature.tournaments.savedDetailsUnavailable"];
                         ToastService.ShowWarning(_registrationError);
                     }
                 }
@@ -1192,7 +1192,9 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _registrationError = $"Your registration was saved. Updated details are temporarily unavailable. ({GetErrorMessage(exception, "loading failed")})";
+                    _registrationError = Localization.Get(
+                        "Feature.tournaments.savedDetailsUnavailableWithReason",
+                        GetLocalizedErrorMessage(exception, "Feature.tournaments.loadingFailed"));
                     ToastService.ShowWarning(_registrationError);
                 }
             }
@@ -1242,21 +1244,21 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 else
                 {
                     if(IsCurrentRequest(tournamentId, requestGeneration))
-                        _adminError = "This registration does not contain enough identity data to remove it.";
+                        _adminError = Localization["Feature.tournaments.registrationIdentityMissing"];
                     return;
                 }
 
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
                     _adminRemovalReason = string.Empty;
-                    ToastService.ShowSuccess("The registration was removed.");
+                    ToastService.ShowSuccess(Localization["Feature.tournaments.registrationRemoved"]);
                 }
             }
             catch(Exception exception) when(IsUnauthorized(exception))
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _adminError = "You are not authorized to remove this registration.";
+                    _adminError = Localization["Feature.tournaments.registrationRemoveUnauthorized"];
                     ToastService.ShowError(_adminError);
                 }
                 return;
@@ -1265,7 +1267,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _adminError = GetErrorMessage(exception, "The registration could not be removed right now.");
+                    _adminError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationRemoveFailed");
                     ToastService.ShowError(_adminError);
                 }
                 return;
@@ -1282,7 +1284,9 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             {
                 if(IsCurrentRequest(tournamentId, requestGeneration))
                 {
-                    _adminError = $"The registration was removed. The updated participant list is temporarily unavailable. ({GetErrorMessage(exception, "loading failed")})";
+                    _adminError = Localization.Get(
+                        "Feature.tournaments.registrationRemovedListUnavailable",
+                        GetLocalizedErrorMessage(exception, "Feature.tournaments.loadingFailed"));
                     ToastService.ShowWarning(_adminError);
                 }
             }
@@ -1390,7 +1394,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         {
             if(!HasLocalRosterShape)
             {
-                _teamError = $"Select exactly {RequiredTeamSize} roster member(s), including the captain, before reviewing.";
+                _teamError = Localization.Get("Feature.tournaments.selectExactRoster", RequiredTeamSize);
                 return;
             }
 
@@ -1496,12 +1500,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = "Your account is not authorized to manage this registration.";
+                _registrationError = Localization["Feature.tournaments.registrationManageUnauthorized"];
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = GetErrorMessage(exception, "Registration options are unavailable right now.");
+                _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationOptionsUnavailable");
         }
         finally
         {
@@ -1539,12 +1543,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception) when(IsUnauthorized(exception))
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = "Your account is not authorized to manage this registration.";
+                _registrationError = Localization["Feature.tournaments.registrationManageUnauthorized"];
         }
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _registrationError = GetErrorMessage(exception, "Registration options are unavailable right now.");
+                _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationOptionsUnavailable");
         }
         finally
         {
@@ -1576,7 +1580,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 title,
                 message,
                 yesText: actionText,
-                noText: "Cancel",
+                noText: Localization["common.cancel"],
                 options: new DialogOptions { CloseOnEscapeKey = true, DefaultFocus = DefaultFocus.FirstChild });
             return result == true;
         }
@@ -1622,7 +1626,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         catch(Exception exception)
         {
             if(IsCurrentRequest(tournamentId, requestGeneration))
-                _teamError = GetErrorMessage(exception, "Your team options are unavailable right now.");
+                _teamError = GetLocalizedErrorMessage(exception, "Feature.tournaments.teamOptionsUnavailable");
         }
         finally
         {
@@ -1651,7 +1655,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 return false;
 
             if(updatedTournament is null)
-                throw new InvalidOperationException("The tournament could not be found while loading registration options.");
+                throw new InvalidOperationException(Localization["Feature.tournaments.tournamentNotFoundLoadingRegistration"]);
 
             Tournament = updatedTournament;
             _loadedRegistrationFingerprint = GetRegistrationFingerprint(updatedTournament);
@@ -1733,6 +1737,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         rosterCount > requiredTeamSize
             ? $"The team captain changed. The current captain was added to this roster, which now has {rosterCount} of the required {requiredTeamSize} members. Choose a member to remove before saving."
             : "The team captain changed. The current captain was added to this roster. Review the roster before saving.";
+
+    private string GetLocalizedCaptainTransferWarning(int rosterCount, int requiredTeamSize) =>
+        rosterCount > requiredTeamSize
+            ? Localization.Get("Feature.tournaments.captainChangedRosterTooLarge", rosterCount, requiredTeamSize)
+            : Localization["Feature.tournaments.captainChangedReviewRoster"];
 
     private void MergeRosterCandidateEligibility(IEnumerable<RosterCandidateEligibilityDTO>? candidates)
     {
@@ -1942,41 +1951,58 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private static bool IsExistingRegistrationConflictCode(string code) =>
         ExistingRegistrationConflictCodes.Contains(code);
 
-    private static string GetConfirmationLabel(RosterMemberConfirmationStatus status) => status switch
+    private string GetParticipantCountLabel() =>
+        Localization.Get("Feature.tournaments.participantCount", _participants.Count);
+
+    private string GetIndividualRegistrationStatusText(TournamentRegistrationStatus status) => status switch
     {
-        RosterMemberConfirmationStatus.AutoConfirmed => "Captain confirmed",
-        RosterMemberConfirmationStatus.Pending => "Pending confirmation",
-        RosterMemberConfirmationStatus.Confirmed => "Confirmed",
-        _ => status.ToString()
+        TournamentRegistrationStatus.PendingConfirmation => Localization["Feature.tournaments.individualRegistrationPending"],
+        TournamentRegistrationStatus.Active => Localization["Feature.tournaments.individualRegistrationActive"],
+        _ => Localization.Get("Feature.tournaments.registrationStatus", GetRegistrationStatusLabel(status))
+    };
+
+    private string GetCaptainRegistrationStatusText(TournamentRegistrationStatus status) => status switch
+    {
+        TournamentRegistrationStatus.PendingConfirmation => Localization["Feature.tournaments.captainRegistrationPending"],
+        TournamentRegistrationStatus.Active => Localization["Feature.tournaments.captainRegistrationActive"],
+        _ => Localization.Get("Feature.tournaments.registrationStatus", GetRegistrationStatusLabel(status))
+    };
+
+    private string GetConfirmationLabel(RosterMemberConfirmationStatus status) => status switch
+    {
+        RosterMemberConfirmationStatus.AutoConfirmed => Localization["Feature.tournaments.confirmationCaptain"],
+        RosterMemberConfirmationStatus.Pending => Localization["Feature.tournaments.confirmationPending"],
+        RosterMemberConfirmationStatus.Confirmed => Localization["Feature.tournaments.confirmationConfirmed"],
+        _ => Localization.Get("Feature.tournaments.confirmationStatus", status.ToString())
     };
 
     private string GetTeamRegistrationStateMessage()
     {
         if(!IsRegistrationOpen)
-            return "Registration is closed because this tournament is no longer scheduled.";
+            return Localization["Feature.tournaments.registrationClosedNotScheduled"];
 
         if(!_isAuthenticated)
-            return "Sign in to join this tournament.";
+            return Localization["Feature.tournaments.signInCheckEligibility"];
 
         if(HasCaptainManagedRegistration)
-            return "Review or edit your captain-managed team registration.";
+            return Localization["Feature.tournaments.reviewCaptainRegistration"];
 
         return CurrentTeamRegistration?.Team is { } team
-            ? $"You are registered on {team.Name}; roster changes belong to its captain."
-            : "Choose your team and lineup to join the tournament.";
+            ? Localization.Get("Feature.tournaments.registeredTeamCaptainManaged", team.Name)
+            : Localization["Feature.tournaments.chooseTeamAndLineup"];
     }
 
-    private static string GetCurrentTeamRegistrationStatusText(TournamentRegistrationStatus status) => status switch
+    private string GetCurrentTeamRegistrationStatusText(TournamentRegistrationStatus status) => status switch
     {
-        TournamentRegistrationStatus.PendingConfirmation => "Your team is waiting for all selected members to confirm.",
-        TournamentRegistrationStatus.Active => "Your team registration is active.",
-        _ => $"Your team registration is {status.ToString().ToLowerInvariant()}."
+        TournamentRegistrationStatus.PendingConfirmation => Localization["Feature.tournaments.teamRegistrationPending"],
+        TournamentRegistrationStatus.Active => Localization["Feature.tournaments.teamRegistrationActive"],
+        _ => Localization.Get("Feature.tournaments.registrationStatus", GetRegistrationStatusLabel(status))
     };
 
-    private static string GetUserLabel(PublicUserDTO? user)
+    private string GetUserLabel(PublicUserDTO? user)
     {
         if(user is null)
-            return "Unknown user";
+            return Localization["Feature.tournaments.unknownUser"];
 
         if(!string.IsNullOrWhiteSpace(user.Username))
             return user.Username.Trim();
@@ -1988,18 +2014,82 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             .Where(value => !string.IsNullOrWhiteSpace(value))
             .Select(value => value!.Trim()));
 
-        return string.IsNullOrWhiteSpace(name) ? "Participant" : name;
+        return string.IsNullOrWhiteSpace(name) ? Localization["Feature.tournaments.participant"] : name;
     }
 
-    private static string GetReasonText(IEnumerable<string> reasonCodes)
+    private string GetParticipantDialogTitle(ParticipantViewModel participant) =>
+        string.IsNullOrWhiteSpace(participant.DisplayName)
+            ? Localization[participant.Team is null ? "shared.user" : "shared.team"]
+            : participant.DisplayName.Trim();
+
+    private string GetReasonText(IEnumerable<string> reasonCodes)
     {
         var reasons = reasonCodes
             .Where(code => !string.IsNullOrWhiteSpace(code))
-            .Select(code => code.Replace('_', ' ').Trim())
+            .Select(GetReasonLabel)
             .ToList();
 
-        return reasons.Count == 0 ? "Not eligible for this workflow." : string.Join("; ", reasons);
+        return reasons.Count == 0
+            ? Localization["Feature.tournaments.notEligible"]
+            : string.Join("; ", reasons);
     }
+
+    private string GetReasonLabel(string reasonCode) => reasonCode.Trim().ToLowerInvariant() switch
+    {
+        "team_already_registered" => Localization["Feature.tournaments.teamAlreadyEntered"],
+        "captain_duplicate_participation" => Localization["Feature.tournaments.captainAlreadyEntered"],
+        "duplicate_participation" => Localization["Feature.tournaments.playerAlreadyEntered"],
+        "roster_candidate_ineligible" => Localization["Feature.tournaments.rosterMemberIneligible"],
+        _ => reasonCode.Replace('_', ' ').Trim()
+    };
+
+    private string GetLocalizedErrorMessage(Exception exception, string fallbackKey)
+    {
+        if(exception is ApiException apiException && !string.IsNullOrWhiteSpace(apiException.Content))
+        {
+            var content = apiException.Content!.Trim().Trim('"', '\'');
+            if(content.Contains("duplicate_participation", StringComparison.OrdinalIgnoreCase))
+                return Localization["Feature.tournaments.playerAlreadyEntered"];
+
+            if(content.Contains("team_already_registered", StringComparison.OrdinalIgnoreCase))
+                return Localization["Feature.tournaments.teamAlreadyEntered"];
+        }
+
+        return Localization[fallbackKey];
+    }
+
+    private string GetRegistrationKindLabel(TournamentRegistrationKind kind) => kind switch
+    {
+        TournamentRegistrationKind.Individual => Localization["Feature.tournaments.registrationKindIndividual"],
+        TournamentRegistrationKind.Team => Localization["Feature.tournaments.registrationKindTeam"],
+        _ => kind.ToString()
+    };
+
+    private string GetRegistrationStatusLabel(TournamentRegistrationStatus status) => status switch
+    {
+        TournamentRegistrationStatus.PendingConfirmation => Localization["Feature.tournaments.registrationStatusPending"],
+        TournamentRegistrationStatus.Active => Localization["Feature.tournaments.registrationStatusActive"],
+        _ => status.ToString()
+    };
+
+    private string GetRosterMemberAriaLabel(PublicUserDTO member, bool isCaptain, bool unavailable)
+    {
+        var label = GetUserLabel(member);
+        if(isCaptain)
+            label = Localization.Get("Feature.tournaments.rosterCaptainAria", label);
+
+        return unavailable
+            ? Localization.Get("Feature.tournaments.rosterUnavailableAria", label)
+            : label;
+    }
+
+    private string GetTeamAriaLabel(string teamName, bool unavailable) =>
+        unavailable
+            ? Localization.Get("Feature.tournaments.teamUnavailableAria", teamName)
+            : teamName;
+
+    private string GetCaptainSuffix(bool isCaptain) =>
+        isCaptain ? $" ({Localization["Feature.tournaments.captain"]})" : string.Empty;
 
     private static bool IsUnauthorized(Exception exception) =>
         exception is UnauthorizedAccessException ||

@@ -11,38 +11,38 @@
             <div class="Tournament-editor-modal-dialog"
                  role="dialog"
                  aria-modal="true"
-                 aria-label="Add tournament"
+                 aria-label='@Localization["Feature.tournaments.addDialogAria"]'
                  @onclick:stopPropagation>
-                <button type="button" class="Tournament-editor-modal-close" aria-label="Close add tournament dialog" @onclick="() => CloseDialog(null)">&times;</button>
+                <button type="button" class="Tournament-editor-modal-close" aria-label='@Localization["Feature.tournaments.closeAddDialog"]' @onclick="() => CloseDialog(null)">&times;</button>
 
                 <div class="form-container Tournament-editor-form-container">
                     <EditForm EditContext="_editContext" OnValidSubmit="SubmitTournamentAsync" class="Tournament-editor-form">
-                        <DataAnnotationsValidator />
+                        <LocalizedDataAnnotationsValidator FieldLabelKeys="@ValidationFieldLabelKeys" ValidationMessageKeys="@ValidationMessageKeys" />
 
                         <div class="form-group">
-                            <label for="name" class="form-label">Name</label>
+                            <label for="name" class="form-label">@Localization["shared.name"]</label>
                             <InputText id="name" class="form-control" @bind-Value="_newTournament.Name" />
                             <ValidationMessage For="@(() => _newTournament.Name)"/>
                         </div>
 
                         <div class="form-group-inline grid gap-4 lg:grid-cols-2">
                             <div class="form-group">
-                                <label for="bracketType">Bracket Type</label>
+                                <label for="bracketType">@Localization["Feature.tournament.bracketType"]</label>
                                 <InputSelect id="bracketType" class="form-control" @bind-Value="_newTournament.BracketType">
                                     @foreach(var type in SupportedBracketTypes)
                                     {
-                                        <option value="@type">@type.GetLabel()</option>
+                                        <option value="@type">@GetBracketLabel(type)</option>
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newTournament.BracketType)" />
                             </div>
 
                             <div class="form-group">
-                                <label for="participationMode">Participation Mode</label>
+                                <label for="participationMode">@Localization["tournament.participation"]</label>
                                 <InputSelect id="participationMode" class="form-control" @bind-Value="_newTournament.ParticipationMode">
                                     @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
                                     {
-                                        <option value="@type">@type</option>
+                                        <option value="@type">@GetParticipationLabel(type)</option>
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newTournament.ParticipationMode)" />
@@ -51,9 +51,9 @@
                             @if(_newTournament.ParticipationMode == ParticipationMode.Team)
                             {
                                 <div class="form-group">
-                                    <label for="teamSize">Team size</label>
+                                    <label for="teamSize">@Localization["tournament.teamSize"]</label>
                                     <InputNumber id="teamSize" class="form-control" @bind-Value="_newTournament.TeamSize" min="1" max="50" />
-                                    <small class="form-help">Every team must submit exactly this many players.</small>
+                                    <small class="form-help">@Localization["Feature.tournaments.teamSizeHelp"]</small>
                                     <ValidationMessage For="@(() => _newTournament.TeamSize)" />
                                 </div>
                             }
@@ -61,22 +61,22 @@
 
                         <div class="form-group-inline grid gap-4 lg:grid-cols-2">
                             <div class="form-group">
-                                <label for="format">Format</label>
+                                <label for="format">@Localization["tournament.format"]</label>
                                 <InputSelect id="format" class="form-control" @bind-Value="_newTournament.Format">
                                     @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
                                     {
-                                        <option value="@type">@type.GetLabel()</option>
+                                        <option value="@type">@GetFormatLabel(type)</option>
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newTournament.Format)" />
                             </div>
 
                             <div class="form-group">
-                                <label for="finalsFormat">Finals Format</label>
+                                <label for="finalsFormat">@Localization["Feature.tournaments.finalsFormat"]</label>
                                 <InputSelect id="finalsFormat" class="form-control" @bind-Value="_newTournament.FinalsFormat">
                                     @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
                                     {
-                                        <option value="@type">@type.GetLabel()</option>
+                                        <option value="@type">@GetFormatLabel(type)</option>
                                     }
                                 </InputSelect>
                                 <ValidationMessage For="@(() => _newTournament.FinalsFormat)" />
@@ -84,12 +84,12 @@
                         </div>
                         <div class="Tournament-editor-schedule-fields">
                             <div class="form-group">
-                                <label>Planned start time</label>
+                                <label>@Localization["Feature.tournaments.plannedStartTime"]</label>
                                 <div class="Tournament-editor-datetime-row">
                                     <MudDatePicker Date="@_plannedStartDate"
                                                    DateChanged="HandlePlannedStartDateChanged"
                                                    DateFormat="dd/MM/yyyy"
-                                                   Placeholder="Date"
+                                                   Placeholder='@Localization["Feature.tournaments.datePlaceholder"]'
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
                                                    Clearable="false"
@@ -98,7 +98,7 @@
                                                    TimeChanged="HandlePlannedStartTimeChanged"
                                                    AmPm="false"
                                                    TimeFormat="HH:mm"
-                                                   Placeholder="Time"
+                                                   Placeholder='@Localization["Feature.tournaments.timePlaceholder"]'
                                                    Variant="Variant.Outlined"
                                                    Margin="Margin.Dense"
                                                    Clearable="false"
@@ -113,13 +113,13 @@
 
                             <div class="Tournament-editor-duration-row">
                                 <div class="form-group">
-                                    <label for="averageGameDuration">Average game duration (minutes)</label>
+                                    <label for="averageGameDuration">@Localization["Feature.tournaments.averageGameDuration"]</label>
                                     <InputNumber id="averageGameDuration" class="form-control" @bind-Value="_newTournament.AverageGameDurationMinutes" />
                                     <ValidationMessage For="@(() => _newTournament.AverageGameDurationMinutes)" />
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="roundBreakDuration">Round break (minutes)</label>
+                                    <label for="roundBreakDuration">@Localization["Feature.tournaments.roundBreakDuration"]</label>
                                     <InputNumber id="roundBreakDuration" class="form-control" @bind-Value="_newTournament.RoundBreakDurationMinutes" />
                                     <ValidationMessage For="@(() => _newTournament.RoundBreakDurationMinutes)" />
                                 </div>
@@ -127,7 +127,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="tournamentImage">Tournament Image</label>
+                            <label for="tournamentImage">@Localization["Feature.tournaments.tournamentImage"]</label>
                             <CustomInputFile @ref="_imageInputRef" id="tournamentImage" @bind-Value="_newTournament.Image" />
                             <ValidationMessage For="@(() => _newTournament.Image)" />
                         </div>
@@ -138,8 +138,8 @@
                         }
 
                         <div class="form-actions">
-                            <button type="submit" class="button-primary" disabled="@_isSubmitting">@(_isSubmitting ? "Creating..." : "Create tournament")</button>
-                            <button type="button" class="button-secondary" @onclick="() => CloseDialog(null)">Cancel</button>
+                            <button type="submit" class="button-primary" disabled="@_isSubmitting">@(_isSubmitting ? Localization["Feature.tournaments.creating"] : Localization["Feature.tournaments.createTournament"])</button>
+                            <button type="button" class="button-secondary" @onclick="() => CloseDialog(null)">@Localization["common.cancel"]</button>
                         </div>
                     </EditForm>
                 </div>

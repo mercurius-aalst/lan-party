@@ -55,8 +55,8 @@ public partial class Home
         }
         catch(Exception)
         {
-            _loadError = "Could not load the tournament highlights right now.";
-            ToastService.ShowError("Could not load the home page tournaments.");
+            _loadError = Localization["General.Home.LoadError"];
+            ToastService.ShowError(Localization["General.Home.LoadToast"]);
             await InvokeAsync(StateHasChanged);
         }
     }

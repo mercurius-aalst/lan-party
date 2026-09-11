@@ -7,11 +7,11 @@
 @using Microsoft.AspNetCore.Authorization
 @rendermode InteractiveServer
 
-<PageTitle>Sponsors Admin</PageTitle>
+<PageTitle>@Localization["Admin.pageTitle"]</PageTitle>
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading sponsors..." />
+    <LoadingScreen Message='@Localization["Admin.loadingSponsors"]' />
 }
 else
 {
@@ -20,49 +20,47 @@ else
             <section class="brand-card sponsor-admin-form-card">
                 <div class="sponsor-admin-card-header">
                     <div>
-                        <h2>Manage sponsors</h2>
+                        <h2>@Localization["Admin.manageSponsors"]</h2>
                     </div>
                 </div>
 
                 <div class="search-bar-container sponsor-admin-search-container">
-                    <CustomAutocomplete @ref="_autoCompleteComponent" TItem="SponsorManagementDTO" Items="_displaySponsors" ItemLabel="sponsor => sponsor.Name" OnSelected="OnSponsorSelected" Placeholder="Search sponsors" />
+                    <CustomAutocomplete @ref="_autoCompleteComponent" TItem="SponsorManagementDTO" Items="_displaySponsors" ItemLabel="sponsor => sponsor.Name" OnSelected="OnSponsorSelected" Placeholder='@Localization["Admin.searchSponsors"]' />
                 </div>
 
                 <EditForm EditContext="_editContext" OnValidSubmit="HandleSubmit">
-                    <DataAnnotationsValidator />
-
                     <div class="sponsor-admin-form-grid">
                         <div class="form-group">
-                            <label for="name">Name</label>
+                            <label for="name">@Localization["Admin.name"]</label>
                             <InputText id="name" class="form-control" @bind-Value="_selectedSponsor.Name" />
                             <ValidationMessage For="@(() => _selectedSponsor.Name)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="infoUrl">Info url</label>
+                            <label for="infoUrl">@Localization["Admin.infoUrl"]</label>
                             <InputText id="infoUrl" class="form-control" @bind-Value="_selectedSponsor.InfoUrl" />
                             <ValidationMessage For="@(() => _selectedSponsor.InfoUrl)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="sponsorTier">Sponsor tier</label>
+                            <label for="sponsorTier">@Localization["Admin.sponsorTier"]</label>
                             <InputSelect id="sponsorTier" class="form-control" @bind-Value="_selectedSponsor.SponsorTier">
                                 @foreach(var tier in Enum.GetValues<SponsorTier>())
                                 {
-                                    <option value="@tier">@tier.GetLabel()</option>
+                                    <option value="@tier">@GetTierLabel(tier)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _selectedSponsor.SponsorTier)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="sponsorLogo">Logo</label>
-                            <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" LabelText="Choose logo" @bind-Value="_selectedSponsor.Logo" />
+                            <label for="sponsorLogo">@Localization["Admin.logo"]</label>
+                            <CustomInputFile @ref="_imageInputRef" id="sponsorLogo" LabelText='@Localization["Admin.chooseLogo"]' @bind-Value="_selectedSponsor.Logo" />
                             <ValidationMessage For="@(() => _selectedSponsor.Logo)" />
                         </div>
 
                         <div class="form-group sponsor-admin-description-field">
-                            <label for="description">Description</label>
+                            <label for="description">@Localization["Admin.description"]</label>
                             <InputTextArea id="description" class="form-control" @bind-Value="_selectedSponsor.Description" />
                             <ValidationMessage For="@(() => _selectedSponsor.Description)" />
                         </div>
@@ -70,14 +68,14 @@ else
 
                     <div class="form-actions">
                         <div class="form-actions-section">
-                            <button type="submit" class="btn btn-primary">@(_isCreateMode ? "Create Sponsor" : "Update Sponsor")</button>
+                            <button type="submit" class="btn btn-primary">@(_isCreateMode ? Localization["Admin.createSponsor"] : Localization["Admin.updateSponsor"])</button>
                         </div>
                         <div class="form-actions-section">
                             @if(!_isCreateMode)
                             {
-                                <button type="button" class="btn btn-danger" @onclick="DeleteSponsor">Delete Sponsor</button>
+                                <button type="button" class="btn btn-danger" @onclick="DeleteSponsor">@Localization["Admin.deleteSponsor"]</button>
                             }
-                            <button type="button" class="btn btn-secondary" @onclick="ClearForm">Clear</button>
+                            <button type="button" class="btn btn-secondary" @onclick="ClearForm">@Localization["Admin.clear"]</button>
                         </div>
                     </div>
                 </EditForm>
@@ -85,11 +83,11 @@ else
 
             <aside class="sponsor-admin-sidebar">
                 <section class="brand-card sponsor-admin-side-card">
-                    <h2>Sponsor overview</h2>
+                    <h2>@Localization["Admin.overview"]</h2>
                     <ul class="sponsor-admin-points">
-                        <li>@_sponsors.Count sponsor@(_sponsors.Count == 1 ? string.Empty : "s") currently listed.</li>
-                        <li>@(_isCreateMode ? "Adding a new sponsor." : $"Editing {_selectedSponsor.Name}.")</li>
-                        <li>Sponsor placement follows its selected tier.</li>
+                        <li>@(_sponsors.Count == 1 ? Localization.Get("Admin.sponsorCountOne", _sponsors.Count) : Localization.Get("Admin.sponsorCountMany", _sponsors.Count))</li>
+                        <li>@(_isCreateMode ? Localization["Admin.addingSponsor"] : Localization.Get("Admin.editingSponsor", _selectedSponsor.Name))</li>
+                        <li>@Localization["Admin.placement"]</li>
                     </ul>
                 </section>
             </aside>

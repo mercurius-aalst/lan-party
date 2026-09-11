@@ -1,20 +1,19 @@
 @rendermode InteractiveServer
-
 @if(ShouldShowInteractionOverlay)
 {
-    <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label="Close menus"></button>
+    <button type="button" class="nav-overlay" @onclick="HandleOutsideClick" aria-label='@Localization["nav.closeMenus"]'></button>
 }
 
 <div class="brand-nav-shell flex w-full flex-col gap-4 md:flex-row md:items-center md:justify-between" @onclick="HandleNavShellClick">
-    <nav class="brand-nav-links flex flex-col items-stretch gap-3 md:flex-1 md:flex-row md:items-center md:justify-center md:gap-5" aria-label="Discover and play">
+    <nav class="brand-nav-links flex flex-col items-stretch gap-3 md:flex-1 md:flex-row md:items-center md:justify-center md:gap-5" aria-label='@Localization["nav.discover"]'>
         <NavLink href="/" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
-            Home
+            @Localization["nav.home"]
         </NavLink>
         <NavLink href="/tournaments" Match="NavLinkMatch.Prefix" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
-            Tournaments
+            @Localization["nav.tournaments"]
         </NavLink>
         <NavLink href="/sponsors" Match="NavLinkMatch.All" class="brand-nav-link text-center md:text-left" ActiveClass="brand-nav-link--active" @onclick="HandleNavigationClicked">
-            Sponsors
+            @Localization["nav.sponsors"]
         </NavLink>
         <div class="nav-menu-group info-nav-group" @onclick:stopPropagation="true">
             <button type="button"
@@ -22,45 +21,45 @@
                     @onclick="ToggleInfoMenu"
                     aria-expanded="@GetAriaExpanded(_isInfoMenuVisible)"
                     aria-haspopup="true">
-                Info
+                @Localization["nav.info"]
                 <span class="bi bi-chevron-down info-nav-caret" aria-hidden="true"></span>
             </button>
             @if(_isInfoMenuVisible)
             {
                 <div class="dropdown-menu-custom info-dropdown mt-2 flex min-w-full flex-col gap-1 md:mt-0 md:min-w-[13rem]" @onclick:stopPropagation="true">
-                    <NavLink href="/info" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Overview</NavLink>
-                    <a href="/info#packing" class="dropdown-item" @onclick="HandleNavigationClicked">What to bring</a>
-                    <a href="/info#where" class="dropdown-item" @onclick="HandleNavigationClicked">When &amp; where</a>
-                    <a href="/info#tickets" class="dropdown-item" @onclick="HandleNavigationClicked">Tickets</a>
-                    <a href="/info#catering" class="dropdown-item" @onclick="HandleNavigationClicked">Catering</a>
-                    <a href="/info#contact-info" class="dropdown-item" @onclick="HandleNavigationClicked">Contact</a>
+                    <NavLink href="/info" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">@Localization["nav.info.overview"]</NavLink>
+                    <a href="/info#packing" class="dropdown-item" @onclick="HandleNavigationClicked">@Localization["nav.info.packing"]</a>
+                    <a href="/info#where" class="dropdown-item" @onclick="HandleNavigationClicked">@Localization["nav.info.where"]</a>
+                    <a href="/info#tickets" class="dropdown-item" @onclick="HandleNavigationClicked">@Localization["nav.info.tickets"]</a>
+                    <a href="/info#catering" class="dropdown-item" @onclick="HandleNavigationClicked">@Localization["nav.info.catering"]</a>
+                    <a href="/info#contact-info" class="dropdown-item" @onclick="HandleNavigationClicked">@Localization["nav.info.contact"]</a>
                 </div>
             }
         </div>
     </nav>
 
-    <div id="@SearchContainerElementId" class="@GetSearchContainerClass()" role="search" aria-label="Search the LAN community" @onclick:stopPropagation="true">
-        <label class="visually-hidden" for="global-nav-search">Search users, teams, and tournaments</label>
+    <div id="@SearchContainerElementId" class="@GetSearchContainerClass()" role="search" aria-label='@Localization["nav.searchCommunity"]' @onclick:stopPropagation="true">
+        <label class="visually-hidden" for="global-nav-search">@Localization["nav.searchLabel"]</label>
         <div class="@GetSearchInputShellClass()">
             <span class="bi bi-search nav-search-icon" aria-hidden="true"></span>
             <input id="global-nav-search"
                    class="nav-search-input"
                    type="search"
-                   placeholder="Search players, teams, tournaments"
+                   placeholder='@Localization["nav.searchPlaceholder"]'
                    value="@_searchQuery"
                    @oninput="HandleSearchInputAsync"
                    @onfocus="HandleSearchFocus"
                    @onkeydown="HandleSearchKeyDownAsync"
                    autocomplete="off"
                    spellcheck="false"
-                   aria-label="Search players, teams, and tournaments"
+                   aria-label='@Localization["nav.searchLabel"]'
                    aria-autocomplete="list"
                    aria-expanded="@GetAriaExpanded(_isSearchDropdownVisible)"
                    aria-controls="global-nav-search-results" />
 
             @if(!string.IsNullOrWhiteSpace(_searchQuery))
             {
-                <button type="button" class="nav-search-clear-button" @onclick="ClearSearchInputAsync" aria-label="Clear search">
+                <button type="button" class="nav-search-clear-button" @onclick="ClearSearchInputAsync" aria-label='@Localization["nav.searchClear"]'>
                     <span class="bi bi-x-lg" aria-hidden="true"></span>
                 </button>
             }
@@ -68,24 +67,24 @@
 
         @if(_isSearchDropdownVisible)
         {
-            <div id="global-nav-search-results" class="nav-search-dropdown" role="listbox" aria-label="Search results" @onclick:stopPropagation="true">
+            <div id="global-nav-search-results" class="nav-search-dropdown" role="listbox" aria-label='@Localization["nav.searchResults"]' @onclick:stopPropagation="true">
                 @if(_isSearchLoading)
                 {
                     <div class="nav-search-state" aria-live="polite">
                         <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
-                        <span>Searching...</span>
+                        <span>@Localization["nav.searching"]</span>
                     </div>
                 }
                 else if(_hasSearchError)
                 {
                     <div class="nav-search-state nav-search-state--error" aria-live="polite">
-                        Search is unavailable right now.
+                        @Localization["nav.searchUnavailable"]
                     </div>
                 }
                 else if(!HasSearchResults)
                 {
                     <div class="nav-search-state" aria-live="polite">
-                        No matches found.
+                        @Localization["nav.noMatches"]
                     </div>
                 }
                 else
@@ -103,10 +102,10 @@
         }
     </div>
 
-    <div class="brand-nav-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end" role="group" aria-label="Account and event actions">
+    <div class="brand-nav-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center md:justify-end" role="group" aria-label='@Localization["nav.accountActions"]'>
         <AuthorizeView Roles="admin">
             <Authorized>
-                <div id="@AdminMenuContainerElementId" class="nav-menu-group" aria-label="Organizer tools" @onclick:stopPropagation="true">
+                <div id="@AdminMenuContainerElementId" class="nav-menu-group" aria-label='@Localization["nav.organizerTools"]' @onclick:stopPropagation="true">
                     <button type="button"
                             id="@AdminMenuTriggerElementId"
                             class="@GetAdminButtonClass()"
@@ -115,7 +114,7 @@
                             aria-expanded="@GetAriaExpanded(_isDropdownVisible)"
                             aria-haspopup="true"
                             aria-controls="@AdminMenuElementId">
-                        Admin
+                        @Localization["nav.admin"]
                     </button>
                     @if(_isDropdownVisible)
                     {
@@ -124,7 +123,7 @@
                              role="menu"
                              aria-labelledby="@AdminMenuTriggerElementId"
                              @onclick:stopPropagation="true">
-                            <NavLink href="/admin/sponsors" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" role="menuitem" @onclick="HandleNavigationClicked">Sponsors</NavLink>
+                            <NavLink href="/admin/sponsors" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" role="menuitem" @onclick="HandleNavigationClicked">@Localization["admin.sponsors"]</NavLink>
                         </div>
                     }
                 </div>
@@ -158,9 +157,9 @@
                     @if(_isUserMenuVisible)
                     {
                         <div class="dropdown-menu-custom nav-user-menu mt-2 flex min-w-full flex-col gap-1 md:mt-0" @onclick:stopPropagation="true">
-                            <NavLink href="/profile" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Profile</NavLink>
-                            <NavLink href="/teams/manage" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">Teams</NavLink>
-                            <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">Logout</button>
+                            <NavLink href="/profile" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">@Localization["nav.profile"]</NavLink>
+                            <NavLink href="/teams/manage" Match="NavLinkMatch.All" class="dropdown-item" ActiveClass="dropdown-item--active" @onclick="HandleNavigationClicked">@Localization["nav.teams"]</NavLink>
+                            <button type="button" class="dropdown-item dropdown-button" @onclick="Logout">@Localization["nav.logout"]</button>
                         </div>
                     }
                     @if(_isNotificationMenuVisible)
@@ -168,15 +167,15 @@
                         <div class="dropdown-menu-custom nav-notification-dropdown mt-2 flex min-w-full flex-col gap-1 md:mt-0" @onclick:stopPropagation="true">
                             <div class="nav-notification-menu">
                                 <div class="nav-notification-header">
-                                    <strong>Notifications</strong>
+                                    <strong>@Localization["nav.notifications"]</strong>
                                     @if(NotificationCount > 0)
                                     {
-                                        <button type="button" @onclick="MarkNotificationsReadAsync">Mark read</button>
+                                        <button type="button" @onclick="MarkNotificationsReadAsync">@Localization["nav.markRead"]</button>
                                     }
                                 </div>
                                 @if(NotificationService.Notifications.Count == 0)
                                 {
-                                    <div class="nav-notification-empty">No notifications.</div>
+                                    <div class="nav-notification-empty">@Localization["nav.noNotifications"]</div>
                                 }
                                 else
                                 {
@@ -190,14 +189,14 @@
                                             <div class="nav-notification-actions">
                                                 @if(notification.InviteId.HasValue)
                                                 {
-                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, true)" aria-label="Accept invitation">
+                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, true)" aria-label='@Localization["nav.acceptInvitation"]'>
                                                         <span class="bi bi-check-lg" aria-hidden="true"></span>
                                                     </button>
-                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, false)" aria-label="Decline invitation">
+                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, false)" aria-label='@Localization["nav.declineInvitation"]'>
                                                         <span class="bi bi-x-lg" aria-hidden="true"></span>
                                                     </button>
                                                 }
-                                                <button type="button" class="nav-notification-action" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label="Dismiss notification">
+                                                <button type="button" class="nav-notification-action" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label='@Localization["nav.dismissNotification"]'>
                                                     <span class="bi bi-dash-lg" aria-hidden="true"></span>
                                                 </button>
                                             </div>
@@ -211,18 +210,18 @@
             </Authorized>
             <NotAuthorized>
                 <div class="brand-auth-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center">
-                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">Login</button>
-                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginRegistration">Register</button>
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">@Localization["nav.login"]</button>
+                    <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginRegistration">@Localization["nav.register"]</button>
                     @if(IsMockBackendEnabled)
                     {
-                        <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">Mock Admin</a>
+                        <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">@Localization["nav.dev"] @Localization["nav.admin"]</a>
                     }
                 </div>
             </NotAuthorized>
         </AuthorizeView>
 
         <a href="/info#tickets" class="button-primary brand-ticket-cta w-full justify-center md:w-auto" @onclick="HandleNavigationClicked">
-            Get Tickets
+            @Localization["nav.info.tickets"]
         </a>
     </div>
 </div>

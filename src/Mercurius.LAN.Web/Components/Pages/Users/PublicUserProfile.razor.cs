@@ -25,7 +25,9 @@ public partial class PublicUserProfile
         !string.IsNullOrWhiteSpace(_profile?.SteamId) ||
         !string.IsNullOrWhiteSpace(_profile?.RiotId);
     private string FullName => GetFullName(_profile);
-    private string PageTitleText => _profile is null ? "User Profile" : $"{FullName} Profile";
+    private string PageTitleText => _profile is null
+        ? Localization["General.PublicUser.PageTitle"]
+        : Localization.Get("General.PublicUser.NamedPageTitle", FullName);
 
     protected override async Task OnParametersSetAsync()
     {

@@ -8,14 +8,14 @@
 <div class="Tournament-overview-container">
     <div class="overview-header-row">
         <div>
-            <h2 class="Tournament-overview-header section-eyebrow">Details</h2>
+            <h2 class="Tournament-overview-header section-eyebrow">@Localization["tournament.details"]</h2>
         </div>
 
         @if(!_isEditMode && Tournament.Status == TournamentStatus.Scheduled)
         {
             <AuthorizeView Roles="admin">
                 <Authorized>
-                    <button type="button" class="btn btn-primary" @onclick="EnableEditMode">Edit</button>
+                    <button type="button" class="btn btn-primary" @onclick="EnableEditMode">@Localization["common.edit"]</button>
                 </Authorized>
             </AuthorizeView>
         }
@@ -25,51 +25,51 @@
     {
         <div class="overview-grid">
             <section class="brand-card overview-card">
-                <h3>Competition setup</h3>
+                <h3>@Localization["Feature.tournamentsOverview.competitionSetup"]</h3>
                 <dl class="overview-list">
                     <div>
-                        <dt>Status</dt>
-                        <dd><span class="Tournament-status @Tournament.Status.GetStatusClass()">@Tournament.Status.GetStatusLabel()</span></dd>
+                        <dt>@Localization["tournament.status"]</dt>
+                        <dd><span class="Tournament-status @Tournament.Status.GetStatusClass()">@GetStatusLabel(Tournament.Status)</span></dd>
                     </div>
                     <div>
-                        <dt>Bracket</dt>
-                        <dd>@Tournament.BracketType.GetLabel()</dd>
+                        <dt>@Localization["Feature.tournamentsOverview.bracket"]</dt>
+                        <dd>@GetBracketLabel(Tournament.BracketType)</dd>
                     </div>
                     <div>
-                        <dt>Mode</dt>
-                        <dd>@Tournament.ParticipationMode.GetLabel()</dd>
+                        <dt>@Localization["tournament.participation"]</dt>
+                        <dd>@GetParticipationLabel(Tournament.ParticipationMode)</dd>
                     </div>
                     @if(Tournament.ParticipationMode == ParticipationMode.Team && Tournament.TeamSize.HasValue)
                     {
                         <div>
-                            <dt>Team size</dt>
-                            <dd>@Tournament.TeamSize players</dd>
+                        <dt>@Localization["tournament.teamSize"]</dt>
+                        <dd>@Localization.Get("Feature.tournament.teamSizePlayers", Tournament.TeamSize)</dd>
                         </div>
                     }
                     <div>
-                        <dt>Format</dt>
-                        <dd>@Tournament.Format.GetLabel()</dd>
+                        <dt>@Localization["tournament.format"]</dt>
+                        <dd>@GetFormatLabel(Tournament.Format)</dd>
                     </div>
                 </dl>
             </section>
 
             <section class="brand-card overview-card">
-                <h3>Schedule & registration</h3>
+                <h3>@Localization["Feature.tournamentsOverview.scheduleRegistration"]</h3>
                 <dl class="overview-list">
                     <div>
-                        <dt>Start time</dt>
+                        <dt>@Localization["Feature.tournaments.startTime"]</dt>
                         <dd>@GetPlannedStartLabel()</dd>
                     </div>
                     <div>
-                        <dt>Estimated end</dt>
+                        <dt>@Localization["Feature.tournamentsOverview.estimatedEnd"]</dt>
                         <dd>@GetEstimatedEndLabel()</dd>
                     </div>
                     <div>
-                        <dt>Finals</dt>
-                        <dd>@Tournament.FinalsFormat.GetLabel()</dd>
+                        <dt>@Localization["Feature.tournamentsOverview.finals"]</dt>
+                        <dd>@GetFormatLabel(Tournament.FinalsFormat)</dd>
                     </div>
                     <div>
-                        <dt>Registration</dt>
+                        <dt>@Localization["Feature.tournaments.registration"]</dt>
                         <dd><span class="badge @Tournament.Status.GetStatusClass()">@GetRegistrationStateLabel()</span></dd>
                     </div>
                 </dl>
@@ -81,31 +81,31 @@
         <AuthorizeView Roles="admin">
             <Authorized Context="adminContext">
                 <EditForm EditContext="_editContext" OnValidSubmit="SubmitEditAsync">
-                    <DataAnnotationsValidator />
+                    <LocalizedDataAnnotationsValidator FieldLabelKeys="@ValidationFieldLabelKeys" ValidationMessageKeys="@ValidationMessageKeys" />
                     <div class="brand-card overview-edit-card">
                         <div class="form-group">
-                            <label for="name">Name</label>
+                            <label for="name">@Localization["shared.name"]</label>
                             <InputText id="name" class="form-control" @bind-Value="_editTournament.Name" />
                             <ValidationMessage For="@(() => _editTournament.Name)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="bracketType">Bracket Type</label>
+                            <label for="bracketType">@Localization["Feature.tournament.bracketType"]</label>
                             <InputSelect id="bracketType" class="form-control" @bind-Value="_editTournament.BracketType">
                                 @foreach(var type in SupportedBracketTypes)
                                 {
-                                    <option value="@type">@type.GetLabel()</option>
+                                    <option value="@type">@GetBracketLabel(type)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editTournament.BracketType)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="participationMode">Participation Mode</label>
+                            <label for="participationMode">@Localization["tournament.participation"]</label>
                             <InputSelect id="participationMode" class="form-control" @bind-Value="_editTournament.ParticipationMode">
                                 @foreach(ParticipationMode type in Enum.GetValues(typeof(ParticipationMode)))
                                 {
-                                    <option value="@type">@type.GetLabel()</option>
+                                    <option value="@type">@GetParticipationLabel(type)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editTournament.ParticipationMode)" />
@@ -114,50 +114,50 @@
                         @if(_editTournament.ParticipationMode == ParticipationMode.Team)
                         {
                             <div class="form-group">
-                                <label for="teamSize">Team size</label>
+                                <label for="teamSize">@Localization["tournament.teamSize"]</label>
                                 <InputNumber id="teamSize" class="form-control" @bind-Value="_editTournament.TeamSize" min="1" max="50" />
-                                <small class="form-help">Every team must submit exactly this many players.</small>
+                                <small class="form-help">@Localization["Feature.tournaments.teamSizeHelp"]</small>
                                 <ValidationMessage For="@(() => _editTournament.TeamSize)" />
                             </div>
                         }
 
                         <div class="form-group">
-                            <label for="format">Match Format</label>
+                            <label for="format">@Localization["Feature.tournaments.matchFormat"]</label>
                             <InputSelect id="format" class="form-control" @bind-Value="_editTournament.Format">
                                 @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
                                 {
-                                    <option value="@type">@type.GetLabel()</option>
+                                    <option value="@type">@GetFormatLabel(type)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editTournament.Format)" />
                         </div>
 
                         <div class="form-group">
-                            <label for="finalsFormat">Finals Format</label>
+                            <label for="finalsFormat">@Localization["Feature.tournaments.finalsFormat"]</label>
                             <InputSelect id="finalsFormat" class="form-control" @bind-Value="_editTournament.FinalsFormat">
                                 @foreach(TournamentFormat type in Enum.GetValues(typeof(TournamentFormat)))
                                 {
-                                    <option value="@type">@type.GetLabel()</option>
+                                    <option value="@type">@GetFormatLabel(type)</option>
                                 }
                             </InputSelect>
                             <ValidationMessage For="@(() => _editTournament.FinalsFormat)" />
                         </div>
                         <div class="overview-edit-schedule-fields">
                             <div class="form-group">
-                                <label for="plannedStartTime">Planned start time</label>
+                                <label for="plannedStartTime">@Localization["Feature.tournaments.plannedStartTime"]</label>
                                 <input id="plannedStartTime" type="datetime-local" class="form-control" @bind="_editTournament.PlannedStartTime" @bind:format="yyyy-MM-ddTHH:mm" />
                                 <ValidationMessage For="@(() => _editTournament.PlannedStartTime)" />
                             </div>
 
                             <div class="overview-edit-duration-row">
                                 <div class="form-group">
-                                    <label for="averageGameDuration">Average game duration (minutes)</label>
+                                    <label for="averageGameDuration">@Localization["Feature.tournaments.averageGameDuration"]</label>
                                     <InputNumber id="averageGameDuration" class="form-control" @bind-Value="_editTournament.AverageGameDurationMinutes" />
                                     <ValidationMessage For="@(() => _editTournament.AverageGameDurationMinutes)" />
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="roundBreakDuration">Round break (minutes)</label>
+                                    <label for="roundBreakDuration">@Localization["Feature.tournaments.roundBreakDuration"]</label>
                                     <InputNumber id="roundBreakDuration" class="form-control" @bind-Value="_editTournament.RoundBreakDurationMinutes" />
                                     <ValidationMessage For="@(() => _editTournament.RoundBreakDurationMinutes)" />
                                 </div>
@@ -165,7 +165,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="tournamentImage">Tournament Image</label>
+                            <label for="tournamentImage">@Localization["Feature.tournaments.tournamentImage"]</label>
                             <CustomInputFile @ref="_imageInputRef" id="tournamentImage" @bind-Value="_editTournament.Image" />
                             <ValidationMessage For="@(() => _editTournament.Image)" />
                         </div>
@@ -176,8 +176,8 @@
                         }
 
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? "Saving..." : "Save")</button>
-                            <button type="button" class="btn btn-secondary" @onclick="CancelEditMode">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? Localization["Feature.tournaments.saving"] : Localization["common.save"])</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CancelEditMode">@Localization["common.cancel"]</button>
                         </div>
                     </div>
                 </EditForm>

@@ -6,7 +6,7 @@
 <div class="image-upload-field">
     <label class="@GetPickerCssClass()">
         <span class="bi bi-image" aria-hidden="true"></span>
-        <span>@LabelText</span>
+        <span>@ResolvedLabelText</span>
         <InputFile OnChange="HandleFileChange"
                    class="image-upload-native"
                    accept="@Accept"
@@ -19,8 +19,8 @@
     [Inject]
     private IConfiguration Configuration { get; set; } = null!;
 
-    [Parameter] public string LabelText { get; set; } = "Choose image";
-    [Parameter] public string EmptyText { get; set; } = "No file selected";
+    [Parameter] public string LabelText { get; set; } = "";
+    [Parameter] public string EmptyText { get; set; } = "";
     [Parameter] public string Accept { get; set; } = "image/png, image/jpeg, image/webp";
 
     private ValidationMessageStore? messageStore;
@@ -31,7 +31,8 @@
     public string? FileContentType { get; private set; }
     public string? FileName { get; private set; }
 
-    private string SelectedFileText => FileName ?? EmptyText;
+    private string SelectedFileText => FileName ?? (string.IsNullOrWhiteSpace(EmptyText) ? Localization["form.noFile"] : EmptyText);
+    private string ResolvedLabelText => string.IsNullOrWhiteSpace(LabelText) ? Localization["shared.chooseImage"] : LabelText;
 
     protected override void OnInitialized()
     {
@@ -89,7 +90,7 @@
 
         if(!AllowedContentTypes.Contains(file.ContentType))
         {
-            string errorMessage = $"File type '{file.ContentType}' is not allowed. Only PNG, JPEG, and WEBP are accepted.";
+            string errorMessage = Localization.Get("shared.fileTypeNotAllowed", file.ContentType);
             messageStore?.Add(FieldIdentifier, errorMessage);
             EditContext?.NotifyFieldChanged(FieldIdentifier);
             return;
@@ -97,7 +98,7 @@
 
         if(file.Size > _maxFileSize)
         {
-            string errorMessage = $"File size exceeds the {_maxFileSize / (1024 * 1024)}MB limit.";
+            string errorMessage = Localization.Get("shared.fileSizeLimit", _maxFileSize / (1024 * 1024));
             messageStore?.Add(FieldIdentifier, errorMessage);
             EditContext?.NotifyFieldChanged(FieldIdentifier);
             return;
@@ -121,7 +122,7 @@
         catch(IOException)
         {
             ClearTemporaryFile();
-            string errorMessage = $"File size exceeds the {_maxFileSize / (1024 * 1024)}MB limit.";
+            string errorMessage = Localization.Get("shared.fileSizeLimit", _maxFileSize / (1024 * 1024));
             messageStore?.Add(FieldIdentifier, errorMessage);
         }
         finally

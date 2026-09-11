@@ -4,18 +4,18 @@
 @using Microsoft.AspNetCore.Authorization
 @using Mercurius.LAN.Web.DTOs.Users
 
-<PageTitle>@(IsRegistrationFlow ? "Create your profile" : "Complete Profile")</PageTitle>
+<PageTitle>@(IsRegistrationFlow ? Localization["General.CompleteProfile.CreateTitle"] : Localization["auth.completeProfile"])</PageTitle>
 
 @if(!string.IsNullOrWhiteSpace(_loadError))
 {
     <section class="status-page brand-section" role="alert" aria-live="assertive">
         <div class="brand-card status-page-card">
-            <span class="section-eyebrow">Profile</span>
-            <h1>Profile setup unavailable</h1>
+            <span class="section-eyebrow">@Localization["profile.profile"]</span>
+            <h1>@Localization["General.CompleteProfile.SetupUnavailable"]</h1>
             <p>@_loadError</p>
             <div class="status-page-actions">
-                <button type="button" class="button-primary" @onclick="LoadProfileAsync">Try Again</button>
-                <a href="@GetRecoveryHref()" class="button-secondary">@(IsRegistrationFlow ? "Cancel registration" : "Back home")</a>
+                <button type="button" class="button-primary" @onclick="LoadProfileAsync">@Localization["status.tryAgain"]</button>
+                <a href="@GetRecoveryHref()" class="button-secondary">@(IsRegistrationFlow ? Localization["General.CompleteProfile.CancelRegistration"] : Localization["common.backHome"])</a>
             </div>
         </div>
     </section>
@@ -24,10 +24,10 @@ else if(_isCompleted)
 {
     <section class="complete-profile-page">
         <section class="brand-card complete-profile-success" role="status" aria-live="polite">
-            <span class="section-eyebrow">Registration complete</span>
-            <h1>You’re ready to play.</h1>
-            <p>Your account and player profile are set up. Continue to explore tournaments and the LAN event.</p>
-            <button type="button" class="btn btn-primary" @onclick="ContinueAfterCompletion">Continue to Mercurius LAN</button>
+            <span class="section-eyebrow">@Localization["General.CompleteProfile.RegistrationComplete"]</span>
+            <h1>@Localization["General.CompleteProfile.ReadyToPlay"]</h1>
+            <p>@Localization["General.CompleteProfile.SuccessMessage"]</p>
+            <button type="button" class="btn btn-primary" @onclick="ContinueAfterCompletion">@Localization["General.CompleteProfile.ContinueLan"]</button>
         </section>
     </section>
 }
@@ -39,22 +39,22 @@ else
 {
     <section class="complete-profile-page">
         <header class="complete-profile-header brand-section">
-            <span class="section-eyebrow">@(IsRegistrationFlow ? "Join Mercurius LAN" : "Account setup")</span>
-            <h1>@(IsRegistrationFlow ? "Create your player profile" : "Complete your profile")</h1>
-            <p>@(IsRegistrationFlow ? "A few quick details help us make your tournament experience yours." : "Finish your account details before registering for tournaments or appearing in competition data.")</p>
+            <span class="section-eyebrow">@(IsRegistrationFlow ? Localization["General.CompleteProfile.JoinLan"] : Localization["General.CompleteProfile.AccountSetup"])</span>
+            <h1>@(IsRegistrationFlow ? Localization["General.CompleteProfile.CreatePlayerProfile"] : Localization["General.CompleteProfile.CompleteYourProfile"])</h1>
+            <p>@(IsRegistrationFlow ? Localization["General.CompleteProfile.RegistrationIntro"] : Localization["General.CompleteProfile.CompleteIntro"])</p>
         </header>
 
         <div class="complete-profile-layout">
             <section class="brand-card complete-profile-main-card">
                 <div class="complete-profile-card-header">
                     <div>
-                        <span class="section-eyebrow">Profile onboarding</span>
+                        <span class="section-eyebrow">@Localization["General.CompleteProfile.Onboarding"]</span>
                         <h2>@StepTitles[_activeStep]</h2>
                     </div>
-                    <span class="complete-profile-required-note">Required fields are marked required</span>
+                    <span class="complete-profile-required-note">@Localization["General.CompleteProfile.RequiredNote"]</span>
                 </div>
 
-                <ol class="complete-profile-steps" aria-label="Profile setup progress">
+                <ol class="complete-profile-steps" aria-label='@Localization["General.CompleteProfile.ProgressAria"]'>
                     @for(var stepIndex = 0; stepIndex < StepTitles.Length; stepIndex++)
                     {
                         <li class="@GetStepClass(stepIndex)" aria-current="@(stepIndex == _activeStep ? "step" : null)">
@@ -65,7 +65,6 @@ else
                 </ol>
 
                 <EditForm EditContext="_editContext" OnSubmit="HandleSubmitAsync" FormName="complete-profile">
-                    <DataAnnotationsValidator />
                     <ValidationSummary />
 
                     @if(_activeStep == 0)
@@ -74,61 +73,61 @@ else
                             @if(!string.IsNullOrWhiteSpace(_email))
                             {
                                 <div class="complete-profile-email-row">
-                                    <label class="form-label" for="email">Email <small>(from your account)</small></label>
+                                    <label class="form-label" for="email">@Localization["profile.email"] <small>@Localization["General.CompleteProfile.FromAccount"]</small></label>
                                     <input id="email" class="form-control" value="@_email" disabled />
                                 </div>
                             }
                             <div class="form-group">
-                                <label for="username">Username <small>(required)</small></label>
+                                <label for="username">@Localization["profile.username"] <small>@Localization["General.CompleteProfile.RequiredShort"]</small></label>
                                 <InputText id="username" @bind-Value="_model.Username" @onblur="CheckUsernameAvailabilityAsync" class="form-control" autocomplete="username" />
                                 <ValidationMessage For="@(() => _model.Username)" />
                                 @if(!string.IsNullOrWhiteSpace(_usernameAvailabilityMessage))
                                 {
                                     <div class="@_usernameAvailabilityClass complete-profile-status-text" role="status">@_usernameAvailabilityMessage</div>
                                 }
-                                <small class="form-text">Use 3-32 letters or numbers. This is how other players will find you.</small>
+                                <small class="form-text">@Localization["General.CompleteProfile.UsernameHint"]</small>
                             </div>
                         </div>
                     }
                     else if(_activeStep == 1)
                     {
                         <div class="complete-profile-step-content">
-                            <p class="complete-profile-help">Tell us who will be playing. Both fields are required for your player profile.</p>
+                            <p class="complete-profile-help">@Localization["General.CompleteProfile.AboutHelp"]</p>
                             <div class="complete-profile-form-grid">
-                                <div class="form-group"><label for="firstname">First name <small>(required)</small></label><InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" autocomplete="given-name" /><ValidationMessage For="@(() => _model.Firstname)" /></div>
-                                <div class="form-group"><label for="lastname">Last name <small>(required)</small></label><InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" autocomplete="family-name" /><ValidationMessage For="@(() => _model.Lastname)" /></div>
+                                <div class="form-group"><label for="firstname">@Localization["profile.firstName"] <small>@Localization["General.CompleteProfile.RequiredShort"]</small></label><InputText id="firstname" @bind-Value="_model.Firstname" class="form-control" autocomplete="given-name" /><ValidationMessage For="@(() => _model.Firstname)" /></div>
+                                <div class="form-group"><label for="lastname">@Localization["profile.lastName"] <small>@Localization["General.CompleteProfile.RequiredShort"]</small></label><InputText id="lastname" @bind-Value="_model.Lastname" class="form-control" autocomplete="family-name" /><ValidationMessage For="@(() => _model.Lastname)" /></div>
                             </div>
                         </div>
                     }
                     else
                     {
                         <div class="complete-profile-step-content">
-                            <p class="complete-profile-help">These links are optional. Add the gaming IDs you want teammates and tournament admins to use.</p>
+                            <p class="complete-profile-help">@Localization["General.CompleteProfile.GamingHelp"]</p>
                             <div class="complete-profile-form-grid">
-                                <div class="form-group"><label for="discordId">Discord ID <small>(optional)</small></label><InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.DiscordId)" /></div>
-                                <div class="form-group"><label for="steamId">Steam ID <small>(optional)</small></label><InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.SteamId)" /></div>
-                                <div class="form-group"><label for="riotId">Riot ID <small>(optional)</small></label><InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.RiotId)" /></div>
+                                <div class="form-group"><label for="discordId">@Localization["shared.discord"] ID <small>@Localization["General.CompleteProfile.OptionalShort"]</small></label><InputText id="discordId" @bind-Value="_model.DiscordId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.DiscordId)" /></div>
+                                <div class="form-group"><label for="steamId">@Localization["shared.steam"] ID <small>@Localization["General.CompleteProfile.OptionalShort"]</small></label><InputText id="steamId" @bind-Value="_model.SteamId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.SteamId)" /></div>
+                                <div class="form-group"><label for="riotId">@Localization["shared.riot"] ID <small>@Localization["General.CompleteProfile.OptionalShort"]</small></label><InputText id="riotId" @bind-Value="_model.RiotId" class="form-control" autocomplete="off" /><ValidationMessage For="@(() => _model.RiotId)" /></div>
                             </div>
-                            <div class="complete-profile-review" aria-label="Profile review"><span class="section-eyebrow">Ready to finish?</span><p><strong>@_model.Username</strong> · @_model.Firstname @_model.Lastname</p><small>You can update optional identifiers later from your profile.</small></div>
+                            <div class="complete-profile-review" aria-label='@Localization["General.CompleteProfile.ReviewAria"]'><span class="section-eyebrow">@Localization["General.CompleteProfile.ReadyToFinish"]</span><p><strong>@_model.Username</strong> · @_model.Firstname @_model.Lastname</p><small>@Localization["General.CompleteProfile.OptionalLater"]</small></div>
                         </div>
                     }
 
                     <div class="complete-profile-form-actions">
                         <div class="complete-profile-form-actions-main">
-                            @if(_activeStep > 0) { <button type="button" class="btn btn-outline-secondary" @onclick="PreviousStep" disabled="@_isSaving">Back</button> }
-                            @if(_activeStep < LastStepIndex) { <button type="button" class="btn btn-primary" @onclick="NextStepAsync" disabled="@_isSaving">Continue</button> }
-                            else { <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? "Saving…" : "Create profile")</button> }
+                            @if(_activeStep > 0) { <button type="button" class="btn btn-outline-secondary" @onclick="PreviousStep" disabled="@_isSaving">@Localization["common.back"]</button> }
+                            @if(_activeStep < LastStepIndex) { <button type="button" class="btn btn-primary" @onclick="NextStepAsync" disabled="@_isSaving">@Localization["General.CompleteProfile.Continue"]</button> }
+                            else { <button type="submit" class="btn btn-primary" disabled="@_isSaving">@(_isSaving ? Localization["General.CompleteProfile.Saving"] : Localization["General.CompleteProfile.CreateProfile"])</button> }
                         </div>
                         @if(IsRegistrationFlow)
                         {
-                            <button type="button" class="btn btn-link complete-profile-cancel" @onclick="CancelOnboarding" disabled="@_isSaving">Cancel</button>
+                            <button type="button" class="btn btn-link complete-profile-cancel" @onclick="CancelOnboarding" disabled="@_isSaving">@Localization["common.cancel"]</button>
                         }
                     </div>
                 </EditForm>
             </section>
 
             <aside class="complete-profile-sidebar">
-                <section class="brand-card complete-profile-side-card"><span class="section-eyebrow">Why this matters</span><h2>What this profile unlocks</h2><ul class="complete-profile-points"><li>Username checks before tournament registration.</li><li>Bracket, placement, and participant displays.</li><li>Optional Discord, Steam, or Riot identifiers when needed.</li></ul></section>
+                <section class="brand-card complete-profile-side-card"><span class="section-eyebrow">@Localization["General.CompleteProfile.WhyThisMatters"]</span><h2>@Localization["General.CompleteProfile.WhatUnlocks"]</h2><ul class="complete-profile-points"><li>@Localization["General.CompleteProfile.UsernameChecks"]</li><li>@Localization["General.CompleteProfile.CompetitionDisplays"]</li><li>@Localization["General.CompleteProfile.OptionalIds"]</li></ul></section>
             </aside>
         </div>
     </section>

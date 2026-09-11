@@ -9,7 +9,7 @@ public partial class CustomAutocomplete<TItem> : IDisposable
     [Parameter] public List<TItem> Items { get; set; } = new();
     [Parameter] public Func<TItem, string> ItemLabel { get; set; } = default!;
     [Parameter] public EventCallback<TItem> OnSelected { get; set; }
-    [Parameter] public string Placeholder { get; set; } = "Search...";
+    [Parameter] public string Placeholder { get; set; } = string.Empty;
 
     private string _searchText = string.Empty;
     private List<TItem> _filteredItems = new();

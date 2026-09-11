@@ -7,34 +7,34 @@
 
 @if(_isLoading)
 {
-    <LoadingScreen Message="Loading user profile..." />
+    <LoadingScreen Message='@Localization["status.loadingProfile"]' />
 }
 else if(_hasError)
 {
-    <StatusPage Eyebrow="Participants"
-                Title="Profile unavailable"
-                Message="This user profile could not be loaded right now."
+    <StatusPage Eyebrow='@Localization["General.PublicUser.Participants"]'
+                Title='@Localization["General.PublicUser.Unavailable"]'
+                Message='@Localization["General.PublicUser.LoadError"]'
                 PrimaryHref="/tournaments"
-                PrimaryLabel="Browse tournaments"
+                PrimaryLabel='@Localization["common.browseTournaments"]'
                 SecondaryHref="/"
-                SecondaryLabel="Back home" />
+                SecondaryLabel='@Localization["common.backHome"]' />
 }
 else if(_profile is null)
 {
-    <StatusPage Eyebrow="Participants"
-                Title="User not found"
-                Message="We could not find a public profile for that username."
+    <StatusPage Eyebrow='@Localization["General.PublicUser.Participants"]'
+                Title='@Localization["General.PublicUser.NotFound"]'
+                Message='@Localization["General.PublicUser.NotFoundMessage"]'
                 PrimaryHref="/tournaments"
-                PrimaryLabel="Browse tournaments"
+                PrimaryLabel='@Localization["common.browseTournaments"]'
                 SecondaryHref="/"
-                SecondaryLabel="Back home" />
+                SecondaryLabel='@Localization["common.backHome"]' />
 }
 else
 {
     <section class="public-user-page py-6 pb-12">
         <div class="public-user-shell">
-            <nav class="public-profile-breadcrumb" aria-label="Breadcrumb">
-                <a href="/">Home</a>
+            <nav class="public-profile-breadcrumb" aria-label='@Localization["General.PublicUser.Breadcrumb"]'>
+                <a href="/">@Localization["nav.home"]</a>
                 <span>/</span>
                 <span aria-current="page">@_profile.Username</span>
             </nav>
@@ -43,7 +43,7 @@ else
                 <div class="public-user-hero-identity">
                     <span class="public-user-avatar" aria-hidden="true">@GetInitials(_profile)</span>
                     <div>
-                        <span class="section-eyebrow">Participant profile</span>
+                        <span class="section-eyebrow">@Localization["General.PublicUser.ParticipantProfile"]</span>
                         <h1>@FullName</h1>
                         <p>@_profile.Username</p>
                     </div>
@@ -52,17 +52,17 @@ else
 
             <section id="profile-details" class="brand-card public-user-card brand-section-anchor">
                 <div class="public-user-card-heading">
-                    <h2>Profile details</h2>
+                    <h2>@Localization["General.PublicUser.ProfileDetails"]</h2>
                 </div>
 
                 <div class="public-user-identity-grid">
                     <div class="public-user-detail-panel">
-                        <span class="public-user-panel-label">Username</span>
+                        <span class="public-user-panel-label">@Localization["profile.username"]</span>
                         <strong>@_profile.Username</strong>
                     </div>
 
                     <div class="public-user-detail-panel">
-                        <span class="public-user-panel-label">Name</span>
+                        <span class="public-user-panel-label">@Localization["shared.name"]</span>
                         <strong>@FullName</strong>
                     </div>
                 </div>
@@ -70,7 +70,7 @@ else
                 @if(HasLinkedIdentities)
                 {
                     <div class="public-user-linked-section">
-                        <h3>Linked IDs</h3>
+                        <h3>@Localization["General.PublicUser.LinkedIds"]</h3>
                         <dl class="public-user-linked-grid">
                             @if(!string.IsNullOrWhiteSpace(_profile.DiscordId))
                             {

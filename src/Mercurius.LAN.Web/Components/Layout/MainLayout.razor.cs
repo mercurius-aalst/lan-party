@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
+using Mercurius.LAN.Web.Localization;
 
 namespace Mercurius.LAN.Web.Components.Layout;
 
@@ -14,9 +15,10 @@ public partial class MainLayout : IDisposable
     private ElementReference _menuToggle;
     private bool _isDarkMode;
     private bool _themeInitialized;
+    private bool _languageInitialized;
     private string _themePreference = "system";
 
-    private string ThemeToggleLabel => _isDarkMode ? "Switch to light mode" : "Switch to dark mode";
+    private string ThemeToggleLabel => _isDarkMode ? Localization["theme.switchLight"] : Localization["theme.switchDark"];
 
     private static readonly MudBlazor.MudTheme SiteTheme = new()
     {
@@ -122,7 +124,26 @@ public partial class MainLayout : IDisposable
         }
 
         _themeInitialized = true;
+        if(!_languageInitialized)
+        {
+            var languageChanged = await Localization.InitializeAsync(JsRuntime);
+            _languageInitialized = true;
+            if(languageChanged)
+            {
+                NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
+                return;
+            }
+        }
+
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ChangeLanguageAsync(string language)
+    {
+        if(!await Localization.SetLanguageAsync(JsRuntime, language))
+            return;
+
+        NavigationManager.NavigateTo(NavigationManager.Uri, forceLoad: true);
     }
 
     private async Task ToggleThemeAsync()

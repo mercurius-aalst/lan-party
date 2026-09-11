@@ -3,14 +3,14 @@
 @using Mercurius.LAN.Web.Components.Shared
 @rendermode InteractiveServer
 
-<PageTitle>Error</PageTitle>
+<PageTitle>@Localization["common.error"]</PageTitle>
 
-<StatusPage Eyebrow="System" Title="Error" Message="An unexpected error occurred while processing your request." PrimaryHref="/" PrimaryLabel="Back Home" SecondaryHref="/tournaments" SecondaryLabel="Browse Tournaments">
+<StatusPage Eyebrow='@Localization["common.system"]' Title='@Localization["common.error"]' Message='@Localization["common.unexpectedError"]' PrimaryHref="/" PrimaryLabel='@Localization["common.backHome"]' SecondaryHref="/tournaments" SecondaryLabel='@Localization["common.browseTournaments"]'>
     @if(ShowRequestId)
     {
-        <p><strong>Request ID:</strong> <code>@_requestId</code></p>
+        <p><strong>@Localization["common.requestId"]</strong> <code>@_requestId</code></p>
     }
 
-    <p>Swapping to <strong>Development</strong> will show more detailed exception information for local debugging.</p>
-    <p><strong>Do not enable Development in production.</strong> It can expose sensitive information to end users.</p>
+    <p>@Localization["common.developmentHint"]</p>
+    <p><strong>@Localization["common.doNotEnableDevelopment"]</strong></p>
 </StatusPage>

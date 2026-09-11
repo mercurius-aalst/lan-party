@@ -21,32 +21,18 @@ public partial class TournamentPlacementsTab
             ? string.Empty
             : $"/teams/{Uri.EscapeDataString(teamName.Trim())}";
 
-    private static string GetUserLabel(DTOs.Users.PublicUserDTO user)
+    private string GetUserLabel(DTOs.Users.PublicUserDTO user)
     {
         if(!string.IsNullOrWhiteSpace(user.Username))
             return user.Username.Trim();
 
         return string.IsNullOrWhiteSpace(user.DisplayName)
-            ? "Participant"
+            ? Localization["Feature.tournaments.participant"]
             : user.DisplayName.Trim();
     }
 
-    private string GetOrdinalSuffix(int number)
+    private string GetOrdinalLabel(int number)
     {
-        if(number % 100 >= 11 && number % 100 <= 13)
-        {
-            return number + "th";
-        }
-
-        int num = number % 10;
-        string suffix = num switch
-        {
-            1 => "st",
-            2 => "nd",
-            3 => "rd",
-            _ => "th"
-        };
-
-        return number + suffix;
+        return Localization.Get("Feature.tournaments.placementOrdinal", number);
     }
 }

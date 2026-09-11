@@ -15,72 +15,71 @@ public partial class PublicProfileMatchSummaries
     private static string BuildTournamentHref(PublicProfileMatchSummaryDTO summary) =>
         $"/tournaments/{summary.TournamentId}";
 
-    private static string GetOpponentLabel(PublicProfileMatchSummaryDTO summary) =>
+    private string GetOpponentLabel(PublicProfileMatchSummaryDTO summary) =>
         summary.OpponentIsTbd || string.IsNullOrWhiteSpace(summary.OpponentDisplayName)
-            ? "Opponent TBD"
+            ? Localization["shared.tbd"]
             : summary.OpponentDisplayName;
 
-    private static string GetResultLabel(PublicProfileMatchSummaryDTO summary)
+    private string GetResultLabel(PublicProfileMatchSummaryDTO summary)
     {
         if(summary.LifecycleState == MatchLifecycleState.Forfeited)
         {
             return summary.ParticipantScore.HasValue && summary.OpponentScore.HasValue
-                ? $"Forfeit · participant {summary.ParticipantScore} - {summary.OpponentScore} opponent"
-                : "Forfeit recorded";
+                ? Localization.Get("match.forfeitScore", summary.ParticipantScore, summary.OpponentScore)
+                : Localization["match.forfeitRecorded"];
         }
 
         if(summary.ParticipantScore.HasValue && summary.OpponentScore.HasValue)
-            return $"Score · participant {summary.ParticipantScore} - {summary.OpponentScore} opponent";
+            return Localization.Get("match.score", summary.ParticipantScore, summary.OpponentScore);
 
         return summary.LifecycleState switch
         {
-            MatchLifecycleState.Completed => "Completed",
-            _ => "Result recorded"
+            MatchLifecycleState.Completed => Localization["status.completed"],
+            _ => Localization["match.resultRecorded"]
         };
     }
 
-    private static string GetUpcomingStateLabel(PublicProfileMatchSummaryDTO summary)
+    private string GetUpcomingStateLabel(PublicProfileMatchSummaryDTO summary)
     {
         if(summary.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation &&
            summary.EstimatedStartTime is { } estimatedStart &&
            estimatedStart.ToUniversalTime() <= DateTime.UtcNow)
-            return "Awaiting start · estimate passed";
+            return Localization["match.awaitingStartEstimatePassed"];
 
         return summary.LifecycleState == MatchLifecycleState.AwaitingEndedConfirmation
-            ? "Scheduled match"
-            : "Upcoming match";
+            ? Localization["match.scheduled"]
+            : Localization["match.upcoming"];
     }
 
-    private static string GetRoundLabel(PublicProfileMatchSummaryDTO summary)
+    private string GetRoundLabel(PublicProfileMatchSummaryDTO summary)
     {
-        var bracket = summary.IsLowerBracketMatch ? "Lower bracket" : "Upper bracket";
-        return $"{bracket}, round {summary.RoundNumber}, match {summary.MatchNumber}";
+        var bracket = summary.IsLowerBracketMatch ? Localization["match.lowerBracket"] : Localization["match.upperBracket"];
+        return Localization.Get("match.round", bracket, summary.RoundNumber, summary.MatchNumber);
     }
 
-    private static string GetPreviousTimeLabel(PublicProfileMatchSummaryDTO summary)
+    private string GetPreviousTimeLabel(PublicProfileMatchSummaryDTO summary)
     {
         var completedAt = summary.CompletedAtUtc ?? summary.StartedAtUtc;
         return completedAt.HasValue
-            ? $"Played {FormatLocal(completedAt.Value)}"
-            : "Played date unavailable";
+            ? Localization.Get("match.played", FormatLocal(completedAt.Value))
+            : Localization["match.playedDateUnavailable"];
     }
 
-    private static string GetUpcomingTimeLabel(PublicProfileMatchSummaryDTO summary)
+    private string GetUpcomingTimeLabel(PublicProfileMatchSummaryDTO summary)
     {
         if(summary.EstimatedStartTime is { } estimatedStart)
-            return $"Estimated {FormatLocal(estimatedStart)}";
+            return Localization.Get("match.estimated", FormatLocal(estimatedStart));
 
         if(summary.ScheduledStartTime is { } scheduledStart)
-            return $"Scheduled {FormatLocal(scheduledStart)}";
+            return Localization.Get("match.scheduledAt", FormatLocal(scheduledStart));
 
-        return "Time to be confirmed";
+        return Localization["match.timeToBeConfirmed"];
     }
 
     private static string? GetTimeAttribute(DateTime? value) =>
         value?.ToUtcIsoString();
 
-    private static string FormatLocal(DateTime value) =>
-        value.ToLocalDisplayTime().ToString("dd MMM yyyy · HH:mm");
+    private string FormatLocal(DateTime value) => Localization.FormatDateTime(value.ToLocalDisplayTime());
 
     private Task RetryAsync() => OnRetry.InvokeAsync();
 }

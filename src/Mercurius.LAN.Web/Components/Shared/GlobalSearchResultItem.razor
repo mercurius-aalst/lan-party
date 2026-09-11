@@ -55,14 +55,14 @@
             await Hovered.InvokeAsync();
     }
 
-    private static string GetSearchResultTypeLabel(GlobalSearchResultType resultType)
+    private string GetSearchResultTypeLabel(GlobalSearchResultType resultType)
     {
         return resultType switch
         {
-            GlobalSearchResultType.User => "User",
-            GlobalSearchResultType.Team => "Team",
-            GlobalSearchResultType.Tournament => "Tournament",
-            _ => "Result"
+            GlobalSearchResultType.User => Localization["search.users"],
+            GlobalSearchResultType.Team => Localization["search.teams"],
+            GlobalSearchResultType.Tournament => Localization["search.tournaments"],
+            _ => Localization["search.viewProfile"]
         };
     }
 

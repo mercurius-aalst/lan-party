@@ -60,9 +60,9 @@ public partial class DoubleEliminationTournamentBracketComponent
 
             _viewOptions =
             [
-                new(BracketView.Upper, "Upper bracket", $"{_uBMatches.Count()} matches"),
-                new(BracketView.Lower, "Lower bracket", $"{_lBMatches.Count()} matches"),
-                new(BracketView.GrandFinal, "Grand final", _gFMatch == null ? "Pending" : GetMatchFormatLabel(_gFMatch))
+                new(BracketView.Upper, Localization["Feature.tournaments.upperBracket"], Localization.Get("Feature.tournaments.matchCount", _uBMatches.Count())),
+                new(BracketView.Lower, Localization["Feature.tournaments.lowerBracket"], Localization.Get("Feature.tournaments.matchCount", _lBMatches.Count())),
+                new(BracketView.GrandFinal, Localization["Feature.tournaments.grandFinal"], _gFMatch == null ? Localization["Feature.tournaments.pending"] : GetMatchFormatLabel(_gFMatch))
             ];
 
             if(_activeView == BracketView.Lower && !_lBMatches.Any())
@@ -197,12 +197,12 @@ public partial class DoubleEliminationTournamentBracketComponent
     private string GetTabCssClass(BracketView view) =>
         view == _activeView ? "double-elimination-tab--active" : string.Empty;
 
-    private static string GetMatchFormatLabel(Match match) =>
+    private string GetMatchFormatLabel(Match match) =>
         match.Format switch
         {
-            TournamentFormat.BestOf1 => "Best of 1",
-            TournamentFormat.BestOf3 => "Best of 3",
-            TournamentFormat.BestOf5 => "Best of 5",
-            _ => "Final set"
+            TournamentFormat.BestOf1 => Localization["Feature.tournament.formatBestOf1"],
+            TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
+            TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
+            _ => Localization["Feature.tournaments.finalSet"]
         };
 }

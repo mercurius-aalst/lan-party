@@ -10,12 +10,12 @@
 <div class="layout-shell flex min-h-[100dvh] flex-col" data-theme-state="@(_isDarkMode ? "dark" : "light")">
     <header class="brand-header sticky top-0 z-[1100]" @onkeydown="HandleHeaderKeyDown">
         <div class="brand-header-inner brand-container flex items-center justify-between gap-4">
-            <a class="brand-logo-link inline-flex shrink-0 items-center" href="/" aria-label="Mercurius LAN home">
+            <a class="brand-logo-link inline-flex shrink-0 items-center" href="/" aria-label='@Localization["brand.homeAria"]'>
                 <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="brand-logo-image brand-logo-image--theme-light" />
                 <img src="/img/lan_logo_wide_light.svg" alt="" aria-hidden="true" class="brand-logo-image brand-logo-image--theme-dark" />
             </a>
 
-            <button @ref="_menuToggle" class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label="Toggle navigation" aria-expanded="@(_sidebarOpen ? "true" : "false")" aria-controls="primary-navigation">
+            <button @ref="_menuToggle" class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label='@Localization["nav.toggle"]' aria-expanded="@(_sidebarOpen ? "true" : "false")" aria-controls="primary-navigation">
                 <span class="menu-toggle-inner">
                     <span class="bar"></span>
                     <span class="bar"></span>
@@ -40,7 +40,7 @@
 
     @if(_sidebarOpen)
     {
-        <button type="button" class="brand-nav-backdrop" @onclick="HandleOutsideClick" aria-label="Close navigation"></button>
+        <button type="button" class="brand-nav-backdrop" @onclick="HandleOutsideClick" aria-label='@Localization["nav.close"]'></button>
     }
 
     <main class="brand-main flex-1 @(IsHomePage ? "brand-main--home" : null)">
@@ -56,39 +56,52 @@
                     <img src="/img/lan_logo_wide_dark.svg" alt="Mercurius LAN" class="footer-logo-image footer-logo-image--theme-light" />
                     <img src="/img/lan_logo_wide_light.svg" alt="" aria-hidden="true" class="footer-logo-image footer-logo-image--theme-dark" />
                 </div>
-                <p>Mercurius LAN brings students together for tournaments, BYOC setups, and a full weekend of competitive play.</p>
+                <p>@Localization["footer.description"]</p>
             </section>
 
-            <nav class="footer-column" aria-label="Quick links">
-                <h3>Quick Links</h3>
-                <a href="/">Home</a>
-                <a href="/tournaments">Tournaments</a>
-                <a href="/sponsors">Sponsors</a>
-                <a href="/info">Info</a>
-                <a href="/privacy-policy">Privacy Policy</a>
+            <nav class="footer-column" aria-label='@Localization["footer.quickLinks"]'>
+                <h3>@Localization["footer.quickLinks"]</h3>
+                <a href="/">@Localization["nav.home"]</a>
+                <a href="/tournaments">@Localization["nav.tournaments"]</a>
+                <a href="/sponsors">@Localization["nav.sponsors"]</a>
+                <a href="/info">@Localization["nav.info"]</a>
+                <a href="/privacy-policy">@Localization["privacy.pageTitle"]</a>
             </nav>
 
             <section class="footer-column">
-                <h3>Event Info</h3>
-                <p>Student community. Compete. Connect.</p>
-                <p>Offline mock mode is available for local UI validation.</p>
+                <h3>@Localization["footer.eventInfo"]</h3>
+                <p>@Localization["footer.studentCommunity"]</p>
+                <p>@Localization["footer.offlineMock"]</p>
             </section>
 
             <section class="footer-column">
-                <h3>Explore</h3>
-                <a href="/info#where">When &amp; Where</a>
-                <a href="/info#tickets">Tickets</a>
-                <a href="/info#catering">Catering</a>
-                <a href="/info#contact-info">Contact</a>
+                <h3>@Localization["footer.explore"]</h3>
+                <a href="/info#where">@Localization["footer.whenWhere"]</a>
+                <a href="/info#tickets">@Localization["nav.info.tickets"]</a>
+                <a href="/info#catering">@Localization["nav.info.catering"]</a>
+                <a href="/info#contact-info">@Localization["footer.contact"]</a>
+            </section>
+
+            <section class="footer-column footer-language-control" aria-label='@Localization["language.label"]'>
+                <label class="visually-hidden" for="footer-language-select">@Localization["language.select"]</label>
+                <div class="footer-language-select-shell">
+                    <span class="bi bi-translate footer-language-icon" aria-hidden="true"></span>
+                    <select id="footer-language-select"
+                            value="@Localization.CurrentLanguage"
+                            @onchange="async args => await ChangeLanguageAsync(args.Value?.ToString() ?? ILocalizationService.DefaultLanguage)">
+                        <option value="en-US">@Localization["language.english"]</option>
+                        <option value="nl-BE">@Localization["language.dutch"]</option>
+                    </select>
+                </div>
             </section>
         </div>
     </footer>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
+    @Localization["common.unhandledError"]
+    <a href="." class="reload">@Localization["common.reload"]</a>
+    <span class="dismiss" aria-label='@Localization["common.dismiss"]'>🗙</span>
 </div>
 
 <BlazoredToasts Position=ToastPosition.BottomRight />
