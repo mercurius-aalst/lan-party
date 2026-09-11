@@ -1,4 +1,5 @@
 .layout-shell {
+    --header-height: 5.5rem;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -17,7 +18,9 @@
 }
 
 .brand-header-inner {
+    box-sizing: border-box;
     min-height: var(--header-height);
+    padding-block: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
