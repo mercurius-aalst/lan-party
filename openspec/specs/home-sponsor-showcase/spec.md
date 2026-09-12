@@ -46,3 +46,12 @@ The sponsor showcase SHALL use layout, sizing, and edge treatments that make the
 - **WHEN** users want more sponsor information than the homepage slider provides
 - **THEN** the home page provides a link to the full sponsors page
 
+### Requirement: Homepage sections fail independently
+
+The home page MUST preserve successfully loaded tournament or sponsor content when the other independent API-backed section fails.
+
+#### Scenario: Homepage receives a partial API failure
+- **WHEN** either tournament or sponsor loading fails while the other succeeds
+- **THEN** the successful content remains visible
+- **AND** the failed section shows a friendly unavailable state or is safely omitted without blocking the page shell
+

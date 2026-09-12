@@ -45,8 +45,11 @@ public partial class Profile
     [Inject] private IToastService ToastService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(!firstRender)
+            return;
+
         _loadError = null;
         try
         {
@@ -79,6 +82,16 @@ public partial class Profile
         {
             NavigationManager.NavigateTo("/account/login?returnUrl=/profile", true);
         }
+        catch(HttpRequestException)
+        {
+            _loadError = Localization["General.Profile.LoadError"];
+        }
+        catch(TaskCanceledException)
+        {
+            _loadError = Localization["General.Profile.LoadError"];
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task SaveAsync()
@@ -120,6 +133,14 @@ public partial class Profile
         {
             NavigationManager.NavigateTo("/complete-profile?returnUrl=/profile");
         }
+        catch(HttpRequestException)
+        {
+            ToastService.ShowError(Localization["General.Profile.RequestFailed"]);
+        }
+        catch(TaskCanceledException)
+        {
+            ToastService.ShowError(Localization["General.Profile.RequestFailed"]);
+        }
         finally
         {
             _isSaving = false;
@@ -145,7 +166,7 @@ public partial class Profile
                 : availability.Reason ?? Localization["General.Profile.UsernameUnavailable"];
             _usernameAvailabilityClass = availability.IsAvailable ? "form-text text-success" : "form-text text-danger";
         }
-        catch(ApiException)
+        catch(Exception exception) when(exception is ApiException or HttpRequestException or TaskCanceledException)
         {
             _usernameAvailabilityMessage = null;
         }
@@ -162,6 +183,10 @@ public partial class Profile
         catch(ApiException exception)
         {
             ToastService.ShowError(await GetApiErrorAsync(exception));
+        }
+        catch(Exception exception) when(exception is HttpRequestException or TaskCanceledException)
+        {
+            ToastService.ShowError(Localization["General.Profile.RequestFailed"]);
         }
         finally
         {
@@ -180,6 +205,10 @@ public partial class Profile
         catch(ApiException exception)
         {
             ToastService.ShowError(await GetApiErrorAsync(exception));
+        }
+        catch(Exception exception) when(exception is HttpRequestException or TaskCanceledException)
+        {
+            ToastService.ShowError(Localization["General.Profile.RequestFailed"]);
         }
         finally
         {
@@ -201,6 +230,10 @@ public partial class Profile
         catch(ApiException exception)
         {
             ToastService.ShowError(await GetApiErrorAsync(exception));
+        }
+        catch(Exception exception) when(exception is HttpRequestException or TaskCanceledException)
+        {
+            ToastService.ShowError(Localization["General.Profile.RequestFailed"]);
         }
         finally
         {

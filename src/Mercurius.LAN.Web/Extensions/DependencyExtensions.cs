@@ -6,7 +6,6 @@ using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
 using Mercurius.LAN.Web.Localization;
-using Polly;
 using Refit;
 using System.Text.Json;
 using System.Web;
@@ -90,28 +89,33 @@ public static class DependencyExtensions
         };
 
         services.AddTransient<AccessTokenHandler>();
+        services.AddTransient<ApiReadTimeoutHandler>();
 
         var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress");
         var baseAddress = BuildApiBaseAddress(configuredBaseAddress);
 
         services.AddRefitClient<ILANClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(baseAddress);
+            })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
             })
-            .AddHttpMessageHandler<AccessTokenHandler>()
-            .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
-            {
-                TimeSpan.FromSeconds(1),
-            }));
+            .AddHttpMessageHandler<ApiReadTimeoutHandler>()
+            .AddHttpMessageHandler<AccessTokenHandler>();
 
         services.AddRefitClient<IUserClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(baseAddress);
+            })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
             })
+            .AddHttpMessageHandler<ApiReadTimeoutHandler>()
             .AddHttpMessageHandler<AccessTokenHandler>();
 
         return services;

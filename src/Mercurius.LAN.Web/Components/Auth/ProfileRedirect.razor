@@ -6,30 +6,52 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager NavigationManager
 @inject IUserClient UserClient
+@implements IAsyncDisposable
 
 @code {
     [Parameter]
     public RouteData RouteData { get; set; } = default!;
 
-    private string? _lastCheckedUri;
+    private string? _pendingUri;
+    private long _navigationVersion;
+    private bool _disposed;
 
-    protected override async Task OnParametersSetAsync()
+    protected override void OnParametersSet()
     {
-        if(_lastCheckedUri == NavigationManager.Uri)
+        if(_disposed || string.Equals(_pendingUri, NavigationManager.Uri, StringComparison.Ordinal))
             return;
 
-        _lastCheckedUri = NavigationManager.Uri;
+        _pendingUri = NavigationManager.Uri;
+        _navigationVersion++;
+    }
 
-        var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if(authenticationState.User.Identity?.IsAuthenticated != true)
-            return;
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(_disposed || _pendingUri is null)
+            return Task.CompletedTask;
 
-        if(IsCompleteProfilePage() || IsAccountRoute())
+        var checkedUri = _pendingUri;
+        var navigationVersion = _navigationVersion;
+        _pendingUri = null;
+        _ = CheckProfileRedirectAsync(checkedUri, navigationVersion);
+        return Task.CompletedTask;
+    }
+
+    private async Task CheckProfileRedirectAsync(string checkedUri, long navigationVersion)
+    {
+        if(!IsCurrentNavigation(checkedUri, navigationVersion) || IsCompleteProfilePage(checkedUri) || IsAccountRoute(checkedUri))
             return;
 
         try
         {
+            var authenticationState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            if(!IsCurrentNavigation(checkedUri, navigationVersion) || authenticationState.User.Identity?.IsAuthenticated != true)
+                return;
+
             var currentUserProfile = await UserClient.GetCurrentUserProfileAsync();
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             if(IsRegistrationFlow())
             {
                 NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
@@ -43,47 +65,85 @@
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Unauthorized)
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             var returnUrl = GetCurrentRelativeUrl();
             NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.Gone)
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             NavigationManager.NavigateTo("/account/logout", forceLoad: true);
         }
         catch(ApiException exception) when(exception.StatusCode == HttpStatusCode.NotFound)
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: IsRegistrationFlow());
         }
         catch(UnauthorizedAccessException)
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             var returnUrl = GetCurrentRelativeUrl();
             NavigationManager.NavigateTo($"/account/login?returnUrl={Uri.EscapeDataString(returnUrl)}", forceLoad: true);
         }
         catch(ApiException) when(IsRegistrationFlow())
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
         }
         catch(HttpRequestException) when(IsRegistrationFlow())
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
         }
         catch(TaskCanceledException) when(IsRegistrationFlow())
         {
+            if(!IsCurrentNavigation(checkedUri, navigationVersion))
+                return;
+
             NavigationManager.NavigateTo(GetCompleteProfileUrl(), replace: true);
+        }
+        catch(ApiException)
+        {
+            // Profile completion enrichment is optional while the API is unavailable.
+        }
+        catch(HttpRequestException)
+        {
+            // Keep the current page usable; the profile page exposes its own retry state.
+        }
+        catch(TaskCanceledException)
+        {
+            // A bounded API timeout must not terminate the interactive circuit.
         }
     }
 
-    private bool IsCompleteProfilePage()
+    private bool IsCurrentNavigation(string checkedUri, long navigationVersion) =>
+        !_disposed &&
+        navigationVersion == _navigationVersion &&
+        string.Equals(checkedUri, NavigationManager.Uri, StringComparison.Ordinal);
+
+    private bool IsCompleteProfilePage(string? uri = null)
     {
-        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var relativePath = NavigationManager.ToBaseRelativePath(uri ?? NavigationManager.Uri);
         var path = relativePath.Split('?', '#')[0].Trim('/');
 
         return string.Equals(path, "complete-profile", StringComparison.OrdinalIgnoreCase);
     }
 
-    private bool IsAccountRoute()
+    private bool IsAccountRoute(string? uri = null)
     {
-        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        var relativePath = NavigationManager.ToBaseRelativePath(uri ?? NavigationManager.Uri);
         var path = relativePath.Split('?', '#')[0].Trim('/');
 
         return path.StartsWith("account/", StringComparison.OrdinalIgnoreCase);
@@ -128,6 +188,14 @@
         return string.IsNullOrWhiteSpace(relativePath)
             ? "/"
             : $"/{relativePath}";
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        _navigationVersion++;
+        _pendingUri = null;
+        return ValueTask.CompletedTask;
     }
 
 }

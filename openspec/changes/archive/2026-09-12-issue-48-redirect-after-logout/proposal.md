@@ -19,6 +19,10 @@ cleared.
 - Revalidate the callback's decoded `returnUrl` with the existing local logout
   policy and fall back to `/` for missing, protected, unsafe, or malformed
   values.
+- Clear the local authentication cookie before starting the Auth0 sign-out so
+  the local session ends even when the remote provider flow fails.
+- Complete a failed remote sign-out with a redirect to the validated public
+  return target while preserving the local cookie deletion response header.
 - Fall back to home (or an equivalent safe public location) for protected,
   malformed, external, absolute, protocol-relative, backslash-prefixed, or
   control-character-containing targets.
