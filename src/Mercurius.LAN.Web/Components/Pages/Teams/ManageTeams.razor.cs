@@ -36,6 +36,9 @@ public partial class ManageTeams : IAsyncDisposable
     private TeamManagementTab _activeTab = TeamManagementTab.Members;
     private readonly Dictionary<Guid, Guid?> _transferSelections = [];
     private readonly Dictionary<Guid, TeamLogoSelection> _selectedLogos = [];
+    private readonly CancellationTokenSource _lifetimeCancellationTokenSource = new();
+    private Task? _initializationTask;
+    private bool _disposed;
 
     private IReadOnlyList<TeamManagementSummaryDTO> ManageableTeams =>
         _summary.CaptainedTeams
@@ -49,24 +52,42 @@ public partial class ManageTeams : IAsyncDisposable
             ? ManageableTeams.FirstOrDefault(team => team.Id == _selectedTeamId.Value)
             : null;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
         RealtimeService.TeamStateInvalidated += RefreshFromSignalAsync;
-        await LoadSummaryAsync();
+        _initializationTask = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        var cancellationToken = _lifetimeCancellationTokenSource.Token;
+        await LoadSummaryAsync(cancellationToken);
+        if(!IsActive(cancellationToken))
+            return;
 
         try
         {
-            await RealtimeService.StartAsync();
-            await RealtimeService.JoinTeamsAsync(ManageableTeams.Select(team => team.Id));
+            await RealtimeService.StartAsync(cancellationToken);
+            if(!IsActive(cancellationToken))
+                return;
+
+            await RealtimeService.JoinTeamsAsync(ManageableTeams.Select(team => team.Id), cancellationToken);
+        }
+        catch(OperationCanceledException) when(!IsActive(cancellationToken))
+        {
         }
         catch(Exception)
         {
-            ToastService.ShowWarning(Localization["General.TeamManage.LiveUpdatesUnavailable"]);
+            if(IsActive(cancellationToken))
+                ToastService.ShowWarning(Localization["General.TeamManage.LiveUpdatesUnavailable"]);
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(_disposed)
+            return;
+
         if(_confirmation is not null && _confirmationFocusTrap is null)
         {
             _confirmationFocusTrap = await JSRuntime.InvokeAsync<IJSObjectReference>(
@@ -79,43 +100,97 @@ public partial class ManageTeams : IAsyncDisposable
         }
     }
 
-    private async Task LoadSummaryAsync()
+    private async Task LoadSummaryAsync(CancellationToken cancellationToken)
     {
+        if(!IsActive(cancellationToken))
+            return;
+
         _isLoading = true;
         _loadError = null;
         try
         {
-            _summary = await TeamService.GetCurrentUserTeamSummaryAsync();
+            _summary = await TeamService.GetCurrentUserTeamSummaryAsync(cancellationToken);
+            if(!IsActive(cancellationToken))
+                return;
+
             EnsureSelectedTeam();
-            await NotificationService.RefreshAsync();
+            await NotificationService.RefreshAsync(cancellationToken);
+        }
+        catch(OperationCanceledException) when(!IsActive(cancellationToken))
+        {
         }
         catch(Exception exception)
         {
+            if(!IsActive(cancellationToken))
+                return;
+
             _summary = new();
             _loadError = GetErrorMessage(exception);
         }
         finally
         {
-            _isLoading = false;
+            if(IsActive(cancellationToken))
+            {
+                _isLoading = false;
+                await RenderIfActiveAsync();
+            }
         }
     }
 
-    private async Task RefreshSummaryAsync()
+    private async Task RefreshSummaryAsync(CancellationToken cancellationToken = default)
     {
-        _summary = await TeamService.GetCurrentUserTeamSummaryAsync();
+        var activeCancellationToken = cancellationToken == default
+            ? _lifetimeCancellationTokenSource.Token
+            : cancellationToken;
+        if(!IsActive(activeCancellationToken))
+            return;
+
+        _summary = await TeamService.GetCurrentUserTeamSummaryAsync(activeCancellationToken);
+        if(!IsActive(activeCancellationToken))
+            return;
+
         EnsureSelectedTeam();
-        await NotificationService.RefreshAsync();
-        await RealtimeService.JoinTeamsAsync(ManageableTeams.Select(team => team.Id));
-        await InvokeAsync(StateHasChanged);
+        await NotificationService.RefreshAsync(activeCancellationToken);
+        if(!IsActive(activeCancellationToken))
+            return;
+
+        await RealtimeService.JoinTeamsAsync(ManageableTeams.Select(team => team.Id), activeCancellationToken);
+        if(IsActive(activeCancellationToken))
+            await RenderIfActiveAsync();
     }
 
     private async Task RefreshFromSignalAsync()
     {
+        if(_disposed)
+            return;
+
         try
         {
-            await RefreshSummaryAsync();
+            await RefreshSummaryAsync(_lifetimeCancellationTokenSource.Token);
+        }
+        catch(OperationCanceledException) when(_disposed)
+        {
         }
         catch(Exception)
+        {
+        }
+    }
+
+    private bool IsActive(CancellationToken cancellationToken) =>
+        !_disposed && !cancellationToken.IsCancellationRequested;
+
+    protected virtual Task RequestRenderAsync() => InvokeAsync(StateHasChanged);
+
+    private async Task RenderIfActiveAsync()
+    {
+        if(_disposed)
+            return;
+
+        try
+        {
+            await RequestRenderAsync();
+        }
+        catch(InvalidOperationException) when(_disposed)
         {
         }
     }
@@ -537,8 +612,23 @@ public partial class ManageTeams : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+        _lifetimeCancellationTokenSource.Cancel();
         RealtimeService.TeamStateInvalidated -= RefreshFromSignalAsync;
+
+        if(_initializationTask is not null)
+        {
+            try
+            {
+                await _initializationTask;
+            }
+            catch(OperationCanceledException)
+            {
+            }
+        }
+
         await DisposeConfirmationFocusTrapAsync();
+        _lifetimeCancellationTokenSource.Dispose();
     }
 
     private enum TeamManagementTab

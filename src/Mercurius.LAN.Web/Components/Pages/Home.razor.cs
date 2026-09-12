@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 
 namespace Mercurius.LAN.Web.Components.Pages;
 
-public partial class Home
+public partial class Home : IAsyncDisposable
 {
     [Inject] private ITournamentService TournamentService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
@@ -18,9 +18,14 @@ public partial class Home
     [Inject] private ISponsorService SponsorService { get; set; } = null!;
     [Inject] private IOptions<LanEventOptions> EventOptions { get; set; } = null!;
 
-    private List<Tournament>? _tournaments;
+    private List<Tournament> _tournaments = [];
     private List<Sponsor> _sponsors = [];
-    private string? _loadError;
+    private bool _isTournamentsLoading = true;
+    private bool _isSponsorsLoading = true;
+    private string? _tournamentsError;
+    private string? _sponsorsError;
+    private long _loadVersion;
+    private bool _disposed;
 
     private IReadOnlyList<Tournament> FeaturedTournaments => _tournaments?.Take(4).ToList() ?? [];
     private IReadOnlyList<Tournament> HeroTournaments => _tournaments?.Take(3).ToList() ?? [];
@@ -29,42 +34,115 @@ public partial class Home
 
     private string HeroLocation => $"{EventOptions.Value.VenueName}, {EventOptions.Value.Address}";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if(!firstRender)
-            return;
+        if(firstRender && !_disposed)
+            _ = LoadHomeDataAsync();
 
-        await LoadHomeDataAsync();
+        return Task.CompletedTask;
     }
 
     private async Task LoadHomeDataAsync()
     {
-        _loadError = null;
+        if(_disposed)
+            return;
+
+        var loadVersion = ++_loadVersion;
+        _isTournamentsLoading = true;
+        _isSponsorsLoading = true;
+        _tournamentsError = null;
+        _sponsorsError = null;
+
+        await RenderIfCurrentAsync(loadVersion);
+        _ = LoadTournamentsAsync(loadVersion);
+        _ = LoadSponsorsAsync(loadVersion);
+    }
+
+    private async Task LoadTournamentsAsync(long loadVersion)
+    {
         try
         {
-            var tournamentsTask = TournamentService.GetTournamentsAsync(pageSize: 12);
-            var sponsorsTask = SponsorService.GetSponsorsAsync();
-            await Task.WhenAll(tournamentsTask, sponsorsTask);
-
-            _tournaments = tournamentsTask.Result;
-            _sponsors = sponsorsTask.Result
-                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
-                .ThenBy(sponsor => sponsor.Name)
-                .ToList();
-            await InvokeAsync(StateHasChanged);
+            var tournaments = await TournamentService.GetTournamentsAsync(pageSize: 12);
+            if(IsCurrentLoad(loadVersion))
+                _tournaments = tournaments;
         }
         catch(Exception)
         {
-            _loadError = Localization["General.Home.LoadError"];
+            if(!IsCurrentLoad(loadVersion))
+                return;
+
+            _tournaments = [];
+            _tournamentsError = Localization["General.Home.LoadError"];
             ToastService.ShowError(Localization["General.Home.LoadToast"]);
-            await InvokeAsync(StateHasChanged);
+        }
+        finally
+        {
+            if(IsCurrentLoad(loadVersion))
+            {
+                _isTournamentsLoading = false;
+                await RenderIfCurrentAsync(loadVersion);
+            }
+        }
+    }
+
+    private async Task LoadSponsorsAsync(long loadVersion)
+    {
+        try
+        {
+            var sponsors = (await SponsorService.GetSponsorsAsync())
+                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
+                .ThenBy(sponsor => sponsor.Name)
+                .ToList();
+            if(IsCurrentLoad(loadVersion))
+                _sponsors = sponsors;
+        }
+        catch(Exception)
+        {
+            if(!IsCurrentLoad(loadVersion))
+                return;
+
+            _sponsors = [];
+            _sponsorsError = Localization["General.Home.SponsorsUnavailable"];
+        }
+        finally
+        {
+            if(IsCurrentLoad(loadVersion))
+            {
+                _isSponsorsLoading = false;
+                await RenderIfCurrentAsync(loadVersion);
+            }
         }
     }
 
     private Task RetryLoadAsync() => LoadHomeDataAsync();
 
+    private bool IsCurrentLoad(long loadVersion) => !_disposed && loadVersion == _loadVersion;
+
+    protected virtual Task RequestRenderAsync() => InvokeAsync(StateHasChanged);
+
+    private async Task RenderIfCurrentAsync(long loadVersion)
+    {
+        if(!IsCurrentLoad(loadVersion))
+            return;
+
+        try
+        {
+            await RequestRenderAsync();
+        }
+        catch(InvalidOperationException) when(_disposed)
+        {
+        }
+    }
+
     private void NavigateToTournament(Guid tournamentId)
     {
         NavigationManager.NavigateTo($"/tournaments/{tournamentId}");
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        _loadVersion++;
+        return ValueTask.CompletedTask;
     }
 }

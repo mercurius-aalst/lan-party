@@ -21,6 +21,8 @@
       login, registration, or Auth0 callback behavior.
 - [x] 2.4 Revalidate the callback query target and redirect locally, falling
       back to `/` for missing, protected, unsafe, or malformed values.
+- [x] 2.5 Clear the local authentication cookie before initiating live Auth0
+      sign-out so remote provider failures cannot preserve the local session.
 
 ## Validation
 
@@ -33,3 +35,6 @@
       Auth0 smoke testing.
 - [x] 3.3 Document the exact development and production Auth0 Allowed Logout
       URL entries and the provider's query/hash validation behavior.
+- [x] 3.4 Add pipeline coverage for the completed logout response and anonymous
+      protected follow-up after remote sign-out failure, then rerun the relevant
+      contract tests and application build.

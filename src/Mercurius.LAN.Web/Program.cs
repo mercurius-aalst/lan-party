@@ -39,7 +39,6 @@ builder.Services.AddCustomServices(builder.Configuration);
 
 var app = builder.Build();
 var mockModeEnabled = DependencyExtensions.IsMockBackendEnabled(app.Configuration);
-const string logoutCallbackPath = "/account/logout/callback";
 
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment())
@@ -117,18 +116,10 @@ else
 
     app.MapGet("/account/logout", async (HttpContext httpContext, string? returnUrl = null) =>
     {
-        var redirectUri = LocalReturnUrlHelper.GetSafeLogoutReturnUrl(returnUrl);
-        var callbackUri = logoutCallbackPath + QueryString.Create("returnUrl", redirectUri).ToUriComponent();
-
-        var authenticationProperties = new LogoutAuthenticationPropertiesBuilder()
-                .WithRedirectUri(callbackUri)
-                .Build();
-
-        await httpContext.SignOutAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await AccountLogoutFlow.BeginLiveAsync(httpContext, returnUrl, app.Logger);
     }).RequireAuthorization();
 
-    app.MapGet(logoutCallbackPath, (HttpRequest request) =>
+    app.MapGet(AccountLogoutFlow.LogoutCallbackPath, (HttpRequest request) =>
     {
         var returnUrl = request.Query["returnUrl"];
         return Results.LocalRedirect(returnUrl.Count == 1

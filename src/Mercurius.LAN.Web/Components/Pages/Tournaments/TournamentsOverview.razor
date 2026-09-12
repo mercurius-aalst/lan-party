@@ -210,11 +210,23 @@ else
         </div>
     </section>
 
-    @if(_sponsors.Any())
-    {
-        <section class="brand-section tournaments-sponsors">
+}
+
+@if(_isSponsorsLoading || _sponsorsError is not null || _sponsors.Any())
+{
+    <section class="brand-section tournaments-sponsors">
+        @if(_isSponsorsLoading)
+        {
+            <p class="tournament-empty-copy" role="status">@Localization["status.loadingSponsors"]</p>
+        }
+        else if(_sponsorsError is not null)
+        {
+            <p class="tournament-empty-copy" role="alert">@_sponsorsError</p>
+        }
+        else
+        {
             <SponsorScroller Sponsors="_sponsors" AriaLabel='@Localization["Feature.tournamentsOverview.sponsorLogosAria"]' />
-        </section>
-    }
+        }
+    </section>
 }
 

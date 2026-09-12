@@ -6,7 +6,6 @@ using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
 using Mercurius.LAN.Web.Localization;
-using Polly;
 using Refit;
 using System.Text.Json;
 using System.Web;
@@ -17,6 +16,8 @@ namespace Mercurius.LAN.Web.Extensions;
 
 public static class DependencyExtensions
 {
+    internal static readonly TimeSpan ApiRequestTimeout = TimeSpan.FromSeconds(5);
+
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
         if(IsMockBackendEnabled(configuration))
@@ -95,19 +96,23 @@ public static class DependencyExtensions
         var baseAddress = BuildApiBaseAddress(configuredBaseAddress);
 
         services.AddRefitClient<ILANClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(baseAddress);
+                client.Timeout = ApiRequestTimeout;
+            })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
             })
-            .AddHttpMessageHandler<AccessTokenHandler>()
-            .AddTransientHttpErrorPolicy(builder => builder.WaitAndRetryAsync(new[]
-            {
-                TimeSpan.FromSeconds(1),
-            }));
+            .AddHttpMessageHandler<AccessTokenHandler>();
 
         services.AddRefitClient<IUserClient>(refitSettings)
-            .ConfigureHttpClient(configuration => configuration.BaseAddress = new Uri(baseAddress))
+            .ConfigureHttpClient(client =>
+            {
+                client.BaseAddress = new Uri(baseAddress);
+                client.Timeout = ApiRequestTimeout;
+            })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
