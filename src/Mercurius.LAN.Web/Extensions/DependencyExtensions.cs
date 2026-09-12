@@ -16,8 +16,6 @@ namespace Mercurius.LAN.Web.Extensions;
 
 public static class DependencyExtensions
 {
-    internal static readonly TimeSpan ApiRequestTimeout = TimeSpan.FromSeconds(5);
-
     public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
     {
         if(IsMockBackendEnabled(configuration))
@@ -91,6 +89,7 @@ public static class DependencyExtensions
         };
 
         services.AddTransient<AccessTokenHandler>();
+        services.AddTransient<ApiReadTimeoutHandler>();
 
         var configuredBaseAddress = configuration.GetValue<string>("MercuriusAPI:BaseAddress");
         var baseAddress = BuildApiBaseAddress(configuredBaseAddress);
@@ -99,24 +98,24 @@ public static class DependencyExtensions
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri(baseAddress);
-                client.Timeout = ApiRequestTimeout;
             })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
             })
+            .AddHttpMessageHandler<ApiReadTimeoutHandler>()
             .AddHttpMessageHandler<AccessTokenHandler>();
 
         services.AddRefitClient<IUserClient>(refitSettings)
             .ConfigureHttpClient(client =>
             {
                 client.BaseAddress = new Uri(baseAddress);
-                client.Timeout = ApiRequestTimeout;
             })
             .ConfigurePrimaryHttpMessageHandler(static () => new HttpClientHandler
             {
                 UseCookies = false
             })
+            .AddHttpMessageHandler<ApiReadTimeoutHandler>()
             .AddHttpMessageHandler<AccessTokenHandler>();
 
         return services;
