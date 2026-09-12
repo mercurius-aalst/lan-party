@@ -23,11 +23,24 @@
     width: max-content;
     min-width: 0;
     gap: 0;
-    animation: sponsor-scroller-marquee 30s linear infinite;
     will-change: transform;
 }
 
-.sponsor-scroller__viewport:hover .sponsor-scroller__track {
+.sponsor-scroller__track--static {
+    display: none;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    gap: 0.85rem;
+}
+
+.sponsor-scroller__track--marquee {
+    display: none;
+    animation: sponsor-scroller-marquee 30s linear infinite;
+}
+
+.sponsor-scroller__viewport:hover .sponsor-scroller__track,
+.sponsor-scroller__viewport:focus-within .sponsor-scroller__track {
     animation-play-state: paused;
 }
 
@@ -48,19 +61,25 @@
     padding: 0.95rem 1.15rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-card);
-    background: var(--color-surface-muted);
+    background: color-mix(in srgb, var(--color-dark-navy) 50%, var(--color-soft-white));
     box-shadow: none;
     text-decoration: none;
     transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+    flex: 0 0 clamp(9.75rem, 12vw, 11rem);
+    max-width: 100%;
 }
 
 .sponsor-scroller__logo:hover,
 .sponsor-scroller__logo:focus-visible {
     transform: translateY(-2px);
     border-color: var(--color-primary-green);
-    background: rgba(57, 201, 101, 0.12);
+    background: color-mix(in srgb, var(--color-primary-green) 18%, var(--color-dark-navy) 41%, var(--color-soft-white) 41%);
     box-shadow: none;
-    outline: none;
+}
+
+.sponsor-scroller__logo:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
 }
 
 .sponsor-scroller__logo img {
@@ -88,14 +107,19 @@
 }
 
 @media (max-width: 900px) {
-    .sponsor-scroller__loop {
+    .sponsor-scroller__loop,
+    .sponsor-scroller__track--static {
         gap: 0.75rem;
+    }
+
+    .sponsor-scroller__loop {
         padding-inline-end: 0.75rem;
     }
 
     .sponsor-scroller__logo {
         width: clamp(8.5rem, 33vw, 10rem);
         min-width: clamp(8.5rem, 33vw, 10rem);
+        flex-basis: clamp(8.5rem, 33vw, 10rem);
         height: clamp(5.4rem, 17vw, 6rem);
         padding: 0.85rem 0.95rem;
     }
@@ -111,8 +135,9 @@
     }
 
     .sponsor-scroller__logo {
-        width: clamp(7.85rem, 46vw, 8.85rem);
-        min-width: clamp(7.85rem, 46vw, 8.85rem);
+        width: clamp(7rem, 40vw, 8.25rem);
+        min-width: clamp(7rem, 40vw, 8.25rem);
+        flex-basis: clamp(7rem, 40vw, 8.25rem);
         height: 5rem;
         border-radius: 16px;
     }
@@ -122,8 +147,61 @@
     }
 }
 
+/* Static presentation is selected by sponsor count and the narrowest consumer capacity. */
+.sponsor-scroller--count-1 .sponsor-scroller__track--static {
+    display: flex;
+}
+
+.sponsor-scroller--count-1 .sponsor-scroller__track--marquee {
+    display: none;
+}
+
+.sponsor-scroller--count-2 .sponsor-scroller__track--marquee,
+.sponsor-scroller--count-3 .sponsor-scroller__track--marquee,
+.sponsor-scroller--count-4 .sponsor-scroller__track--marquee,
+.sponsor-scroller--count-overflow .sponsor-scroller__track--marquee {
+    display: flex;
+}
+
+@media (min-width: 340px) {
+    .sponsor-scroller--count-2 .sponsor-scroller__track--static {
+        display: flex;
+    }
+
+    .sponsor-scroller--count-2 .sponsor-scroller__track--marquee {
+        display: none;
+    }
+}
+
+@media (min-width: 500px) {
+    .sponsor-scroller--count-3 .sponsor-scroller__track--static {
+        display: flex;
+    }
+
+    .sponsor-scroller--count-3 .sponsor-scroller__track--marquee {
+        display: none;
+    }
+}
+
+@media (min-width: 800px) {
+    .sponsor-scroller--count-4 .sponsor-scroller__track--static {
+        display: flex;
+    }
+
+    .sponsor-scroller--count-4 .sponsor-scroller__track--marquee {
+        display: none;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .sponsor-scroller__track {
+    .sponsor-scroller__track--static {
+        display: flex !important;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+
+    .sponsor-scroller__track--marquee {
+        display: none !important;
         animation: none;
     }
 }

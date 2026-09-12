@@ -1,8 +1,21 @@
 @if(Sponsors.Count > 0)
 {
-    <div class="sponsor-scroller" aria-label="@(string.IsNullOrWhiteSpace(AriaLabel) ? Localization["shared.sponsorLogos"] : AriaLabel)">
+    <div class="sponsor-scroller @SponsorCountClass" aria-label="@(string.IsNullOrWhiteSpace(AriaLabel) ? Localization["shared.sponsorLogos"] : AriaLabel)">
         <div class="sponsor-scroller__viewport">
-            <div class="sponsor-scroller__track">
+            <div class="sponsor-scroller__track sponsor-scroller__track--static">
+                @foreach(var sponsor in Sponsors)
+                {
+                    <a class="sponsor-scroller__logo"
+                       href="@sponsor.InfoUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       aria-label="@Localization.Get("shared.visitSponsor", sponsor.Name)">
+                        <img src="@sponsor.LogoUrl" alt="@Localization.Get("shared.sponsorLogo", sponsor.Name)" />
+                    </a>
+                }
+            </div>
+
+            <div class="sponsor-scroller__track sponsor-scroller__track--marquee">
                 @for(var loopIndex = 0; loopIndex < LoopCount; loopIndex++)
                 {
                     var isPrimaryLoop = loopIndex == 0;

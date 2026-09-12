@@ -2,6 +2,10 @@ using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Services;
+#if INCLUDE_MOCK_BACKEND
+using Mercurius.LAN.Web.Options;
+using Microsoft.Extensions.Options;
+#endif
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -22,8 +26,10 @@ public partial class NavMenu : IAsyncDisposable
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+#if INCLUDE_MOCK_BACKEND
     [Inject]
-    private IConfiguration Configuration { get; set; } = null!;
+    private IOptions<MockBackendOptions> MockBackendOptions { get; set; } = null!;
+#endif
     [Inject]
     private IGlobalSearchService GlobalSearchService { get; set; } = null!;
     [Inject]
@@ -73,8 +79,10 @@ public partial class NavMenu : IAsyncDisposable
 
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
     private string RegisterHref => $"/account/register?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
+#if INCLUDE_MOCK_BACKEND
     private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/sponsors")}";
-    private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
+    private bool IsMockBackendEnabled => MockBackendOptions.Value.Enabled;
+#endif
     private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible || _isNotificationMenuVisible;
     private bool HasSearchResults => _searchResults.Count > 0;
     private int NotificationCount => NotificationService.UnreadCount;
