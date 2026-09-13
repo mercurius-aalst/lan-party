@@ -1,7 +1,9 @@
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Mercurius.LAN.Web.APIClients;
+#if INCLUDE_MOCK_BACKEND
 using Mercurius.LAN.Web.Mock;
+#endif
 using Mercurius.LAN.Web.Middleware;
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Services;
@@ -9,16 +11,22 @@ using Mercurius.LAN.Web.Localization;
 using Refit;
 using System.Text.Json;
 using System.Web;
+#if INCLUDE_MOCK_BACKEND
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+#endif
 
 namespace Mercurius.LAN.Web.Extensions;
 
 public static class DependencyExtensions
 {
-    public static IServiceCollection AddAuthenticationServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuthenticationServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        bool mockModeEnabled)
     {
-        if(IsMockBackendEnabled(configuration))
+#if INCLUDE_MOCK_BACKEND
+        if(mockModeEnabled)
         {
             services.AddAuthorization();
             services.AddCascadingAuthenticationState();
@@ -34,6 +42,7 @@ public static class DependencyExtensions
 
             return services;
         }
+#endif
 
         var auth0Options = GetAuth0Options(configuration);
 
@@ -78,10 +87,16 @@ public static class DependencyExtensions
         return services;
     }
 
-    public static IServiceCollection AddHttpClients(this IServiceCollection services, JsonSerializerOptions jsonOptions, IConfiguration configuration)
+    public static IServiceCollection AddHttpClients(
+        this IServiceCollection services,
+        JsonSerializerOptions jsonOptions,
+        IConfiguration configuration,
+        bool mockModeEnabled)
     {
-        if(IsMockBackendEnabled(configuration))
+#if INCLUDE_MOCK_BACKEND
+        if(mockModeEnabled)
             return services;
+#endif
 
         var refitSettings = new RefitSettings
         {
@@ -133,12 +148,16 @@ public static class DependencyExtensions
         return $"{normalizedAddress}/";
     }
 
-    public static IServiceCollection AddCustomServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCustomServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        bool mockModeEnabled)
     {
         services.AddScoped<ILocalizationService, LocalizationService>();
         services.AddScoped<IContactEmailService, SmtpContactEmailService>();
 
-        if(IsMockBackendEnabled(configuration))
+#if INCLUDE_MOCK_BACKEND
+        if(mockModeEnabled)
         {
             services.AddSingleton<MockBackendStore>();
             services.AddScoped<ITournamentService, MockTournamentService>();
@@ -153,6 +172,7 @@ public static class DependencyExtensions
             services.AddHttpContextAccessor();
             return services;
         }
+#endif
 
         services.AddScoped<ITournamentService, TournamentService>();
         services.AddScoped<ITeamService, TeamService>();
@@ -167,9 +187,7 @@ public static class DependencyExtensions
         return services;
     }
 
-    public static bool IsMockBackendEnabled(IConfiguration configuration) =>
-        configuration.GetValue<bool>($"{MockBackendOptions.SectionName}:Enabled");
-
+#if INCLUDE_MOCK_BACKEND
     public static string NormalizeMockPersona(string? persona, string fallbackPersona)
     {
         var candidate = string.IsNullOrWhiteSpace(persona) ? fallbackPersona : persona;
@@ -219,6 +237,7 @@ public static class DependencyExtensions
 
         return new ClaimsPrincipal(identity);
     }
+#endif
 
     private static Auth0Options GetAuth0Options(IConfiguration configuration)
     {

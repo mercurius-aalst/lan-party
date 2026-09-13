@@ -46,6 +46,9 @@ jobs:
       - name: Test
         run: dotnet test
 
+      - name: Test production Release boundary
+        run: dotnet test --configuration Release --no-restore -p:IncludeMockBackend=false
+
   build-image:
     runs-on: ubuntu-24.04
     name: "Build Docker Image"

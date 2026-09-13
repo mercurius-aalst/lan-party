@@ -398,7 +398,7 @@
 
 .home-tournament-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+    grid-template-columns: minmax(0, 0.92fr) minmax(18rem, 1.08fr);
     gap: clamp(1.25rem, 2vw, 2rem);
     align-items: start;
 }
@@ -422,6 +422,12 @@
     background: var(--color-surface-raised);
     box-shadow: var(--shadow-brand);
     transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.home-tournament-lead {
+    max-width: 42rem;
+    justify-self: start;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--color-ink) 8%, transparent);
 }
 
 .home-tournament-lead:hover,
@@ -533,7 +539,7 @@
 
 .home-actions {
     display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     width: min(calc(100% - 2rem), var(--site-max-width));
     margin: 0 auto;
     gap: clamp(1rem, 2.5vw, 2rem);

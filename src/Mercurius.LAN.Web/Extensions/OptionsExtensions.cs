@@ -4,14 +4,19 @@ namespace Mercurius.LAN.Web.Extensions;
 
 public static class OptionsExtensions
 {
-    public static IServiceCollection AddCustomOptions(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddCustomOptions(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        bool mockModeEnabled)
     {
+#if INCLUDE_MOCK_BACKEND
         services.AddOptions<MockBackendOptions>()
             .Bind(configuration.GetSection(MockBackendOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+#endif
 
-        if(!IsMockBackendEnabled(configuration))
+        if(!mockModeEnabled)
         {
             services.AddOptions<Auth0Options>()
                 .Bind(configuration.GetSection(Auth0Options.SectionName))
@@ -43,10 +48,5 @@ public static class OptionsExtensions
             .ValidateDataAnnotations();
 
         return services;
-    }
-
-    private static bool IsMockBackendEnabled(IConfiguration configuration)
-    {
-        return configuration.GetValue<bool>($"{MockBackendOptions.SectionName}:Enabled");
     }
 }

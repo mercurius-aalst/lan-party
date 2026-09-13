@@ -3,7 +3,9 @@ using Blazored.Toast;
 using Mercurius.LAN.Web.Components;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Middleware;
+#if INCLUDE_MOCK_BACKEND
 using Mercurius.LAN.Web.Mock;
+#endif
 using Mercurius.LAN.Web.Options;
 using Mercurius.LAN.Web.Serialization;
 using Microsoft.AspNetCore.Authentication;
@@ -14,7 +16,21 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+#if INCLUDE_MOCK_BACKEND
+if(MockBackendMode.IsAllowedEnvironment(builder.Environment))
+    builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+#endif
+
+const bool mockBackendIncluded =
+#if INCLUDE_MOCK_BACKEND
+    true;
+#else
+    false;
+#endif
+var mockModeEnabled = MockBackendMode.Resolve(
+    builder.Configuration,
+    builder.Environment,
+    mockBackendIncluded);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -32,13 +48,12 @@ var jsonOptions = new JsonSerializerOptions
     AllowOutOfOrderMetadataProperties = true
 };
 
-builder.Services.AddCustomOptions(builder.Configuration);
-builder.Services.AddAuthenticationServices(builder.Configuration);
-builder.Services.AddHttpClients(jsonOptions, builder.Configuration);
-builder.Services.AddCustomServices(builder.Configuration);
+builder.Services.AddCustomOptions(builder.Configuration, mockModeEnabled);
+builder.Services.AddAuthenticationServices(builder.Configuration, mockModeEnabled);
+builder.Services.AddHttpClients(jsonOptions, builder.Configuration, mockModeEnabled);
+builder.Services.AddCustomServices(builder.Configuration, mockModeEnabled);
 
 var app = builder.Build();
-var mockModeEnabled = DependencyExtensions.IsMockBackendEnabled(app.Configuration);
 
 // Configure the HTTP request pipeline.
 if(!app.Environment.IsDevelopment())
@@ -53,6 +68,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
 
+#if INCLUDE_MOCK_BACKEND
 if(mockModeEnabled)
 {
     app.MapGet("/account/login", async (HttpContext httpContext, MockBackendStore store, string? returnUrl = null, string? persona = null) =>
@@ -92,6 +108,7 @@ if(mockModeEnabled)
     }).AllowAnonymous();
 }
 else
+#endif
 {
     app.MapGet("/account/login", async (HttpContext httpContext, string? returnUrl = null) =>
     {
