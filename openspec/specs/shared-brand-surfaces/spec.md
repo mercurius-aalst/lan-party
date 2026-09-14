@@ -126,14 +126,16 @@ SponsorScroller MUST preserve its sponsor content, links, labels, loading,
 empty, error, accessibility, and interaction behavior. An outer visual framing
 wrapper MAY be removed only when it contributes no semantic grouping, accessible
 name, interaction boundary, state, or required anchor. Non-Home instances MAY
-use the available content width, while Home MUST retain its existing width and
-composition.
+use the available content width, while Home MUST retain its existing content
+purpose and responsive behavior.
 
 #### Scenario: SponsorScroller renders on Home
 
 - **WHEN** Home renders the sponsor scroller
-- **THEN** its existing width, composition, sponsor content, and actions MUST
-  remain unchanged
+- **THEN** its sponsor content, links, actions, and accessibility MUST remain
+  unchanged
+- **AND** its visual framing and responsive tile sizing MAY be refined without
+  changing that content purpose
 - **AND** any wrapper removal MUST not change its semantics or accessibility
 
 #### Scenario: SponsorScroller renders outside Home
@@ -173,4 +175,3 @@ invert, or otherwise unnecessarily alter sponsor branding.
 - **THEN** the same contrast and artwork-preservation treatment MUST remain
   effective
 - **AND** logo links, labels, and focus states MUST remain usable
-

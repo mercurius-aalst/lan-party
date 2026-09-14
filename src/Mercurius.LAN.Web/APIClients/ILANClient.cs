@@ -128,6 +128,18 @@ public interface ILANClient
         [Body] UpdateRosterMemberConfirmationRequestDTO request,
         CancellationToken cancellationToken = default);
 
+    [Delete("/v1/lan/tournaments/{tournamentId}/registrations/roster-members/{rosterMemberId}")]
+    Task DeclineTournamentRosterMemberAsync(
+        Guid tournamentId,
+        Guid rosterMemberId,
+        CancellationToken cancellationToken = default);
+
+    [Get("/v1/lan/tournament-roster-confirmations/me")]
+    Task<PendingRosterConfirmationPageDTO> GetPendingRosterConfirmationsAsync(
+        [AliasAs("page")] int page,
+        [AliasAs("pageSize")] int pageSize,
+        CancellationToken cancellationToken = default);
+
     [Get("/v1/lan/tournaments/{tournamentId}/registrations/admin")]
     Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
         Guid tournamentId,

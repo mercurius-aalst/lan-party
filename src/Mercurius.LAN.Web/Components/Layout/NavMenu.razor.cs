@@ -73,6 +73,8 @@ public partial class NavMenu : IAsyncDisposable
     private long _authenticatedNavigationVersion;
     private string? _pendingAuthenticatedNavigationIdentityKey;
     private bool _disposed;
+    private readonly HashSet<string> _pendingNotificationActionIds = [];
+    private string? _notificationActionError;
 
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
@@ -716,8 +718,15 @@ public partial class NavMenu : IAsyncDisposable
         await NotificationService.DismissAsync(id);
     }
 
-    private async Task RespondToInviteNotificationAsync(Guid inviteId, bool accept)
+    private bool IsNotificationActionPending(string notificationId) =>
+        _pendingNotificationActionIds.Contains(notificationId);
+
+    private async Task RespondToInviteNotificationAsync(TeamNotificationItem notification, bool accept)
     {
+        if(notification.InviteId is not Guid inviteId || !_pendingNotificationActionIds.Add(notification.Id))
+            return;
+
+        _notificationActionError = null;
         try
         {
             await TeamService.RespondToInviteAsync(inviteId, accept);
@@ -725,6 +734,44 @@ public partial class NavMenu : IAsyncDisposable
         }
         catch(Exception)
         {
+            _notificationActionError = Localization["nav.notificationActionFailed"];
+        }
+        finally
+        {
+            _pendingNotificationActionIds.Remove(notification.Id);
+        }
+    }
+
+    private async Task RespondToRosterNotificationAsync(TeamNotificationItem notification, bool accept)
+    {
+        if(!_pendingNotificationActionIds.Add(notification.Id))
+            return;
+
+        _notificationActionError = null;
+        try
+        {
+            await NotificationService.RespondToRosterSelectionAsync(
+                notification.Id,
+                accept,
+                _lifetimeCancellationTokenSource.Token);
+        }
+        catch(OperationCanceledException) when(_disposed)
+        {
+        }
+        catch(Exception)
+        {
+            _notificationActionError = Localization["nav.rosterActionFailed"];
+            try
+            {
+                await NotificationService.RefreshAsync(_lifetimeCancellationTokenSource.Token);
+            }
+            catch(Exception)
+            {
+            }
+        }
+        finally
+        {
+            _pendingNotificationActionIds.Remove(notification.Id);
         }
     }
 

@@ -62,14 +62,22 @@ layout and movement to the number of available sponsors and the active
 responsive capacity. It MUST use bounded tiles rather than stretching sparse
 content across the full track.
 
-#### Scenario: One to four sponsors fit in the visible carousel
+#### Scenario: One to three sponsors fit in the visible carousel
 
-- **WHEN** the available sponsor items fit within the visible capacity at the
-  active breakpoint
+- **WHEN** one to three unique sponsor items fit within the visible capacity at
+  the active breakpoint
 - **THEN** the items MUST be centered in a compact static layout
 - **AND** the carousel MUST NOT auto-scroll or introduce unnecessary movement
 - **AND** a wide layout SHOULD show up to four bounded sponsor tiles across when
   the available width allows
+
+#### Scenario: At least four unique sponsors are available
+
+- **WHEN** at least four unique sponsors are available
+- **THEN** the carousel MUST use its moving marquee presentation even when all
+  sponsor tiles fit in the visible width
+- **AND** repeated entries for the same persisted sponsor ID MUST NOT increase
+  the unique sponsor count
 
 #### Scenario: A single sponsor is available
 
@@ -96,4 +104,3 @@ content across the full track.
   page-wide horizontal scrolling
 - **AND** the carousel MUST switch between static and moving behavior according
   to the capacity at that breakpoint
-

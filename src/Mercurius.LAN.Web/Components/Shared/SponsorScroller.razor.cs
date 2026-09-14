@@ -13,7 +13,11 @@ public partial class SponsorScroller
     [Parameter]
     public string AriaLabel { get; set; } = string.Empty;
 
-    private string SponsorCountClass => Sponsors.Count switch
+    private IReadOnlyList<Sponsor> DisplaySponsors => Sponsors
+        .DistinctBy(sponsor => sponsor.Id)
+        .ToList();
+
+    private string SponsorCountClass => DisplaySponsors.Count switch
     {
         <= 1 => "sponsor-scroller--count-1",
         2 => "sponsor-scroller--count-2",

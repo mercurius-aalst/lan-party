@@ -111,6 +111,14 @@ public interface ITournamentService
         Guid rosterMemberId,
         CancellationToken cancellationToken = default);
 
+    Task DeclineTournamentRosterMemberAsync(
+        Guid tournamentId,
+        Guid rosterMemberId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PendingRosterConfirmationDTO>> GetPendingRosterConfirmationsAsync(
+        CancellationToken cancellationToken = default);
+
     Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
         Guid tournamentId,
         int? page = null,

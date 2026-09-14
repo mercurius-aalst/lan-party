@@ -1,37 +1,3 @@
-.sponsors-hero-section {
-    padding-top: 0;
-    padding-bottom: clamp(0.65rem, 1.35vw, 1rem);
-}
-
-.sponsors-hero {
-    --brand-page-hero-columns: 1fr;
-    --brand-page-hero-gap: clamp(0.7rem, 1.6vw, 1.2rem);
-    --brand-page-hero-padding: clamp(0.9rem, 1.8vw, 1.35rem);
-    --brand-page-hero-padding-mobile: 0.9rem;
-    --brand-page-hero-margin-top: 0;
-    --brand-page-hero-copy-gap: 0.55rem;
-    --brand-page-hero-copy-paragraph-size: clamp(0.98rem, 1.24vw, 1.06rem);
-    --brand-page-hero-copy-paragraph-line-height: 1.5;
-    background: var(--color-surface);
-    box-shadow: none;
-}
-
-.sponsors-hero::after {
-    display: none;
-}
-
-.sponsors-hero-lead {
-    display: grid;
-    gap: 0;
-}
-
-.sponsors-hero-copy h1 {
-    margin-bottom: 0;
-    font-size: clamp(2rem, 3.6vw, 3.1rem);
-    line-height: 1;
-}
-
-.sponsors-hero-copy p,
 .sponsors-impact-card p,
 .sponsor-card-body p,
 .sponsors-empty-state p {
@@ -47,6 +13,7 @@
     max-width: 52rem;
 }
 
+.sponsors-impact-header h1,
 .sponsors-impact-header h2,
 .sponsors-tier-heading h2,
 .sponsors-empty-state h2 {
@@ -66,6 +33,10 @@
     padding: 1.35rem;
     border: 1px solid var(--color-border);
     background: var(--color-surface-raised);
+}
+
+.sponsors-impact-card h2 {
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
 }
 
 .sponsors-tier-list {

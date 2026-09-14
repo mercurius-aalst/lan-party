@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Security.Claims;
 using Mercurius.LAN.Web.Components.Pages.Tournaments.Tabs;
 using Mercurius.LAN.Web.DTOs.Registrations;
+using Mercurius.LAN.Web.DTOs.Users;
+using Mercurius.LAN.Web.Localization;
 using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Services;
 using Microsoft.AspNetCore.Components;
@@ -109,11 +111,49 @@ public sealed class TournamentParticipantsLoadingTests
         Assert.True(GetField<bool>(tab, "_registrationLoadCompleted"));
     }
 
+    [Fact]
+    public async Task BellRosterDecisionRefreshesOpenRegistrationWithoutRealtime()
+    {
+        var service = CreateTournamentService();
+        var notifications = new RecordingNotificationService();
+        var tab = CreateTab(
+            service,
+            popupOnly: false,
+            dialogOpen: false,
+            notificationService: notifications);
+        SetPrivateField(tab, "_isAuthenticated", true);
+        SetPrivateField(tab, "_registrationState", new CurrentUserTournamentRegistrationStateDTO
+        {
+            TournamentId = tab.Tournament.Id,
+            PendingRosterConfirmation = new TournamentRosterMemberDTO
+            {
+                Id = Guid.NewGuid(),
+                User = new PublicUserDTO { Id = Guid.NewGuid(), Username = "selected" },
+                ConfirmationStatus = RosterMemberConfirmationStatus.Pending
+            },
+            CanConfirmRoster = true
+        });
+        tab.InitializeForTest();
+
+        await notifications.RaiseRosterDecisionChangedAsync(tab.Tournament.Id);
+
+        Assert.Equal(1, service.StateRequestCount);
+        var refreshedState = GetField<CurrentUserTournamentRegistrationStateDTO?>(tab, "_registrationState");
+        Assert.NotNull(refreshedState);
+        Assert.Null(refreshedState!.PendingRosterConfirmation);
+
+        await tab.DisposeAsync();
+        await notifications.RaiseRosterDecisionChangedAsync(tab.Tournament.Id);
+
+        Assert.Equal(1, service.StateRequestCount);
+    }
+
     private static TestableTournamentParticipantsTab CreateTab(
         RecordingTournamentServiceProxy service,
         bool popupOnly,
         bool dialogOpen,
-        bool isAdmin = false)
+        bool isAdmin = false,
+        ITeamNotificationService? notificationService = null)
     {
         var tab = new TestableTournamentParticipantsTab();
         SetPrivateProperty(tab, "Localization", TestLocalizationService.Instance);
@@ -123,6 +163,7 @@ public sealed class TournamentParticipantsLoadingTests
         SetPrivateProperty(tab, "TournamentService", service.Proxy);
         SetPrivateProperty(tab, "AuthenticationStateProvider", new FixedAuthenticationStateProvider(CreatePrincipal(isAdmin)));
         SetPrivateProperty(tab, "TeamRealtimeService", new NoopTeamRealtimeService());
+        SetPrivateProperty(tab, "NotificationService", notificationService ?? new RecordingNotificationService());
         SetPrivateField(tab, "_registrationFocusTrap", DispatchProxy.Create<IJSObjectReference, NoopJsObjectReferenceProxy>());
         tab.SetParametersForTest();
         return tab;
@@ -181,6 +222,8 @@ public sealed class TournamentParticipantsLoadingTests
 
         public Task LoadAfterRenderAsync() => base.OnAfterRenderAsync(false);
 
+        public void InitializeForTest() => base.OnInitialized();
+
         public void SetDialogOpenForTest(bool isOpen)
         {
             RegistrationDialogOpen = isOpen;
@@ -201,6 +244,7 @@ public sealed class TournamentParticipantsLoadingTests
         public TestRenderer()
             : base(new ServiceCollection()
                 .AddSingleton<IJSRuntime, NoopJsRuntime>()
+                .AddSingleton<ILocalizationService>(TestLocalizationService.Instance)
                 .BuildServiceProvider(), NullLoggerFactory.Instance)
         {
         }
@@ -323,6 +367,32 @@ public sealed class TournamentParticipantsLoadingTests
             }
 
             throw new InvalidOperationException("The delayed test request should only complete through cancellation.");
+        }
+    }
+
+    private sealed class RecordingNotificationService : ITeamNotificationService
+    {
+        public event Func<Task>? Changed;
+        public event Func<Guid, Task>? RosterDecisionChanged;
+        public IReadOnlyList<TeamNotificationItem> Notifications => [];
+        public int UnreadCount => 0;
+
+        public Task RefreshAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task RespondToRosterSelectionAsync(
+            string notificationId,
+            bool accept,
+            CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task MarkAllReadAsync() => Task.CompletedTask;
+
+        public Task DismissAsync(string id) => Task.CompletedTask;
+
+        public async Task RaiseRosterDecisionChangedAsync(Guid tournamentId)
+        {
+            var handler = RosterDecisionChanged;
+            if(handler is not null)
+                await handler(tournamentId);
         }
     }
 }

@@ -10,7 +10,7 @@
 
 @rendermode @(new InteractiveServerRenderMode(prerender: false))
 
-<PageTitle>@Localization["Feature.tournaments.detailPageTitle"]</PageTitle>
+<PageTitle>@PageTitleText</PageTitle>
 @if(_isLoading && _tournament is null)
 {
     <LoadingScreen Message='@Localization["Feature.tournaments.loadingDetail"]' />
@@ -218,7 +218,7 @@ else
                             <div class="Tournament-section-header">
                                 <div>
                                     <span class="section-eyebrow">@Localization["tournament.admin"]</span>
-                                    <h2>@Localization["Feature.tournaments.partnerHeading"]</h2>
+                                    <h2>@SponsorAdminHeading</h2>
                                     <p>@Localization["Feature.tournaments.partnerDescription"]</p>
                                 </div>
                             </div>

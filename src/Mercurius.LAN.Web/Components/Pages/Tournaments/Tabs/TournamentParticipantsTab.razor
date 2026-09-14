@@ -38,7 +38,7 @@
                 <div class="registration-panel-header">
                     <div>
                         <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
-                        <h3 id="registration-panel-heading">@Localization["Feature.tournaments.joinTournament"]</h3>
+                        <h3 id="registration-panel-heading">@(_registrationState?.PendingRosterConfirmation is null ? Localization["Feature.tournaments.joinTournament"] : Localization["Feature.tournaments.rosterInvitation"])</h3>
                         @if(Tournament.ParticipationMode == ParticipationMode.Team)
                         {
                             <p>@GetTeamRegistrationStateMessage()</p>
@@ -50,15 +50,76 @@
                     }
                 </div>
 
-                @if(IsRegistrationOpen)
+                @if(_isTeamUnregistrationConfirmationOpen &&
+                    !_isRegistrationDialogOpen &&
+                    CurrentCaptainManagedRegistration?.Team is { } directTeam)
                 {
-                    <button type="button"
-                            class="button-primary registration-open-button"
-                            disabled="@(_isSubmitting || _isLoadingRegistration)"
-                            @onclick="OpenRegistrationDialog">
-                        <span class="bi bi-arrow-up-right-circle" aria-hidden="true"></span>
-                        <span>@GetRegistrationActionLabel()</span>
-                    </button>
+                    <div class="registration-inline-confirmation"
+                         role="alertdialog"
+                         aria-modal="false"
+                         aria-labelledby="team-unregistration-confirmation-title"
+                         aria-describedby="team-unregistration-confirmation-message"
+                         tabindex="-1"
+                         @onkeydown="HandleTeamUnregistrationConfirmationKeyDown"
+                         @onkeydown:stopPropagation>
+                        <div>
+                            <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
+                            <h3 id="team-unregistration-confirmation-title">@Localization["Feature.tournaments.confirmTeamUnregister"]</h3>
+                            <p id="team-unregistration-confirmation-message">@Localization.Get("Feature.tournaments.confirmTeamUnregisterMessage", directTeam.Name, Tournament.Name)</p>
+                        </div>
+                        <div class="registration-inline-confirmation-actions">
+                            <button type="button" class="button-secondary" @onclick="KeepTeamRegistrationAsync" @ref="_teamUnregistrationKeepButtonElement">
+                                @Localization["Feature.tournaments.keepRegistration"]
+                            </button>
+                            <button type="button" class="button-secondary registration-cancel-button" @onclick="UnregisterTeamAsync">
+                                @Localization["Feature.tournaments.cancelRegistration"]
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if(_registrationState?.PendingRosterConfirmation is not null)
+                {
+                    var selectedTeam = CurrentTeamRegistration?.Team;
+                    <div class="registration-invitation" aria-labelledby="roster-invitation-summary-heading">
+                        <div>
+                            <span class="section-eyebrow">@Localization["Feature.tournaments.rosterInvitation"]</span>
+                            <h3 id="roster-invitation-summary-heading">@Localization["Feature.tournaments.youWereSelected"]</h3>
+                            <p>@Localization.Get("Feature.tournaments.rosterInvitationMessage", selectedTeam?.Name ?? Localization["Feature.tournaments.unknownTeam"], Tournament.Name)</p>
+                            @if(_registrationError is not null)
+                            {
+                                <p class="registration-message registration-message--error" role="alert">@_registrationError</p>
+                            }
+                        </div>
+                        <div class="registration-invitation-actions">
+                            <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">
+                                @Localization["Feature.tournaments.acceptRosterPlace"]
+                            </button>
+                            <button type="button" class="button-secondary registration-cancel-button" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="DeclineRosterMemberAsync">
+                                @Localization["Feature.tournaments.declineRosterPlace"]
+                            </button>
+                        </div>
+                    </div>
+                }
+                else if(IsRegistrationOpen)
+                {
+                    <div class="registration-entry-actions">
+                        <button type="button"
+                                class="button-primary registration-open-button"
+                                disabled="@(_isSubmitting || _isLoadingRegistration)"
+                                @onclick="OpenRegistrationDialog">
+                            <span class="bi bi-arrow-up-right-circle" aria-hidden="true"></span>
+                            <span>@GetRegistrationActionLabel()</span>
+                        </button>
+                        @if(CanCancelTeamRegistrationDirectly)
+                        {
+                            <button type="button"
+                                    class="button-secondary registration-cancel-button"
+                                    @onclick="BeginDirectTeamUnregistrationAsync"
+                                    @ref="_teamUnregistrationTriggerElement">
+                                @Localization["Feature.tournaments.cancelRegistration"]
+                            </button>
+                        }
+                    </div>
                 }
                 else
                 {
@@ -120,7 +181,26 @@
                 <p class="registration-message registration-message--warning" role="status">@_registrationWarning</p>
             }
 
-            @if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Individual)
+            @if(_isAuthenticated && IsRegistrationOpen && _registrationState?.PendingRosterConfirmation is { } pending)
+            {
+                var selectedTeam = CurrentTeamRegistration?.Team;
+                <section class="registration-invitation" aria-labelledby="roster-invitation-heading">
+                    <div>
+                        <span class="section-eyebrow">@Localization["Feature.tournaments.rosterInvitation"]</span>
+                        <h3 id="roster-invitation-heading">@Localization["Feature.tournaments.youWereSelected"]</h3>
+                        <p>@Localization.Get("Feature.tournaments.rosterInvitationMessage", selectedTeam?.Name ?? Localization["Feature.tournaments.unknownTeam"], Tournament.Name)</p>
+                    </div>
+                    <div class="registration-invitation-actions">
+                        <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">
+                            @Localization["Feature.tournaments.acceptRosterPlace"]
+                        </button>
+                        <button type="button" class="button-secondary registration-cancel-button" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="DeclineRosterMemberAsync">
+                            @Localization["Feature.tournaments.declineRosterPlace"]
+                        </button>
+                    </div>
+                </section>
+            }
+            else if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Individual)
             {
                 <div class="registration-workflow">
                     @if(_registrationState?.IndividualRegistration is { } individualRegistration)
@@ -151,6 +231,33 @@
             }
             else if(_isAuthenticated && IsRegistrationOpen && Tournament.ParticipationMode == ParticipationMode.Team)
             {
+                @if(_isTeamUnregistrationConfirmationOpen && SelectedTeam is { } selectedTeam)
+                {
+                    <div class="registration-inline-confirmation"
+                         role="alertdialog"
+                         aria-modal="true"
+                         aria-labelledby="team-unregistration-confirmation-title"
+                         aria-describedby="team-unregistration-confirmation-message"
+                         tabindex="-1"
+                         @onkeydown="HandleTeamUnregistrationConfirmationKeyDown"
+                         @onkeydown:stopPropagation>
+                        <div>
+                            <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
+                            <h3 id="team-unregistration-confirmation-title">@Localization["Feature.tournaments.confirmTeamUnregister"]</h3>
+                            <p id="team-unregistration-confirmation-message">@Localization.Get("Feature.tournaments.confirmTeamUnregisterMessage", selectedTeam.Name, Tournament.Name)</p>
+                        </div>
+                        <div class="registration-inline-confirmation-actions">
+                            <button type="button" class="button-secondary" @onclick="KeepTeamRegistrationAsync" @ref="_teamUnregistrationKeepButtonElement">
+                                @Localization["Feature.tournaments.keepRegistration"]
+                            </button>
+                            <button type="button" class="button-secondary registration-cancel-button" @onclick="UnregisterTeamAsync">
+                                @Localization["Feature.tournaments.cancelRegistration"]
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
                 <div class="registration-workflow registration-workflow--team">
                     @if(_teamError is not null)
                     {
@@ -395,11 +502,18 @@
                         @if(CanUnregisterSelectedTeam)
                         {
                             <div class="registration-actions">
-                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="UnregisterTeamAsync">@Localization["Feature.tournaments.unregisterTeam"]</button>
+                                <button type="button"
+                                        class="button-secondary registration-cancel-button"
+                                        disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
+                                        @onclick="BeginTeamUnregistrationConfirmationAsync"
+                                        @ref="_teamUnregistrationTriggerElement">
+                                    @Localization["Feature.tournaments.cancelRegistration"]
+                                </button>
                             </div>
                         }
                     }
                 </div>
+                }
             }
             else if(_isAuthenticated && !IsRegistrationOpen)
             {
@@ -420,17 +534,6 @@
                 </div>
             }
 
-            @if(_registrationState?.PendingRosterConfirmation is { } pending)
-            {
-                var currentTeam = CurrentTeamRegistration?.Team;
-                <div class="registration-confirmation" role="status">
-                    <div>
-                    <span class="section-eyebrow">@Localization["Feature.tournaments.rosterConfirmation"]</span>
-                    <p>@Localization.Get("Feature.tournaments.placeAwaitingConfirmation", GetUserLabel(pending.User), currentTeam is null ? string.Empty : Localization.Get("Feature.tournaments.onTeam", currentTeam.Name), Tournament.Name)</p>
-                    </div>
-                    <button type="button" class="button-primary" disabled="@(!CanConfirmPending || _isSubmitting || _isLoadingRegistration)" @onclick="ConfirmRosterMemberAsync">@Localization["tournament.confirmPlace"]</button>
-                </div>
-            }
                     </div>
                 </div>
             </div>

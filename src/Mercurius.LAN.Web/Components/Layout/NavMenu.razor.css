@@ -214,6 +214,26 @@
     font-weight: 600;
 }
 
+.nav-notification-error {
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.nav-notification-action--label {
+    padding: 0.3rem 0.45rem;
+    border-radius: 8px;
+}
+
+.nav-notification-action:disabled {
+    cursor: wait;
+    opacity: 0.55;
+}
+
 .nav-notification-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;

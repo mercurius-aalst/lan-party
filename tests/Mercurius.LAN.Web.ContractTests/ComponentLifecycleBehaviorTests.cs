@@ -404,9 +404,11 @@ public sealed class ComponentLifecycleBehaviorTests
     private class NoopNotificationService : ITeamNotificationService
     {
         public event Func<Task>? Changed;
+        public event Func<Guid, Task>? RosterDecisionChanged;
         public IReadOnlyList<TeamNotificationItem> Notifications => Array.Empty<TeamNotificationItem>();
         public int UnreadCount => 0;
         public virtual Task RefreshAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task RespondToRosterSelectionAsync(string notificationId, bool accept, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public Task MarkAllReadAsync() => Task.CompletedTask;
         public Task DismissAsync(string id) => Task.CompletedTask;
     }

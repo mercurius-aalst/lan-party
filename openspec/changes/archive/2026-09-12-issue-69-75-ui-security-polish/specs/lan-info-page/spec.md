@@ -2,10 +2,10 @@
 
 ### Requirement: Info ticket options use intentional visual hierarchy
 
-The Info page MUST distinguish ticket options with intentional semantic color
-and surface accents while preserving readable text, existing ticket content,
-and the existing ticket-inspired presentation. Color MUST supplement labels or
-other non-color cues rather than carrying the ticket distinction alone.
+The Info page MUST distinguish ticket options with a clear visual hierarchy,
+using the main theme green for ticket names while preserving neutral ticket
+surfaces, readable text, existing ticket content, and the existing
+ticket-inspired presentation.
 
 #### Scenario: Visitor compares tickets in either theme
 

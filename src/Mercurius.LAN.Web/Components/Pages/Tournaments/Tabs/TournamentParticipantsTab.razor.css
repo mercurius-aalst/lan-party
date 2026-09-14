@@ -314,6 +314,73 @@
     gap: 1rem;
 }
 
+.registration-invitation {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1rem, 3vw, 1.4rem);
+    border: 1px solid var(--color-primary-green);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised);
+}
+
+.registration-invitation > div:first-child {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.registration-invitation h3,
+.registration-invitation p {
+    margin: 0;
+}
+
+.registration-invitation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.registration-inline-confirmation {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--color-danger) 42%, var(--color-border));
+    border-radius: var(--radius-control);
+    background: var(--color-danger-soft);
+}
+
+.registration-inline-confirmation h3,
+.registration-inline-confirmation p {
+    margin: 0;
+}
+
+.registration-inline-confirmation h3 {
+    margin-top: 0.25rem;
+    font-size: 1.05rem;
+}
+
+.registration-inline-confirmation p {
+    margin-top: 0.35rem;
+    color: var(--color-muted-text);
+}
+
+.registration-inline-confirmation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.registration-cancel-button {
+    border-color: color-mix(in srgb, var(--color-danger) 42%, var(--color-border-strong));
+    color: var(--color-danger);
+}
+
+.registration-cancel-button:hover,
+.registration-cancel-button:focus-visible {
+    border-color: var(--color-danger);
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
 .registration-open-button,
 .registration-refresh-button {
     display: inline-flex;
@@ -679,7 +746,9 @@
     .registration-stepper-actions > div,
     .registration-stepper-actions button,
     .registration-individual-action,
-    .registration-open-button {
+    .registration-open-button,
+    .registration-inline-confirmation-actions,
+    .registration-inline-confirmation-actions button {
         width: 100%;
     }
 }
