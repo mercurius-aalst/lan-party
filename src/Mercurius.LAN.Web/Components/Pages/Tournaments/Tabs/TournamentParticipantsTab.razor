@@ -309,6 +309,11 @@
                                 </div>
                             </div>
                         }
+                        // Derive the roster view once per render; the stepper steps and actions below read it repeatedly.
+                        var rosterCandidates = EditableRosterCandidates;
+                        var rosterSelectionContext = GetRosterSelectionContext();
+                        var canSubmitRoster = CanSubmitRoster;
+                        var canAdvanceTeamStep = CanAdvanceTeamStep;
                         <MudStepper @ref="_teamRegistrationStepper"
                                     ActiveIndex="@_activeTeamStep"
                                     ActiveIndexChanged="HandleTeamStepChangedAsync"
@@ -391,11 +396,11 @@
                                             <legend>@Localization["Feature.tournaments.rosterMembers"]</legend>
                                             <p class="registration-help">@Localization["Feature.tournaments.captainSelectedHelp"]</p>
                                             <div class="registration-roster-list">
-                                                @foreach(var member in EditableRosterCandidates)
+                                                @foreach(var member in rosterCandidates)
                                                 {
                                                     var selected = _selectedRosterUserIds.Contains(member.Id);
                                                     var isCaptain = member.Id == SelectedTeam.CaptainUserId;
-                                                    var unavailable = !_isLoadingRoster && !CanSelectRosterMember(member.Id);
+                                                    var unavailable = !_isLoadingRoster && !CanSelectRosterMember(member.Id, rosterSelectionContext);
                                                     <label class="registration-roster-member @(unavailable ? "registration-roster-member--ineligible" : null) @(selected ? "is-selected" : null)">
                                                         <input type="checkbox"
                                                                checked="@selected"
@@ -442,7 +447,7 @@
                                 </div>
                                 </MudStep>
 
-                                <MudStep Title='@Localization["Feature.tournaments.reviewSubmit"]' SecondaryText='@Localization["Feature.tournaments.confirmRoster"]' Disabled="@(!CanSubmitRoster)">
+                                <MudStep Title='@Localization["Feature.tournaments.reviewSubmit"]' SecondaryText='@Localization["Feature.tournaments.confirmRoster"]' Disabled="@(!canSubmitRoster)">
                                 <div class="registration-step-content">
                                     @if(SelectedTeam is not null)
                                     {
@@ -455,7 +460,7 @@
                                             </div>
                                             <div>
                                                 <dt>@Localization["Feature.tournaments.selectedRoster"]</dt>
-                                                <dd>@string.Join(", ", EditableRosterCandidates.Where(member => reviewRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
+                                                <dd>@string.Join(", ", rosterCandidates.Where(member => reviewRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
                                             </div>
                                             <div>
                                                 <dt>@Localization["Feature.tournaments.confirmation"]</dt>
@@ -487,11 +492,11 @@
                                         }
                                         @if(_activeTeamStep < 2)
                                         {
-                                            <button type="button" class="button-primary" disabled="@(!CanAdvanceTeamStep || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="NextTeamStepAsync">@Localization["common.next"]</button>
+                                            <button type="button" class="button-primary" disabled="@(!canAdvanceTeamStep || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="NextTeamStepAsync">@Localization["common.next"]</button>
                                         }
                                         else
                                         {
-                                            <button type="button" class="button-primary" disabled="@(!CanSubmitRoster || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="SubmitTeamRosterAsync">@(HasCaptainManagedRegistration ? Localization["tournament.saveRoster"] : Localization["tournament.confirmRegistration"])</button>
+                                            <button type="button" class="button-primary" disabled="@(!canSubmitRoster || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="SubmitTeamRosterAsync">@(HasCaptainManagedRegistration ? Localization["tournament.saveRoster"] : Localization["tournament.confirmRegistration"])</button>
                                         }
                                     </div>
                                     <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">@Localization["Feature.tournaments.startOver"]</button>

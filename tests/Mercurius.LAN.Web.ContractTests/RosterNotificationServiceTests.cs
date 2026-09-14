@@ -25,6 +25,21 @@ public sealed class RosterNotificationServiceTests
     }
 
     [Fact]
+    public void RosterStepDerivesCandidatesAndSelectionContextOncePerRender()
+    {
+        var markup = ReadRepositoryFile("src/Mercurius.LAN.Web/Components/Pages/Tournaments/Tabs/TournamentParticipantsTab.razor");
+
+        Assert.Contains("var rosterCandidates = EditableRosterCandidates;", markup, StringComparison.Ordinal);
+        Assert.Contains("var rosterSelectionContext = GetRosterSelectionContext();", markup, StringComparison.Ordinal);
+        Assert.Contains("CanSelectRosterMember(member.Id, rosterSelectionContext)", markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("foreach(var member in EditableRosterCandidates)", markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("CanSelectRosterMember(member.Id)", markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("EditableRosterCandidates.Where(", markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("!CanSubmitRoster ", markup, StringComparison.Ordinal);
+        Assert.DoesNotContain("!CanAdvanceTeamStep ", markup, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void InlineUnregistrationConfirmationMovesFocusIntoAndBackOutOfThePrompt()
     {
         var code = ReadRepositoryFile("src/Mercurius.LAN.Web/Components/Pages/Tournaments/Tabs/TournamentParticipantsTab.razor.cs");

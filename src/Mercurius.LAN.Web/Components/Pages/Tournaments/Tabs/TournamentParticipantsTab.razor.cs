@@ -179,20 +179,40 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _selectedTeamEligibility is not null &&
         CanUseTeamEligibility(SelectedTeam.Id, _selectedTeamEligibility);
 
-    private bool HasLocalRosterShape =>
-        SelectedTeam is not null &&
-        RequiredTeamSize > 0 &&
-        GetNormalizedRosterSelection().Count == RequiredTeamSize &&
-        GetNormalizedRosterSelection().Contains(SelectedTeam.CaptainUserId);
+    private bool HasLocalRosterShape
+    {
+        get
+        {
+            if(SelectedTeam is null || RequiredTeamSize <= 0)
+                return false;
 
-    private bool IsRosterEligibleForWorkflow =>
-        _rosterEligibility is not null &&
-        (_rosterEligibility.Eligible ||
-         (HasCaptainManagedRegistration &&
-          _rosterEligibility.ReasonCodes.Count > 0 &&
-          _rosterEligibility.ReasonCodes.All(IsExistingRegistrationConflictCode) &&
-          _rosterEligibility.Candidates.All(candidate =>
-              candidate.Eligible || IsExistingRosterConflictAllowed(candidate.UserId, candidate, GetExistingRosterUserIds()))));
+            var selection = GetNormalizedRosterSelection();
+            return selection.Count == RequiredTeamSize &&
+                   selection.Contains(SelectedTeam.CaptainUserId);
+        }
+    }
+
+    private bool IsRosterEligibleForWorkflow
+    {
+        get
+        {
+            if(_rosterEligibility is null)
+                return false;
+
+            if(_rosterEligibility.Eligible)
+                return true;
+
+            if(!HasCaptainManagedRegistration ||
+               _rosterEligibility.ReasonCodes.Count == 0 ||
+               !_rosterEligibility.ReasonCodes.All(IsExistingRegistrationConflictCode))
+                return false;
+
+            var existingRosterUserIds = GetExistingRosterUserIds();
+            return _rosterEligibility.Candidates.All(candidate =>
+                candidate.Eligible ||
+                IsExistingRosterConflictAllowed(candidate.UserId, candidate, existingRosterUserIds));
+        }
+    }
 
     private bool CanSubmitRoster =>
         IsRegistrationOpen &&
@@ -1969,7 +1989,10 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         (_registrationState?.CaptainManagedRegistrations ?? [])
             .Any(registration => registration.Team?.Id == teamId);
 
-    private bool CanSelectRosterMember(Guid userId)
+    private bool CanSelectRosterMember(Guid userId) =>
+        CanSelectRosterMember(userId, GetRosterSelectionContext());
+
+    private bool CanSelectRosterMember(Guid userId, RosterSelectionContext context)
     {
         if(SelectedTeam is null)
             return false;
@@ -1977,10 +2000,21 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         return IsRosterMemberSelectable(
             userId,
             SelectedTeam.CaptainUserId,
-            (SelectedTeam.Members ?? []).Select(member => member.Id).ToHashSet(),
+            context.CurrentTeamMemberIds,
             _rosterCandidatesById,
-            GetExistingRosterUserIds());
+            context.ExistingRosterUserIds);
     }
+
+    // The roster markup needs these sets once per rendered member, so callers build the context
+    // once per render and reuse it instead of re-allocating both sets for every candidate.
+    private RosterSelectionContext GetRosterSelectionContext() =>
+        new(
+            (SelectedTeam?.Members ?? []).Select(member => member.Id).ToHashSet(),
+            GetExistingRosterUserIds());
+
+    private readonly record struct RosterSelectionContext(
+        IReadOnlySet<Guid> CurrentTeamMemberIds,
+        IReadOnlySet<Guid> ExistingRosterUserIds);
 
     private IReadOnlyList<Guid> GetNormalizedRosterSelection(bool autofillEligibleMembers = false)
     {
