@@ -17,6 +17,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 #if INCLUDE_MOCK_BACKEND
+// Local overrides, including the mock backend switch, are only read in the allowed development environment.
 if(MockBackendMode.IsAllowedEnvironment(builder.Environment))
     builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 #endif

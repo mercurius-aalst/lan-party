@@ -31,16 +31,39 @@ public sealed class ProductionMockModeSafetyTests
         Assert.Contains("cannot be enabled", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Fact]
+    public void Resolve_AllowsExplicitMockModeInDevelopment()
+    {
+        var configuration = BuildConfiguration(enabled: true);
+        var environment = new TestHostEnvironment(Environments.Development);
+
+        Assert.True(MockBackendMode.Resolve(configuration, environment, mockBackendIncluded: true));
+    }
+
     [Theory]
-    [InlineData("Development")]
     [InlineData("Test")]
     [InlineData("Testing")]
-    public void Resolve_AllowsExplicitMockModeInApprovedEnvironments(string environmentName)
+    [InlineData("Staging")]
+    public void Resolve_RejectsEnabledMockModeOutsideDevelopment(string environmentName)
     {
         var configuration = BuildConfiguration(enabled: true);
         var environment = new TestHostEnvironment(environmentName);
 
-        Assert.True(MockBackendMode.Resolve(configuration, environment, mockBackendIncluded: true));
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => MockBackendMode.Resolve(configuration, environment, mockBackendIncluded: true));
+
+        Assert.Contains(environmentName, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("cannot be enabled", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("Development", true)]
+    [InlineData("Test", false)]
+    [InlineData("Testing", false)]
+    [InlineData("Production", false)]
+    public void IsAllowedEnvironment_OnlyAllowsDevelopment(string environmentName, bool expected)
+    {
+        Assert.Equal(expected, MockBackendMode.IsAllowedEnvironment(new TestHostEnvironment(environmentName)));
     }
 
     [Theory]

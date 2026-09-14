@@ -14,9 +14,7 @@ public sealed class MockBackendOptions
 public static class MockBackendMode
 {
     public static bool IsAllowedEnvironment(IHostEnvironment environment) =>
-        environment.IsDevelopment()
-        || environment.IsEnvironment("Test")
-        || environment.IsEnvironment("Testing");
+        environment.IsDevelopment();
 
     public static bool Resolve(
         IConfiguration configuration,
@@ -31,7 +29,7 @@ public static class MockBackendMode
         {
             throw new InvalidOperationException(
                 "Mock backend mode is enabled, but this build excludes the mock backend. " +
-                "Disable MockBackend:Enabled or use an explicit local development/test build with IncludeMockBackend=true.");
+                "Disable MockBackend:Enabled or use an explicit local development build with IncludeMockBackend=true.");
         }
 
         if(IsAllowedEnvironment(environment))
@@ -39,6 +37,6 @@ public static class MockBackendMode
 
         throw new InvalidOperationException(
             $"Mock backend mode cannot be enabled in the '{environment.EnvironmentName}' environment. " +
-            "Mock mode is restricted to Development, Test, and Testing environments.");
+            "Mock mode is restricted to the Development environment.");
     }
 }
