@@ -216,6 +216,60 @@ public sealed class RosterNotificationServiceTests
     }
 
     [Fact]
+    public async Task RefreshDoesNotMutateAnAlreadyPublishedNotificationSnapshot()
+    {
+        var invite = new TeamInviteSummaryDTO
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            TeamName = "Inviters",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-2)
+        };
+        var roster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Selected",
+            SelectedAtUtc = DateTime.UtcNow
+        };
+        var rosterLoads = 0;
+        var releaseRoster = new TaskCompletionSource();
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name == nameof(ITeamService.GetCurrentUserTeamSummaryAsync)
+            ? Task.FromResult(new CurrentUserTeamSummaryDTO { ReceivedPendingInvites = [invite] })
+            : throw new NotSupportedException(method.Name));
+        var tournamentService = CreateProxy<ITournamentService>((method, _) =>
+        {
+            if(method.Name != nameof(ITournamentService.GetPendingRosterConfirmationsAsync))
+                throw new NotSupportedException(method.Name);
+
+            return ++rosterLoads == 1
+                ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([])
+                : BlockedRosterLoad();
+
+            async Task<IReadOnlyList<PendingRosterConfirmationDTO>> BlockedRosterLoad()
+            {
+                await releaseRoster.Task;
+                return [roster];
+            }
+        });
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+        await service.RefreshAsync();
+
+        // The list handed to the UI is captured while the next refresh is still loading both sources.
+        var published = service.Notifications;
+        var inFlight = service.RefreshAsync();
+        await service.DismissAsync($"team-invite:{invite.Id:N}");
+        releaseRoster.TrySetResult();
+        await inFlight;
+
+        Assert.DoesNotContain(published, item => item.Id == $"roster-selection:{roster.RosterMemberId:N}");
+        Assert.Contains(service.Notifications, item => item.Id == $"roster-selection:{roster.RosterMemberId:N}");
+        Assert.DoesNotContain(service.Notifications, item => item.Id == $"team-invite:{invite.Id:N}");
+    }
+
+    [Fact]
     public async Task RosterDeclineUsesRosterRouteThenRefreshesWithoutRemovingTeamInvite()
     {
         var roster = new PendingRosterConfirmationDTO

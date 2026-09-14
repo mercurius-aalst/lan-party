@@ -25,6 +25,10 @@ public sealed class TeamNotificationService : ITeamNotificationService
     private readonly HashSet<string> _readIds = [];
     private readonly HashSet<string> _dismissedIds = [];
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
+    // RefreshAsync runs on the SignalR callback thread while dismiss/read mutations run on the
+    // circuit thread, so every access to the notification state is guarded by this lock.
+    private readonly object _stateLock = new();
+    private TeamNotificationItem[] _snapshot = [];
 
     public TeamNotificationService(
         ITeamService teamService,
@@ -39,9 +43,9 @@ public sealed class TeamNotificationService : ITeamNotificationService
     public event Func<Task>? Changed;
     public event Func<Guid, Task>? RosterDecisionChanged;
 
-    public IReadOnlyList<TeamNotificationItem> Notifications => _notifications;
+    public IReadOnlyList<TeamNotificationItem> Notifications => _snapshot;
 
-    public int UnreadCount => _notifications.Count(notification => !notification.IsRead);
+    public int UnreadCount => _snapshot.Count(notification => !notification.IsRead);
 
     public async Task RefreshAsync(CancellationToken cancellationToken = default)
     {
@@ -103,8 +107,13 @@ public sealed class TeamNotificationService : ITeamNotificationService
         bool accept,
         CancellationToken cancellationToken = default)
     {
-        var notification = _notifications.FirstOrDefault(item =>
-            item.Id == notificationId && item.Kind == TeamNotificationKind.RosterSelection);
+        TeamNotificationItem? notification;
+        lock(_stateLock)
+        {
+            notification = _notifications.FirstOrDefault(item =>
+                item.Id == notificationId && item.Kind == TeamNotificationKind.RosterSelection);
+        }
+
         if(notification?.TournamentId is not Guid tournamentId ||
            notification.RosterMemberId is not Guid rosterMemberId)
         {
@@ -137,10 +146,15 @@ public sealed class TeamNotificationService : ITeamNotificationService
 
     public async Task MarkAllReadAsync()
     {
-        foreach(var notification in _notifications)
+        lock(_stateLock)
         {
-            _readIds.Add(notification.Id);
-            notification.IsRead = true;
+            foreach(var notification in _notifications)
+            {
+                _readIds.Add(notification.Id);
+                notification.IsRead = true;
+            }
+
+            _snapshot = _notifications.ToArray();
         }
 
         await NotifyChangedAsync();
@@ -148,8 +162,13 @@ public sealed class TeamNotificationService : ITeamNotificationService
 
     public async Task DismissAsync(string id)
     {
-        _dismissedIds.Add(id);
-        _notifications.RemoveAll(notification => notification.Id == id);
+        lock(_stateLock)
+        {
+            _dismissedIds.Add(id);
+            _notifications.RemoveAll(notification => notification.Id == id);
+            _snapshot = _notifications.ToArray();
+        }
+
         await NotifyChangedAsync();
     }
 
@@ -171,9 +190,15 @@ public sealed class TeamNotificationService : ITeamNotificationService
         TeamNotificationKind kind,
         IEnumerable<TeamNotificationItem> notifications)
     {
-        _notifications.RemoveAll(notification => notification.Kind == kind);
-        _notifications.AddRange(notifications);
-        _notifications.Sort((left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
+        lock(_stateLock)
+        {
+            // The sequence reads the dismissed/read id sets, so it is materialised under the
+            // same lock that guards those sets.
+            _notifications.RemoveAll(notification => notification.Kind == kind);
+            _notifications.AddRange(notifications);
+            _notifications.Sort((left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
+            _snapshot = _notifications.ToArray();
+        }
     }
 
     private IEnumerable<TeamNotificationItem> CreateTeamInviteNotifications(CurrentUserTeamSummaryDTO summary)
