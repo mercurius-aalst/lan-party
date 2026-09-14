@@ -48,54 +48,41 @@ public sealed class TeamNotificationService : ITeamNotificationService
         await _refreshGate.WaitAsync(cancellationToken);
         try
         {
-            var summaryTask = _teamService.GetCurrentUserTeamSummaryAsync(cancellationToken);
-            var rosterTask = _tournamentService.GetPendingRosterConfirmationsAsync(cancellationToken);
-            await Task.WhenAll(summaryTask, rosterTask);
-            var summary = await summaryTask;
-            var rosterConfirmations = await rosterTask;
-            _notifications.Clear();
+            var summaryTask = LoadTeamSummaryAsync();
+            var rosterTask = LoadRosterConfirmationsAsync();
 
-            foreach(var invite in summary.ReceivedPendingInvites.OrderByDescending(invite => invite.CreatedAt))
+            try
             {
-                var id = $"team-invite:{invite.Id:N}";
-                if(_dismissedIds.Contains(id))
-                    continue;
+                await Task.WhenAll(summaryTask, rosterTask);
+            }
+            catch
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-                _notifications.Add(new TeamNotificationItem(
-                    id,
-                    TeamNotificationKind.TeamInvite,
-                    _localization["nav.teamInviteTitle"],
-                    _localization.Get("nav.teamInviteMessage", invite.TeamName),
-                    "/teams/manage#received-invites",
-                    invite.TeamId,
-                    invite.Id,
-                    null,
-                    null,
-                    _readIds.Contains(id),
-                    invite.CreatedAt));
+                if(summaryTask.IsCanceled)
+                    await summaryTask;
+                if(rosterTask.IsCanceled)
+                    await rosterTask;
             }
 
-            foreach(var roster in rosterConfirmations)
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var summaryFailure = GetFailure(summaryTask);
+            var rosterFailure = GetFailure(rosterTask);
+
+            if(summaryFailure is null && summaryTask.Status == TaskStatus.RanToCompletion)
+                ReplaceNotifications(TeamNotificationKind.TeamInvite, CreateTeamInviteNotifications(await summaryTask));
+
+            if(rosterFailure is null && rosterTask.Status == TaskStatus.RanToCompletion)
+                ReplaceNotifications(TeamNotificationKind.RosterSelection, CreateRosterNotifications(await rosterTask));
+
+            if(summaryFailure is not null && rosterFailure is not null)
             {
-                var id = $"roster-selection:{roster.RosterMemberId:N}";
-                if(_dismissedIds.Contains(id))
-                    continue;
-
-                _notifications.Add(new TeamNotificationItem(
-                    id,
-                    TeamNotificationKind.RosterSelection,
-                    _localization["nav.rosterSelectionTitle"],
-                    _localization.Get("nav.rosterSelectionMessage", roster.TeamName, roster.TournamentName),
-                    $"/tournaments/{roster.TournamentId}#registration",
-                    roster.TeamId,
-                    null,
-                    roster.TournamentId,
-                    roster.RosterMemberId,
-                    _readIds.Contains(id),
-                    roster.SelectedAtUtc));
+                throw new AggregateException(
+                    "Could not refresh team and roster notifications.",
+                    summaryFailure,
+                    rosterFailure);
             }
-
-            _notifications.Sort((left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
         }
         finally
         {
@@ -103,6 +90,12 @@ public sealed class TeamNotificationService : ITeamNotificationService
         }
 
         await NotifyChangedAsync();
+
+        async Task<CurrentUserTeamSummaryDTO> LoadTeamSummaryAsync() =>
+            await _teamService.GetCurrentUserTeamSummaryAsync(cancellationToken);
+
+        async Task<IReadOnlyList<PendingRosterConfirmationDTO>> LoadRosterConfirmationsAsync() =>
+            await _tournamentService.GetPendingRosterConfirmationsAsync(cancellationToken);
     }
 
     public async Task RespondToRosterSelectionAsync(
@@ -127,6 +120,14 @@ public sealed class TeamNotificationService : ITeamNotificationService
         try
         {
             await RefreshAsync(cancellationToken);
+        }
+        catch(OperationCanceledException)
+        {
+            throw;
+        }
+        catch(Exception)
+        {
+            // The mutation already succeeded. Keep it successful even if the follow-up read is unavailable.
         }
         finally
         {
@@ -165,6 +166,65 @@ public sealed class TeamNotificationService : ITeamNotificationService
         if(handler != null)
             await handler(tournamentId);
     }
+
+    private void ReplaceNotifications(
+        TeamNotificationKind kind,
+        IEnumerable<TeamNotificationItem> notifications)
+    {
+        _notifications.RemoveAll(notification => notification.Kind == kind);
+        _notifications.AddRange(notifications);
+        _notifications.Sort((left, right) => right.CreatedAt.CompareTo(left.CreatedAt));
+    }
+
+    private IEnumerable<TeamNotificationItem> CreateTeamInviteNotifications(CurrentUserTeamSummaryDTO summary)
+    {
+        foreach(var invite in summary.ReceivedPendingInvites.OrderByDescending(invite => invite.CreatedAt))
+        {
+            var id = $"team-invite:{invite.Id:N}";
+            if(_dismissedIds.Contains(id))
+                continue;
+
+            yield return new TeamNotificationItem(
+                id,
+                TeamNotificationKind.TeamInvite,
+                _localization["nav.teamInviteTitle"],
+                _localization.Get("nav.teamInviteMessage", invite.TeamName),
+                "/teams/manage#received-invites",
+                invite.TeamId,
+                invite.Id,
+                null,
+                null,
+                _readIds.Contains(id),
+                invite.CreatedAt);
+        }
+    }
+
+    private IEnumerable<TeamNotificationItem> CreateRosterNotifications(
+        IReadOnlyList<PendingRosterConfirmationDTO> rosterConfirmations)
+    {
+        foreach(var roster in rosterConfirmations)
+        {
+            var id = $"roster-selection:{roster.RosterMemberId:N}";
+            if(_dismissedIds.Contains(id))
+                continue;
+
+            yield return new TeamNotificationItem(
+                id,
+                TeamNotificationKind.RosterSelection,
+                _localization["nav.rosterSelectionTitle"],
+                _localization.Get("nav.rosterSelectionMessage", roster.TeamName, roster.TournamentName),
+                $"/tournaments/{roster.TournamentId}#registration",
+                roster.TeamId,
+                null,
+                roster.TournamentId,
+                roster.RosterMemberId,
+                _readIds.Contains(id),
+                roster.SelectedAtUtc);
+        }
+    }
+
+    private static Exception? GetFailure<T>(Task<T> task) =>
+        task.IsFaulted ? task.Exception?.GetBaseException() : null;
 }
 
 public sealed record TeamNotificationItem(

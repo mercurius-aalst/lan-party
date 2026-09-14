@@ -77,6 +77,145 @@ public sealed class RosterNotificationServiceTests
     }
 
     [Fact]
+    public async Task RefreshAppliesRosterUpdatesWhenTeamInvitesAreUnavailable()
+    {
+        var invite = new TeamInviteSummaryDTO
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            TeamName = "Inviters",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-2)
+        };
+        var initialRoster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Qualifiers",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Initial",
+            SelectedAtUtc = DateTime.UtcNow.AddMinutes(-3)
+        };
+        var refreshedRoster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Refreshed",
+            SelectedAtUtc = DateTime.UtcNow
+        };
+        var teamCalls = 0;
+        var rosterCalls = 0;
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name switch
+        {
+            nameof(ITeamService.GetCurrentUserTeamSummaryAsync) => ++teamCalls == 1
+                ? Task.FromResult(new CurrentUserTeamSummaryDTO { ReceivedPendingInvites = [invite] })
+                : Task.FromException<CurrentUserTeamSummaryDTO>(new InvalidOperationException("team source unavailable")),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var tournamentService = CreateProxy<ITournamentService>((method, _) => method.Name switch
+        {
+            nameof(ITournamentService.GetPendingRosterConfirmationsAsync) => ++rosterCalls == 1
+                ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([initialRoster])
+                : Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([refreshedRoster]),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+
+        await service.RefreshAsync();
+        await service.RefreshAsync();
+
+        Assert.Contains(service.Notifications, item => item.Id == $"team-invite:{invite.Id:N}");
+        Assert.Contains(service.Notifications, item => item.Id == $"roster-selection:{refreshedRoster.RosterMemberId:N}");
+        Assert.DoesNotContain(service.Notifications, item => item.Id == $"roster-selection:{initialRoster.RosterMemberId:N}");
+    }
+
+    [Fact]
+    public async Task RefreshAppliesTeamInviteUpdatesWhenRosterSelectionsAreUnavailable()
+    {
+        var initialInvite = new TeamInviteSummaryDTO
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            TeamName = "Initial",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-3)
+        };
+        var refreshedInvite = new TeamInviteSummaryDTO
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            TeamName = "Refreshed",
+            CreatedAt = DateTime.UtcNow
+        };
+        var roster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Selected",
+            SelectedAtUtc = DateTime.UtcNow.AddMinutes(-2)
+        };
+        var teamCalls = 0;
+        var rosterCalls = 0;
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name switch
+        {
+            nameof(ITeamService.GetCurrentUserTeamSummaryAsync) => ++teamCalls == 1
+                ? Task.FromResult(new CurrentUserTeamSummaryDTO { ReceivedPendingInvites = [initialInvite] })
+                : Task.FromResult(new CurrentUserTeamSummaryDTO { ReceivedPendingInvites = [refreshedInvite] }),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var tournamentService = CreateProxy<ITournamentService>((method, _) => method.Name switch
+        {
+            nameof(ITournamentService.GetPendingRosterConfirmationsAsync) => ++rosterCalls == 1
+                ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([roster])
+                : Task.FromException<IReadOnlyList<PendingRosterConfirmationDTO>>(new InvalidOperationException("roster source unavailable")),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+
+        await service.RefreshAsync();
+        await service.RefreshAsync();
+
+        Assert.Contains(service.Notifications, item => item.Id == $"team-invite:{refreshedInvite.Id:N}");
+        Assert.DoesNotContain(service.Notifications, item => item.Id == $"team-invite:{initialInvite.Id:N}");
+        Assert.Contains(service.Notifications, item => item.Id == $"roster-selection:{roster.RosterMemberId:N}");
+    }
+
+    [Fact]
+    public async Task RefreshSortsSuccessfulSourcesTogetherByLatestActivity()
+    {
+        var invite = new TeamInviteSummaryDTO
+        {
+            Id = Guid.NewGuid(),
+            TeamId = Guid.NewGuid(),
+            TeamName = "Inviters",
+            CreatedAt = DateTime.UtcNow.AddMinutes(-2)
+        };
+        var roster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Selected",
+            SelectedAtUtc = DateTime.UtcNow
+        };
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name == nameof(ITeamService.GetCurrentUserTeamSummaryAsync)
+            ? Task.FromResult(new CurrentUserTeamSummaryDTO { ReceivedPendingInvites = [invite] })
+            : throw new NotSupportedException(method.Name));
+        var tournamentService = CreateProxy<ITournamentService>((method, _) => method.Name == nameof(ITournamentService.GetPendingRosterConfirmationsAsync)
+            ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([roster])
+            : throw new NotSupportedException(method.Name));
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+
+        await service.RefreshAsync();
+
+        Assert.Equal($"roster-selection:{roster.RosterMemberId:N}", service.Notifications[0].Id);
+        Assert.Equal($"team-invite:{invite.Id:N}", service.Notifications[1].Id);
+    }
+
+    [Fact]
     public async Task RosterDeclineUsesRosterRouteThenRefreshesWithoutRemovingTeamInvite()
     {
         var roster = new PendingRosterConfirmationDTO
@@ -207,6 +346,104 @@ public sealed class RosterNotificationServiceTests
             pending.Clear();
             return Task.FromResult(new TournamentRegistrationDTO());
         }
+    }
+
+    [Fact]
+    public async Task SuccessfulRosterMutationRemainsSuccessfulWhenNotificationRefreshFails()
+    {
+        var roster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Selected",
+            SelectedAtUtc = DateTime.UtcNow
+        };
+        var teamCalls = 0;
+        var rosterCalls = 0;
+        var confirmCalls = 0;
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name switch
+        {
+            nameof(ITeamService.GetCurrentUserTeamSummaryAsync) => ++teamCalls == 1
+                ? Task.FromResult(new CurrentUserTeamSummaryDTO())
+                : Task.FromException<CurrentUserTeamSummaryDTO>(new InvalidOperationException("team source unavailable")),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var tournamentService = CreateProxy<ITournamentService>((method, _) => method.Name switch
+        {
+            nameof(ITournamentService.GetPendingRosterConfirmationsAsync) => ++rosterCalls == 1
+                ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([roster])
+                : Task.FromException<IReadOnlyList<PendingRosterConfirmationDTO>>(new InvalidOperationException("roster source unavailable")),
+            nameof(ITournamentService.ConfirmTournamentRosterMemberAsync) => Confirm(),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+        var changedTournamentId = Guid.Empty;
+        service.RosterDecisionChanged += tournamentId =>
+        {
+            changedTournamentId = tournamentId;
+            return Task.CompletedTask;
+        };
+
+        await service.RefreshAsync();
+        var notification = Assert.Single(service.Notifications);
+
+        await service.RespondToRosterSelectionAsync(notification.Id, accept: true);
+
+        Assert.Equal(1, confirmCalls);
+        Assert.Equal(roster.TournamentId, changedTournamentId);
+        Assert.Contains(service.Notifications, item => item.Id == notification.Id);
+
+        Task<TournamentRegistrationDTO> Confirm()
+        {
+            confirmCalls++;
+            return Task.FromResult(new TournamentRegistrationDTO());
+        }
+    }
+
+    [Fact]
+    public async Task FailedRosterMutationPropagatesWithoutRaisingDecisionChanged()
+    {
+        var roster = new PendingRosterConfirmationDTO
+        {
+            RosterMemberId = Guid.NewGuid(),
+            TournamentId = Guid.NewGuid(),
+            TournamentName = "Finals",
+            TeamId = Guid.NewGuid(),
+            TeamName = "Selected",
+            SelectedAtUtc = DateTime.UtcNow
+        };
+        var rosterCalls = 0;
+        var teamService = CreateProxy<ITeamService>((method, _) => method.Name == nameof(ITeamService.GetCurrentUserTeamSummaryAsync)
+            ? Task.FromResult(new CurrentUserTeamSummaryDTO())
+            : throw new NotSupportedException(method.Name));
+        var tournamentService = CreateProxy<ITournamentService>((method, _) => method.Name switch
+        {
+            nameof(ITournamentService.GetPendingRosterConfirmationsAsync) => ++rosterCalls == 1
+                ? Task.FromResult<IReadOnlyList<PendingRosterConfirmationDTO>>([roster])
+                : throw new InvalidOperationException("refresh should not run after mutation failure"),
+            nameof(ITournamentService.ConfirmTournamentRosterMemberAsync) =>
+                Task.FromException<TournamentRegistrationDTO>(new InvalidOperationException("mutation rejected")),
+            _ => throw new NotSupportedException(method.Name)
+        });
+        var service = new TeamNotificationService(teamService, tournamentService, TestLocalizationService.Instance);
+        var decisionChanged = false;
+        service.RosterDecisionChanged += _ =>
+        {
+            decisionChanged = true;
+            return Task.CompletedTask;
+        };
+
+        await service.RefreshAsync();
+        var notification = Assert.Single(service.Notifications);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.RespondToRosterSelectionAsync(notification.Id, accept: true));
+
+        Assert.False(decisionChanged);
+        Assert.Equal(1, rosterCalls);
+        Assert.Contains(service.Notifications, item => item.Id == notification.Id);
     }
 
     [Fact]
