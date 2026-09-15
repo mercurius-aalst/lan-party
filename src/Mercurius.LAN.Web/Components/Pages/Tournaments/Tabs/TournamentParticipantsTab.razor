@@ -142,7 +142,6 @@
                      role="dialog"
                      aria-modal="true"
                      aria-labelledby="registration-dialog-title"
-                     aria-describedby="@(Tournament.ParticipationMode == ParticipationMode.Team ? "registration-dialog-description" : null)"
                      tabindex="-1"
                      @ref="_registrationDialogElement"
                      @onclick:stopPropagation>
@@ -157,10 +156,6 @@
                     <header class="participants-modal-header registration-dialog-header">
                         <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
                         <h2 id="registration-dialog-title" class="visually-hidden">@Localization.Get("Feature.tournaments.registrationFor", Tournament.Name)</h2>
-                        @if(Tournament.ParticipationMode == ParticipationMode.Team)
-                        {
-                            <p id="registration-dialog-description">@GetTeamRegistrationStateMessage()</p>
-                        }
                     </header>
 
                     <div class="registration-dialog-body">
@@ -485,6 +480,19 @@
 
                             <ActionContent>
                                 <div class="registration-stepper-actions">
+                                    <div class="registration-stepper-actions-secondary">
+                                        <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">@Localization["Feature.tournaments.startOver"]</button>
+                                        @if(CanUnregisterSelectedTeam)
+                                        {
+                                            <button type="button"
+                                                    class="button-link registration-cancel-button"
+                                                    disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
+                                                    @onclick="BeginTeamUnregistrationConfirmationAsync"
+                                                    @ref="_teamUnregistrationTriggerElement">
+                                                @Localization["Feature.tournaments.cancelRegistration"]
+                                            </button>
+                                        }
+                                    </div>
                                     <div>
                                         @if(_activeTeamStep > 0)
                                         {
@@ -499,23 +507,10 @@
                                             <button type="button" class="button-primary" disabled="@(!canSubmitRoster || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="SubmitTeamRosterAsync">@(HasCaptainManagedRegistration ? Localization["tournament.saveRoster"] : Localization["tournament.confirmRegistration"])</button>
                                         }
                                     </div>
-                                    <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">@Localization["Feature.tournaments.startOver"]</button>
                                 </div>
                             </ActionContent>
                         </MudStepper>
 
-                        @if(CanUnregisterSelectedTeam)
-                        {
-                            <div class="registration-actions">
-                                <button type="button"
-                                        class="button-secondary registration-cancel-button"
-                                        disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
-                                        @onclick="BeginTeamUnregistrationConfirmationAsync"
-                                        @ref="_teamUnregistrationTriggerElement">
-                                    @Localization["Feature.tournaments.cancelRegistration"]
-                                </button>
-                            </div>
-                        }
                     }
                 </div>
                 }

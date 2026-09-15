@@ -640,6 +640,20 @@
     opacity: 0.55;
 }
 
+.registration-stepper-actions-secondary {
+    align-items: center;
+}
+
+.registration-stepper-actions .button-link.registration-cancel-button {
+    color: var(--color-danger);
+}
+
+.registration-stepper-actions .button-link.registration-cancel-button:hover,
+.registration-stepper-actions .button-link.registration-cancel-button:focus-visible {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
 .registration-review-list {
     display: grid;
     gap: 0.65rem;
