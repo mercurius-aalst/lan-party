@@ -496,11 +496,50 @@
     }
 
     .brand-nav-shell {
-        padding: 1rem;
+        padding: 0.9rem;
         border: 0;
         border-radius: var(--radius-card);
         background: var(--color-surface-raised);
         box-shadow: var(--shadow-brand);
+        gap: 0.7rem;
+    }
+
+    .brand-nav-links,
+    .brand-nav-actions,
+    .brand-auth-actions {
+        gap: 0.55rem;
+    }
+
+    .brand-nav-link,
+    .brand-nav-links ::deep .brand-nav-link {
+        padding: 0.45rem 0.6rem;
+        border-radius: var(--radius-button);
+        text-align: left;
+    }
+
+    .brand-nav-link::after,
+    .brand-nav-links ::deep .brand-nav-link::after {
+        left: 50%;
+        right: auto;
+        width: 2.25rem;
+        transform: translateX(-50%);
+        bottom: 0.2rem;
+    }
+
+    .brand-nav-shell .brand-nav-search {
+        flex: none;
+        width: 100%;
+    }
+
+    .brand-auth-actions {
+        align-items: center !important;
+    }
+
+    .brand-auth-actions .brand-utility-button,
+    .brand-auth-actions .brand-dev-link {
+        width: auto;
+        min-width: 7.5rem;
+        flex: none;
     }
 
     .brand-nav-search {

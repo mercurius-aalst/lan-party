@@ -46,6 +46,15 @@
     flex: 1 1 auto;
 }
 
+.brand-nav-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 1rem;
+}
+
 .brand-main {
     flex: 1 1 auto;
     padding: 2rem 0 3rem;
@@ -309,9 +318,14 @@ html[data-theme="dark"] .footer-logo-image--theme-dark {
         position: fixed;
         top: var(--header-height);
         right: 1rem;
-        left: 1rem;
+        left: auto;
+        width: min(18rem, calc(100vw - 2rem));
         z-index: 1050;
         pointer-events: none;
+    }
+
+    .brand-nav-actions {
+        gap: 0.75rem;
     }
 
     .brand-nav-panel:not(.open) {
