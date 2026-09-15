@@ -228,8 +228,12 @@ html[data-theme="dark"] .footer-logo-image--theme-dark {
 
 .menu-toggle {
     display: none;
-    width: 48px;
-    height: 48px;
+    flex: 0 0 2.75rem;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0;
     border: 1px solid var(--color-border-strong);
     border-radius: var(--radius-button);
     background: var(--color-surface-raised);
