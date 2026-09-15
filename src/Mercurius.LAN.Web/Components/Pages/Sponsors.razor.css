@@ -255,9 +255,8 @@
 }
 
 .sponsor-card-logo {
-    --sponsor-logo-bg: color-mix(in srgb, var(--color-dark-navy) 50%, var(--color-soft-white));
     background: var(--sponsor-logo-bg);
-    border: 1px solid var(--color-border-strong);
+    border: 1px solid var(--color-border);
     box-shadow: none;
 }
 
