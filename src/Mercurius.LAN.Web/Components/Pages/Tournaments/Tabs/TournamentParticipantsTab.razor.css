@@ -363,6 +363,13 @@
     color: var(--color-muted-text);
 }
 
+/* Registration is not destructive, so the shared confirmation shell keeps its
+   layout but switches from the danger palette to the brand accent. */
+.registration-inline-confirmation--neutral {
+    border-color: color-mix(in srgb, var(--color-primary-green) 42%, var(--color-border));
+    background: var(--color-surface-raised);
+}
+
 .registration-inline-confirmation-actions {
     display: flex;
     flex-wrap: wrap;
@@ -435,12 +442,6 @@ html[data-theme="dark"] .registration-cancel-button {
 .admin-registration-list {
     display: grid;
     gap: 0.8rem;
-}
-
-.registration-individual-action {
-    justify-self: start;
-    max-width: 100%;
-    width: auto;
 }
 
 .registration-form-grid {
@@ -826,7 +827,6 @@ html[data-theme="dark"] .registration-cancel-button {
 
     .registration-stepper-actions > div,
     .registration-stepper-actions button,
-    .registration-individual-action,
     .registration-open-button,
     .registration-inline-confirmation-actions,
     .registration-inline-confirmation-actions button {

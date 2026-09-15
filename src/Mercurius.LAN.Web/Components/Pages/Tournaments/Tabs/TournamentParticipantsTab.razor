@@ -77,6 +77,34 @@
                         </div>
                     </div>
                 }
+                else if(!_isRegistrationDialogOpen &&
+                    _isIndividualRegistrationConfirmationOpen &&
+                    CanRegisterIndividualDirectly)
+                {
+                    <div class="registration-inline-confirmation registration-inline-confirmation--neutral"
+                         role="alertdialog"
+                         aria-modal="false"
+                         aria-labelledby="individual-registration-inline-confirmation-title"
+                         aria-describedby="individual-registration-inline-confirmation-message">
+                        <div>
+                            <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
+                            <h3 id="individual-registration-inline-confirmation-title">@Localization["Feature.tournaments.confirmIndividualRegistration"]</h3>
+                            <p id="individual-registration-inline-confirmation-message">@Localization.Get("Feature.tournaments.confirmIndividualRegistrationMessage", Tournament.Name)</p>
+                            @if(_registrationError is not null)
+                            {
+                                <p class="registration-message registration-message--error" role="alert">@_registrationError</p>
+                            }
+                        </div>
+                        <div class="registration-inline-confirmation-actions">
+                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="DismissIndividualRegistrationConfirmationAsync">
+                                @Localization["common.cancel"]
+                            </button>
+                            <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">
+                                @Localization["tournament.register"]
+                            </button>
+                        </div>
+                    </div>
+                }
                 else if(_registrationState?.PendingRosterConfirmation is not null)
                 {
                     var selectedTeam = CurrentTeamRegistration?.Team;
@@ -203,7 +231,32 @@
                         <p class="registration-message registration-message--success">@GetIndividualRegistrationStatusText(individualRegistration.Status)</p>
                         @if(_registrationState.CanUnregister)
                         {
-                            <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="UnregisterIndividualAsync">@Localization["tournament.unregister"]</button>
+                            @if(_isIndividualUnregistrationConfirmationOpen && CanUnregisterIndividualDirectly)
+                            {
+                                <div class="registration-inline-confirmation"
+                                     role="alertdialog"
+                                     aria-modal="false"
+                                     aria-labelledby="individual-unregistration-confirmation-title"
+                                     aria-describedby="individual-unregistration-confirmation-message">
+                                    <div>
+                                        <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
+                                        <h3 id="individual-unregistration-confirmation-title">@Localization["Feature.tournaments.confirmIndividualUnregister"]</h3>
+                                        <p id="individual-unregistration-confirmation-message">@Localization.Get("Feature.tournaments.confirmIndividualUnregisterMessage", Tournament.Name)</p>
+                                    </div>
+                                    <div class="registration-inline-confirmation-actions">
+                                        <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="DismissIndividualUnregistrationConfirmationAsync">
+                                            @Localization["Feature.tournaments.keepRegistration"]
+                                        </button>
+                                        <button type="button" class="button-secondary registration-cancel-button" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="UnregisterIndividualAsync">
+                                            @Localization["Feature.tournaments.cancelRegistration"]
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <button type="button" class="button-secondary registration-cancel-button" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="BeginIndividualUnregistrationConfirmationAsync">@Localization["Feature.tournaments.cancelRegistration"]</button>
+                            }
                         }
                     }
                     else if(_individualEligibility is null)
@@ -214,9 +267,27 @@
                     {
                         <p class="registration-message registration-message--warning">@Localization.Get("Feature.tournaments.cannotRegisterYet", GetReasonText(_individualEligibility.ReasonCodes))</p>
                     }
-                    else if(_registrationState?.CanRegisterIndividual == true)
+                    else if(CanRegisterIndividualDirectly)
                     {
-                        <button type="button" class="button-primary registration-individual-action" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">@Localization["tournament.registerIndividual"]</button>
+                        <div class="registration-inline-confirmation registration-inline-confirmation--neutral"
+                             role="alertdialog"
+                             aria-modal="false"
+                             aria-labelledby="individual-registration-confirmation-title"
+                             aria-describedby="individual-registration-confirmation-message">
+                            <div>
+                                <span class="section-eyebrow">@Localization["Feature.tournaments.registration"]</span>
+                                <h3 id="individual-registration-confirmation-title">@Localization["Feature.tournaments.confirmIndividualRegistration"]</h3>
+                                <p id="individual-registration-confirmation-message">@Localization.Get("Feature.tournaments.confirmIndividualRegistrationMessage", Tournament.Name)</p>
+                            </div>
+                            <div class="registration-inline-confirmation-actions">
+                                <button type="button" class="button-secondary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="CloseRegistrationDialogAsync">
+                                    @Localization["common.cancel"]
+                                </button>
+                                <button type="button" class="button-primary" disabled="@(_isSubmitting || _isLoadingRegistration)" @onclick="RegisterIndividualAsync">
+                                    @Localization["tournament.register"]
+                                </button>
+                            </div>
+                        </div>
                     }
                     else
                     {

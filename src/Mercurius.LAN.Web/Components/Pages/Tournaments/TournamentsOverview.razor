@@ -152,7 +152,7 @@ else
                     <div class="brand-tournament-card-actions tournaments-card-actions grid gap-3">
                         <button type="button" class="button-secondary" @onclick="() => NavigateToTournamentDetail(tournament.Id)">@Localization["Feature.tournamentsOverview.viewDetails"]</button>
                         <button type="button" class="button-primary" disabled="@(!CanRegister(tournament))" @onclick="() => OpenRegistration(tournament)">
-                            @(CanRegister(tournament) ? Localization["tournament.register"] : Localization["Feature.tournamentsOverview.registrationClosed"])
+                            @(CanRegister(tournament) ? Localization["Feature.tournaments.viewRegistrationOptions"] : Localization["Feature.tournamentsOverview.registrationClosed"])
                         </button>
                     </div>
                 </article>
