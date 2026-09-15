@@ -474,20 +474,26 @@
                                             </div>
                                             <div>
                                                 <dt>@Localization["Feature.tournaments.confirmation"]</dt>
-                                                <dd>@Localization["Feature.tournaments.confirmationHelp"]</dd>
+                                                <dd>
+                                                    @Localization["Feature.tournaments.confirmationHelp"]
+                                                    @if(HasCaptainManagedRegistration)
+                                                    {
+                                                        var rosterConfirmationMembers = CaptainManagedRegistration!.RosterMembers.Where(member => !member.IsCaptain).ToList();
+                                                        @if(rosterConfirmationMembers.Count > 0)
+                                                        {
+                                                            <div class="registration-review-roster" aria-label='@Localization["Feature.tournaments.rosterConfirmationState"]'>
+                                                                @foreach(var member in rosterConfirmationMembers)
+                                                                {
+                                                                    <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
+                                                                        @GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    }
+                                                </dd>
                                             </div>
                                         </dl>
-                                        @if(HasCaptainManagedRegistration)
-                                        {
-                                            <div class="registration-review-roster" aria-label='@Localization["Feature.tournaments.rosterConfirmationState"]'>
-                                                @foreach(var member in CaptainManagedRegistration!.RosterMembers)
-                                                {
-                                                    <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
-                                                        @if(member.IsCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
-                                                    </span>
-                                                }
-                                            </div>
-                                        }
                                     }
                                 </div>
                                 </MudStep>

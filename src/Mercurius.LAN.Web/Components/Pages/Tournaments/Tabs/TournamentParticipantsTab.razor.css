@@ -678,6 +678,8 @@
 }
 
 .registration-review-list dd {
+    display: grid;
+    gap: 0.35rem;
     margin: 0;
     overflow-wrap: anywhere;
 }
@@ -701,18 +703,15 @@
 }
 
 .registration-review-member--pending {
-    box-shadow: inset 3px 0 0 var(--color-warning);
     background: var(--color-warning-soft);
 }
 
 .registration-review-member--confirmed {
-    box-shadow: inset 3px 0 0 var(--color-success);
     background: var(--color-success-soft);
 }
 
 .registration-review-member--selected {
     border: 1px solid var(--color-border);
-    box-shadow: inset 3px 0 0 var(--color-primary-green);
 }
 
 .registration-captain-chip {
