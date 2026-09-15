@@ -407,7 +407,9 @@
                                                                aria-label='@GetRosterMemberAriaLabel(member, isCaptain, unavailable)'
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
-                                                             <strong>@GetUserLabel(member)</strong>@if(isCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}
+                                                            <span class="registration-roster-member-name">
+                                                                <strong>@GetUserLabel(member)</strong>@if(isCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}
+                                                            </span>
                                                             @if(unavailable)
                                                             {
                                                                 <span class="registration-status-chip registration-status-chip--unavailable">@Localization["Feature.tournaments.unavailable"]</span>

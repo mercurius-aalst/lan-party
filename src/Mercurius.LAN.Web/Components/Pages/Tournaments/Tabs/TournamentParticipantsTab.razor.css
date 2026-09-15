@@ -471,7 +471,16 @@
     gap: 0.15rem;
 }
 
-.registration-roster-member-copy strong {
+.registration-roster-member-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.registration-roster-member-name strong {
+    min-width: 0;
     overflow-wrap: anywhere;
 }
 
@@ -719,10 +728,6 @@
     font-weight: 800;
     line-height: 1.4;
     white-space: nowrap;
-}
-
-.registration-roster-member-copy .registration-captain-chip {
-    margin-left: 0.35rem;
 }
 
 .registration-message--error {
