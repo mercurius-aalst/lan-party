@@ -224,22 +224,6 @@
     font-weight: 700;
 }
 
-/* The label variants must out-specify the icon-sized `.nav-notification-action`
-   rule, which is declared later in this file and would otherwise win at equal
-   specificity, forcing these to 1.8rem circles and making the Accept/Decline
-   labels overflow into each other. */
-.nav-notification-action.nav-notification-action--label {
-    flex: 0 0 auto;
-    width: auto;
-    height: auto;
-    min-height: 1.8rem;
-    padding: 0.3rem 0.6rem;
-    border-radius: 8px;
-    font-size: 0.78rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
 .nav-notification-action:disabled {
     cursor: wait;
     opacity: 0.55;

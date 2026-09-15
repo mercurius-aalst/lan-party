@@ -202,11 +202,11 @@
                                                 }
                                                 else if(notification.Kind == TeamNotificationKind.RosterSelection)
                                                 {
-                                                    <button type="button" class="nav-notification-action nav-notification-action--accept nav-notification-action--label" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, true)">
-                                                        @Localization["nav.acceptRosterSelection"]
+                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, true)" aria-label='@Localization["nav.acceptRosterSelection"]'>
+                                                        <span class="bi bi-check-lg" aria-hidden="true"></span>
                                                     </button>
-                                                    <button type="button" class="nav-notification-action nav-notification-action--decline nav-notification-action--label" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, false)">
-                                                        @Localization["nav.declineRosterSelection"]
+                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, false)" aria-label='@Localization["nav.declineRosterSelection"]'>
+                                                        <span class="bi bi-x-lg" aria-hidden="true"></span>
                                                     </button>
                                                 }
                                                 <button type="button" class="nav-notification-action" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label='@Localization["nav.dismissNotification"]'>
