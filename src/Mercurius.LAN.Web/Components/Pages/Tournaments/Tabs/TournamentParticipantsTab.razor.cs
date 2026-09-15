@@ -2280,8 +2280,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             ? Localization.Get("Feature.tournaments.teamUnavailableAria", teamName)
             : teamName;
 
-    private string GetCaptainSuffix(bool isCaptain) =>
-        isCaptain ? $" ({Localization["Feature.tournaments.captain"]})" : string.Empty;
 
     private static bool IsUnauthorized(Exception exception) =>
         exception is UnauthorizedAccessException ||

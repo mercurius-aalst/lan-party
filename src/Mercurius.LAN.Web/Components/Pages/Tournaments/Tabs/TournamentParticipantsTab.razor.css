@@ -644,15 +644,6 @@
     align-items: center;
 }
 
-.registration-stepper-actions .button-link.registration-cancel-button {
-    color: var(--color-danger);
-}
-
-.registration-stepper-actions .button-link.registration-cancel-button:hover,
-.registration-stepper-actions .button-link.registration-cancel-button:focus-visible {
-    background: var(--color-danger-soft);
-    color: var(--color-danger);
-}
 
 .registration-review-list {
     display: grid;
@@ -662,8 +653,11 @@
 
 .registration-review-list > div {
     display: grid;
-    gap: 0.15rem;
-    padding: 0.45rem 0;
+    gap: 0.35rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
 }
 
 .registration-review-list dt {
@@ -686,11 +680,35 @@
 }
 
 .registration-review-member {
-    padding: 0.35rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
     border: 0;
     border-radius: 999px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface);
     font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.registration-review-member--pending {
+    box-shadow: inset 3px 0 0 var(--color-warning);
+    background: var(--color-warning-soft);
+}
+
+.registration-review-member--confirmed {
+    box-shadow: inset 3px 0 0 var(--color-success);
+    background: var(--color-success-soft);
+}
+
+.registration-review-member--selected {
+    border: 1px solid var(--color-border);
+    box-shadow: inset 3px 0 0 var(--color-primary-green);
+}
+
+.registration-captain-icon {
+    color: var(--color-link);
+    font-size: 0.78rem;
 }
 
 .registration-message--error {

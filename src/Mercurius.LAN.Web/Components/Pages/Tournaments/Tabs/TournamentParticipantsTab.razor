@@ -279,7 +279,9 @@
                                 <div class="registration-review-roster" aria-label='@Localization["Feature.tournaments.rosterConfirmationState"]'>
                                     @foreach(var member in currentTeam.RosterMembers)
                                     {
-                                        <span class="registration-review-member">@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)</span>
+                                        <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
+                                            @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                        </span>
                                     }
                                 </div>
                             </div>
@@ -299,7 +301,9 @@
                                 <div class="registration-review-roster" aria-label='@Localization["Feature.tournaments.rosterConfirmationState"]'>
                                     @foreach(var member in currentTeam.RosterMembers)
                                     {
-                                        <span class="registration-review-member">@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)</span>
+                                        <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
+                                            @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                        </span>
                                     }
                                 </div>
                             </div>
@@ -403,7 +407,7 @@
                                                                aria-label='@GetRosterMemberAriaLabel(member, isCaptain, unavailable)'
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
-                                                             <strong>@GetUserLabel(member)</strong>@GetCaptainSuffix(isCaptain)
+                                                             <strong>@GetUserLabel(member)</strong>@if(isCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true" title='@Localization["Feature.tournaments.captain"]'></span>}
                                                             @if(unavailable)
                                                             {
                                                                 <span class="registration-status-chip registration-status-chip--unavailable">@Localization["Feature.tournaments.unavailable"]</span>
@@ -455,7 +459,16 @@
                                             </div>
                                             <div>
                                                 <dt>@Localization["Feature.tournaments.selectedRoster"]</dt>
-                                                <dd>@string.Join(", ", rosterCandidates.Where(member => reviewRosterUserIds.Contains(member.Id)).Select(GetUserLabel))</dd>
+                                                <dd>
+                                                    <div class="registration-review-roster">
+                                                        @foreach(var selectedMember in rosterCandidates.Where(candidate => reviewRosterUserIds.Contains(candidate.Id)))
+                                                        {
+                                                            <span class="registration-review-member registration-review-member--selected">
+                                                                @if(selectedMember.Id == SelectedTeam.CaptainUserId){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true" title='@Localization["Feature.tournaments.captain"]'></span>}@GetUserLabel(selectedMember)
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </dd>
                                             </div>
                                             <div>
                                                 <dt>@Localization["Feature.tournaments.confirmation"]</dt>
@@ -467,8 +480,8 @@
                                             <div class="registration-review-roster" aria-label='@Localization["Feature.tournaments.rosterConfirmationState"]'>
                                                 @foreach(var member in CaptainManagedRegistration!.RosterMembers)
                                                 {
-                                                    <span class="registration-review-member">
-                                                        @GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                                    <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
+                                                        @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
                                                     </span>
                                                 }
                                             </div>
@@ -485,7 +498,7 @@
                                         @if(CanUnregisterSelectedTeam)
                                         {
                                             <button type="button"
-                                                    class="button-link registration-cancel-button"
+                                                    class="button-secondary registration-cancel-button"
                                                     disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
                                                     @onclick="BeginTeamUnregistrationConfirmationAsync"
                                                     @ref="_teamUnregistrationTriggerElement">
