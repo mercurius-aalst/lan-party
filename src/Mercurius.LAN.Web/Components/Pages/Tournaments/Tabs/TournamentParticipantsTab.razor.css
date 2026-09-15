@@ -706,9 +706,23 @@
     box-shadow: inset 3px 0 0 var(--color-primary-green);
 }
 
-.registration-captain-icon {
-    color: var(--color-link);
-    font-size: 0.78rem;
+.registration-captain-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: var(--color-success-soft);
+    color: var(--color-success);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.registration-roster-member-copy .registration-captain-chip {
+    margin-left: 0.35rem;
 }
 
 .registration-message--error {

@@ -280,7 +280,7 @@
                                     @foreach(var member in currentTeam.RosterMembers)
                                     {
                                         <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
-                                            @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                            @if(member.IsCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
                                         </span>
                                     }
                                 </div>
@@ -302,7 +302,7 @@
                                     @foreach(var member in currentTeam.RosterMembers)
                                     {
                                         <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
-                                            @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                            @if(member.IsCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
                                         </span>
                                     }
                                 </div>
@@ -407,7 +407,7 @@
                                                                aria-label='@GetRosterMemberAriaLabel(member, isCaptain, unavailable)'
                                                                @onchange="args => ToggleRosterMemberAsync(member.Id, args)" />
                                                         <span class="registration-roster-member-copy">
-                                                             <strong>@GetUserLabel(member)</strong>@if(isCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true" title='@Localization["Feature.tournaments.captain"]'></span>}
+                                                             <strong>@GetUserLabel(member)</strong>@if(isCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}
                                                             @if(unavailable)
                                                             {
                                                                 <span class="registration-status-chip registration-status-chip--unavailable">@Localization["Feature.tournaments.unavailable"]</span>
@@ -464,7 +464,7 @@
                                                         @foreach(var selectedMember in rosterCandidates.Where(candidate => reviewRosterUserIds.Contains(candidate.Id)))
                                                         {
                                                             <span class="registration-review-member registration-review-member--selected">
-                                                                @if(selectedMember.Id == SelectedTeam.CaptainUserId){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true" title='@Localization["Feature.tournaments.captain"]'></span>}@GetUserLabel(selectedMember)
+                                                                @if(selectedMember.Id == SelectedTeam.CaptainUserId){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}@GetUserLabel(selectedMember)
                                                             </span>
                                                         }
                                                     </div>
@@ -481,7 +481,7 @@
                                                 @foreach(var member in CaptainManagedRegistration!.RosterMembers)
                                                 {
                                                     <span class="registration-review-member @(member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-member--pending" : "registration-review-member--confirmed")">
-                                                        @if(member.IsCaptain){<span class="bi bi-star-fill registration-captain-icon" aria-hidden="true"></span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
+                                                        @if(member.IsCaptain){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}@GetUserLabel(member.User): @GetConfirmationLabel(member.ConfirmationStatus)
                                                     </span>
                                                 }
                                             </div>
