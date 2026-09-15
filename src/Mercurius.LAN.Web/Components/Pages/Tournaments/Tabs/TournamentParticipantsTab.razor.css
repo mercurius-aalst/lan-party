@@ -370,15 +370,46 @@
 }
 
 .registration-cancel-button {
-    border-color: color-mix(in srgb, var(--color-danger) 42%, var(--color-border-strong));
-    color: var(--color-danger);
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+    color: var(--color-white);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+/* The danger fill is dark in the light theme and light in the dark theme, so the
+   foreground flips with the theme surface to keep contrast in both. */
+html[data-theme="dark"] .registration-cancel-button {
+    color: var(--color-surface-raised);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .registration-cancel-button {
+        color: var(--color-surface-raised);
+    }
 }
 
 .registration-cancel-button:hover,
 .registration-cancel-button:focus-visible {
-    border-color: var(--color-danger);
-    background: var(--color-danger-soft);
-    color: var(--color-danger);
+    border-color: color-mix(in srgb, var(--color-danger) 85%, var(--color-ink));
+    background: color-mix(in srgb, var(--color-danger) 85%, var(--color-ink));
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.2);
+    transform: translateY(-1px);
+}
+
+.registration-cancel-button:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+}
+
+.registration-cancel-button[disabled],
+.registration-cancel-button[disabled]:hover,
+.registration-cancel-button[disabled]:focus-visible {
+    border-color: var(--color-border);
+    background: var(--color-neutral-soft);
+    color: var(--color-muted-text);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .registration-open-button,
