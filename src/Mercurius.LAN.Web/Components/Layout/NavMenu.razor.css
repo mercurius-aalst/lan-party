@@ -225,8 +225,14 @@
 }
 
 .nav-notification-action--label {
-    padding: 0.3rem 0.45rem;
+    width: auto;
+    height: auto;
+    min-height: 1.8rem;
+    padding: 0.3rem 0.6rem;
     border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
 }
 
 .nav-notification-action:disabled {
@@ -248,7 +254,8 @@
 .nav-notification-actions {
     display: flex;
     flex: 0 0 auto;
-    gap: 0.25rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
     align-items: center;
     justify-content: flex-end;
 }
