@@ -210,6 +210,31 @@ public sealed class TournamentService : ITournamentService
             },
             cancellationToken);
 
+    public Task DeclineTournamentRosterMemberAsync(
+        Guid tournamentId,
+        Guid rosterMemberId,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.DeclineTournamentRosterMemberAsync(tournamentId, rosterMemberId, cancellationToken);
+
+    public async Task<IReadOnlyList<PendingRosterConfirmationDTO>> GetPendingRosterConfirmationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        const int pageSize = 50;
+        var page = 1;
+        var confirmations = new List<PendingRosterConfirmationDTO>();
+
+        while(true)
+        {
+            var response = await _lanClient.GetPendingRosterConfirmationsAsync(page, pageSize, cancellationToken);
+            confirmations.AddRange(response.Items);
+
+            if(confirmations.Count >= response.TotalCount || response.Items.Count == 0)
+                return confirmations;
+
+            page++;
+        }
+    }
+
     public Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
         Guid tournamentId,
         int? page = null,

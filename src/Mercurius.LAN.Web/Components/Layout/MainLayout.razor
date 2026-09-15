@@ -15,26 +15,28 @@
                 <img src="/img/lan_logo_wide_light.svg" alt="" aria-hidden="true" class="brand-logo-image brand-logo-image--theme-dark" />
             </a>
 
-            <button @ref="_menuToggle" class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label='@Localization["nav.toggle"]' aria-expanded="@(_sidebarOpen ? "true" : "false")" aria-controls="primary-navigation">
-                <span class="menu-toggle-inner">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                </span>
-            </button>
+            <div class="brand-nav-actions">
+                <button @ref="_menuToggle" class="menu-toggle @(_sidebarOpen ? "open" : null)" @onclick="ToggleSidebar" aria-label='@Localization["nav.toggle"]' aria-expanded="@(_sidebarOpen ? "true" : "false")" aria-controls="primary-navigation">
+                    <span class="menu-toggle-inner">
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                        <span class="bar"></span>
+                    </span>
+                </button>
 
-            <div id="primary-navigation" class="brand-nav-panel flex flex-1 items-center justify-end @(_sidebarOpen ? "open" : null)">
-                <NavMenu OnNavigationSelected="OnNavigationSelected" />
+                <div id="primary-navigation" class="brand-nav-panel flex flex-1 items-center justify-end @(_sidebarOpen ? "open" : null)">
+                    <NavMenu OnNavigationSelected="OnNavigationSelected" />
+                </div>
+
+                <button type="button"
+                        class="theme-toggle"
+                        @onclick="ToggleThemeAsync"
+                        aria-pressed="@_isDarkMode"
+                        aria-label="@ThemeToggleLabel"
+                        title="@ThemeToggleLabel">
+                    <span class="bi @(_isDarkMode ? "bi-sun" : "bi-moon-stars")" aria-hidden="true"></span>
+                </button>
             </div>
-
-            <button type="button"
-                    class="theme-toggle"
-                    @onclick="ToggleThemeAsync"
-                    aria-pressed="@_isDarkMode"
-                    aria-label="@ThemeToggleLabel"
-                    title="@ThemeToggleLabel">
-                <span class="bi @(_isDarkMode ? "bi-sun" : "bi-moon-stars")" aria-hidden="true"></span>
-            </button>
         </div>
     </header>
 

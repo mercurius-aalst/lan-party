@@ -173,6 +173,10 @@
                                         <button type="button" @onclick="MarkNotificationsReadAsync">@Localization["nav.markRead"]</button>
                                     }
                                 </div>
+                                @if(_notificationActionError is not null)
+                                {
+                                    <p class="nav-notification-error" role="alert">@_notificationActionError</p>
+                                }
                                 @if(NotificationService.Notifications.Count == 0)
                                 {
                                     <div class="nav-notification-empty">@Localization["nav.noNotifications"]</div>
@@ -189,14 +193,23 @@
                                             <div class="nav-notification-actions">
                                                 @if(notification.InviteId.HasValue)
                                                 {
-                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, true)" aria-label='@Localization["nav.acceptInvitation"]'>
+                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToInviteNotificationAsync(notification, true)" aria-label='@Localization["nav.acceptInvitation"]'>
                                                         <span class="bi bi-check-lg" aria-hidden="true"></span>
                                                     </button>
-                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" @onclick="() => RespondToInviteNotificationAsync(notification.InviteId.Value, false)" aria-label='@Localization["nav.declineInvitation"]'>
+                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToInviteNotificationAsync(notification, false)" aria-label='@Localization["nav.declineInvitation"]'>
                                                         <span class="bi bi-x-lg" aria-hidden="true"></span>
                                                     </button>
                                                 }
-                                                <button type="button" class="nav-notification-action" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label='@Localization["nav.dismissNotification"]'>
+                                                else if(notification.Kind == TeamNotificationKind.RosterSelection)
+                                                {
+                                                    <button type="button" class="nav-notification-action nav-notification-action--accept" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, true)" aria-label='@Localization["nav.acceptRosterSelection"]'>
+                                                        <span class="bi bi-check-lg" aria-hidden="true"></span>
+                                                    </button>
+                                                    <button type="button" class="nav-notification-action nav-notification-action--decline" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => RespondToRosterNotificationAsync(notification, false)" aria-label='@Localization["nav.declineRosterSelection"]'>
+                                                        <span class="bi bi-x-lg" aria-hidden="true"></span>
+                                                    </button>
+                                                }
+                                                <button type="button" class="nav-notification-action" disabled="@IsNotificationActionPending(notification.Id)" @onclick="() => DismissNotificationAsync(notification.Id)" aria-label='@Localization["nav.dismissNotification"]'>
                                                     <span class="bi bi-dash-lg" aria-hidden="true"></span>
                                                 </button>
                                             </div>
@@ -212,9 +225,13 @@
                 <div class="brand-auth-actions flex flex-col items-stretch gap-3 md:flex-row md:items-center">
                     <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginLogin">@Localization["nav.login"]</button>
                     <button type="button" class="brand-utility-button w-full justify-center md:w-auto" @onclick="BeginRegistration">@Localization["nav.register"]</button>
-                    @if(IsMockBackendEnabled)
-                    {
-                        <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">@Localization["nav.dev"] @Localization["nav.admin"]</a>
+                    @{
+#if INCLUDE_MOCK_BACKEND
+                        if(IsMockBackendEnabled)
+                        {
+                            <a href="@MockAdminLoginHref" class="brand-dev-link inline-flex w-full items-center justify-center rounded-[12px] border border-[rgba(34,197,94,0.16)] px-4 py-3 text-center md:w-auto md:border-0 md:px-0 md:py-0" @onclick="HandleNavigationClicked">@Localization["nav.dev"] @Localization["nav.admin"]</a>
+                        }
+#endif
                     }
                 </div>
             </NotAuthorized>

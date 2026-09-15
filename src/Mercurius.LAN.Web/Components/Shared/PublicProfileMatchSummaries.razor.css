@@ -1,6 +1,9 @@
 .public-profile-match-summaries {
     display: grid;
     gap: 1.5rem;
+    /* Owned here rather than by a page override so the public user and team
+       profiles render this card identically. */
+    padding: clamp(1rem, 1.8vw, 1.35rem);
 }
 
 .public-profile-match-summaries-heading {

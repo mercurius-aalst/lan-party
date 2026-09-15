@@ -64,6 +64,12 @@
     background: var(--color-surface-raised) !important;
 }
 
+/* The individual flow is a single confirmation, so it does not need the width
+   the team stepper requires. */
+.registration-dialog--compact {
+    width: min(36rem, calc(100vw - 2rem));
+}
+
 .registration-dialog-body {
     display: grid;
     gap: 1.1rem;
@@ -314,6 +320,120 @@
     gap: 1rem;
 }
 
+.registration-invitation {
+    display: grid;
+    gap: 1rem;
+    padding: clamp(1rem, 3vw, 1.4rem);
+    border: 1px solid var(--color-primary-green);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-raised);
+}
+
+.registration-invitation > div:first-child {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.registration-invitation h3,
+.registration-invitation p {
+    margin: 0;
+}
+
+.registration-invitation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.registration-inline-confirmation {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid color-mix(in srgb, var(--color-danger) 42%, var(--color-border));
+    border-radius: var(--radius-control);
+    background: var(--color-danger-soft);
+}
+
+.registration-inline-confirmation h3,
+.registration-inline-confirmation p {
+    margin: 0;
+}
+
+.registration-inline-confirmation h3 {
+    margin-top: 0.25rem;
+    font-size: 1.05rem;
+}
+
+.registration-inline-confirmation p {
+    margin-top: 0.35rem;
+    color: var(--color-muted-text);
+}
+
+/* Registration is not destructive, so the shared confirmation shell keeps its
+   layout but drops the danger palette for a neutral outline. */
+.registration-inline-confirmation--neutral {
+    border-color: var(--color-border);
+    background: var(--color-surface-raised);
+}
+
+/* Inside the registration dialog the confirmation already sits on the dialog's own
+   surface and the dialog header already names it, so the nested outline is dropped.
+   The compound selector keeps this winning over the shared base rule. */
+.registration-inline-confirmation.registration-inline-confirmation--flat {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
+.registration-inline-confirmation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.registration-cancel-button {
+    border-color: var(--color-danger);
+    background: var(--color-danger);
+    color: var(--color-white);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+/* The danger fill is dark in the light theme and light in the dark theme, so the
+   foreground flips with the theme surface to keep contrast in both. */
+html[data-theme="dark"] .registration-cancel-button {
+    color: var(--color-surface-raised);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) .registration-cancel-button {
+        color: var(--color-surface-raised);
+    }
+}
+
+.registration-cancel-button:hover,
+.registration-cancel-button:focus-visible {
+    border-color: color-mix(in srgb, var(--color-danger) 85%, var(--color-ink));
+    background: color-mix(in srgb, var(--color-danger) 85%, var(--color-ink));
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.2);
+    transform: translateY(-1px);
+}
+
+.registration-cancel-button:focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+}
+
+.registration-cancel-button[disabled],
+.registration-cancel-button[disabled]:hover,
+.registration-cancel-button[disabled]:focus-visible {
+    border-color: var(--color-border);
+    background: var(--color-neutral-soft);
+    color: var(--color-muted-text);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .registration-open-button,
 .registration-refresh-button {
     display: inline-flex;
@@ -337,12 +457,6 @@
 .admin-registration-list {
     display: grid;
     gap: 0.8rem;
-}
-
-.registration-individual-action {
-    justify-self: start;
-    max-width: 100%;
-    width: auto;
 }
 
 .registration-form-grid {
@@ -404,7 +518,16 @@
     gap: 0.15rem;
 }
 
-.registration-roster-member-copy strong {
+.registration-roster-member-name {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.registration-roster-member-name strong {
+    min-width: 0;
     overflow-wrap: anywhere;
 }
 
@@ -573,6 +696,11 @@
     opacity: 0.55;
 }
 
+.registration-stepper-actions-secondary {
+    align-items: center;
+}
+
+
 .registration-review-list {
     display: grid;
     gap: 0.65rem;
@@ -581,8 +709,11 @@
 
 .registration-review-list > div {
     display: grid;
-    gap: 0.15rem;
-    padding: 0.45rem 0;
+    gap: 0.35rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-control);
+    background: var(--color-surface-muted);
 }
 
 .registration-review-list dt {
@@ -594,6 +725,8 @@
 }
 
 .registration-review-list dd {
+    display: grid;
+    gap: 0.35rem;
     margin: 0;
     overflow-wrap: anywhere;
 }
@@ -605,11 +738,42 @@
 }
 
 .registration-review-member {
-    padding: 0.35rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.6rem;
     border: 0;
     border-radius: 999px;
-    background: var(--color-surface-muted);
+    background: var(--color-surface);
     font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.registration-review-member--pending {
+    background: var(--color-warning-soft);
+}
+
+.registration-review-member--confirmed {
+    background: var(--color-success-soft);
+}
+
+.registration-review-member--selected {
+    border: 1px solid var(--color-border);
+}
+
+.registration-captain-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    background: var(--color-success-soft);
+    color: var(--color-success);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.4;
+    white-space: nowrap;
 }
 
 .registration-message--error {
@@ -678,8 +842,9 @@
 
     .registration-stepper-actions > div,
     .registration-stepper-actions button,
-    .registration-individual-action,
-    .registration-open-button {
+    .registration-open-button,
+    .registration-inline-confirmation-actions,
+    .registration-inline-confirmation-actions button {
         width: 100%;
     }
 }

@@ -3,6 +3,7 @@ using System.Net;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.Extensions;
+using Mercurius.LAN.Web.Localization;
 using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
@@ -80,6 +81,11 @@ public partial class TournamentDetail : IDisposable
 
     private TournamentSponsorPlacement? FeaturedPartner =>
         _tournament?.SponsorPlacement;
+
+    private string PageTitleText => FormatDetailPageTitle(Localization, _tournament?.Name);
+
+    private string SponsorAdminHeading =>
+        FormatSponsorAdminHeading(Localization, SelectedSponsor?.Name);
 
     private Sponsor? SelectedSponsor =>
         _selectedSponsorId.HasValue
@@ -406,6 +412,20 @@ public partial class TournamentDetail : IDisposable
     private string GetFeaturedPartnerSummary(TournamentSponsorPlacement placement)
     {
         return placement.SponsorDescription ?? string.Empty;
+    }
+
+    internal static string FormatDetailPageTitle(ILocalizationService localization, string? tournamentName)
+    {
+        return string.IsNullOrWhiteSpace(tournamentName)
+            ? localization["Feature.tournaments.tournamentFallback"]
+            : localization.Get("Feature.tournaments.detailPageTitle", tournamentName);
+    }
+
+    internal static string FormatSponsorAdminHeading(ILocalizationService localization, string? sponsorName)
+    {
+        return string.IsNullOrWhiteSpace(sponsorName)
+            ? localization["Feature.tournaments.presentedBy"]
+            : localization.Get("Feature.tournaments.partnerHeading", sponsorName);
     }
 
     private string GetPartnerEyebrow(TournamentSponsorPlacement placement)

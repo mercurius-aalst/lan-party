@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Mercurius.LAN.Web.Components.Pages.Tournaments;
 using Mercurius.LAN.Web.Localization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +25,38 @@ public sealed class LocalizationServiceTests
             dutch.Keys.OrderBy(static key => key));
         Assert.All(english, entry => Assert.False(string.IsNullOrWhiteSpace(entry.Value), $"English key '{entry.Key}' is empty."));
         Assert.All(dutch, entry => Assert.False(string.IsNullOrWhiteSpace(entry.Value), $"Dutch key '{entry.Key}' is empty."));
+    }
+
+    [Fact]
+    public void TournamentDetailFormatsLocalizedTemplatesAndUsesFallbacksWhenDataIsUnavailable()
+    {
+        using var resources = TestResources.Create(
+            new Dictionary<string, string>
+            {
+                ["Feature.tournaments.detailPageTitle"] = "{0} · Tournament",
+                ["Feature.tournaments.tournamentFallback"] = "Tournament",
+                ["Feature.tournaments.partnerHeading"] = "Presented by {0}",
+                ["Feature.tournaments.presentedBy"] = "Presented by"
+            },
+            new Dictionary<string, string>
+            {
+                ["Feature.tournaments.detailPageTitle"] = "{0} · Toernooi",
+                ["Feature.tournaments.tournamentFallback"] = "Toernooi",
+                ["Feature.tournaments.partnerHeading"] = "Mede mogelijk gemaakt door {0}",
+                ["Feature.tournaments.presentedBy"] = "Aangeboden door"
+            });
+
+        var english = resources.CreateService();
+        Assert.Equal("Summer LAN · Tournament", TournamentDetail.FormatDetailPageTitle(english, "Summer LAN"));
+        Assert.Equal("Tournament", TournamentDetail.FormatDetailPageTitle(english, null));
+        Assert.Equal("Presented by Acme", TournamentDetail.FormatSponsorAdminHeading(english, "Acme"));
+        Assert.Equal("Presented by", TournamentDetail.FormatSponsorAdminHeading(english, " "));
+
+        var dutch = resources.CreateService(ILocalizationService.DutchLanguage);
+        Assert.Equal("Zomer LAN · Toernooi", TournamentDetail.FormatDetailPageTitle(dutch, "Zomer LAN"));
+        Assert.Equal("Toernooi", TournamentDetail.FormatDetailPageTitle(dutch, null));
+        Assert.Equal("Mede mogelijk gemaakt door Acme", TournamentDetail.FormatSponsorAdminHeading(dutch, "Acme"));
+        Assert.Equal("Aangeboden door", TournamentDetail.FormatSponsorAdminHeading(dutch, null));
     }
 
     [Fact]

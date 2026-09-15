@@ -6,7 +6,17 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <IncludeMockBackend Condition="'$(IncludeMockBackend)' == '' and '$(Configuration)' == 'Debug'">true</IncludeMockBackend>
+    <IncludeMockBackend Condition="'$(IncludeMockBackend)' == ''">false</IncludeMockBackend>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IncludeMockBackend)' == 'true'">
+    <DefineConstants>$(DefineConstants);INCLUDE_MOCK_BACKEND</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IncludeMockBackend)' != 'true'">
+    <Compile Remove="MockBackendParityTests.cs;MockMatchLifecycleTests.cs;MockRegistrationParityTests.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
