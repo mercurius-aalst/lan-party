@@ -140,6 +140,99 @@ public sealed class TournamentParticipantsMutationTests
         Assert.Equal(0, callbackCount);
     }
 
+    [Fact]
+    public async Task IndividualRegistrationActionOpensTheInlineConfirmationWithoutSendingTheMutation()
+    {
+        var tournament = CreateTournament(Guid.NewGuid());
+        var tab = CreateTab(out _);
+        var service = CreateIndividualRegistrationService();
+        SetPrivateProperty(tab, "TournamentService", service);
+        tab.SetTournamentForTest(tournament);
+        SeedIndividualState(tab, service);
+
+        await InvokePrivateAsync(tab, "OpenRegistrationDialog");
+
+        Assert.True(GetField<bool>(tab, "_isIndividualRegistrationConfirmationOpen"));
+        Assert.False(GetField<bool>(tab, "_isRegistrationDialogOpen"));
+        Assert.Equal(0, service.RegisterCallCount);
+        Assert.Empty(service.Calls);
+    }
+
+    [Fact]
+    public async Task ConfirmingIndividualRegistrationSendsTheMutationExactlyOnce()
+    {
+        var tournament = CreateTournament(Guid.NewGuid());
+        var tab = CreateTab(out _);
+        var service = CreateIndividualRegistrationService();
+        SetPrivateProperty(tab, "TournamentService", service);
+        tab.SetTournamentForTest(tournament);
+        SeedIndividualState(tab, service);
+
+        await InvokePrivateAsync(tab, "OpenRegistrationDialog");
+        await InvokePrivateAsync(tab, "RegisterIndividualAsync");
+
+        Assert.Equal(1, service.RegisterCallCount);
+        Assert.Equal([tournament.Id], service.RegisterTournamentIds);
+        Assert.False(GetField<bool>(tab, "_isIndividualRegistrationConfirmationOpen"));
+    }
+
+    [Fact]
+    public async Task DismissingIndividualRegistrationConfirmationSendsNoMutation()
+    {
+        var tournament = CreateTournament(Guid.NewGuid());
+        var tab = CreateTab(out _);
+        var service = CreateIndividualRegistrationService();
+        SetPrivateProperty(tab, "TournamentService", service);
+        tab.SetTournamentForTest(tournament);
+        SeedIndividualState(tab, service);
+
+        await InvokePrivateAsync(tab, "OpenRegistrationDialog");
+        await InvokePrivateAsync(tab, "DismissIndividualRegistrationConfirmationAsync");
+
+        Assert.False(GetField<bool>(tab, "_isIndividualRegistrationConfirmationOpen"));
+        Assert.Equal(0, service.RegisterCallCount);
+        Assert.Empty(service.Calls);
+    }
+
+    [Fact]
+    public async Task IneligibleIndividualPlayerStillUsesTheRegistrationDialog()
+    {
+        var tournament = CreateTournament(Guid.NewGuid());
+        var tab = CreateTab(out _);
+        var service = CreateIndividualRegistrationService();
+        SetPrivateProperty(tab, "TournamentService", service);
+        tab.SetTournamentForTest(tournament);
+        SeedIndividualState(tab, service, eligible: false);
+
+        await InvokePrivateAsync(tab, "OpenRegistrationDialog");
+
+        Assert.True(GetField<bool>(tab, "_isRegistrationDialogOpen"));
+        Assert.False(GetField<bool>(tab, "_isIndividualRegistrationConfirmationOpen"));
+        Assert.Empty(service.Calls);
+    }
+
+    [Fact]
+    public async Task IndividualUnregistrationRequiresTheConfirmationBeforeTheMutation()
+    {
+        var tournament = CreateTournament(Guid.NewGuid());
+        var tab = CreateTab(out _);
+        var service = CreateIndividualRegistrationService();
+        SetPrivateProperty(tab, "TournamentService", service);
+        tab.SetTournamentForTest(tournament);
+        SeedIndividualState(tab, service, registered: true);
+
+        await InvokePrivateAsync(tab, "BeginIndividualUnregistrationConfirmationAsync");
+
+        Assert.True(GetField<bool>(tab, "_isIndividualUnregistrationConfirmationOpen"));
+        Assert.Equal(0, service.DeleteCallCount);
+
+        await InvokePrivateAsync(tab, "UnregisterIndividualAsync");
+
+        Assert.Equal(1, service.DeleteCallCount);
+        Assert.Equal([tournament.Id], service.DeleteTournamentIds);
+        Assert.False(GetField<bool>(tab, "_isIndividualUnregistrationConfirmationOpen"));
+    }
+
     private static TestableTournamentParticipantsTab CreateTab(out RecordingToastServiceProxy toastService)
     {
         var tab = new TestableTournamentParticipantsTab();
@@ -156,6 +249,39 @@ public sealed class TournamentParticipantsMutationTests
         var proxy = (RecordingTournamentServiceProxy)(object)service;
         proxy.RemovalCompletion = completion;
         return proxy;
+    }
+
+    private static RecordingIndividualRegistrationServiceProxy CreateIndividualRegistrationService() =>
+        (RecordingIndividualRegistrationServiceProxy)(object)
+        DispatchProxy.Create<ITournamentService, RecordingIndividualRegistrationServiceProxy>();
+
+    private static void SeedIndividualState(
+        TournamentParticipantsTab tab,
+        RecordingIndividualRegistrationServiceProxy service,
+        bool eligible = true,
+        bool registered = false)
+    {
+        var state = new CurrentUserTournamentRegistrationStateDTO
+        {
+            TournamentId = tab.Tournament.Id,
+            CanRegisterIndividual = !registered,
+            CanUnregister = registered,
+            IndividualRegistration = registered
+                ? CreateRegistration(Guid.NewGuid(), tab.Tournament.Id)
+                : null
+        };
+        service.State = state;
+        service.Eligibility = new EligibilityResponseDTO { Eligible = eligible };
+        SetPrivateField(tab, "_isAuthenticated", true);
+        SetPrivateField(tab, "_registrationState", state);
+        SetPrivateField(tab, "_individualEligibility", service.Eligibility);
+    }
+
+    private static Task InvokePrivateAsync(TournamentParticipantsTab tab, string methodName)
+    {
+        var method = typeof(TournamentParticipantsTab).GetMethod(methodName, PrivateInstance)!;
+        var testTab = (TestableTournamentParticipantsTab)tab;
+        return testTab.InvokeOnRendererAsync(() => (Task)method.Invoke(tab, null)!);
     }
 
     private static Task InvokeUserMutation(
@@ -357,6 +483,40 @@ public sealed class TournamentParticipantsMutationTests
             }
 
             throw new NotSupportedException($"Unexpected tournament service call: {targetMethod?.Name}");
+        }
+    }
+
+    public class RecordingIndividualRegistrationServiceProxy : DispatchProxy
+    {
+        public CurrentUserTournamentRegistrationStateDTO State { get; set; } = new();
+        public EligibilityResponseDTO Eligibility { get; set; } = new() { Eligible = true };
+        public List<string> Calls { get; } = [];
+        public List<Guid> RegisterTournamentIds { get; } = [];
+        public List<Guid> DeleteTournamentIds { get; } = [];
+        public int RegisterCallCount => RegisterTournamentIds.Count;
+        public int DeleteCallCount => DeleteTournamentIds.Count;
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            var methodName = targetMethod?.Name ?? "<unknown>";
+            Calls.Add(methodName);
+            switch(methodName)
+            {
+                case nameof(ITournamentService.GetCurrentUserTournamentRegistrationStateAsync):
+                    return Task.FromResult(State);
+                case nameof(ITournamentService.CheckIndividualTournamentRegistrationEligibilityAsync):
+                    return Task.FromResult(Eligibility);
+                case nameof(ITournamentService.RegisterCurrentUserForTournamentAsync):
+                    RegisterTournamentIds.Add((Guid)args![0]!);
+                    return Task.FromResult(new TournamentRegistrationDTO { TournamentId = (Guid)args[0]! });
+                case nameof(ITournamentService.DeleteCurrentUserTournamentRegistrationAsync):
+                    DeleteTournamentIds.Add((Guid)args![0]!);
+                    return Task.CompletedTask;
+                default:
+                    // The follow-up refresh is expected to fail in this harness; the
+                    // mutation itself is what these tests count.
+                    throw new NotSupportedException($"Unexpected tournament service call: {methodName}");
+            }
         }
     }
 }
