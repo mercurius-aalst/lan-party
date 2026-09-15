@@ -64,6 +64,12 @@
     background: var(--color-surface-raised) !important;
 }
 
+/* The individual flow is a single confirmation, so it does not need the width
+   the team stepper requires. */
+.registration-dialog--compact {
+    width: min(36rem, calc(100vw - 2rem));
+}
+
 .registration-dialog-body {
     display: grid;
     gap: 1.1rem;
@@ -364,9 +370,9 @@
 }
 
 /* Registration is not destructive, so the shared confirmation shell keeps its
-   layout but switches from the danger palette to the brand accent. */
+   layout but drops the danger palette for a neutral outline. */
 .registration-inline-confirmation--neutral {
-    border-color: color-mix(in srgb, var(--color-primary-green) 42%, var(--color-border));
+    border-color: var(--color-border);
     background: var(--color-surface-raised);
 }
 

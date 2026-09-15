@@ -166,7 +166,7 @@
                  role="presentation"
                  @onclick="CloseRegistrationDialogAsync"
                  @onkeydown="HandleRegistrationDialogKeyDown">
-                <div class="participants-modal-dialog registration-dialog"
+                <div class="participants-modal-dialog registration-dialog @(Tournament.ParticipationMode == ParticipationMode.Individual ? "registration-dialog--compact" : null)"
                      role="dialog"
                      aria-modal="true"
                      aria-labelledby="registration-dialog-title"

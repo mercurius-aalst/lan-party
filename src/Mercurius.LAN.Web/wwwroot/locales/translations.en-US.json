@@ -795,7 +795,7 @@
   "Feature.tournaments.confirmationHelp": "Selected members must confirm their place.",
   "Feature.tournaments.confirmationPending": "Pending confirmation",
   "Feature.tournaments.confirmIndividualRegistration": "Confirm your spot",
-  "Feature.tournaments.confirmIndividualRegistrationMessage": "You will be registered for {0} and appear in the participant list.",
+  "Feature.tournaments.confirmIndividualRegistrationMessage": "You're signing up for {0}. You can cancel your registration any time before it starts.",
   "Feature.tournaments.confirmIndividualUnregister": "Cancel individual registration",
   "Feature.tournaments.confirmIndividualUnregisterMessage": "Cancel your individual registration for {0}?",
   "Feature.tournaments.confirmRoster": "Confirm roster",

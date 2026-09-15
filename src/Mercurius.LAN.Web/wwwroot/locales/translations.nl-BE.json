@@ -795,7 +795,7 @@
   "Feature.tournaments.confirmationHelp": "De geselecteerde leden moeten hun plaats bevestigen.",
   "Feature.tournaments.confirmationPending": "Wacht op bevestiging",
   "Feature.tournaments.confirmIndividualRegistration": "Bevestig je deelname",
-  "Feature.tournaments.confirmIndividualRegistrationMessage": "Je wordt ingeschreven voor {0} en verschijnt in de deelnemerslijst.",
+  "Feature.tournaments.confirmIndividualRegistrationMessage": "Je schrijft je in voor {0}. Je kunt je inschrijving altijd annuleren voor het toernooi begint.",
   "Feature.tournaments.confirmIndividualUnregister": "Individuele inschrijving annuleren",
   "Feature.tournaments.confirmIndividualUnregisterMessage": "Je individuele inschrijving voor {0} annuleren?",
   "Feature.tournaments.confirmRoster": "Teamopstelling bevestigen",
