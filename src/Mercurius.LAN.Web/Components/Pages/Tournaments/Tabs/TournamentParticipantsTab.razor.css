@@ -376,6 +376,15 @@
     background: var(--color-surface-raised);
 }
 
+/* Inside the registration dialog the confirmation already sits on the dialog's own
+   surface and the dialog header already names it, so the nested outline is dropped.
+   The compound selector keeps this winning over the shared base rule. */
+.registration-inline-confirmation.registration-inline-confirmation--flat {
+    padding: 0;
+    border: 0;
+    background: transparent;
+}
+
 .registration-inline-confirmation-actions {
     display: flex;
     flex-wrap: wrap;
