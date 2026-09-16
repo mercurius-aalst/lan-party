@@ -30,17 +30,27 @@ The site SHALL apply consistent active-state feedback to route-based header navi
 - **AND** route-based active styling continues to represent the current page route rather than the fragment or action control
 
 ### Requirement: Header action buttons preserve clear action hierarchy
-The site SHALL style supporting header actions such as login, user, and admin controls as lower-emphasis utility actions while preserving the tickets action as the visually dominant header call to action.
+
+The site SHALL organize header actions by player goal and role while styling
+supporting account, search, and admin actions as lower-emphasis utility controls
+and keeping the tickets action visually prominent when it is available.
 
 #### Scenario: Visitor views signed-out header actions
+
 - **WHEN** a visitor views the header while signed out
-- **THEN** the login action is presented as a supporting utility control
-- **AND** the tickets action remains more visually prominent than the login action
+- **THEN** the header MUST expose clear paths to discovery, event information,
+  sponsors, login, and registration according to the active account-access flow
+- **AND** the tickets action MUST remain more visually prominent than supporting
+  account actions
 
 #### Scenario: Visitor views authenticated header actions
-- **WHEN** an authenticated visitor views the header with the user menu trigger and tickets action
-- **THEN** the user menu trigger is presented as a supporting utility control
-- **AND** the tickets action remains the most visually prominent call to action in the header
+
+- **WHEN** an authenticated visitor views the header with the user menu trigger,
+  team, notification, and tickets actions
+- **THEN** the actions MUST be grouped by player goal without hiding any action
+  authorized by the existing navigation behavior
+- **AND** the tickets action MUST remain the most visually prominent header call
+  to action
 
 ### Requirement: Open header menu triggers use stable selected styling
 The site SHALL apply explicit selected styling to open admin and user menu triggers without making them appear faded, washed out, or inactive.
@@ -207,4 +217,124 @@ The site navigation SHALL provide authenticated users with a discoverable route 
 - **WHEN** an authenticated user receives a team SignalR hub notification for a pending team invite
 - **THEN** the authenticated navigation updates its notification control after refreshing confirmed notification and invite state
 - **AND** the notification does not expose private invite details to anonymous visitors or public navigation surfaces
+
+### Requirement: Primary navigation follows player goals without breaking routes
+
+The navigation SHALL present a concise player-first information architecture for
+discovering tournaments, understanding the event, finding public participants,
+and reaching authenticated team/profile actions while preserving canonical route
+destinations and existing navigation callbacks.
+
+#### Scenario: Visitor selects a player-goal destination
+
+- **WHEN** a visitor selects a primary, secondary, search, profile, team, or
+  notification navigation item
+- **THEN** the application MUST use the item's existing Blazor route or action
+  callback
+- **AND** any temporary mobile, dropdown, or search surface MUST close using its
+  existing behavior
+
+#### Scenario: Navigation is rendered for a role
+
+- **WHEN** the shell renders for an anonymous user, authenticated player, or
+  authenticated administrator
+- **THEN** only the destinations authorized for that role MUST be shown
+- **AND** reorganizing their grouping MUST NOT reveal protected data or remove a
+  successful action from its canonical entry point
+
+### Requirement: Navigation exposes contextual next actions
+
+The site SHALL provide local section links or contextual next-action affordances
+when they clarify a journey, but these affordances MUST remain additive to the
+existing route, anchor, search, and keyboard contracts.
+
+#### Scenario: Visitor scans a dense page
+
+- **WHEN** a tournament, team, profile, or organizer page contains multiple
+  sections
+- **THEN** the page MAY expose local links to the loaded sections and next
+  action when the content is dense enough to benefit from them
+- **AND** a short page, including Home when its useful sections fit the page
+  flow, MUST NOT render a redundant anchor rail or duplicate jump buttons
+- **AND** the links MUST target existing route fragments or callbacks rather
+  than inventing an unimplemented destination
+
+### Requirement: Temporary organizer menus dismiss predictably
+
+The administrator menu MUST close when an organizer destination is selected,
+when the pointer interacts outside the menu, or when the user presses Escape.
+The menu MUST expose accurate expanded and controlled semantics without
+changing administrator authorization or destination routes.
+
+#### Scenario: Admin selects the current organizer destination
+
+- **WHEN** an administrator selects an organizer menu item, including while
+  already on that item's route
+- **THEN** the menu MUST close after the selection
+- **AND** the existing route and authorization behavior MUST remain unchanged
+
+#### Scenario: Admin interacts outside the menu
+
+- **WHEN** an administrator presses or clicks outside the Admin trigger and
+  menu
+- **THEN** the menu MUST close
+- **AND** pressing or clicking inside the trigger or menu MUST NOT be treated as
+  an outside interaction
+
+#### Scenario: Admin dismisses with Escape
+
+- **WHEN** the Admin menu is open and the administrator presses Escape
+- **THEN** the menu MUST close
+- **AND** focus SHOULD return to the Admin trigger
+- **AND** the trigger's `aria-expanded` state MUST return to `false`
+
+### Requirement: Theme preference supports system default and explicit modes
+
+The shell SHALL provide an accessible light/dark theme choice while keeping one
+page-wide semantic theme at a time. When no explicit preference is stored, the
+initial theme MUST follow the browser or operating-system preference. An
+explicit user choice MUST persist across later visits when client-side
+persistence is available, without requiring a new backend contract.
+
+#### Scenario: Visitor changes the theme
+
+- **WHEN** a visitor selects light or dark mode from the shell control
+- **THEN** the current page MUST update to the selected theme without changing
+  route, form data, or loaded journey state
+- **AND** the control MUST expose its current mode and an accessible name
+- **AND** all sections MUST remain in the selected theme rather than flipping
+  individual sections independently
+
+#### Scenario: Visitor has no stored theme preference
+
+- **WHEN** a visitor opens the site without a stored explicit theme choice
+- **THEN** the shell MUST use the current system color-scheme preference
+- **AND** the first rendered state MUST remain readable while the preference is
+  resolved
+
+### Requirement: Home navigation reflects the concise landing information architecture
+
+Home navigation and in-page entry points SHALL support only the useful landing
+sections: Hero, Sponsors, Tournaments, Tickets, and Contact, in that order.
+Existing compatibility anchors MAY remain available inside their relevant
+section, but the shell MUST not add a second navigation rail solely to jump
+between sections that are already visible in the page flow.
+
+#### Scenario: Visitor opens Home
+
+- **WHEN** a visitor opens the Home route
+- **THEN** the page MUST present the five useful sections in the required order
+- **AND** redundant feature, orientation, or filler sections MUST not be
+  introduced as part of the redesign
+- **AND** existing compatibility fragments MUST continue to resolve without
+  requiring a visible anchor menu
+
+### Requirement: Optional authenticated navigation enrichment is non-blocking
+
+The site navigation MUST remain usable while current-profile, notification, or realtime enrichment is loading or unavailable and MUST fall back to available identity claims where possible. Optional enrichment MUST run after interactive rendering and MUST not start realtime work or request a render after the navigation component is disposed.
+
+#### Scenario: Navigation enrichment fails
+- **WHEN** an authenticated visitor's profile, notification, or realtime enrichment request fails
+- **THEN** the shared navigation remains rendered and interactive
+- **AND** the user menu retains a non-blocking identity fallback
 

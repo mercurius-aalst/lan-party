@@ -86,7 +86,9 @@ mock-login, Auth0 challenge, or Auth0 callback redirect behavior.
 The live Auth0 logout flow MUST send the provider to the fixed local
 `/account/logout/callback` URI with the already server-validated logout target
 as an encoded `returnUrl` query parameter. It MUST NOT put the dynamic target
-in the callback path.
+in the callback path. The application MUST clear its local authentication
+cookie before starting the Auth0 sign-out operation so a remote provider
+failure cannot leave the local session authenticated.
 
 #### Scenario: Auth0 logout returns through the fixed callback
 
@@ -113,3 +115,10 @@ in the callback path.
 - **THEN** the callback MUST revalidate the missing, unsafe, or malformed value
   through the logout return-target policy
 - **AND** it MUST redirect locally to `/`
+
+#### Scenario: Remote provider sign-out fails
+
+- **WHEN** the Auth0 sign-out operation fails after logout has started
+- **THEN** the local authentication cookie MUST already be cleared
+- **AND** the logout response MUST complete with a redirect to the validated public return target
+- **AND** a later request to a protected route MUST be treated as anonymous

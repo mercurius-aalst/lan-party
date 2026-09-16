@@ -61,6 +61,12 @@ public partial class NavMenu : IAsyncDisposable
     private ElementReference _adminMenuTrigger;
     private string? _loadedIdentityKey;
     private string? _currentProfileUsername;
+    private readonly CancellationTokenSource _lifetimeCancellationTokenSource = new();
+    private CancellationTokenSource? _authenticatedNavigationCancellationTokenSource;
+    private Task? _authenticatedNavigationTask;
+    private long _authenticatedNavigationVersion;
+    private string? _pendingAuthenticatedNavigationIdentityKey;
+    private bool _disposed;
 
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
@@ -81,13 +87,27 @@ public partial class NavMenu : IAsyncDisposable
 
     protected override async Task OnParametersSetAsync()
     {
-        if(AuthenticationStateTask == null)
+        if(_disposed || AuthenticationStateTask == null)
             return;
 
-        var authState = await AuthenticationStateTask;
+        AuthenticationState authState;
+        try
+        {
+            authState = await AuthenticationStateTask;
+        }
+        catch(OperationCanceledException) when(_disposed)
+        {
+            return;
+        }
+
+        if(_disposed)
+            return;
+
         var user = authState.User;
         if(user.Identity?.IsAuthenticated != true)
         {
+            CancelAuthenticatedNavigation();
+            _pendingAuthenticatedNavigationIdentityKey = null;
             _loadedIdentityKey = null;
             _currentProfileUsername = null;
             return;
@@ -99,21 +119,95 @@ public partial class NavMenu : IAsyncDisposable
 
         _loadedIdentityKey = identityKey;
         _currentProfileUsername = null;
+        CancelAuthenticatedNavigation();
+        _pendingAuthenticatedNavigationIdentityKey = identityKey;
+    }
 
+    private void StartAuthenticatedNavigation(string identityKey)
+    {
+        if(_disposed || !string.Equals(identityKey, _loadedIdentityKey, StringComparison.Ordinal))
+            return;
+
+        var cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_lifetimeCancellationTokenSource.Token);
+        _authenticatedNavigationCancellationTokenSource = cancellationTokenSource;
+        var navigationVersion = ++_authenticatedNavigationVersion;
+        _authenticatedNavigationTask = LoadAuthenticatedNavigationAsync(identityKey, navigationVersion, cancellationTokenSource);
+    }
+
+    private async Task LoadAuthenticatedNavigationAsync(
+        string identityKey,
+        long navigationVersion,
+        CancellationTokenSource cancellationTokenSource)
+    {
+        var cancellationToken = cancellationTokenSource.Token;
         try
         {
             var profile = await UserClient.GetCurrentUserProfileAsync();
+            if(!IsCurrentAuthenticatedNavigation(identityKey, navigationVersion, cancellationToken))
+                return;
+
             _currentProfileUsername = profile.User?.Username?.Trim();
-            await NotificationService.RefreshAsync();
-            await TeamRealtimeService.StartAsync();
+            await NotificationService.RefreshAsync(cancellationToken);
+            if(!IsCurrentAuthenticatedNavigation(identityKey, navigationVersion, cancellationToken))
+                return;
+
+            await TeamRealtimeService.StartAsync(cancellationToken);
+            if(!IsCurrentAuthenticatedNavigation(identityKey, navigationVersion, cancellationToken))
+                return;
+
+            await InvokeAsync(() =>
+            {
+                if(IsCurrentAuthenticatedNavigation(identityKey, navigationVersion, cancellationToken))
+                    StateHasChanged();
+            });
+        }
+        catch(OperationCanceledException) when(cancellationToken.IsCancellationRequested || _disposed)
+        {
         }
         catch(Exception)
         {
         }
+        finally
+        {
+            if(ReferenceEquals(_authenticatedNavigationCancellationTokenSource, cancellationTokenSource))
+            {
+                _authenticatedNavigationCancellationTokenSource = null;
+                cancellationTokenSource.Dispose();
+            }
+        }
+    }
+
+    private bool IsCurrentAuthenticatedNavigation(
+        string identityKey,
+        long navigationVersion,
+        CancellationToken cancellationToken) =>
+        !_disposed &&
+        !cancellationToken.IsCancellationRequested &&
+        navigationVersion == _authenticatedNavigationVersion &&
+        string.Equals(identityKey, _loadedIdentityKey, StringComparison.Ordinal);
+
+    private void CancelAuthenticatedNavigation()
+    {
+        _authenticatedNavigationVersion++;
+        var cancellationTokenSource = _authenticatedNavigationCancellationTokenSource;
+        _authenticatedNavigationCancellationTokenSource = null;
+        if(cancellationTokenSource is null)
+            return;
+
+        cancellationTokenSource.Cancel();
+        cancellationTokenSource.Dispose();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if(_disposed)
+            return;
+
+        var pendingIdentityKey = _pendingAuthenticatedNavigationIdentityKey;
+        _pendingAuthenticatedNavigationIdentityKey = null;
+        if(pendingIdentityKey is not null)
+            StartAuthenticatedNavigation(pendingIdentityKey);
+
         if(_isSearchDropdownVisible && _searchOutsideClickListener == null)
         {
             _searchOutsideClickReference ??= DotNetObjectReference.Create(this);
@@ -591,6 +685,9 @@ public partial class NavMenu : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
+        CancelAuthenticatedNavigation();
+        _lifetimeCancellationTokenSource.Cancel();
         NotificationService.Changed -= HandleNotificationsChangedAsync;
         TeamRealtimeService.TeamStateInvalidated -= RefreshNotificationsFromSignalAsync;
         CancelPendingSearch();
@@ -598,6 +695,7 @@ public partial class NavMenu : IAsyncDisposable
         await DisposeAccountMenuOutsideClickListenerAsync();
         await DisposeAdminMenuOutsideClickListenerAsync();
         _searchOutsideClickReference?.Dispose();
+        _lifetimeCancellationTokenSource.Dispose();
     }
 
     private async Task MarkNotificationsReadAsync()
@@ -624,14 +722,27 @@ public partial class NavMenu : IAsyncDisposable
 
     private Task HandleNotificationsChangedAsync()
     {
-        return InvokeAsync(StateHasChanged);
+        if(_disposed)
+            return Task.CompletedTask;
+
+        return InvokeAsync(() =>
+        {
+            if(!_disposed)
+                StateHasChanged();
+        });
     }
 
     private async Task RefreshNotificationsFromSignalAsync()
     {
+        if(_disposed)
+            return;
+
         try
         {
-            await NotificationService.RefreshAsync();
+            await NotificationService.RefreshAsync(_lifetimeCancellationTokenSource.Token);
+        }
+        catch(OperationCanceledException) when(_disposed)
+        {
         }
         catch(Exception)
         {

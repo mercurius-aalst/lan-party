@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace Mercurius.LAN.Web.Components.Pages.Tournaments;
 
-public partial class TournamentsOverview
+public partial class TournamentsOverview : IAsyncDisposable
 {
     private enum TournamentSortOption
     {
@@ -54,13 +54,18 @@ public partial class TournamentsOverview
     private bool _isAddTournamentDialogOpen;
     private bool _isLoading = true;
     private bool _isLoadingPage;
+    private bool _isSponsorsLoading;
     private bool _isRegistrationDialogOpen;
     private TournamentExtended? _registrationTournament;
     private string? _loadError;
+    private string? _sponsorsError;
     private int _page = 1;
     private const int PageSize = 24;
     private const int PageRequestSize = PageSize + 1;
     private bool _hasNextPage;
+    private long _tournamentLoadVersion;
+    private long _sponsorLoadVersion;
+    private bool _disposed;
     private TournamentSortOption _sortOption;
     private OverviewStatusFilter _statusFilter = OverviewStatusFilter.All;
     private OverviewParticipationFilter _participationFilter = OverviewParticipationFilter.All;
@@ -87,40 +92,59 @@ public partial class TournamentsOverview
         }
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        if(!firstRender)
-            return;
+        if(firstRender && !_disposed)
+            _ = LoadPageAsync(showLoading: true);
 
-        await LoadPageAsync(showLoading: true);
+        return Task.CompletedTask;
     }
 
     private async Task LoadPageAsync(bool showLoading)
     {
+        if(_disposed)
+            return;
+
         if(showLoading)
             _isLoading = true;
         else
             _isLoadingPage = true;
 
         _loadError = null;
+        var tournamentLoadVersion = ++_tournamentLoadVersion;
+        var shouldLoadSponsors = _sponsors.Count == 0 && !_isSponsorsLoading;
+        var sponsorLoadVersion = _sponsorLoadVersion;
+        if(shouldLoadSponsors)
+        {
+            _isSponsorsLoading = true;
+            _sponsorsError = null;
+            sponsorLoadVersion = ++_sponsorLoadVersion;
+        }
+
+        await RenderIfActiveAsync();
+        _ = LoadTournamentsAsync(tournamentLoadVersion);
+        if(shouldLoadSponsors)
+            _ = LoadSponsorsAsync(sponsorLoadVersion);
+    }
+
+    private async Task LoadTournamentsAsync(long loadVersion)
+    {
         try
         {
-            var tournamentsTask = TournamentService.GetTournamentsAsync(_page, PageRequestSize);
-            var sponsorsTask = _sponsors.Count == 0
-                ? SponsorService.GetSponsorsAsync()
-                : Task.FromResult<IEnumerable<Sponsor>>(_sponsors);
+            var fetchedTournaments = await TournamentService.GetTournamentsAsync(_page, PageRequestSize);
+            if(!IsCurrentTournamentLoad(loadVersion))
+                return;
 
-            await Task.WhenAll(tournamentsTask, sponsorsTask);
-            var fetchedTournaments = tournamentsTask.Result;
             _hasNextPage = fetchedTournaments.Count > PageSize;
             _tournaments = fetchedTournaments.Take(PageSize).ToList();
-            _sponsors = sponsorsTask.Result
-                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
-                .ThenBy(sponsor => sponsor.Name)
-                .ToList();
         }
         catch(Exception exception)
         {
+            if(!IsCurrentTournamentLoad(loadVersion))
+                return;
+
+            _tournaments = [];
+            _hasNextPage = false;
             _loadError = exception is UnauthorizedAccessException
                 ? Localization["Feature.tournamentsOverview.signInToLoad"]
                 : Localization["Feature.tournamentsOverview.loadError"];
@@ -128,9 +152,60 @@ public partial class TournamentsOverview
         }
         finally
         {
-            _isLoading = false;
-            _isLoadingPage = false;
-            await InvokeAsync(StateHasChanged);
+            if(IsCurrentTournamentLoad(loadVersion))
+            {
+                _isLoading = false;
+                _isLoadingPage = false;
+                await RenderIfActiveAsync();
+            }
+        }
+    }
+
+    private async Task LoadSponsorsAsync(long loadVersion)
+    {
+        try
+        {
+            var sponsors = (await SponsorService.GetSponsorsAsync())
+                .OrderBy(sponsor => sponsor.SponsorTier.GetDisplayOrder())
+                .ThenBy(sponsor => sponsor.Name)
+                .ToList();
+            if(IsCurrentSponsorLoad(loadVersion))
+                _sponsors = sponsors;
+        }
+        catch(Exception)
+        {
+            if(IsCurrentSponsorLoad(loadVersion))
+                _sponsorsError = Localization["General.Home.SponsorsUnavailable"];
+        }
+        finally
+        {
+            if(IsCurrentSponsorLoad(loadVersion))
+            {
+                _isSponsorsLoading = false;
+                await RenderIfActiveAsync();
+            }
+        }
+    }
+
+    private bool IsCurrentTournamentLoad(long loadVersion) =>
+        !_disposed && loadVersion == _tournamentLoadVersion;
+
+    private bool IsCurrentSponsorLoad(long loadVersion) =>
+        !_disposed && loadVersion == _sponsorLoadVersion;
+
+    protected virtual Task RequestRenderAsync() => InvokeAsync(StateHasChanged);
+
+    private async Task RenderIfActiveAsync()
+    {
+        if(_disposed)
+            return;
+
+        try
+        {
+            await RequestRenderAsync();
+        }
+        catch(InvalidOperationException) when(_disposed)
+        {
         }
     }
 
@@ -147,6 +222,14 @@ public partial class TournamentsOverview
     {
         _page = 1;
         return LoadPageAsync(showLoading: true);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        _tournamentLoadVersion++;
+        _sponsorLoadVersion++;
+        return ValueTask.CompletedTask;
     }
 
     private void NavigateToTournamentDetail(Guid tournamentId)
