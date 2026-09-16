@@ -232,6 +232,22 @@ internal sealed class MockTournamentService : ITournamentService
         return _store.ConfirmTournamentRosterMember(persona, tournamentId, rosterMemberId);
     }
 
+    public async Task DeclineTournamentRosterMemberAsync(
+        Guid tournamentId,
+        Guid rosterMemberId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        _store.DeclineTournamentRosterMember(persona, tournamentId, rosterMemberId);
+    }
+
+    public async Task<IReadOnlyList<PendingRosterConfirmationDTO>> GetPendingRosterConfirmationsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetPendingRosterConfirmations(persona);
+    }
+
     public Task<List<AdminTournamentRegistrationDTO>> GetAdminTournamentRegistrationsAsync(
         Guid tournamentId,
         int? page = null,

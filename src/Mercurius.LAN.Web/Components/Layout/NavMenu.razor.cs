@@ -2,6 +2,10 @@ using Mercurius.LAN.Web.DTOs.Search;
 using Mercurius.LAN.Web.APIClients;
 using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Services;
+#if INCLUDE_MOCK_BACKEND
+using Mercurius.LAN.Web.Options;
+using Microsoft.Extensions.Options;
+#endif
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
@@ -22,8 +26,10 @@ public partial class NavMenu : IAsyncDisposable
 
     [Inject]
     private NavigationManager NavigationManager { get; set; } = null!;
+#if INCLUDE_MOCK_BACKEND
     [Inject]
-    private IConfiguration Configuration { get; set; } = null!;
+    private IOptions<MockBackendOptions> MockBackendOptions { get; set; } = null!;
+#endif
     [Inject]
     private IGlobalSearchService GlobalSearchService { get; set; } = null!;
     [Inject]
@@ -67,14 +73,18 @@ public partial class NavMenu : IAsyncDisposable
     private long _authenticatedNavigationVersion;
     private string? _pendingAuthenticatedNavigationIdentityKey;
     private bool _disposed;
+    private readonly HashSet<string> _pendingNotificationActionIds = [];
+    private string? _notificationActionError;
 
     [Parameter]
     public EventCallback OnNavigationSelected { get; set; }
 
     private string LoginHref => $"/account/login?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
     private string RegisterHref => $"/account/register?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
+#if INCLUDE_MOCK_BACKEND
     private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/sponsors")}";
-    private bool IsMockBackendEnabled => Configuration.GetValue<bool>("MockBackend:Enabled");
+    private bool IsMockBackendEnabled => MockBackendOptions.Value.Enabled;
+#endif
     private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible || _isNotificationMenuVisible;
     private bool HasSearchResults => _searchResults.Count > 0;
     private int NotificationCount => NotificationService.UnreadCount;
@@ -708,8 +718,15 @@ public partial class NavMenu : IAsyncDisposable
         await NotificationService.DismissAsync(id);
     }
 
-    private async Task RespondToInviteNotificationAsync(Guid inviteId, bool accept)
+    private bool IsNotificationActionPending(string notificationId) =>
+        _pendingNotificationActionIds.Contains(notificationId);
+
+    private async Task RespondToInviteNotificationAsync(TeamNotificationItem notification, bool accept)
     {
+        if(notification.InviteId is not Guid inviteId || !_pendingNotificationActionIds.Add(notification.Id))
+            return;
+
+        _notificationActionError = null;
         try
         {
             await TeamService.RespondToInviteAsync(inviteId, accept);
@@ -717,6 +734,44 @@ public partial class NavMenu : IAsyncDisposable
         }
         catch(Exception)
         {
+            _notificationActionError = Localization["nav.notificationActionFailed"];
+        }
+        finally
+        {
+            _pendingNotificationActionIds.Remove(notification.Id);
+        }
+    }
+
+    private async Task RespondToRosterNotificationAsync(TeamNotificationItem notification, bool accept)
+    {
+        if(!_pendingNotificationActionIds.Add(notification.Id))
+            return;
+
+        _notificationActionError = null;
+        try
+        {
+            await NotificationService.RespondToRosterSelectionAsync(
+                notification.Id,
+                accept,
+                _lifetimeCancellationTokenSource.Token);
+        }
+        catch(OperationCanceledException) when(_disposed)
+        {
+        }
+        catch(Exception)
+        {
+            _notificationActionError = Localization["nav.rosterActionFailed"];
+            try
+            {
+                await NotificationService.RefreshAsync(_lifetimeCancellationTokenSource.Token);
+            }
+            catch(Exception)
+            {
+            }
+        }
+        finally
+        {
+            _pendingNotificationActionIds.Remove(notification.Id);
         }
     }
 

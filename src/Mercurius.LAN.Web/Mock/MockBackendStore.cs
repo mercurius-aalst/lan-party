@@ -1581,6 +1581,47 @@ internal sealed class MockBackendStore
         }
     }
 
+    public IReadOnlyList<PendingRosterConfirmationDTO> GetPendingRosterConfirmations(string persona)
+    {
+        lock(_syncRoot)
+        {
+            var currentUser = GetCurrentProfile(persona).User
+                ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var confirmations = new List<PendingRosterConfirmationDTO>();
+
+            foreach(var tournament in _document.Tournaments)
+            {
+                if(tournament.Status != TournamentStatus.Scheduled)
+                    continue;
+
+                var registration = GetRegistrationDetails(tournament).FirstOrDefault(candidate =>
+                    candidate.Kind == TournamentRegistrationKind.Team &&
+                    candidate.Team is not null &&
+                    candidate.RosterMembers.Any(member =>
+                        member.User.Id == currentUser.Id &&
+                        member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending));
+                var member = registration?.RosterMembers.FirstOrDefault(candidate =>
+                    candidate.User.Id == currentUser.Id &&
+                    candidate.ConfirmationStatus == RosterMemberConfirmationStatus.Pending);
+                if(registration?.Team is null || member is null)
+                    continue;
+
+                confirmations.Add(new PendingRosterConfirmationDTO
+                {
+                    RosterMemberId = member.Id,
+                    TournamentId = tournament.Id,
+                    TournamentName = tournament.Name,
+                    TeamId = registration.Team.Id,
+                    TeamName = registration.Team.Name,
+                    TeamLogoUrl = registration.Team.LogoUrl,
+                    SelectedAtUtc = registration.UpdatedAtUtc
+                });
+            }
+
+            return confirmations.OrderByDescending(item => item.SelectedAtUtc).ToList();
+        }
+    }
+
     public EligibilityResponseDTO CheckIndividualTournamentRegistrationEligibility(
         string persona,
         Guid tournamentId)
@@ -1898,6 +1939,46 @@ internal sealed class MockBackendStore
             registration = updatedRegistration;
             UpdatePublicRegistrationProjection(tournament, registrations);
             return Clone(registration)!;
+        }
+    }
+
+    public void DeclineTournamentRosterMember(string persona, Guid tournamentId, Guid rosterMemberId)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredTournament(tournamentId);
+            EnsureScheduledTournament(tournament);
+            var currentUser = GetCurrentProfile(persona).User
+                ?? throw new InvalidOperationException("Mock profile does not have a user.");
+            var registrations = GetRegistrationDetails(tournament);
+            var registration = registrations.FirstOrDefault(candidate =>
+                candidate.Kind == TournamentRegistrationKind.Team &&
+                candidate.RosterMembers.Any(member =>
+                    member.Id == rosterMemberId &&
+                    member.User.Id == currentUser.Id &&
+                    member.ConfirmationStatus == RosterMemberConfirmationStatus.Pending));
+            if(registration is null)
+                return;
+
+            var updatedRegistration = new TournamentRegistrationDTO
+            {
+                Id = registration.Id,
+                TournamentId = registration.TournamentId,
+                Kind = registration.Kind,
+                Status = TournamentRegistrationStatus.PendingConfirmation,
+                User = Clone(registration.User),
+                Team = Clone(registration.Team),
+                RosterMembers = registration.RosterMembers
+                    .Where(member => member.Id != rosterMemberId)
+                    .Select(Clone)
+                    .Where(member => member is not null)
+                    .Cast<TournamentRosterMemberDTO>()
+                    .ToList(),
+                CreatedAtUtc = registration.CreatedAtUtc,
+                UpdatedAtUtc = DateTime.UtcNow
+            };
+            registrations[registrations.IndexOf(registration)] = updatedRegistration;
+            UpdatePublicRegistrationProjection(tournament, registrations);
         }
     }
 

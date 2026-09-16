@@ -18,7 +18,11 @@ internal sealed class TestLocalizationService : ILocalizationService
             ["Feature.tournaments.registrationIdentityMissing"] = "This registration has no removable participant.",
             ["Feature.tournaments.registrationRemoved"] = "Registration removed.",
             ["Feature.tournaments.savedDetailsUnavailable"] = "Saved, but updated tournament details are temporarily unavailable.",
-            ["Feature.tournaments.savedDetailsUnavailableWithReason"] = "Saved, but updated tournament details are unavailable: {0}"
+            ["Feature.tournaments.savedDetailsUnavailableWithReason"] = "Saved, but updated tournament details are unavailable: {0}",
+            ["nav.teamInviteTitle"] = "Team invitation",
+            ["nav.teamInviteMessage"] = "You have been invited to join {0}.",
+            ["nav.rosterSelectionTitle"] = "Tournament roster invitation",
+            ["nav.rosterSelectionMessage"] = "{0} selected you for {1}."
         };
 
     public static TestLocalizationService Instance { get; } = new();

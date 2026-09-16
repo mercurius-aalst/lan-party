@@ -1,57 +1,19 @@
-.sponsors-hero-section {
-    padding-top: 0;
-    padding-bottom: clamp(1rem, 2vw, 1.5rem);
-}
-
-.sponsors-hero {
-    --brand-page-hero-columns: 1fr;
-    --brand-page-hero-gap: clamp(1rem, 3vw, 2.1rem);
-    --brand-page-hero-padding: clamp(1.25rem, 2.8vw, 2.35rem);
-    --brand-page-hero-padding-mobile: 1rem;
-    --brand-page-hero-copy-gap: 0.75rem;
-    --brand-page-hero-copy-paragraph-size: clamp(0.98rem, 1.24vw, 1.06rem);
-    --brand-page-hero-copy-paragraph-line-height: 1.58;
-    background: var(--color-surface);
-}
-
-.sponsors-hero::after {
-    display: none;
-}
-
-.sponsors-hero-lead {
-    display: grid;
-    gap: 1rem;
-}
-
-.sponsors-hero-copy h1 {
-    margin-bottom: 0;
-    font-size: clamp(2.35rem, 4.3vw, 3.7rem);
-    line-height: 0.94;
-}
-
-.sponsors-hero-copy p,
-.sponsors-impact-header p,
 .sponsors-impact-card p,
 .sponsor-card-body p,
 .sponsors-empty-state p {
     margin: 0;
 }
 
-.sponsors-hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.7rem;
-}
-
 .sponsors-impact-section {
     --brand-section-shell-gap: 1.15rem;
-    padding-block: clamp(1.2rem, 2.2vw, 1.8rem);
+    padding-block: clamp(1rem, 2vw, 1.5rem);
 }
 
 .sponsors-impact-header {
     max-width: 52rem;
 }
 
+.sponsors-impact-header h1,
 .sponsors-impact-header h2,
 .sponsors-tier-heading h2,
 .sponsors-empty-state h2 {
@@ -71,6 +33,10 @@
     padding: 1.35rem;
     border: 1px solid var(--color-border);
     background: var(--color-surface-raised);
+}
+
+.sponsors-impact-card h2 {
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
 }
 
 .sponsors-tier-list {
@@ -210,12 +176,12 @@
 }
 
 @media (max-width: 760px) {
-    .sponsors-hero-actions,
+    .sponsors-impact-actions,
     .sponsors-empty-actions {
         width: 100%;
     }
 
-    .sponsors-hero-actions a,
+    .sponsors-impact-actions a,
     .sponsors-empty-actions a {
         flex: 1 1 auto;
         justify-content: center;
@@ -238,6 +204,13 @@
     border: 0;
     background: var(--color-surface-muted);
     box-shadow: inset 4px 0 0 var(--color-primary-green);
+}
+
+.sponsors-impact-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 0.15rem;
 }
 
 .sponsors-tier-section {
@@ -282,6 +255,8 @@
 }
 
 .sponsor-card-logo {
+    background: var(--sponsor-logo-bg);
+    border: 1px solid var(--color-border);
     box-shadow: none;
 }
 
@@ -302,6 +277,12 @@
 @media (max-width: 960px) {
     .sponsors-impact-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .sponsors-impact-actions a {
+        width: 100%;
     }
 }
 

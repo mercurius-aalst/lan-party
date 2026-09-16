@@ -38,8 +38,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     [Inject] private ITeamService TeamService { get; set; } = null!;
     [Inject] private ITournamentService TournamentService { get; set; } = null!;
     [Inject] private IToastService ToastService { get; set; } = null!;
-    [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private ITeamRealtimeService TeamRealtimeService { get; set; } = null!;
+    [Inject] private ITeamNotificationService NotificationService { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
     [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
@@ -55,6 +55,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private bool _restoreParticipantDialogFocus;
     private bool _isRegistrationDialogOpen;
     private ElementReference _registrationDialogElement;
+    private ElementReference _teamUnregistrationTriggerElement;
+    private ElementReference _teamUnregistrationKeepButtonElement;
     private IJSObjectReference? _registrationFocusTrap;
     private CurrentUserTournamentRegistrationStateDTO? _registrationState;
     private EligibilityResponseDTO? _individualEligibility;
@@ -80,6 +82,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private bool _hasLoadedForTournament;
     private bool _isDisposed;
     private bool _hasDirtyRosterDraft;
+    private bool _isTeamUnregistrationConfirmationOpen;
+    private bool _isIndividualRegistrationConfirmationOpen;
+    private bool _isIndividualUnregistrationConfirmationOpen;
+    private bool _focusTeamUnregistrationConfirmation;
+    private bool _restoreTeamUnregistrationFocus;
     private bool _registrationLoadRequested = true;
     private bool _registrationLoadCompleted;
     private bool _registrationLoadInFlight;
@@ -87,6 +94,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private readonly TeamStateInvalidationGate _teamStateInvalidationGate = new();
     private int _activeTeamStep;
     private long _requestGeneration;
+    private long? _teamUnregistrationConfirmationGeneration;
     private Guid _loadedTournamentId;
     private string _loadedRegistrationFingerprint = string.Empty;
     private string? _registrationWarning;
@@ -155,6 +163,12 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private TournamentRegistrationDTO? CurrentTeamRegistration =>
         _registrationState?.CurrentTeamRegistration ?? _registrationState?.ActiveTeamRegistration;
 
+    private TournamentRegistrationDTO? CurrentCaptainManagedRegistration =>
+        (_registrationState?.CaptainManagedRegistrations ?? [])
+            .FirstOrDefault(registration =>
+                registration.Team is not null &&
+                CaptainedTeams.Any(team => team.Id == registration.Team.Id));
+
     private bool HasCaptainManagedRegistration => CaptainManagedRegistration is not null;
 
     private int RequiredTeamSize => Tournament.TeamSize.GetValueOrDefault();
@@ -166,20 +180,40 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _selectedTeamEligibility is not null &&
         CanUseTeamEligibility(SelectedTeam.Id, _selectedTeamEligibility);
 
-    private bool HasLocalRosterShape =>
-        SelectedTeam is not null &&
-        RequiredTeamSize > 0 &&
-        GetNormalizedRosterSelection().Count == RequiredTeamSize &&
-        GetNormalizedRosterSelection().Contains(SelectedTeam.CaptainUserId);
+    private bool HasLocalRosterShape
+    {
+        get
+        {
+            if(SelectedTeam is null || RequiredTeamSize <= 0)
+                return false;
 
-    private bool IsRosterEligibleForWorkflow =>
-        _rosterEligibility is not null &&
-        (_rosterEligibility.Eligible ||
-         (HasCaptainManagedRegistration &&
-          _rosterEligibility.ReasonCodes.Count > 0 &&
-          _rosterEligibility.ReasonCodes.All(IsExistingRegistrationConflictCode) &&
-          _rosterEligibility.Candidates.All(candidate =>
-              candidate.Eligible || IsExistingRosterConflictAllowed(candidate.UserId, candidate, GetExistingRosterUserIds()))));
+            var selection = GetNormalizedRosterSelection();
+            return selection.Count == RequiredTeamSize &&
+                   selection.Contains(SelectedTeam.CaptainUserId);
+        }
+    }
+
+    private bool IsRosterEligibleForWorkflow
+    {
+        get
+        {
+            if(_rosterEligibility is null)
+                return false;
+
+            if(_rosterEligibility.Eligible)
+                return true;
+
+            if(!HasCaptainManagedRegistration ||
+               _rosterEligibility.ReasonCodes.Count == 0 ||
+               !_rosterEligibility.ReasonCodes.All(IsExistingRegistrationConflictCode))
+                return false;
+
+            var existingRosterUserIds = GetExistingRosterUserIds();
+            return _rosterEligibility.Candidates.All(candidate =>
+                candidate.Eligible ||
+                IsExistingRosterConflictAllowed(candidate.UserId, candidate, existingRosterUserIds));
+        }
+    }
 
     private bool CanSubmitRoster =>
         IsRegistrationOpen &&
@@ -205,12 +239,35 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _registrationState.PendingRosterConfirmation is not null;
 
     private bool CanUnregisterSelectedTeam =>
+        SelectedTeam is not null && CanUnregisterTeam(SelectedTeam.Id);
+
+    private bool CanRegisterIndividualDirectly =>
+        IsRegistrationOpen &&
+        _isAuthenticated &&
+        Tournament.ParticipationMode == ParticipationMode.Individual &&
+        _registrationState is { IndividualRegistration: null, CanRegisterIndividual: true } &&
+        _individualEligibility is { Eligible: true };
+
+    private bool CanUnregisterIndividualDirectly =>
+        IsRegistrationOpen &&
+        _isAuthenticated &&
+        Tournament.ParticipationMode == ParticipationMode.Individual &&
+        _registrationState is { IndividualRegistration: not null, CanUnregister: true };
+
+    private bool CanCancelTeamRegistrationDirectly =>
+        !PopupOnly &&
+        Tournament.ParticipationMode == ParticipationMode.Team &&
+        CurrentCaptainManagedRegistration?.Team is not null &&
+        CanUnregisterTeam(CurrentCaptainManagedRegistration.Team.Id);
+
+    private bool CanUnregisterTeam(Guid teamId) =>
         IsRegistrationOpen &&
         !_isLoadingRegistration &&
         !_isLoadingRoster &&
         !_isSubmitting &&
         _registrationState?.CanUnregister == true &&
-        CaptainManagedRegistration is not null;
+        (_registrationState?.CaptainManagedRegistrations ?? [])
+            .Any(registration => registration.Team?.Id == teamId);
 
     private bool HasPublicParticipants => _participants.Count > 0;
 
@@ -222,6 +279,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     protected override void OnInitialized()
     {
         TeamRealtimeService.TeamStateInvalidated += HandleTeamStateInvalidatedAsync;
+        NotificationService.RosterDecisionChanged += HandleRosterDecisionChangedAsync;
     }
 
     protected override void OnParametersSet()
@@ -260,6 +318,19 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         {
             _restoreParticipantDialogFocus = false;
             await _participantDialogElement.FocusAsync();
+        }
+
+        if(_restoreTeamUnregistrationFocus && !_isTeamUnregistrationConfirmationOpen)
+        {
+            _restoreTeamUnregistrationFocus = false;
+            await _teamUnregistrationTriggerElement.FocusAsync();
+        }
+
+        if(_focusTeamUnregistrationConfirmation)
+        {
+            _focusTeamUnregistrationConfirmation = false;
+            if(_isTeamUnregistrationConfirmationOpen)
+                await _teamUnregistrationKeepButtonElement.FocusAsync();
         }
 
         if(_isRegistrationDialogOpen && _registrationFocusTrap is null)
@@ -943,6 +1014,16 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         if(!IsRegistrationOpen || _isSubmitting)
             return;
 
+        // An eligible individual player has nothing left to choose, so the next
+        // interaction is the confirmation instead of a popup that repeats the action.
+        if(CanRegisterIndividualDirectly)
+        {
+            _isIndividualRegistrationConfirmationOpen = true;
+            _registrationError = null;
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
         if(!_registrationLoadCompleted)
             _registrationLoadRequested = true;
 
@@ -953,6 +1034,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private async Task CloseRegistrationDialogAsync()
     {
         _isRegistrationDialogOpen = false;
+        _isTeamUnregistrationConfirmationOpen = false;
+        _isIndividualRegistrationConfirmationOpen = false;
+        _isIndividualUnregistrationConfirmationOpen = false;
+        _focusTeamUnregistrationConfirmation = false;
+        _restoreTeamUnregistrationFocus = false;
         if(!_registrationLoadCompleted || _registrationLoadCancellation is not null)
         {
             _requestGeneration++;
@@ -965,71 +1051,90 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         await RegistrationDialogOpenChanged.InvokeAsync(false);
     }
 
-    private Task HandleRegistrationDialogKeyDown(KeyboardEventArgs args) =>
-        !_isSubmitting && string.Equals(args.Key, "Escape", StringComparison.Ordinal)
-            ? CloseRegistrationDialogAsync()
-            : Task.CompletedTask;
+    private async Task HandleRegistrationDialogKeyDown(KeyboardEventArgs args)
+    {
+        if(!string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+            return;
+
+        if(_isTeamUnregistrationConfirmationOpen)
+        {
+            await KeepTeamRegistrationAsync();
+            return;
+        }
+
+        if(_isIndividualUnregistrationConfirmationOpen)
+        {
+            await DismissIndividualUnregistrationConfirmationAsync();
+            return;
+        }
+
+        if(!_isSubmitting)
+            await CloseRegistrationDialogAsync();
+    }
+
+    private async Task HandleTeamUnregistrationConfirmationKeyDown(KeyboardEventArgs args)
+    {
+        if(string.Equals(args.Key, "Escape", StringComparison.Ordinal))
+            await KeepTeamRegistrationAsync();
+    }
 
     private async Task RegisterIndividualAsync()
     {
-        if(!IsRegistrationOpen ||
-           _isSubmitting ||
+        if(_isSubmitting ||
            _isLoadingRegistration ||
-           _registrationState?.IndividualRegistration is not null ||
-           _registrationState?.CanRegisterIndividual != true ||
-           _individualEligibility?.Eligible != true)
+           !CanRegisterIndividualDirectly)
             return;
 
         var tournamentId = Tournament.Id;
         var requestGeneration = ++_requestGeneration;
 
-        if(!await ConfirmMutationAsync(
-               Localization["Feature.tournaments.confirmIndividualRegistration"],
-               Localization.Get("Feature.tournaments.confirmIndividualRegistrationMessage", Tournament.Name),
-               Localization["tournament.register"],
-               requestGeneration))
-            return;
-
-        if(!IsCurrentRequest(tournamentId, requestGeneration))
-            return;
-
         if(!await RevalidateIndividualRegistrationAsync(registering: true, requestGeneration))
+        {
+            if(IsCurrentRequest(tournamentId, requestGeneration))
+                _isIndividualRegistrationConfirmationOpen = false;
             return;
+        }
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
             return;
 
-        await RunRegistrationActionAsync(
+        var registered = await RunRegistrationActionAsync(
             () => TournamentService.RegisterCurrentUserForTournamentAsync(tournamentId),
             Localization["Feature.tournaments.individualRegistered"],
             tournamentId,
             requestGeneration);
+
+        if(!IsCurrentRequest(tournamentId, requestGeneration) || _isDisposed)
+            return;
+
+        if(!registered)
+            return;
+
+        // The registration reached the backend, so the confirmation is answered and a
+        // still-open popup closes itself instead of asking for an extra dismissal.
+        _isIndividualRegistrationConfirmationOpen = false;
+        if(_isRegistrationDialogOpen)
+            await CloseRegistrationDialogAsync();
+        else
+            await InvokeAsync(StateHasChanged);
     }
 
     private async Task UnregisterIndividualAsync()
     {
-        if(!IsRegistrationOpen ||
-           _isSubmitting ||
+        if(_isSubmitting ||
            _isLoadingRegistration ||
-           _registrationState?.IndividualRegistration is null ||
-           _registrationState.CanUnregister != true)
+           !CanUnregisterIndividualDirectly)
             return;
 
         var tournamentId = Tournament.Id;
         var requestGeneration = ++_requestGeneration;
 
-        if(!await ConfirmMutationAsync(
-               Localization["Feature.tournaments.confirmIndividualUnregister"],
-               Localization.Get("Feature.tournaments.confirmIndividualUnregisterMessage", Tournament.Name),
-               Localization["tournament.unregister"],
-               requestGeneration))
-            return;
-
-        if(!IsCurrentRequest(tournamentId, requestGeneration))
-            return;
-
         if(!await RevalidateIndividualRegistrationAsync(registering: false, requestGeneration))
+        {
+            if(IsCurrentRequest(tournamentId, requestGeneration))
+                _isIndividualUnregistrationConfirmationOpen = false;
             return;
+        }
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
             return;
@@ -1039,6 +1144,36 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             Localization["Feature.tournaments.individualUnregistered"],
             tournamentId,
             requestGeneration);
+
+        _isIndividualUnregistrationConfirmationOpen = false;
+    }
+
+    private async Task DismissIndividualRegistrationConfirmationAsync()
+    {
+        if(!_isIndividualRegistrationConfirmationOpen)
+            return;
+
+        _isIndividualRegistrationConfirmationOpen = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task BeginIndividualUnregistrationConfirmationAsync()
+    {
+        if(_isSubmitting || _isLoadingRegistration || !CanUnregisterIndividualDirectly)
+            return;
+
+        _isIndividualUnregistrationConfirmationOpen = true;
+        _registrationError = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task DismissIndividualUnregistrationConfirmationAsync()
+    {
+        if(!_isIndividualUnregistrationConfirmationOpen)
+            return;
+
+        _isIndividualUnregistrationConfirmationOpen = false;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ConfirmRosterMemberAsync()
@@ -1059,11 +1194,50 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         if(!IsCurrentRequest(tournamentId, requestGeneration))
             return;
 
-        await RunRegistrationActionAsync(
+        var accepted = await RunRegistrationActionAsync(
             () => TournamentService.ConfirmTournamentRosterMemberAsync(tournamentId, pending.Id),
             Localization["Feature.tournaments.rosterPlaceConfirmed"],
             tournamentId,
             requestGeneration);
+
+        if(accepted)
+            await RefreshNotificationsAfterRosterDecisionAsync();
+    }
+
+    private async Task DeclineRosterMemberAsync()
+    {
+        if(!CanConfirmPending || _isSubmitting)
+            return;
+
+        var tournamentId = Tournament.Id;
+        var requestGeneration = ++_requestGeneration;
+        if(!await ReloadCurrentUserStateAsync(requestGeneration))
+            return;
+
+        var pending = _registrationState?.PendingRosterConfirmation;
+        if(!CanConfirmPending || pending is null || !IsCurrentRequest(tournamentId, requestGeneration))
+            return;
+
+        var declined = await RunRegistrationActionAsync(
+            () => TournamentService.DeclineTournamentRosterMemberAsync(tournamentId, pending.Id),
+            Localization["Feature.tournaments.rosterPlaceDeclined"],
+            tournamentId,
+            requestGeneration);
+
+        if(declined)
+            await RefreshNotificationsAfterRosterDecisionAsync();
+    }
+
+    private async Task RefreshNotificationsAfterRosterDecisionAsync()
+    {
+        try
+        {
+            await NotificationService.RefreshAsync();
+        }
+        catch(Exception)
+        {
+            // The registration surface already refreshed its authoritative state.
+        }
     }
 
     private async Task SubmitTeamRosterAsync()
@@ -1090,20 +1264,54 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             requestGeneration);
     }
 
-    private async Task UnregisterTeamAsync()
+    private async Task BeginDirectTeamUnregistrationAsync()
+    {
+        var registration = CurrentCaptainManagedRegistration;
+        if(!CanCancelTeamRegistrationDirectly || registration?.Team is not { } team)
+            return;
+
+        _selectedTeamId = team.Id;
+        await BeginTeamUnregistrationConfirmationAsync();
+    }
+
+    private async Task BeginTeamUnregistrationConfirmationAsync()
     {
         if(!CanUnregisterSelectedTeam || SelectedTeam is null)
             return;
 
+        _teamUnregistrationConfirmationGeneration = ++_requestGeneration;
+        _isTeamUnregistrationConfirmationOpen = true;
+        _registrationError = null;
+        _teamError = null;
+        _focusTeamUnregistrationConfirmation = true;
+        _restoreTeamUnregistrationFocus = false;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task KeepTeamRegistrationAsync()
+    {
+        if(!_isTeamUnregistrationConfirmationOpen)
+            return;
+
+        _isTeamUnregistrationConfirmationOpen = false;
+        _teamUnregistrationConfirmationGeneration = null;
+        _focusTeamUnregistrationConfirmation = false;
+        _restoreTeamUnregistrationFocus = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UnregisterTeamAsync()
+    {
+        if(!CanUnregisterSelectedTeam || SelectedTeam is null ||
+           !_isTeamUnregistrationConfirmationOpen ||
+           !_teamUnregistrationConfirmationGeneration.HasValue)
+            return;
+
         var teamId = SelectedTeam.Id;
         var tournamentId = Tournament.Id;
-        var requestGeneration = ++_requestGeneration;
-        if(!await ConfirmMutationAsync(
-               Localization["Feature.tournaments.confirmTeamUnregister"],
-               Localization.Get("Feature.tournaments.confirmTeamUnregisterMessage", SelectedTeam.Name, Tournament.Name),
-               Localization["Feature.tournaments.unregisterTeam"],
-               requestGeneration))
-            return;
+        var requestGeneration = _teamUnregistrationConfirmationGeneration.Value;
+        _isTeamUnregistrationConfirmationOpen = false;
+        _teamUnregistrationConfirmationGeneration = null;
 
         if(!IsCurrentRequest(tournamentId, requestGeneration))
             return;
@@ -1126,14 +1334,14 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             requestGeneration);
     }
 
-    private async Task RunRegistrationActionAsync(
+    private async Task<bool> RunRegistrationActionAsync(
         Func<Task> action,
         string successMessage,
         Guid tournamentId,
         long requestGeneration)
     {
         if(!IsCurrentRequest(tournamentId, requestGeneration))
-            return;
+            return false;
 
         _isSubmitting = true;
         _registrationError = null;
@@ -1142,11 +1350,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             try
             {
                 if(!IsCurrentRequest(tournamentId, requestGeneration))
-                    return;
+                    return false;
 
                 await action();
                 if(!IsCurrentRequest(tournamentId, requestGeneration))
-                    return;
+                    return false;
 
                 ToastService.ShowSuccess(successMessage);
             }
@@ -1157,7 +1365,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     _registrationError = Localization["Feature.tournaments.registrationChangeUnauthorized"];
                     ToastService.ShowError(_registrationError);
                 }
-                return;
+                return false;
             }
             catch(Exception exception)
             {
@@ -1166,7 +1374,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     _registrationError = GetLocalizedErrorMessage(exception, "Feature.tournaments.registrationChangeFailed");
                     ToastService.ShowError(_registrationError);
                 }
-                return;
+                return false;
             }
 
             try
@@ -1198,6 +1406,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                     ToastService.ShowWarning(_registrationError);
                 }
             }
+
+            return true;
         }
         finally
         {
@@ -1563,43 +1773,36 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         return false;
     }
 
-    private async Task<bool> ConfirmMutationAsync(
-        string title,
-        string message,
-        string actionText,
-        long requestGeneration)
-    {
-        if(_isSubmitting || _isDisposed)
-            return false;
-
-        _isSubmitting = true;
-        await InvokeAsync(StateHasChanged);
-        try
-        {
-            var result = await DialogService.ShowMessageBoxAsync(
-                title,
-                message,
-                yesText: actionText,
-                noText: Localization["common.cancel"],
-                options: new DialogOptions { CloseOnEscapeKey = true, DefaultFocus = DefaultFocus.FirstChild });
-            return result == true;
-        }
-        finally
-        {
-            if(IsCurrentRequest(Tournament.Id, requestGeneration))
-            {
-                _isSubmitting = false;
-                await InvokeAsync(StateHasChanged);
-            }
-        }
-    }
-
     private async Task HandleTeamStateInvalidatedAsync()
     {
         if(_isDisposed)
             return;
 
         await InvokeAsync(() => _teamStateInvalidationGate.RunAsync(RefreshAfterTeamInvalidationAsync));
+    }
+
+    private async Task HandleRosterDecisionChangedAsync(Guid tournamentId)
+    {
+        if(_isDisposed ||
+           !_isAuthenticated ||
+           tournamentId != Tournament.Id ||
+           (PopupOnly && !_isRegistrationDialogOpen))
+            return;
+
+        await InvokeAsync(() => _teamStateInvalidationGate.RunAsync(
+            () => RefreshAfterRosterDecisionAsync(tournamentId)));
+    }
+
+    private async Task RefreshAfterRosterDecisionAsync(Guid tournamentId)
+    {
+        if(_isDisposed ||
+           !_isAuthenticated ||
+           tournamentId != Tournament.Id ||
+           _isSubmitting)
+            return;
+
+        var requestGeneration = ++_requestGeneration;
+        await ReloadCurrentUserStateAsync(requestGeneration);
     }
 
     private async Task RefreshAfterTeamInvalidationAsync()
@@ -1814,7 +2017,10 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         (_registrationState?.CaptainManagedRegistrations ?? [])
             .Any(registration => registration.Team?.Id == teamId);
 
-    private bool CanSelectRosterMember(Guid userId)
+    private bool CanSelectRosterMember(Guid userId) =>
+        CanSelectRosterMember(userId, GetRosterSelectionContext());
+
+    private bool CanSelectRosterMember(Guid userId, RosterSelectionContext context)
     {
         if(SelectedTeam is null)
             return false;
@@ -1822,10 +2028,21 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         return IsRosterMemberSelectable(
             userId,
             SelectedTeam.CaptainUserId,
-            (SelectedTeam.Members ?? []).Select(member => member.Id).ToHashSet(),
+            context.CurrentTeamMemberIds,
             _rosterCandidatesById,
-            GetExistingRosterUserIds());
+            context.ExistingRosterUserIds);
     }
+
+    // The roster markup needs these sets once per rendered member, so callers build the context
+    // once per render and reuse it instead of re-allocating both sets for every candidate.
+    private RosterSelectionContext GetRosterSelectionContext() =>
+        new(
+            (SelectedTeam?.Members ?? []).Select(member => member.Id).ToHashSet(),
+            GetExistingRosterUserIds());
+
+    private readonly record struct RosterSelectionContext(
+        IReadOnlySet<Guid> CurrentTeamMemberIds,
+        IReadOnlySet<Guid> ExistingRosterUserIds);
 
     private IReadOnlyList<Guid> GetNormalizedRosterSelection(bool autofillEligibleMembers = false)
     {
@@ -1984,11 +2201,14 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         if(!_isAuthenticated)
             return Localization["Feature.tournaments.signInCheckEligibility"];
 
+        if(_registrationState?.PendingRosterConfirmation is not null)
+            return Localization["Feature.tournaments.rosterInvitationSummary"];
+
         if(HasCaptainManagedRegistration)
             return Localization["Feature.tournaments.reviewCaptainRegistration"];
 
         return CurrentTeamRegistration?.Team is { } team
-            ? Localization.Get("Feature.tournaments.registeredTeamCaptainManaged", team.Name)
+            ? Localization.Get("Feature.tournaments.registeredTeamManaged", team.Name)
             : Localization["Feature.tournaments.chooseTeamAndLineup"];
     }
 
@@ -2088,8 +2308,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             ? Localization.Get("Feature.tournaments.teamUnavailableAria", teamName)
             : teamName;
 
-    private string GetCaptainSuffix(bool isCaptain) =>
-        isCaptain ? $" ({Localization["Feature.tournaments.captain"]})" : string.Empty;
 
     private static bool IsUnauthorized(Exception exception) =>
         exception is UnauthorizedAccessException ||
@@ -2188,6 +2406,11 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _isAdmin = false;
         _activeTeamStep = 0;
         _hasDirtyRosterDraft = false;
+        _isTeamUnregistrationConfirmationOpen = false;
+        _isIndividualRegistrationConfirmationOpen = false;
+        _isIndividualUnregistrationConfirmationOpen = false;
+        _focusTeamUnregistrationConfirmation = false;
+        _restoreTeamUnregistrationFocus = false;
     }
 
     private CancellationTokenSource BeginRegistrationLoad()
@@ -2251,6 +2474,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         _requestGeneration++;
         CancelRegistrationLoad();
         TeamRealtimeService.TeamStateInvalidated -= HandleTeamStateInvalidatedAsync;
+        NotificationService.RosterDecisionChanged -= HandleRosterDecisionChangedAsync;
     }
 
     public async ValueTask DisposeAsync()

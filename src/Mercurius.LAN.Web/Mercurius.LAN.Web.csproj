@@ -5,6 +5,12 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>060acddd-9ac9-4709-869a-d4f13615ee12</UserSecretsId>
+    <IncludeMockBackend Condition="'$(IncludeMockBackend)' == '' and '$(Configuration)' == 'Debug'">true</IncludeMockBackend>
+    <IncludeMockBackend Condition="'$(IncludeMockBackend)' == ''">false</IncludeMockBackend>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(IncludeMockBackend)' == 'true'">
+    <DefineConstants>$(DefineConstants);INCLUDE_MOCK_BACKEND</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +26,12 @@
     <EmbeddedResource Remove="artifacts\**" />
     <None Remove="artifacts\**" />
     <None Remove="output\**" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IncludeMockBackend)' != 'true'">
+    <Compile Remove="Mock\**\*.cs" />
+    <Content Remove="appsettings.Local.json;MockData.Local\**;wwwroot\mock-data-local\**" />
+    <None Remove="appsettings.Local.json;MockData.Local\**;wwwroot\mock-data-local\**" />
   </ItemGroup>
 
 	<ItemGroup>

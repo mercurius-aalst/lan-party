@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Reflection;
 using Mercurius.LAN.Web.DTOs.Registrations;
 using Mercurius.LAN.Web.Mock;
 using Mercurius.LAN.Web.Models.Tournaments;
@@ -124,6 +125,56 @@ public sealed class MockRegistrationParityTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             fixture.Store.ConfirmTournamentRosterMember("admin", TournamentId, pendingMemberId));
         Assert.Equal("Pending roster confirmation not found.", exception.Message);
+    }
+
+    [Fact]
+    public void PendingRosterSelectionIsReloadSafeAndDeclineKeepsTeamRegistration()
+    {
+        using var fixture = CreateFixture(teamSize: 2);
+        var registration = fixture.Store.SubmitTeamTournamentRoster(
+            "user",
+            TournamentId,
+            TeamId,
+            new SubmitTeamRosterDTO { TeamId = TeamId, UserIds = [CaptainId, MemberId] });
+        var pendingMemberId = registration.RosterMembers.Single(member => member.User.Id == MemberId).Id;
+
+        var notification = Assert.Single(fixture.Store.GetPendingRosterConfirmations("admin"));
+        Assert.Equal(pendingMemberId, notification.RosterMemberId);
+        Assert.Equal("Parity Cup", notification.TournamentName);
+        Assert.Equal("Parity Team", notification.TeamName);
+
+        fixture.Store.DeclineTournamentRosterMember("admin", TournamentId, pendingMemberId);
+        fixture.Store.DeclineTournamentRosterMember("admin", TournamentId, pendingMemberId);
+
+        Assert.Empty(fixture.Store.GetPendingRosterConfirmations("admin"));
+        var captainState = fixture.Store.GetCurrentUserTournamentRegistrationState("user", TournamentId);
+        var retained = Assert.Single(captainState.CaptainManagedRegistrations);
+        Assert.Equal(TournamentRegistrationStatus.PendingConfirmation, retained.Status);
+        Assert.Single(retained.RosterMembers);
+        Assert.Equal(CaptainId, retained.RosterMembers[0].User.Id);
+        Assert.Empty(fixture.Store.GetTournament(TournamentId)!.Registrations);
+    }
+
+    [Theory]
+    [InlineData(TournamentStatus.Canceled)]
+    [InlineData(TournamentStatus.InProgress)]
+    public void NonScheduledPendingRosterSelectionIsHiddenAndDeclineIsRejected(TournamentStatus status)
+    {
+        using var fixture = CreateFixture(teamSize: 2);
+        var registration = fixture.Store.SubmitTeamTournamentRoster(
+            "user",
+            TournamentId,
+            TeamId,
+            new SubmitTeamRosterDTO { TeamId = TeamId, UserIds = [CaptainId, MemberId] });
+        var pendingMemberId = registration.RosterMembers.Single(member => member.User.Id == MemberId).Id;
+
+        SetTournamentStatus(fixture.Store, status);
+
+        Assert.Empty(fixture.Store.GetPendingRosterConfirmations("admin"));
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            fixture.Store.DeclineTournamentRosterMember("admin", TournamentId, pendingMemberId));
+
+        Assert.Equal("tournament_not_scheduled", exception.Message);
     }
 
     [Fact]
@@ -293,6 +344,14 @@ public sealed class MockRegistrationParityTests
         };
 
         return JsonSerializer.Serialize(document);
+    }
+
+    private static void SetTournamentStatus(MockBackendStore store, TournamentStatus status)
+    {
+        var document = (MockBackendDocument)typeof(MockBackendStore)
+            .GetField("_document", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(store)!;
+        document.Tournaments.Single(tournament => tournament.Id == TournamentId).Status = status;
     }
 
     private sealed class Fixture(string root, MockBackendStore store) : IDisposable

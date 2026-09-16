@@ -14,7 +14,7 @@
     position: relative;
     display: grid;
     grid-template-rows: auto minmax(0, 1fr);
-    gap: 1.35rem;
+    gap: 1rem;
     width: min(34rem, calc(100vw - 2rem));
     max-height: min(92vh, 42rem);
     overflow: hidden;
@@ -64,12 +64,12 @@
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: clamp(1.25rem, 2vw, 1.65rem) clamp(0.75rem, 1.8vw, 1.25rem);
+    padding: 0 clamp(0.75rem, 1.8vw, 1.25rem) 0.25rem;
 }
 
-.team-dialog-form {
+.team-dialog-form-container ::deep .team-dialog-form {
     display: grid;
-    gap: 1.1rem;
+    gap: 1.25rem;
 }
 
 .form-group {
@@ -182,7 +182,7 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.65rem;
-    margin-top: 0.35rem;
+    margin-top: 0;
 }
 
 .team-dialog-actions .button-primary,
