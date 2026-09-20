@@ -4,7 +4,6 @@ pipeline {
     environment {
         DOTNET_VERSION  = '9.0'
         IMAGE_NAME      = 'livingwooods/mercurius-frontend'
-        DOCKERHUB_CREDS = credentials('dockerhub')
     }
 
     options {
@@ -104,7 +103,7 @@ pipeline {
         stage('Security Scan') {
             steps {
                 sh """
-                    if ! command -v trivy &>/dev/null; then
+                    if ! command -v trivy >/dev/null 2>&1; then
                         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
                             | sh -s -- -b /usr/local/bin
                     fi
@@ -125,11 +124,13 @@ pipeline {
                 branch 'main'
             }
             steps {
-                sh """
-                    echo "${DOCKERHUB_CREDS_PSW}" | docker login -u "${DOCKERHUB_CREDS_USR}" --password-stdin
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    docker push ${IMAGE_NAME}:latest
-                """
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKERHUB_CREDS_USR', passwordVariable: 'DOCKERHUB_CREDS_PSW')]) {
+                    sh """
+                        echo "${DOCKERHUB_CREDS_PSW}" | docker login -u "${DOCKERHUB_CREDS_USR}" --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${IMAGE_NAME}:latest
+                    """
+                }
             }
         }
 
