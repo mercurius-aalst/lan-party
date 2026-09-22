@@ -34,13 +34,15 @@ public partial class AddTournamentDialog
     private static readonly BracketType[] SupportedBracketTypes =
     [
         BracketType.SingleElimination,
-        BracketType.DoubleElimination
+        BracketType.DoubleElimination,
+        BracketType.Leaderboard
     ];
 
     private static readonly IReadOnlyDictionary<string, string> ValidationFieldLabelKeys = new Dictionary<string, string>
     {
         [nameof(CreateTournamentDTO.Name)] = "shared.name",
         [nameof(CreateTournamentDTO.BracketType)] = "Feature.tournament.bracketType",
+        [nameof(CreateTournamentDTO.LeaderboardRankingMetric)] = "Feature.tournaments.rankingMetric",
         [nameof(CreateTournamentDTO.Format)] = "tournament.format",
         [nameof(CreateTournamentDTO.FinalsFormat)] = "Feature.tournaments.finalsFormat",
         [nameof(CreateTournamentDTO.ParticipationMode)] = "tournament.participation",
@@ -54,18 +56,36 @@ public partial class AddTournamentDialog
     private static readonly IReadOnlyDictionary<string, string> ValidationMessageKeys = new Dictionary<string, string>
     {
         ["Planned start time is required."] = "form.plannedStartTimeRequired",
-        ["Team tournaments require a team size between 1 and 50."] = "form.teamSizeRange"
+        ["Team tournaments require a team size between 1 and 50."] = "form.teamSizeRange",
+        ["Leaderboard tournaments require a ranking metric."] = "form.leaderboardMetricRequired",
+        ["Leaderboard tournaments are individual competitions."] = "form.leaderboardIndividualOnly"
     };
+
+    private bool IsLeaderboardSelected => _newTournament.BracketType == BracketType.Leaderboard;
 
 
     protected override void OnInitialized() {
 
         SetPlannedStartInputs(_newTournament.PlannedStartTime);
         _editContext = new(_newTournament);
-       _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
+        _editContext.SetFieldCssClassProvider(new BootstrapValidationFieldClassProvider());
         _editContext.OnFieldChanged += (sender, args) => {
+            if(args.FieldIdentifier.FieldName == nameof(CreateTournamentDTO.BracketType))
+                ApplyBracketTypeDefaults();
             _editContext.Validate();
         };
+    }
+
+    internal void ApplyBracketTypeDefaults()
+    {
+        if(!IsLeaderboardSelected)
+        {
+            _newTournament.LeaderboardRankingMetric = null;
+            return;
+        }
+
+        _newTournament.ParticipationMode = ParticipationMode.Individual;
+        _newTournament.TeamSize = null;
     }
     private async Task SubmitTournamentAsync(EditContext editContext)
     {
@@ -162,6 +182,7 @@ public partial class AddTournamentDialog
         BracketType.DoubleElimination => Localization["Feature.tournament.bracketDouble"],
         BracketType.RoundRobin => Localization["Feature.tournament.bracketRoundRobin"],
         BracketType.Swiss => Localization["Feature.tournament.bracketSwiss"],
+        BracketType.Leaderboard => Localization["Feature.tournament.bracketLeaderboard"],
         _ => type.ToString()
     };
 
@@ -178,5 +199,12 @@ public partial class AddTournamentDialog
         TournamentFormat.BestOf3 => Localization["Feature.tournament.formatBestOf3"],
         TournamentFormat.BestOf5 => Localization["Feature.tournament.formatBestOf5"],
         _ => format.ToString()
+    };
+
+    private string GetRankingMetricLabel(LeaderboardRankingMetric metric) => metric switch
+    {
+        LeaderboardRankingMetric.HighestScore => Localization["Feature.tournaments.rankingMetricHighestScore"],
+        LeaderboardRankingMetric.FastestTime => Localization["Feature.tournaments.rankingMetricFastestTime"],
+        _ => metric.ToString()
     };
 }

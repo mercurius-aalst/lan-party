@@ -1,3 +1,5 @@
+using Mercurius.LAN.Web.DTOs.Leaderboards;
+using Mercurius.LAN.Web.Extensions;
 using Mercurius.LAN.Web.Models.Tournaments;
 using Mercurius.LAN.Web.Models.Matches;
 using Microsoft.AspNetCore.Components;
@@ -8,6 +10,14 @@ public partial class TournamentPlacementsTab
 {
     [Parameter] public IEnumerable<Placement> Placements { get; set; } = Enumerable.Empty<Placement>();
     [Parameter] public ParticipationMode ParticipationMode { get; set; }
+    [Parameter] public BracketType BracketType { get; set; }
+    [Parameter] public LeaderboardRankingMetric? RankingMetric { get; set; }
+
+    private string FormatLeaderboardParticipantValue(LeaderboardRowDTO participant) =>
+        LeaderboardFormattingExtensions.FormatLeaderboardValue(
+            RankingMetric ?? LeaderboardRankingMetric.HighestScore,
+            participant.Score,
+            participant.DurationMilliseconds);
 
     private IEnumerable<string> GetUserParticipantNames(Placement placement)
     {

@@ -25,6 +25,7 @@ public static class TournamentExtensions
             BracketType.DoubleElimination => "Double Elimination",
             BracketType.RoundRobin => "Round Robin (unsupported)",
             BracketType.Swiss => "Swiss (unsupported)",
+            BracketType.Leaderboard => "Leaderboard",
             _ => bracketType.ToString()
         };
     }

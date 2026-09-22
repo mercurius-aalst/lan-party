@@ -1,4 +1,5 @@
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Leaderboards;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
@@ -272,6 +273,39 @@ internal sealed class MockTournamentService : ITournamentService
         CancellationToken cancellationToken = default)
     {
         _store.RemoveTournamentTeamRegistrationAsAdmin(tournamentId, teamId, reason);
+        return Task.CompletedTask;
+    }
+
+    public Task<PublicLeaderboardDTO> GetLeaderboardAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetLeaderboard(tournamentId));
+
+    public Task<AdminLeaderboardResponseDTO> GetAdminLeaderboardAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetAdminLeaderboard(tournamentId));
+
+    public Task<AdminLeaderboardParticipantDTO> RecordLeaderboardAttemptAsync(
+        Guid tournamentId,
+        RecordLeaderboardAttemptDTO request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.RecordLeaderboardAttempt(tournamentId, request));
+
+    public Task<LeaderboardAttemptDTO> UpdateLeaderboardAttemptAsync(
+        Guid tournamentId,
+        Guid attemptId,
+        UpdateLeaderboardAttemptDTO request,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.UpdateLeaderboardAttempt(tournamentId, attemptId, request));
+
+    public Task DeleteLeaderboardAttemptAsync(
+        Guid tournamentId,
+        Guid attemptId,
+        Guid rowVersion,
+        CancellationToken cancellationToken = default)
+    {
+        _store.DeleteLeaderboardAttempt(tournamentId, attemptId, rowVersion);
         return Task.CompletedTask;
     }
 
