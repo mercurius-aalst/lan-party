@@ -10,10 +10,26 @@ public static class LeaderboardFormattingExtensions
 
     public static string FormatLeaderboardDuration(long durationMilliseconds)
     {
-        var duration = TimeSpan.FromMilliseconds(durationMilliseconds);
-        return duration.TotalHours >= 1
-            ? duration.ToString(@"h\:mm\:ss\.fff", CultureInfo.InvariantCulture)
-            : duration.ToString(@"m\:ss\.fff", CultureInfo.InvariantCulture);
+        // Durations are positive whole milliseconds; integer arithmetic keeps total hours exact and cannot overflow.
+        var totalMilliseconds = Math.Max(0, durationMilliseconds);
+        var milliseconds = totalMilliseconds % 1000;
+        var totalSeconds = totalMilliseconds / 1000;
+        var seconds = totalSeconds % 60;
+        var totalMinutes = totalSeconds / 60;
+        var minutes = totalMinutes % 60;
+        var hours = totalMinutes / 60;
+
+        var millisecondPart = milliseconds.ToString("000", CultureInfo.InvariantCulture);
+        var secondPart = seconds.ToString("00", CultureInfo.InvariantCulture);
+
+        if(hours >= 1)
+        {
+            var hourPart = hours.ToString(CultureInfo.InvariantCulture);
+            var minutePart = minutes.ToString("00", CultureInfo.InvariantCulture);
+            return $"{hourPart}:{minutePart}:{secondPart}.{millisecondPart}";
+        }
+
+        return $"{minutes.ToString(CultureInfo.InvariantCulture)}:{secondPart}.{millisecondPart}";
     }
 
     public static string FormatLeaderboardValue(

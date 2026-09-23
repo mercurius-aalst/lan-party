@@ -136,6 +136,17 @@ public sealed class LeaderboardContractTests
                 3_723_004));
     }
 
+    [Theory]
+    [InlineData(0, "0:00.000")]
+    [InlineData(39_480, "0:39.480")]
+    [InlineData(3_723_004, "1:02:03.004")]
+    [InlineData(90_000_000, "25:00:00.000")]
+    [InlineData(long.MaxValue, "2562047788015:12:55.807")]
+    public void LeaderboardDurationFormattingKeepsTotalHoursWithoutOverflow(long durationMilliseconds, string expected)
+    {
+        Assert.Equal(expected, LeaderboardFormattingExtensions.FormatLeaderboardDuration(durationMilliseconds));
+    }
+
     private static Type ResolveClientResultType(Type returnType)
     {
         if(!returnType.IsGenericType)

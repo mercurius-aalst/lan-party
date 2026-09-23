@@ -1,3 +1,4 @@
+using System.Net;
 using Blazored.Toast.Services;
 using Mercurius.LAN.Web.Components.Shared;
 using Mercurius.LAN.Web.DTOs.Registrations;
@@ -98,6 +99,14 @@ public partial class TournamentOverviewTab
         _editTournament.TeamSize = null;
     }
 
+    internal string ResolveEditSaveError(ApiException exception)
+    {
+        // The backend signals a concurrent leaderboard change with the "leaderboard_changed" code.
+        return string.Equals(exception.GetApiError()?.Code, "leaderboard_changed", StringComparison.OrdinalIgnoreCase)
+            ? Localization["Feature.tournaments.editConflict"]
+            : Localization["Feature.tournaments.updateFailed"];
+    }
+
     private void CancelEditMode()
     {
         _isEditMode = false;
@@ -160,7 +169,7 @@ public partial class TournamentOverviewTab
         }
         catch(ApiException ex)
         {
-            _saveError = string.IsNullOrWhiteSpace(ex.Content) ? Localization["Feature.tournaments.updateFailed"] : ex.Content;
+            _saveError = ResolveEditSaveError(ex);
             ToastService.ShowError(_saveError);
         }
         catch(UnauthorizedAccessException)

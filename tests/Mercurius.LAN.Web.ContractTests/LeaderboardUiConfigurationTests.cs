@@ -141,6 +141,23 @@ public sealed class LeaderboardUiConfigurationTests
         Assert.Null(dto.LeaderboardRankingMetric);
     }
 
+    [Theory]
+    [InlineData("""{"code":"leaderboard_changed","message":"The tournament leaderboard changed."}""", "Feature.tournaments.editConflict")]
+    [InlineData("{\"code\":\"leaderboard_changed\"", "Feature.tournaments.updateFailed")]
+    [InlineData("", "Feature.tournaments.updateFailed")]
+    [InlineData("""{"code":"something_else"}""", "Feature.tournaments.updateFailed")]
+    public void TournamentEditConflictShowsALocalizedMessageAndNeverRawApiContent(string content, string expectedKey)
+    {
+        var tab = new TournamentOverviewTab();
+        SetPrivateProperty(tab, "Localization", TestLocalizationService.Instance);
+
+        var message = tab.ResolveEditSaveError(CreateApiException(HttpStatusCode.Conflict, content));
+
+        Assert.Equal(expectedKey, message);
+        Assert.NotEqual(content, message);
+        Assert.DoesNotContain("{", message, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void EmptyLeaderboardCompletionKeepsTheBackendReasonAndStaysInProgress()
     {

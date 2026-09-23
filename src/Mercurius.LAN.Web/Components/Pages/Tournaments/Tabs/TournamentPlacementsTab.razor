@@ -49,7 +49,7 @@
                             }
                         }
                     </div>
-                    <div class="placement-title">@GetOrdinalLabel(placement.Place)</div>
+                    <div class="placement-title">@GetOrdinalLabel(Localization, placement.Place)</div>
                 </div>
             }
         </div>
@@ -57,7 +57,7 @@
             @foreach(var placement in Placements.OrderBy(p => p.Place).Skip(3))
             {
                 <li class="placement-item">
-                    <span class="placement-title">@Localization.Get("Feature.tournaments.placementPlace", GetOrdinalLabel(placement.Place))</span>
+                    <span class="placement-title">@GetPlacementLabel(Localization, placement.Place)</span>
                     <ul class="participant-list">
                         @if(BracketType == BracketType.Leaderboard)
                         {
