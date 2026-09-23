@@ -167,7 +167,7 @@ public interface ILANClient
         Guid tournamentId,
         CancellationToken cancellationToken = default);
 
-    [Get("/v1/lan/tournaments/{tournamentId}/leaderboard/admin")]
+    [Get("/v1/lan/tournaments/{tournamentId}/leaderboard/attempts")]
     Task<AdminLeaderboardResponseDTO> GetAdminLeaderboardAsync(
         Guid tournamentId,
         CancellationToken cancellationToken = default);

@@ -31,7 +31,7 @@ public sealed class LeaderboardContractTests
 
     [Theory]
     [InlineData(nameof(ILANClient.GetLeaderboardAsync), "GET", "/v1/lan/tournaments/{tournamentId}/leaderboard", typeof(PublicLeaderboardDTO))]
-    [InlineData(nameof(ILANClient.GetAdminLeaderboardAsync), "GET", "/v1/lan/tournaments/{tournamentId}/leaderboard/admin", typeof(AdminLeaderboardResponseDTO))]
+    [InlineData(nameof(ILANClient.GetAdminLeaderboardAsync), "GET", "/v1/lan/tournaments/{tournamentId}/leaderboard/attempts", typeof(AdminLeaderboardResponseDTO))]
     [InlineData(nameof(ILANClient.RecordLeaderboardAttemptAsync), "POST", "/v1/lan/tournaments/{tournamentId}/leaderboard/attempts", typeof(AdminLeaderboardParticipantDTO))]
     [InlineData(nameof(ILANClient.UpdateLeaderboardAttemptAsync), "PUT", "/v1/lan/tournaments/{tournamentId}/leaderboard/attempts/{attemptId}", typeof(LeaderboardAttemptDTO))]
     [InlineData(nameof(ILANClient.DeleteLeaderboardAttemptAsync), "DELETE", "/v1/lan/tournaments/{tournamentId}/leaderboard/attempts/{attemptId}", typeof(Task))]
