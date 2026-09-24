@@ -91,11 +91,7 @@
 }
 
 .Tournament-detail-hero-actions .Tournament-detail-registration-note {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 0.85rem;
-    border: 1px dashed var(--color-border-strong);
-    border-radius: 999px;
+    align-self: center;
     color: var(--color-muted-text);
     font-size: 0.85rem;
 }
