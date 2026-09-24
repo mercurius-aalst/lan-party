@@ -15,7 +15,7 @@ public class CreateTournamentDTO : IValidatableObject
     public TournamentFormat FinalsFormat { get; set; }
 
     [Required]
-    public ParticipationMode? ParticipationMode { get; set; }
+    public ParticipationMode? ParticipationMode { get; set; } = Models.Tournaments.ParticipationMode.Individual;
 
     [Required]
     public IBrowserFile Image { get; set; } = null!;

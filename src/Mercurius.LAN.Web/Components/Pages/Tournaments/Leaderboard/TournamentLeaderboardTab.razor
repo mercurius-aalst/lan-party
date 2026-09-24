@@ -12,9 +12,20 @@
 
         <AuthorizeView Roles="admin">
             <Authorized>
-                <button type="button" class="button-primary" disabled="@(!CanManageResults)" @onclick="OpenResultEntry">
-                    @Localization["Feature.leaderboard.recordResult"]
-                </button>
+                <div class="leaderboard-entry-actions">
+                    <button type="button"
+                            class="leaderboard-entry-button button-primary"
+                            disabled="@(!CanManageResults)"
+                            aria-describedby="@(ResultEntryUnavailableReason is null ? null : ResultEntryUnavailableDescriptionId)"
+                            title="@ResultEntryUnavailableReason"
+                            @onclick="OpenResultEntry">
+                        @Localization["Feature.leaderboard.recordResult"]
+                    </button>
+                    @if(ResultEntryUnavailableReason is not null)
+                    {
+                        <p id="@ResultEntryUnavailableDescriptionId" class="leaderboard-entry-unavailable">@ResultEntryUnavailableReason</p>
+                    }
+                </div>
             </Authorized>
         </AuthorizeView>
     </div>

@@ -636,6 +636,8 @@
   "Feature.leaderboard.durationPreview": "Geregistreerd als {0}",
   "Feature.leaderboard.editAttemptValue": "Waarde van de poging",
   "Feature.leaderboard.entryDialogTitle": "Klassementsresultaat registreren",
+  "Feature.leaderboard.entryUnavailableClosed": "Dit toernooi aanvaardt geen klassementsvermeldingen meer.",
+  "Feature.leaderboard.entryUnavailableScheduled": "Vermeldingen kunnen worden toegevoegd zodra het toernooi bezig is. Start het toernooi eerst.",
   "Feature.leaderboard.guest": "Gast",
   "Feature.leaderboard.guestNameHelp": "Twee gasten mogen dezelfde weergavenaam hebben; elke vermelding blijft afzonderlijk.",
   "Feature.leaderboard.guestNameLabel": "Weergavenaam van de gast",

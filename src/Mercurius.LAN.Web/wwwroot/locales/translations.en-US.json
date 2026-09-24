@@ -636,6 +636,8 @@
   "Feature.leaderboard.durationPreview": "Recorded as {0}",
   "Feature.leaderboard.editAttemptValue": "Attempt value",
   "Feature.leaderboard.entryDialogTitle": "Record leaderboard result",
+  "Feature.leaderboard.entryUnavailableClosed": "This tournament no longer accepts leaderboard entries.",
+  "Feature.leaderboard.entryUnavailableScheduled": "Entries can be added once the tournament is in progress. Start the tournament first.",
   "Feature.leaderboard.guest": "Guest",
   "Feature.leaderboard.guestNameHelp": "Two guests may share the same display name; each entry stays separate.",
   "Feature.leaderboard.guestNameLabel": "Guest display name",

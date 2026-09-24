@@ -9,6 +9,8 @@ namespace Mercurius.LAN.Web.Components.Pages.Tournaments.Leaderboard;
 
 public partial class TournamentLeaderboardTab : IDisposable
 {
+    internal const string ResultEntryUnavailableDescriptionId = "leaderboard-entry-unavailable";
+
     [Parameter] public TournamentExtended Tournament { get; set; } = null!;
     [Parameter] public EventCallback OnLeaderboardChanged { get; set; }
 
@@ -30,6 +32,13 @@ public partial class TournamentLeaderboardTab : IDisposable
 
     private bool CanManageResults =>
         Tournament.IsLeaderboard() && Tournament.Status == TournamentStatus.InProgress;
+
+    internal string? ResultEntryUnavailableReason =>
+        CanManageResults
+            ? null
+            : Tournament.Status == TournamentStatus.Scheduled
+                ? Localization["Feature.leaderboard.entryUnavailableScheduled"]
+                : Localization["Feature.leaderboard.entryUnavailableClosed"];
 
     protected override Task OnParametersSetAsync()
     {

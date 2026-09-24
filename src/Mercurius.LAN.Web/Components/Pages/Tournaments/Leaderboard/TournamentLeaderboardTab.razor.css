@@ -18,6 +18,30 @@
     font-size: 0.95rem;
 }
 
+.leaderboard-entry-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.leaderboard-entry-button.button-primary[disabled] {
+    background: var(--color-neutral-soft);
+    border-color: var(--color-border);
+    color: var(--color-muted-text);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.leaderboard-entry-unavailable {
+    margin: 0;
+    max-width: 22rem;
+    color: var(--color-text-muted, #b9c0d4);
+    font-size: 0.85rem;
+    text-align: right;
+}
+
 .leaderboard-state {
     margin: 0;
     padding: 1rem;

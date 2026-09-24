@@ -342,11 +342,127 @@ public sealed class LeaderboardUiConfigurationTests
         return dialog;
     }
 
+    [Fact]
+    public void CreateTournamentFormDefaultsToIndividualParticipation()
+    {
+        var dialog = CreateAddTournamentDialog();
+
+        var dto = GetField<CreateTournamentDTO>(dialog, "_newTournament");
+
+        Assert.Equal(ParticipationMode.Individual, dto.ParticipationMode);
+    }
+
+    [Theory]
+    [InlineData(500, """{"type":"https://tools.ietf.org/html/rfc9110#section-15.6.1","title":"An error occurred while processing your request.","status":500,"traceId":"00-ff7ee017a1914d40d2ea070561fe584b3-afd034ad78951b6a-00"}""")]
+    [InlineData(503, """{"status":503,"traceId":"00-abc"}""")]
+    [InlineData(500, "<html><body>Internal Server Error</body></html>")]
+    [InlineData(400, """{"status":400,"traceId":"00-def"}""")]
+    public void CreateTournamentFailureNeverRendersRawApiContent(int statusCode, string content)
+    {
+        var dialog = CreateAddTournamentDialog();
+
+        var message = dialog.ResolveCreateError(CreateApiException((HttpStatusCode)statusCode, content));
+
+        Assert.Equal("Feature.tournaments.createFailed", message);
+        Assert.NotEqual(content, message);
+        Assert.DoesNotContain("{", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("traceId", message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("""{"status":400,"errors":{"Name":["The name is already in use."]}}""", "The name is already in use.")]
+    [InlineData("""{"status":400,"detail":"Planned start time must be in the future."}""", "Planned start time must be in the future.")]
+    [InlineData("""{"status":400,"message":"The tournament name is already in use."}""", "The tournament name is already in use.")]
+    [InlineData("""{"status":400,"errors":{"TeamSize":"Enter a team size between 1 and 50."}}""", "Enter a team size between 1 and 50.")]
+    public void CreateTournamentValidationFailureKeepsTheSafeBackendMessage(string content, string expectedMessage)
+    {
+        var dialog = CreateAddTournamentDialog();
+
+        var message = dialog.ResolveCreateError(CreateApiException(HttpStatusCode.BadRequest, content));
+
+        Assert.Equal(expectedMessage, message);
+    }
+
+    [Theory]
+    [InlineData("A leaderboard tournament requires a ranking metric.")]
+    [InlineData("\"A leaderboard tournament requires a ranking metric.\"")]
+    [InlineData("<html><body>Bad Request</body></html>")]
+    [InlineData("""{"title":"One or more validation errors occurred."}""")]
+    [InlineData("""{"status":400,"traceId":"00-abc"}""")]
+    [InlineData("""{"errors":{"Name":[]}}""")]
+    [InlineData("""["The name is already in use."]""")]
+    public void CreateTournamentUnstructuredFailureFallsBackToTheLocalizedMessage(string content)
+    {
+        var dialog = CreateAddTournamentDialog();
+
+        var message = dialog.ResolveCreateError(CreateApiException(HttpStatusCode.BadRequest, content));
+
+        Assert.Equal("Feature.tournaments.createFailed", message);
+        Assert.NotEqual(content, message);
+        Assert.DoesNotContain("{", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("traceId", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void CreateTournamentAuthorizationFailureStaysLocalized()
+    {
+        var dialog = CreateAddTournamentDialog();
+
+        var message = dialog.ResolveCreateError(
+            CreateApiException(HttpStatusCode.Unauthorized, """{"title":"Unauthorized"}"""));
+
+        Assert.Equal("Feature.tournaments.createUnauthorized", message);
+    }
+
+    [Theory]
+    [InlineData(TournamentStatus.Scheduled, false, "Feature.leaderboard.entryUnavailableScheduled")]
+    [InlineData(TournamentStatus.InProgress, true, null)]
+    [InlineData(TournamentStatus.Completed, false, "Feature.leaderboard.entryUnavailableClosed")]
+    [InlineData(TournamentStatus.Canceled, false, "Feature.leaderboard.entryUnavailableClosed")]
+    public void ResultEntryExplainsWhyItIsUnavailable(
+        TournamentStatus status,
+        bool expectedCanManageResults,
+        string? expectedReasonKey)
+    {
+        var tab = CreateLeaderboardTab(status);
+
+        Assert.Equal(expectedCanManageResults, GetPrivateProperty<bool>(tab, "CanManageResults"));
+        Assert.Equal(expectedReasonKey, tab.ResultEntryUnavailableReason);
+    }
+
     private static TournamentDetail CreateTournamentDetail()
     {
         var detail = new TournamentDetail();
         SetPrivateProperty(detail, "Localization", TestLocalizationService.Instance);
         return detail;
+    }
+
+    private static AddTournamentDialog CreateAddTournamentDialog()
+    {
+        var dialog = new AddTournamentDialog();
+        SetPrivateProperty(dialog, "Localization", TestLocalizationService.Instance);
+        return dialog;
+    }
+
+    private static TournamentLeaderboardTab CreateLeaderboardTab(TournamentStatus status)
+    {
+        var tab = new TournamentLeaderboardTab
+        {
+            Tournament = new TournamentExtended
+            {
+                BracketType = BracketType.Leaderboard,
+                Status = status
+            }
+        };
+        SetPrivateProperty(tab, "Localization", TestLocalizationService.Instance);
+        return tab;
+    }
+
+    private static T GetPrivateProperty<T>(object instance, string name)
+    {
+        var property = FindProperty(instance.GetType(), name)
+            ?? throw new InvalidOperationException($"Property '{name}' was not found.");
+        return (T)property.GetValue(instance)!;
     }
 
     private static Type GetNestedEnum(Type declaringType, string enumName) =>
