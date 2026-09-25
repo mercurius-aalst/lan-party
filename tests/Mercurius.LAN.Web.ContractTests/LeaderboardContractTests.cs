@@ -147,6 +147,39 @@ public sealed class LeaderboardContractTests
         Assert.Equal(expected, LeaderboardFormattingExtensions.FormatLeaderboardDuration(durationMilliseconds));
     }
 
+    [Fact]
+    public void LeaderboardTournamentsNeverShowMatchFormatInTheirDetailLabel()
+    {
+        var leaderboard = new Tournament
+        {
+            BracketType = BracketType.Leaderboard,
+            Format = TournamentFormat.BestOf1,
+            FinalsFormat = TournamentFormat.BestOf1
+        };
+
+        Assert.Equal("Leaderboard", leaderboard.GetFormatDetailLabel());
+    }
+
+    [Theory]
+    [InlineData(BracketType.SingleElimination, TournamentFormat.BestOf1, "Single Elimination · Best of 1")]
+    [InlineData(BracketType.DoubleElimination, TournamentFormat.BestOf3, "Double Elimination · Best of 3")]
+    [InlineData(BracketType.RoundRobin, TournamentFormat.BestOf5, "Round Robin (unsupported) · Best of 5")]
+    [InlineData(BracketType.Swiss, TournamentFormat.BestOf1, "Swiss (unsupported) · Best of 1")]
+    public void BracketTournamentsKeepTheirBracketAndFormatDetailLabel(
+        BracketType bracketType,
+        TournamentFormat format,
+        string expected)
+    {
+        var tournament = new Tournament
+        {
+            BracketType = bracketType,
+            Format = format,
+            FinalsFormat = format
+        };
+
+        Assert.Equal(expected, tournament.GetFormatDetailLabel());
+    }
+
     private static Type ResolveClientResultType(Type returnType)
     {
         if(!returnType.IsGenericType)

@@ -41,6 +41,14 @@ public static class TournamentExtensions
         };
     }
 
+    public static string GetFormatDetailLabel(this Tournament tournament)
+    {
+        if(tournament.IsLeaderboard())
+            return tournament.BracketType.GetLabel();
+
+        return $"{tournament.BracketType.GetLabel()} · {tournament.Format.GetLabel()}";
+    }
+
     public static string GetStatusClass(this TournamentStatus status)
     {
         return status switch
