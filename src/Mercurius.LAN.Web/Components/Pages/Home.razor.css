@@ -723,6 +723,29 @@
     }
 }
 
+@media (min-width: 901px) {
+    .home-sponsors-panel {
+        padding-top: 0;
+        gap: 0.75rem;
+    }
+
+    .home-sponsors-heading {
+        margin-bottom: 0.35rem;
+    }
+
+    #home-sponsors .home-sponsors-heading .home-sponsors-cta {
+        --brand-button-secondary-background: var(--color-canvas);
+        --brand-button-secondary-hover-background: color-mix(in srgb, var(--color-canvas) 92%, var(--color-ink));
+        background: var(--color-canvas);
+        border-color: var(--color-border);
+    }
+
+    #home-sponsors .home-sponsors-heading .home-sponsors-cta:hover {
+        background: color-mix(in srgb, var(--color-canvas) 92%, var(--color-ink));
+        border-color: var(--color-border-strong);
+    }
+}
+
 @media (max-width: 1100px) {
     .home-hero-shell {
         min-height: 100svh;
