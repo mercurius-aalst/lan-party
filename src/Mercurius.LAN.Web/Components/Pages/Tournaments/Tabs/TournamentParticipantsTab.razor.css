@@ -606,6 +606,16 @@ html[data-theme="dark"] .registration-cancel-button {
     gap: 0.65rem;
 }
 
+.registration-team-flow-heading h3,
+.registration-team-flow-heading p {
+    margin: 0;
+}
+
+.registration-team-flow-heading p {
+    margin-top: 0.35rem;
+    color: var(--color-muted-text);
+}
+
 .registration-team-option {
     display: flex;
     align-items: flex-start;
@@ -625,6 +635,18 @@ html[data-theme="dark"] .registration-cancel-button {
     display: grid;
     min-width: 0;
     gap: 0.2rem;
+}
+
+.registration-team-option-meta {
+    justify-items: end;
+}
+
+.registration-team-selection {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-success);
+    font-weight: 700;
 }
 
 .registration-team-option small {
@@ -828,6 +850,10 @@ html[data-theme="dark"] .registration-cancel-button {
 
     .registration-team-option {
         flex-direction: column;
+    }
+
+    .registration-team-option-meta {
+        justify-items: start;
     }
 
     .registration-team-status {
