@@ -90,6 +90,12 @@
     pointer-events: none;
 }
 
+.Tournament-detail-hero-actions .Tournament-detail-registration-note {
+    align-self: center;
+    color: var(--color-muted-text);
+    font-size: 0.85rem;
+}
+
 .Tournament-detail-hero-visual {
     align-content: start;
 }
