@@ -383,6 +383,14 @@
                         var rosterSelectionContext = GetRosterSelectionContext();
                         var canSubmitRoster = CanSubmitRoster;
                         var canAdvanceTeamStep = CanAdvanceTeamStep;
+                        <div class="registration-team-flow-heading">
+                            <h3>@(HasCaptainManagedRegistration
+                                ? Localization.Get("Feature.tournaments.editTeamRosterFor", SelectedTeam!.Name)
+                                : Localization["Feature.tournaments.registerTeamAsCaptain"])</h3>
+                            <p>@(HasCaptainManagedRegistration
+                                ? Localization["Feature.tournaments.editTeamRosterHelp"]
+                                : Localization["Feature.tournaments.registerTeamAsCaptainHelp"])</p>
+                        </div>
                         <MudStepper @ref="_teamRegistrationStepper"
                                     ActiveIndex="@_activeTeamStep"
                                     ActiveIndexChanged="HandleTeamStepChangedAsync"
@@ -399,32 +407,37 @@
                                             var teamEligibility = GetTeamEligibility(team.Id);
                                             var teamSelectable = CanSelectTeam(team.Id);
                                             <button type="button"
-                                                    class="registration-team-option @(team.Id == _selectedTeamId ? "is-selected" : null) @(teamEligibility is { Eligible: false } ? "is-unavailable" : null)"
+                                                    class="registration-team-option @(team.Id == _selectedTeamId ? "is-selected" : null) @(!teamSelectable ? "is-unavailable" : null)"
                                                     role="option"
                                                     aria-selected="@(team.Id == _selectedTeamId)"
-                                                     aria-label='@GetTeamAriaLabel(team.Name, teamEligibility is { Eligible: false })'
+                                                    aria-label='@GetTeamAriaLabel(team.Name, !teamSelectable, team.Id == _selectedTeamId)'
                                                     disabled="@(!teamSelectable || _isSubmitting || _isLoadingRegistration || _isLoadingTeams || _isLoadingRoster)"
                                                     @onclick="() => SelectTeamAsync(team.Id)">
                                                 <span>
                                                     <strong>@team.Name</strong>
-                                                     <small>@Localization.Get("Feature.tournaments.teamMemberCount", team.Members.Count)</small>
+                                                    <small>@Localization.Get("Feature.tournaments.teamMemberCount", team.Members.Count)</small>
                                                 </span>
-                                                @if(teamEligibility is null)
-                                                {
-                                                    <small class="registration-team-status">@Localization["Feature.tournaments.selectToContinue"]</small>
-                                                }
-                                                else if(teamSelectable && IsCurrentCaptainManagedTeam(team.Id))
-                                                {
-                                                    <small class="registration-team-status registration-team-status--success">@Localization["Feature.tournaments.existingRegistrationEditable"]</small>
-                                                }
-                                                else if(!teamEligibility.Eligible)
-                                                {
-                                                    <small class="registration-team-status registration-team-status--error">@Localization["Feature.tournaments.unavailable"]</small>
-                                                }
-                                                else
-                                                {
-                                                    <small class="registration-team-status registration-team-status--success">@Localization["Feature.tournaments.eligible"]</small>
-                                                }
+                                                <span class="registration-team-option-meta">
+                                                    @if(team.Id == _selectedTeamId)
+                                                    {
+                                                        <small class="registration-team-selection">
+                                                            <span class="bi bi-check-circle-fill" aria-hidden="true"></span>
+                                                            @Localization["Feature.tournaments.selected"]
+                                                        </small>
+                                                    }
+                                                    @if(teamEligibility is not null && teamSelectable && IsCurrentCaptainManagedTeam(team.Id))
+                                                    {
+                                                        <small class="registration-team-status registration-team-status--success">@Localization["Feature.tournaments.existingRegistrationEditable"]</small>
+                                                    }
+                                                    else if(teamEligibility is { Eligible: false })
+                                                    {
+                                                        <small class="registration-team-status registration-team-status--error">@Localization["Feature.tournaments.unavailable"]</small>
+                                                    }
+                                                    else if(teamEligibility is { Eligible: true })
+                                                    {
+                                                        <small class="registration-team-status registration-team-status--success">@Localization["Feature.tournaments.eligible"]</small>
+                                                    }
+                                                </span>
                                             </button>
                                         }
                                     </div>
@@ -432,10 +445,6 @@
                                     @if(SelectedTeam is null)
                                     {
                                         <p class="registration-message registration-message--warning">@Localization["Feature.tournaments.selectEligibleTeam"]</p>
-                                    }
-                                    else if(!CanAdvanceFromTeamSelection || (_teamEligibilityUnavailable && !_isLoadingTeams))
-                                    {
-                                        <span class="registration-status-chip registration-status-chip--unavailable" role="status" aria-label='@Localization["Feature.tournaments.teamUnavailable"]'>@Localization["Feature.tournaments.unavailable"]</span>
                                     }
                                 </div>
                                 </MudStep>
@@ -572,11 +581,14 @@
                             <ActionContent>
                                 <div class="registration-stepper-actions">
                                     <div class="registration-stepper-actions-secondary">
-                                        <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">@Localization["Feature.tournaments.startOver"]</button>
+                                        @if(_activeTeamStep > 0)
+                                        {
+                                            <button type="button" class="button-link" disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="ResetTeamStepper">@Localization["Feature.tournaments.changeTeam"]</button>
+                                        }
                                         @if(CanUnregisterSelectedTeam)
                                         {
                                             <button type="button"
-                                                    class="button-secondary registration-cancel-button"
+                                                    class="button-secondary"
                                                     disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
                                                     @onclick="BeginTeamUnregistrationConfirmationAsync"
                                                     @ref="_teamUnregistrationTriggerElement">
@@ -591,7 +603,7 @@
                                         }
                                         @if(_activeTeamStep < 2)
                                         {
-                                            <button type="button" class="button-primary" disabled="@(!canAdvanceTeamStep || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="NextTeamStepAsync">@Localization["common.next"]</button>
+                                            <button type="button" class="button-primary" disabled="@(!canAdvanceTeamStep || _isSubmitting || _isLoadingRegistration || _isLoadingRoster)" @onclick="NextTeamStepAsync">@(_activeTeamStep == 0 ? (HasCaptainManagedRegistration ? Localization["Feature.tournaments.editRoster"] : Localization["Feature.tournaments.chooseRoster"]) : Localization["Feature.tournaments.reviewRoster"])</button>
                                         }
                                         else
                                         {

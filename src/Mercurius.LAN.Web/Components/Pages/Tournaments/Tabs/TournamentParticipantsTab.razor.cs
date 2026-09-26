@@ -1518,12 +1518,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             return;
 
         if(_selectedTeamId == teamId && _selectedTeamEligibility is not null)
-        {
-            if(CanAdvanceFromTeamSelection)
-                _activeTeamStep = Math.Max(_activeTeamStep, 1);
-
             return;
-        }
 
         _hasDirtyRosterDraft = false;
         _selectedTeamId = teamId;
@@ -1537,8 +1532,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 Tournament.Id,
                 generation,
                 cancellationToken: cancellation.Token);
-            if(!cancellation.IsCancellationRequested && IsCurrentRequest(Tournament.Id, generation) && CanAdvanceFromTeamSelection)
-                _activeTeamStep = 1;
         }
         finally
         {
@@ -2303,10 +2296,16 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             : label;
     }
 
-    private string GetTeamAriaLabel(string teamName, bool unavailable) =>
-        unavailable
-            ? Localization.Get("Feature.tournaments.teamUnavailableAria", teamName)
+    private string GetTeamAriaLabel(string teamName, bool unavailable, bool selected)
+    {
+        var label = selected
+            ? Localization.Get("Feature.tournaments.selectedTeamAria", teamName)
             : teamName;
+
+        return unavailable
+            ? Localization.Get("Feature.tournaments.teamUnavailableAria", label)
+            : label;
+    }
 
 
     private static bool IsUnauthorized(Exception exception) =>
