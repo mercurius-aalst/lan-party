@@ -951,7 +951,7 @@
   "Feature.tournaments.rankingMetric": "Ranking op basis van",
   "Feature.tournaments.rankingMetricFastestTime": "Snelste tijd",
   "Feature.tournaments.rankingMetricHelp": "Bij een leaderboardtournament telt het beste resultaat van elke deelnemer.",
-  "Feature.tournaments.rankingMetricHighestScore": "Hoogste score",
+  "Feature.tournaments.rankingMetricHighestScore": "High Score",
   "Feature.tournaments.rankingMetricPlaceholder": "Kies hoe de ranking wordt bepaald",
   "Feature.tournaments.registeredOnTeam": "Ingeschreven bij {0}",
   "Feature.tournaments.registeredTeamCaptainManaged": "Je bent ingeschreven met {0}. Alleen de captain kan de roster aanpassen.",
