@@ -376,7 +376,7 @@ public sealed class MockMatchLifecycleTests
                 DataFilePath = Path.Combine(repositoryRoot, "src", "Mercurius.LAN.Web", "MockData.Local", "backend.json")
             }));
 
-        var userSummaries = store.GetPublicUserMatchSummaries("alpha1");
+        var userSummaries = store.GetUserMatchSummaries("alpha1");
         Assert.NotNull(userSummaries);
         Assert.Single(userSummaries!.PreviousMatches);
         Assert.Single(userSummaries.UpcomingMatches);
@@ -390,12 +390,12 @@ public sealed class MockMatchLifecycleTests
         Assert.Single(teamSummaries.UpcomingMatches);
         Assert.Equal(userSummaries.UpcomingMatches[0].MatchId, teamSummaries.UpcomingMatches[0].MatchId);
 
-        var emptySummaries = store.GetPublicUserMatchSummaries("track1");
+        var emptySummaries = store.GetUserMatchSummaries("track1");
         Assert.NotNull(emptySummaries);
         Assert.Empty(emptySummaries!.PreviousMatches);
         Assert.Empty(emptySummaries.UpcomingMatches);
 
-        var individualSummaries = store.GetPublicUserMatchSummaries("solo1");
+        var individualSummaries = store.GetUserMatchSummaries("solo1");
         Assert.NotNull(individualSummaries);
         Assert.Single(individualSummaries!.PreviousMatches);
         Assert.Single(individualSummaries.UpcomingMatches);
@@ -403,7 +403,7 @@ public sealed class MockMatchLifecycleTests
         Assert.Equal(2, individualSummaries.PreviousMatches[0].ParticipantScore);
         Assert.Equal(1, individualSummaries.PreviousMatches[0].OpponentScore);
 
-        Assert.Null(store.GetPublicUserMatchSummaries("missing-user"));
+        Assert.Null(store.GetUserMatchSummaries("missing-user"));
     }
 
     [Fact]
@@ -422,7 +422,7 @@ public sealed class MockMatchLifecycleTests
             IndividualProfileFixtureOpponentId,
             "Historical match snapshot regression");
 
-        var summaries = store.GetPublicUserMatchSummaries("solo1");
+        var summaries = store.GetUserMatchSummaries("solo1");
 
         Assert.NotNull(summaries);
         Assert.Equal("solo2", Assert.Single(summaries!.PreviousMatches).OpponentDisplayName);
@@ -446,7 +446,7 @@ public sealed class MockMatchLifecycleTests
             Name = "Current Gamma Grid"
         });
 
-        var userSummaries = store.GetPublicUserMatchSummaries("solo1");
+        var userSummaries = store.GetUserMatchSummaries("solo1");
         var teamSummaries = store.GetPublicTeamMatchSummaries("Team Alpha");
 
         Assert.Equal("current-opponent", Assert.Single(userSummaries!.PreviousMatches).OpponentDisplayName);

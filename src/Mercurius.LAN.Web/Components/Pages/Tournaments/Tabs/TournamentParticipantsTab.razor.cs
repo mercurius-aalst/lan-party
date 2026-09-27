@@ -49,10 +49,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
     private readonly Dictionary<Guid, EligibilityResponseDTO> _teamEligibilityById = [];
     private readonly Dictionary<Guid, RosterCandidateEligibilityDTO> _rosterCandidatesById = [];
 
-    private ParticipantViewModel? _selectedParticipant;
-    private PublicUserDTO? _selectedUser;
-    private ElementReference _participantDialogElement;
-    private bool _restoreParticipantDialogFocus;
     private bool _isRegistrationDialogOpen;
     private ElementReference _registrationDialogElement;
     private ElementReference _teamUnregistrationTriggerElement;
@@ -313,13 +309,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if(_restoreParticipantDialogFocus &&
-           ShouldRenderParticipantDialog(PopupOnly, _selectedParticipant, _selectedUser))
-        {
-            _restoreParticipantDialogFocus = false;
-            await _participantDialogElement.FocusAsync();
-        }
-
         if(_restoreTeamUnregistrationFocus && !_isTeamUnregistrationConfirmationOpen)
         {
             _restoreTeamUnregistrationFocus = false;
@@ -952,55 +941,6 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
                 _isLoadingAdmin = false;
         }
     }
-
-    internal void DisplayParticipantPopup(ParticipantViewModel participant)
-    {
-        if(participant.User is { } user)
-        {
-            _selectedParticipant = null;
-            _selectedUser = user;
-            return;
-        }
-
-        _selectedUser = null;
-        _selectedParticipant = participant;
-    }
-
-    internal void DisplayUserPopup(PublicUserDTO user)
-    {
-        _selectedUser = user;
-    }
-
-    internal void HidePopup()
-    {
-        _selectedParticipant = null;
-        _selectedUser = null;
-        _restoreParticipantDialogFocus = false;
-    }
-
-    internal void HideUserInfoPopup()
-    {
-        _selectedUser = null;
-        _restoreParticipantDialogFocus = _selectedParticipant is not null;
-    }
-
-    internal Task HandleParticipantDialogKeyDown(KeyboardEventArgs args)
-    {
-        if(!string.Equals(args.Key, "Escape", StringComparison.Ordinal))
-            return Task.CompletedTask;
-
-        HidePopup();
-        return Task.CompletedTask;
-    }
-
-    internal static bool ShouldRenderParticipantDialog(
-        bool popupOnly,
-        ParticipantViewModel? selectedParticipant,
-        PublicUserDTO? selectedUser) =>
-        !popupOnly && selectedParticipant is not null && selectedUser is null;
-
-    internal (ParticipantViewModel? Participant, PublicUserDTO? User, bool RestoreParticipantFocus) GetParticipantDialogState() =>
-        (_selectedParticipant, _selectedUser, _restoreParticipantDialogFocus);
 
     private string GetRegistrationActionLabel() =>
         _registrationState?.IndividualRegistration is not null ||
@@ -2227,20 +2167,8 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         if(!string.IsNullOrWhiteSpace(user.Username))
             return user.Username.Trim();
 
-        if(!string.IsNullOrWhiteSpace(user.DisplayName))
-            return user.DisplayName.Trim();
-
-        var name = string.Join(" ", new[] { user.Firstname, user.Lastname }
-            .Where(value => !string.IsNullOrWhiteSpace(value))
-            .Select(value => value!.Trim()));
-
-        return string.IsNullOrWhiteSpace(name) ? Localization["Feature.tournaments.participant"] : name;
+        return Localization["Feature.tournaments.participant"];
     }
-
-    private string GetParticipantDialogTitle(ParticipantViewModel participant) =>
-        string.IsNullOrWhiteSpace(participant.DisplayName)
-            ? Localization[participant.Team is null ? "shared.user" : "shared.team"]
-            : participant.DisplayName.Trim();
 
     private string GetReasonText(IEnumerable<string> reasonCodes)
     {

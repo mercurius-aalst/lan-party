@@ -94,6 +94,7 @@
                         var result = _searchResults[index];
                         <GlobalSearchResultItem Result="result"
                                                 IsActive="@(_highlightedSearchIndex == index)"
+                                                Disabled="@IsSearchResultDisabled(result)"
                                                 Selected="SelectSearchResultAsync"
                                                 Hovered="@(() => SetSearchHighlight(index))" />
                     }

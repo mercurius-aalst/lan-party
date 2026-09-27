@@ -144,20 +144,12 @@ internal sealed class MockBackendStore
                 !candidate.IsDeleted &&
                 string.Equals(candidate.Username, normalizedUsername, StringComparison.OrdinalIgnoreCase));
 
-            if(user == null ||
-               string.IsNullOrWhiteSpace(user.Username) ||
-               string.IsNullOrWhiteSpace(user.Firstname) ||
-               string.IsNullOrWhiteSpace(user.Lastname))
+            if(user == null || string.IsNullOrWhiteSpace(user.Username))
                 return null;
 
             return new PublicUserProfileDTO
             {
-                Username = user.Username!,
-                Firstname = user.Firstname,
-                Lastname = user.Lastname,
-                DiscordId = user.DiscordId,
-                SteamId = user.SteamId,
-                RiotId = user.RiotId
+                Username = user.Username!
             };
         }
     }
@@ -221,7 +213,7 @@ internal sealed class MockBackendStore
         }
     }
 
-    public PublicProfileMatchSummariesDTO? GetPublicUserMatchSummaries(string username)
+    public PublicProfileMatchSummariesDTO? GetUserMatchSummaries(string username)
     {
         lock(_syncRoot)
         {
@@ -863,6 +855,62 @@ internal sealed class MockBackendStore
                 Participant1ReportedScore2 = canViewPrivateReports ? match.Participant1ReportedScore2 : null,
                 Participant2ReportedScore1 = canViewPrivateReports ? match.Participant2ReportedScore1 : null,
                 Participant2ReportedScore2 = canViewPrivateReports ? match.Participant2ReportedScore2 : null
+            };
+        }
+    }
+
+    public MatchOpponentProfileDTO GetMatchOpponentProfile(string persona, Guid matchId)
+    {
+        lock(_syncRoot)
+        {
+            var (tournament, match) = GetMatchContext(matchId);
+            var authorizedSide = FindMockParticipantSide(persona, tournament, match)
+                ?? throw new UnauthorizedAccessException("Only a matched individual or team captain can view the opponent profile.");
+            var opponentId = match.ParticipationMode == ParticipationMode.Team
+                ? authorizedSide == MatchParticipantSide.Participant1 ? match.TeamParticipant2Id : match.TeamParticipant1Id
+                : authorizedSide == MatchParticipantSide.Participant1 ? match.UserParticipant2Id : match.UserParticipant1Id;
+
+            if(!opponentId.HasValue)
+                throw new KeyNotFoundException("The opponent profile is not available.");
+
+            PublicUserDTO? user;
+            if(match.ParticipationMode == ParticipationMode.Team)
+            {
+                var teams = tournament.Teams.Concat(_document.Teams)
+                    .GroupBy(team => team.Id)
+                    .Select(group => group.First());
+                var opponentTeam = teams.FirstOrDefault(team => team.Id == opponentId.Value);
+                var captainId = opponentTeam?.CaptainUserId;
+                user = opponentTeam?.Members.FirstOrDefault(member => member.Id == captainId);
+                if(user is null && captainId.HasValue)
+                {
+                    var captain = _document.Users.FirstOrDefault(candidate => candidate.Id == captainId.Value);
+                    if(captain is not null)
+                        user = PublicUserDTO.FromUser(captain);
+                }
+            }
+            else
+            {
+                user = tournament.Users.FirstOrDefault(candidate => candidate.Id == opponentId.Value);
+                if(user is null)
+                {
+                    var opponent = _document.Users.FirstOrDefault(candidate => candidate.Id == opponentId.Value);
+                    if(opponent is not null)
+                        user = PublicUserDTO.FromUser(opponent);
+                }
+            }
+
+            if(user is null || string.IsNullOrWhiteSpace(user.Username))
+                throw new KeyNotFoundException("The opponent profile is not available.");
+
+            return new MatchOpponentProfileDTO
+            {
+                Username = user.Username,
+                Firstname = user.Firstname,
+                Lastname = user.Lastname,
+                DiscordId = user.DiscordId,
+                SteamId = user.SteamId,
+                RiotId = user.RiotId
             };
         }
     }
@@ -2723,6 +2771,16 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             return Clone(GetRequiredUser(id))!;
+        }
+    }
+
+    public UserDTO GetUserByUsername(string username)
+    {
+        lock(_syncRoot)
+        {
+            var user = _document.Users.FirstOrDefault(existing =>
+                !existing.IsDeleted && string.Equals(existing.Username, username, StringComparison.OrdinalIgnoreCase));
+            return Clone(user ?? throw new KeyNotFoundException("Mock user was not found."))!;
         }
     }
 

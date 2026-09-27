@@ -194,7 +194,7 @@ public sealed class ApiContractTests
     }
 
     [Fact]
-    public async Task PublicProfileMatchSummaryRoutes_DeserializeSafeGuidProjection()
+    public async Task UserMatchSummariesUseAdminRouteAndTeamSummariesRemainPublic()
     {
         var matchId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
         var tournamentId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
@@ -202,10 +202,11 @@ public sealed class ApiContractTests
         using var httpClient = CreateHttpClient(handler);
         var client = RestService.For<ILANClient>(httpClient, CreateRefitSettings());
 
-        var userSummaries = await client.GetPublicUserMatchSummariesAsync("public-user");
+        var userClient = RestService.For<IUserClient>(httpClient, CreateRefitSettings());
+        var userSummaries = await userClient.GetUserMatchSummariesAsync("public-user");
 
         Assert.Equal(HttpMethod.Get, handler.Request!.Method);
-        Assert.Equal("/v1/lan/public/users/public-user/match-summaries", handler.Request.RequestUri!.AbsolutePath);
+        Assert.Equal("/v1/lan/users/public-user/match-summaries", handler.Request.RequestUri!.AbsolutePath);
         var previous = Assert.Single(userSummaries.PreviousMatches);
         Assert.Equal(matchId, previous.MatchId);
         Assert.Equal(tournamentId, previous.TournamentId);
