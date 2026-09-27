@@ -84,12 +84,21 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 - **AND** the captain MUST NOT progress to review until local roster constraints pass
 - **AND** when navigating backward and forward, the current draft MUST be preserved and revalidated
 
+#### Scenario: Captain advances out of the roster step
+
+- **WHEN** the captain advances from Step 2 through the primary action or a later step header and the draft is revalidated against backend roster eligibility
+- **THEN** the revalidation MUST keep the current roster, eligibility, and action state rendered until the backend response arrives
+- **AND** the focused action MUST NOT be replaced or disabled while the revalidation is in flight
+- **AND** the captain MUST advance only when the revalidation confirms the current selection
+- **AND** a rejected revalidation MUST show one concise inline reason above the steps and MUST NOT advance the step
+
 #### Scenario: Captain reviews and submits
 
 - **WHEN** the captain reaches Step 3
 - **THEN** the step title MUST be `Summary` and show selected versus required roster count inline
 - **AND** the separate required-size section MUST NOT be shown
 - **AND** roster member cards MUST visually distinguish confirmed and pending members using each member's actual confirmation state
+- **AND** a captain member card MUST show its localized captain badge after the member name
 - **AND** submission MUST send the exact selected roster through the existing backend team roster route
 - **AND** cancellation of an existing registration MUST appear beside the save action when Summary is reachable
 - **AND** a pending response MUST remain visible as pending until all required confirmations complete
@@ -105,6 +114,7 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 
 - **WHEN** the captain activates a step header to navigate through the Stepper
 - **THEN** the step headers MUST be keyboard navigable and expose visible focus and active states
+- **AND** a clickable step header MUST show a soft rounded hover surface
 - **AND** navigation to a later step MUST be blocked unless all prior team and roster requirements pass
 - **AND** navigation to an earlier step MUST remain available while a request is not submitting
 - **AND** the existing forward and back action buttons MUST NOT be duplicated outside the Stepper
@@ -252,6 +262,13 @@ The tournament detail page MUST expose a concise registration trigger and render
 - **THEN** the primary action MUST retain a clearly disabled visual style
 - **AND** the popup MUST NOT render separate `Change team` or `Back` buttons when the stepper provides navigable steps
 - **AND** summary and roster content MUST preserve accessible labels and meaningful disabled states
+
+#### Scenario: Captain reads registration options
+
+- **WHEN** a captain views the team, roster, or summary options in the popup
+- **THEN** team, roster, and summary cards MUST keep their natural width when only a few options are shown instead of stretching across the whole dialog
+- **AND** every registration cancellation action MUST render with the shared danger treatment
+- **AND** the dialog MUST remain readable without page-wide horizontal overflow at narrow widths
 
 ### Requirement: Registration context recovers when the popup is reopened
 

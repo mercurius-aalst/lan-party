@@ -544,8 +544,8 @@
                                                         : RosterMemberConfirmationStatus.Pending;
                                                     <div class="registration-review-player @(confirmationStatus == RosterMemberConfirmationStatus.Pending ? "registration-review-player--pending" : "registration-review-player--confirmed")">
                                                         <span class="registration-review-player-name">
-                                                            @if(selectedMember.Id == SelectedTeam.CaptainUserId){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}
                                                             <strong>@GetUserLabel(selectedMember)</strong>
+                                                            @if(selectedMember.Id == SelectedTeam.CaptainUserId){<span class="registration-captain-chip">@Localization["Feature.tournaments.captain"]</span>}
                                                         </span>
                                                         <span class="registration-review-player-status">@GetConfirmationLabel(confirmationStatus)</span>
                                                     </div>
@@ -562,7 +562,7 @@
                                     @if(TeamCancellationTargetId is { } cancellationTeamId)
                                     {
                                         <button type="button"
-                                                class="button-secondary"
+                                                class="button-secondary registration-cancel-button"
                                                 disabled="@(_isSubmitting || _isLoadingRegistration || _isLoadingRoster)"
                                                 @onclick="() => BeginTeamUnregistrationConfirmationAsync(cancellationTeamId)"
                                                 @ref="_teamUnregistrationTriggerElement">

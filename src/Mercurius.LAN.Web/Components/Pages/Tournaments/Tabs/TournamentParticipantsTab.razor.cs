@@ -826,6 +826,7 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
         long generation,
         bool includeCandidateReasons = false,
         bool autofillEligibleMembers = false,
+        bool presentProgress = true,
         CancellationToken cancellationToken = default)
     {
         if(!IsCurrentRequest(tournamentId, generation))
@@ -836,13 +837,19 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             : cancellationToken;
 
         _teamError = null;
-        _rosterEligibility = null;
+        // A background revalidation keeps the current roster presentation on screen so the
+        // focused action is neither disabled nor repainted while the check is running.
+        if(presentProgress)
+            _rosterEligibility = null;
         if(SelectedTeam is null)
             return;
 
-        _isLoadingRoster = true;
         _rosterEligibilityUnavailable = false;
-        await InvokeAsync(StateHasChanged);
+        if(presentProgress)
+        {
+            _isLoadingRoster = true;
+            await InvokeAsync(StateHasChanged);
+        }
         try
         {
             var selectedUserIds = _selectedRosterUserIds.ToArray();
@@ -1715,12 +1722,20 @@ public partial class TournamentParticipantsTab : IDisposable, IAsyncDisposable
             await RefreshRosterEligibilityAsync(
                 Tournament.Id,
                 requestGeneration,
+                presentProgress: false,
                 cancellationToken: cancellation.Token);
-            return !cancellation.IsCancellationRequested &&
-                   IsCurrentRequest(Tournament.Id, requestGeneration) &&
-                   SelectedTeam?.Id == teamId &&
-                   IsRosterEligibleForWorkflow &&
-                   request.UserIds.ToHashSet().SetEquals(_selectedRosterUserIds);
+
+            var isCurrent = !cancellation.IsCancellationRequested &&
+                            IsCurrentRequest(Tournament.Id, requestGeneration);
+            var isEligible = isCurrent &&
+                             !_rosterEligibilityUnavailable &&
+                             SelectedTeam?.Id == teamId &&
+                             IsRosterEligibleForWorkflow &&
+                             request.UserIds.ToHashSet().SetEquals(_selectedRosterUserIds);
+            if(!isEligible && isCurrent && string.IsNullOrEmpty(_teamError))
+                _teamError = Localization["Feature.tournaments.rosterMemberIneligible"];
+
+            return isEligible;
         }
         finally
         {

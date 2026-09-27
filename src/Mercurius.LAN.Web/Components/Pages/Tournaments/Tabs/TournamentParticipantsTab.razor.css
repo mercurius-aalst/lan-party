@@ -492,7 +492,7 @@ html[data-theme="dark"] .registration-cancel-button {
 
 .registration-roster-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
     gap: 0.5rem;
 }
 
@@ -607,6 +607,7 @@ html[data-theme="dark"] .registration-cancel-button {
 
 .registration-stepper ::deep .mud-step.mud-clickable {
     cursor: pointer;
+    border-radius: var(--radius-control);
 }
 
 .registration-stepper ::deep .mud-step.mud-clickable:hover .mud-step-label-content {
@@ -651,7 +652,7 @@ html[data-theme="dark"] .registration-cancel-button {
 
 .registration-team-options {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
     gap: 0.65rem;
 }
 
@@ -846,7 +847,7 @@ html[data-theme="dark"] .registration-cancel-button {
 
 .registration-review-roster--cards {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
     gap: 0.55rem;
 }
 
