@@ -537,12 +537,10 @@ html[data-theme="dark"] .registration-cancel-button {
 }
 
 .registration-roster-member.is-selected {
-    box-shadow: inset 3px 0 0 var(--color-success);
     background: var(--color-success-soft);
 }
 
 .registration-roster-member--ineligible {
-    box-shadow: inset 3px 0 0 var(--color-warning);
     background: var(--color-warning-soft);
 }
 
