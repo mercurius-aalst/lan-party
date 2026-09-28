@@ -92,6 +92,32 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 - **AND** standalone eligible/unavailable status messages MUST NOT occupy the roster status area
 - **AND** the captain MUST NOT progress to review until local roster constraints pass
 - **AND** when navigating backward and forward, the current draft MUST be preserved and revalidated
+- **AND** when a preserved dirty draft is rechecked, the current captain MUST be added without
+  removing an existing selected member
+- **AND** a roster made oversized by a captain transfer MUST remain invalid until the captain
+  explicitly removes a member
+- **AND** a selected draft member who is no longer in the current team projection MUST remain
+  listed as removable until the draft is repaired or cleared
+
+#### Scenario: Candidate discovery does not invalidate the selected roster
+
+- **WHEN** a team has more members than the configured team size
+- **THEN** roster eligibility MUST validate only the exact selected roster for progression and submit
+- **AND** eligibility reasons for unselected candidates MUST be shown independently
+- **AND** candidate-reason requests MUST be bounded to the backend roster-eligibility endpoint's
+  maximum of 50 user ids per request and merged without dropping or duplicating candidates
+- **AND** an existing registration containing a former team member MUST expose that member as
+  removable or clearly explain the repair path
+- **AND** eligibility-only candidates returned by the backend MUST remain available for removal
+  when they are part of the selected draft
+
+#### Scenario: Candidate discovery handles an oversized team projection
+
+- **WHEN** the current team projection contains more than 50 possible roster candidates
+- **THEN** the page MUST split candidate-reason discovery into backend-safe requests of at most 50
+  user ids each because the endpoint rejects larger requests
+- **AND** the selected exact roster MUST still be validated separately and remain eligible to
+  advance when it satisfies the configured team size
 
 #### Scenario: Captain advances out of the roster step
 
@@ -127,6 +153,16 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 - **AND** navigation to a later step MUST be blocked unless all prior team and roster requirements pass
 - **AND** navigation to an earlier step MUST remain available while a request is not submitting
 - **AND** the existing forward and back action buttons MUST NOT be duplicated outside the Stepper
+
+#### Scenario: Captain edits after captain transfer
+
+- **WHEN** the saved roster identifies a former captain but the current team captain is a different
+  member
+- **THEN** the page MUST include the current captain in the selected roster before validation
+- **AND** the page MUST NOT remove the former captain or another roster member automatically
+- **AND** when the exact team size requires a removal, the page MUST mark the roster invalid and
+  require the captain to choose who leaves
+- **AND** the page MUST explain the adjustment and require the captain to review it before saving
 
 ### Requirement: Roster confirmation and ownership state are clear
 
