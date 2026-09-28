@@ -40,6 +40,12 @@ registration through explicit confirmation and backend-authoritative refresh.
 - **AND** a confirmed mutation MUST refresh the tournament and current-user registration state
 - **AND** the page MUST show the state returned by the backend
 
+#### Scenario: Eligible player registers individually
+
+- **WHEN** an eligible authenticated player selects the individual registration action
+- **THEN** the UI MUST use a concise action label without restating that the player is an individual
+- **AND** the next interaction MUST be a friendly confirmation describing the tournament outcome before the existing mutation is sent
+
 #### Scenario: Registered user unregisters
 
 - **WHEN** an eligible registered user chooses to unregister before tournament start
@@ -79,13 +85,23 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 - **AND** teams below the required size MUST be hidden, including teams with an existing registration
 - **AND** any restored or automatically selected team MUST satisfy the same captain and member-count criteria
 - **AND** the popup MUST explain that undersized teams are hidden
+- **AND** the popup MUST identify whether the captain is registering the team or editing its existing registration
+- **AND** the selected team MUST be visibly and accessibly identified
 - **AND** the selected team MUST be checked against backend team eligibility before the captain can continue
 - **AND** the team selection step MUST remain active until a valid team is selected
+- **AND** the step MUST remain on team selection after an eligible selection until the captain chooses an action labelled for the next step, such as `Choose roster` or `Edit roster`
+
+#### Scenario: Captain sees an unavailable team option
+
+- **WHEN** a captained team fails backend team eligibility
+- **THEN** the team option MUST remain visible only as a visibly disabled or status-marked option with the visual label `Unavailable`
+- **AND** validation reasons, raw reason codes, and explanatory paragraphs MUST not be rendered beside the option
 
 #### Scenario: Captain selects a roster
 
 - **WHEN** the captain reaches Step 2
 - **THEN** the step title MUST identify the selected team as `Roster members for {team}` and show selected versus required roster count inline
+- **AND** the page MUST list members from the selected team
 - **AND** the separate selected-team block and roster-size label/help MUST NOT be shown
 - **AND** the current captain MUST remain selected automatically and MUST NOT appear as a roster candidate
 - **AND** ineligible roster candidates MUST retain a meaningful disabled state and error handling
@@ -98,6 +114,18 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
   explicitly removes a member
 - **AND** a selected draft member who is no longer in the current team projection MUST remain
   listed as removable until the draft is repaired or cleared
+- **AND** the forward action from roster selection MUST be labelled `Review roster`
+
+#### Scenario: Unavailable roster members remain visible but excluded
+
+- **WHEN** a roster member is marked unavailable or ineligible for the tournament
+- **THEN** the member MUST remain visible in the roster selection
+- **AND** the member's selection control MUST initialize unchecked and render as non-selectable/disabled with the accessible state `Unavailable`
+- **AND** the accessible label MUST communicate `Unavailable` without exposing raw backend reason codes or technical refresh terminology
+- **AND** the member MUST be excluded from any restored or realtime-preserved roster draft
+- **AND** the member MUST be excluded from the submitted roster even if a stale draft or client state previously contained that member
+- **AND** eligible roster members MUST retain their existing selectable and checked-state semantics
+- **AND** captain and team selection semantics MUST remain unchanged
 
 #### Scenario: Candidate discovery does not invalidate the selected roster
 
@@ -131,12 +159,21 @@ An authenticated captain MUST use a MudBlazor Stepper with exactly three logical
 
 - **WHEN** the captain reaches Step 3
 - **THEN** the step title MUST be `Summary` and show selected versus required roster count inline
+- **AND** the page MUST summarize the team, roster, required size, and pending confirmation behavior
 - **AND** the separate required-size section MUST NOT be shown
 - **AND** roster member cards MUST visually distinguish confirmed and pending members using each member's actual confirmation state
 - **AND** a captain member card MUST show its localized captain badge after the member name
+- **AND** the final action MUST clearly indicate whether it submits a new registration or saves an edited roster
 - **AND** submission MUST send the exact selected roster through the existing backend team roster route
 - **AND** cancellation of an existing registration MUST appear beside the save action when Summary is reachable
 - **AND** a pending response MUST remain visible as pending until all required confirmations complete
+
+#### Scenario: Captain edits an existing registration
+
+- **WHEN** a captain has a pending or active pre-start team registration
+- **THEN** the page MUST load its current roster into the Stepper
+- **AND** the captain MUST be able to submit an edited roster when backend rules allow it
+- **AND** the UI MUST not block editing solely because the team is already registered
 
 #### Scenario: Captain cancels without reaching the summary
 
