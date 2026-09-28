@@ -27,6 +27,8 @@ RUN dotnet publish \
 
 # Run Stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-azurelinux3.0 AS run
+RUN tdnf upgrade -y pcre2 \
+    && tdnf clean all
 WORKDIR /app
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "Mercurius.LAN.Web.dll"]

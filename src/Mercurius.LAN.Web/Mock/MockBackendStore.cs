@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Mercurius.LAN.Web.DTOs.Leaderboards;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Participants.Teams;
@@ -13,6 +14,7 @@ using Mercurius.LAN.Web.Models.Matches;
 using Mercurius.LAN.Web.Models.Participants;
 using Mercurius.LAN.Web.Models.Sponsors;
 using Mercurius.LAN.Web.Options;
+using Mercurius.LAN.Web.Services;
 using Microsoft.Extensions.Options;
 
 namespace Mercurius.LAN.Web.Mock;
@@ -33,6 +35,7 @@ internal sealed class MockBackendStore
     private static readonly Guid IndividualProfileFixtureOpponentId = Guid.Parse("91111111-1111-1111-1111-111111111113");
     private static readonly Guid IndividualProfileFixturePreviousMatchId = Guid.Parse("92111111-1111-1111-1111-111111111111");
     private static readonly Guid IndividualProfileFixtureUpcomingMatchId = Guid.Parse("92111111-1111-1111-1111-111111111112");
+    private static readonly Guid LeaderboardTimeFixtureTournamentId = Guid.Parse("1a111111-1111-1111-1111-111111111112");
     private static readonly DateTime FeaturedFixtureCreatedAtUtc = new(2026, 5, 1, 9, 0, 0, DateTimeKind.Utc);
     private static readonly DateTime FeaturedFixtureUpdatedAtUtc = new(2026, 5, 11, 12, 0, 0, DateTimeKind.Utc);
     private const int MaxDownstreamMatches = 512;
@@ -41,6 +44,7 @@ internal sealed class MockBackendStore
     private readonly string _dataFilePath;
     private readonly Dictionary<Guid, List<TournamentRegistrationDTO>> _registrationDetails = [];
     private readonly Dictionary<Guid, Dictionary<Guid, MockRegistrationSnapshot>> _publicRegistrationSnapshots = [];
+    private readonly Dictionary<Guid, List<MockLeaderboardParticipant>> _leaderboardParticipants = [];
     private readonly HashSet<Guid> _deletedTeamIds = [];
     private MockBackendDocument _document;
 
@@ -51,6 +55,7 @@ internal sealed class MockBackendStore
         SeedFeaturedDoubleEliminationFixture();
         SeedDefaultRegistrationFixture();
         SeedIndividualProfileFixture();
+        SeedLeaderboardFixtures();
         InitializeRegistrationDetails();
     }
 
@@ -531,6 +536,10 @@ internal sealed class MockBackendStore
     {
         lock(_syncRoot)
         {
+            var bracketType = dto.BracketType;
+            var participationMode = dto.ParticipationMode.GetValueOrDefault();
+            var leaderboardRankingMetric = ValidateLeaderboardConfiguration(bracketType, dto.LeaderboardRankingMetric, participationMode);
+
             var tournament = new TournamentExtended
             {
                 Id = Guid.NewGuid(),
@@ -538,15 +547,16 @@ internal sealed class MockBackendStore
                 StartTime = dto.PlannedStartTime,
                 EndTime = dto.PlannedStartTime.AddHours(4),
                 PlannedStartTime = dto.PlannedStartTime,
-                AverageGameDurationMinutes = dto.AverageGameDurationMinutes,
-                RoundBreakDurationMinutes = dto.RoundBreakDurationMinutes,
+                AverageGameDurationMinutes = NormalizeLeaderboardScheduleDuration(bracketType, dto.AverageGameDurationMinutes),
+                RoundBreakDurationMinutes = NormalizeLeaderboardScheduleDuration(bracketType, dto.RoundBreakDurationMinutes),
                 EstimatedEndTime = null,
                 ImageUrl = "/mock-data-local/generated-tournament.svg",
                 Status = TournamentStatus.Scheduled,
-                BracketType = dto.BracketType,
+                BracketType = bracketType,
+                LeaderboardRankingMetric = leaderboardRankingMetric,
                 Format = dto.Format,
                 FinalsFormat = dto.FinalsFormat,
-                ParticipationMode = dto.ParticipationMode.GetValueOrDefault(),
+                ParticipationMode = participationMode,
                 TeamSize = dto.TeamSize
             };
 
@@ -560,15 +570,23 @@ internal sealed class MockBackendStore
         lock(_syncRoot)
         {
             var tournament = GetRequiredTournament(id);
+            var bracketType = dto.BracketType;
+            var participationMode = dto.ParticipationMode ?? tournament.ParticipationMode;
+            var leaderboardRankingMetric = ValidateLeaderboardConfiguration(bracketType, dto.LeaderboardRankingMetric, participationMode);
+            if(tournament.LeaderboardRankingMetric != leaderboardRankingMetric &&
+               tournament.Status != TournamentStatus.Scheduled)
+                throw new InvalidOperationException("Leaderboard ranking metric cannot be changed after the tournament has started.");
+
             tournament.Name = dto.Name;
             tournament.Format = dto.Format;
             tournament.FinalsFormat = dto.FinalsFormat;
-            tournament.BracketType = dto.BracketType;
-            tournament.ParticipationMode = dto.ParticipationMode.GetValueOrDefault(tournament.ParticipationMode);
+            tournament.BracketType = bracketType;
+            tournament.LeaderboardRankingMetric = leaderboardRankingMetric;
+            tournament.ParticipationMode = participationMode;
             tournament.TeamSize = dto.TeamSize;
             tournament.PlannedStartTime = dto.PlannedStartTime;
-            tournament.AverageGameDurationMinutes = dto.AverageGameDurationMinutes;
-            tournament.RoundBreakDurationMinutes = dto.RoundBreakDurationMinutes;
+            tournament.AverageGameDurationMinutes = NormalizeLeaderboardScheduleDuration(bracketType, dto.AverageGameDurationMinutes);
+            tournament.RoundBreakDurationMinutes = NormalizeLeaderboardScheduleDuration(bracketType, dto.RoundBreakDurationMinutes);
             tournament.EstimatedEndTime = tournament.Matches.Any() ? tournament.Matches.Max(match => match.EstimatedEndTime) : null;
 
             if(dto.Image != null)
@@ -633,6 +651,13 @@ internal sealed class MockBackendStore
                     if(tournament.BracketType == BracketType.Swiss)
                         throw new NotSupportedException("Swiss tournaments are not supported by the mock backend.");
 
+                    if(tournament.BracketType == BracketType.Leaderboard)
+                    {
+                        tournament.StartTime = DateTime.UtcNow;
+                        tournament.Status = TournamentStatus.InProgress;
+                        break;
+                    }
+
                     var registrations = GetRegistrationDetails(tournament);
                     var activeParticipantCount = registrations.Count(registration =>
                         registration.Status == TournamentRegistrationStatus.Active &&
@@ -656,6 +681,25 @@ internal sealed class MockBackendStore
                     if(tournament.Status != TournamentStatus.InProgress)
                         throw new InvalidOperationException("Tournament has to be in progress to be able to complete.");
 
+                    if(tournament.BracketType == BracketType.Leaderboard)
+                    {
+                        var leaderboardRows = BuildLeaderboardRows(tournament, GetLeaderboardParticipants(tournament.Id));
+                        if(leaderboardRows.Count == 0)
+                            throw new InvalidOperationException("A leaderboard tournament requires at least one recorded result to be completed.");
+
+                        tournament.EndTime = DateTime.UtcNow;
+                        tournament.Status = TournamentStatus.Completed;
+                        tournament.Placements = leaderboardRows
+                            .GroupBy(row => row.Rank)
+                            .Select(group => new Placement
+                            {
+                                Place = group.Key,
+                                LeaderboardParticipants = group.ToList()
+                            })
+                            .ToList();
+                        break;
+                    }
+
                     TournamentProjectionMapper.PopulateParticipantProjection(tournament);
                     var placements = BuildPlacements(tournament);
                     tournament.EndTime = DateTime.UtcNow;
@@ -663,6 +707,19 @@ internal sealed class MockBackendStore
                     tournament.Placements = placements;
                     break;
                 case TournamentStatus.Scheduled:
+                    if(tournament.BracketType == BracketType.Leaderboard &&
+                       tournament.Status == TournamentStatus.InProgress)
+                    {
+                        tournament.Status = TournamentStatus.Scheduled;
+                        tournament.StartTime = DateTime.MinValue;
+                        tournament.EndTime = DateTime.MinValue;
+                        tournament.EstimatedEndTime = null;
+                        tournament.Matches = [];
+                        tournament.Placements = [];
+                        _leaderboardParticipants.Remove(tournament.Id);
+                        break;
+                    }
+
                     if(tournament.Status == TournamentStatus.InProgress && tournament.Matches.Any())
                     {
                         InferMockParticipantProvenance(tournament);
@@ -703,6 +760,7 @@ internal sealed class MockBackendStore
                     tournament.EstimatedEndTime = null;
                     tournament.Matches = [];
                     tournament.Placements = [];
+                    _leaderboardParticipants.Remove(tournament.Id);
                     break;
                 default:
                     throw new InvalidOperationException("A supported tournament lifecycle state is required.");
@@ -717,6 +775,97 @@ internal sealed class MockBackendStore
             _document.Tournaments.RemoveAll(tournament => tournament.Id == tournamentId);
             _registrationDetails.Remove(tournamentId);
             _publicRegistrationSnapshots.Remove(tournamentId);
+            _leaderboardParticipants.Remove(tournamentId);
+        }
+    }
+
+    public PublicLeaderboardDTO GetLeaderboard(Guid tournamentId)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredLeaderboardTournament(tournamentId);
+            return new PublicLeaderboardDTO
+            {
+                TournamentId = tournament.Id,
+                RankingMetric = ResolveLeaderboardMetric(tournament),
+                Rows = BuildLeaderboardRows(tournament, GetLeaderboardParticipants(tournament.Id))
+            };
+        }
+    }
+
+    public AdminLeaderboardResponseDTO GetAdminLeaderboard(Guid tournamentId)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredLeaderboardTournament(tournamentId);
+            return BuildAdminLeaderboardResponse(tournament);
+        }
+    }
+
+    public AdminLeaderboardParticipantDTO RecordLeaderboardAttempt(
+        Guid tournamentId,
+        RecordLeaderboardAttemptDTO dto)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredLeaderboardTournament(tournamentId);
+            EnsureLeaderboardInProgress(tournament);
+            ValidateLeaderboardAttemptValue(tournament, dto.Score, dto.DurationMilliseconds);
+
+            var participants = GetOrCreateLeaderboardParticipantList(tournament.Id);
+            var participant = ResolveOrCreateLeaderboardParticipant(tournament, participants, dto);
+            var now = DateTime.UtcNow;
+            participant.Attempts.Add(new MockLeaderboardAttempt
+            {
+                Id = Guid.NewGuid(),
+                Score = dto.Score,
+                DurationMilliseconds = dto.DurationMilliseconds,
+                CreatedAtUtc = now,
+                UpdatedAtUtc = now,
+                RowVersion = Guid.NewGuid()
+            });
+
+            return ToAdminLeaderboardParticipantDTO(participant);
+        }
+    }
+
+    public LeaderboardAttemptDTO UpdateLeaderboardAttempt(
+        Guid tournamentId,
+        Guid attemptId,
+        UpdateLeaderboardAttemptDTO dto)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredLeaderboardTournament(tournamentId);
+            EnsureLeaderboardInProgress(tournament);
+            ValidateLeaderboardAttemptValue(tournament, dto.Score, dto.DurationMilliseconds);
+
+            var attempt = FindLeaderboardAttempt(tournament.Id, attemptId);
+            if(!dto.RowVersion.HasValue || dto.RowVersion.Value != attempt.RowVersion)
+                throw new LeaderboardConflictException();
+
+            attempt.Score = dto.Score;
+            attempt.DurationMilliseconds = dto.DurationMilliseconds;
+            attempt.UpdatedAtUtc = DateTime.UtcNow;
+            attempt.RowVersion = Guid.NewGuid();
+
+            return ToLeaderboardAttemptDTO(attempt);
+        }
+    }
+
+    public void DeleteLeaderboardAttempt(Guid tournamentId, Guid attemptId, Guid rowVersion)
+    {
+        lock(_syncRoot)
+        {
+            var tournament = GetRequiredLeaderboardTournament(tournamentId);
+            EnsureLeaderboardInProgress(tournament);
+
+            var attempt = FindLeaderboardAttempt(tournament.Id, attemptId);
+            if(rowVersion != attempt.RowVersion)
+                throw new LeaderboardConflictException();
+
+            foreach(var participant in GetLeaderboardParticipants(tournament.Id))
+                participant.Attempts.RemoveAll(candidate => candidate.Id == attemptId);
         }
     }
 
@@ -2921,6 +3070,88 @@ internal sealed class MockBackendStore
         tournament.Teams = tournamentTeams;
     }
 
+    private void SeedLeaderboardFixtures()
+    {
+        var tournament = _document.Tournaments.FirstOrDefault(candidate =>
+            candidate.Id == LeaderboardTimeFixtureTournamentId);
+        if(tournament is null || _leaderboardParticipants.ContainsKey(tournament.Id))
+            return;
+
+        var linkedUser = _document.Users.FirstOrDefault(user =>
+            string.Equals(user.Username, "track1", StringComparison.OrdinalIgnoreCase));
+        var createdAtUtc = new DateTime(2026, 6, 19, 10, 15, 0, DateTimeKind.Utc);
+        var participants = new List<MockLeaderboardParticipant>();
+
+        if(linkedUser is not null)
+        {
+            var linkedParticipant = new MockLeaderboardParticipant
+            {
+                Id = Guid.Parse("1b111111-1111-1111-1111-111111111111"),
+                DisplayName = ResolveUserDisplayName(linkedUser),
+                Kind = LeaderboardParticipantKind.LinkedUser,
+                LinkedUserId = linkedUser.Id
+            };
+            linkedParticipant.Attempts.Add(CreateSeedAttempt(
+                "1c111111-1111-1111-1111-111111111111",
+                42_150,
+                createdAtUtc,
+                createdAtUtc.AddMinutes(6)));
+            linkedParticipant.Attempts.Add(CreateSeedAttempt(
+                "1c111111-1111-1111-1111-111111111112",
+                39_480,
+                createdAtUtc.AddMinutes(12),
+                createdAtUtc.AddMinutes(12)));
+            participants.Add(linkedParticipant);
+        }
+
+        var tiedGuest = new MockLeaderboardParticipant
+        {
+            Id = Guid.Parse("1b111111-1111-1111-1111-111111111112"),
+            DisplayName = "Speedy Sam",
+            Kind = LeaderboardParticipantKind.Guest
+        };
+        tiedGuest.Attempts.Add(CreateSeedAttempt(
+            "1c111111-1111-1111-1111-111111111113",
+            39_480,
+            createdAtUtc.AddMinutes(18),
+            createdAtUtc.AddMinutes(18)));
+        tiedGuest.Attempts.Add(CreateSeedAttempt(
+            "1c111111-1111-1111-1111-111111111114",
+            41_000,
+            createdAtUtc.AddMinutes(24),
+            createdAtUtc.AddMinutes(24)));
+        participants.Add(tiedGuest);
+
+        var slowerGuest = new MockLeaderboardParticipant
+        {
+            Id = Guid.Parse("1b111111-1111-1111-1111-111111111113"),
+            DisplayName = "Speedy Sam",
+            Kind = LeaderboardParticipantKind.Guest
+        };
+        slowerGuest.Attempts.Add(CreateSeedAttempt(
+            "1c111111-1111-1111-1111-111111111115",
+            47_120,
+            createdAtUtc.AddMinutes(30),
+            createdAtUtc.AddMinutes(30)));
+        participants.Add(slowerGuest);
+
+        _leaderboardParticipants[tournament.Id] = participants;
+    }
+
+    private static MockLeaderboardAttempt CreateSeedAttempt(
+        string id,
+        long durationMilliseconds,
+        DateTime createdAtUtc,
+        DateTime updatedAtUtc) =>
+        new()
+        {
+            Id = Guid.Parse(id),
+            DurationMilliseconds = durationMilliseconds,
+            CreatedAtUtc = createdAtUtc,
+            UpdatedAtUtc = updatedAtUtc,
+            RowVersion = Guid.NewGuid()
+        };
+
     private void SeedIndividualProfileFixture()
     {
         if(_document.Tournaments.Any(tournament => tournament.Id == IndividualProfileFixtureTournamentId))
@@ -3782,6 +4013,254 @@ internal sealed class MockBackendStore
         return Clone(existingUser)!;
     }
 
+    private TournamentExtended GetRequiredLeaderboardTournament(Guid tournamentId)
+    {
+        var tournament = GetRequiredTournament(tournamentId);
+        if(tournament.BracketType != BracketType.Leaderboard)
+            throw new InvalidOperationException("Leaderboard results are only available for leaderboard tournaments.");
+
+        return tournament;
+    }
+
+    private static void EnsureLeaderboardInProgress(TournamentExtended tournament)
+    {
+        if(tournament.Status != TournamentStatus.InProgress)
+            throw new InvalidOperationException("Leaderboard results can only be changed while the tournament is in progress.");
+    }
+
+    private static LeaderboardRankingMetric? ValidateLeaderboardConfiguration(
+        BracketType bracketType,
+        LeaderboardRankingMetric? leaderboardRankingMetric,
+        ParticipationMode participationMode)
+    {
+        if(bracketType == BracketType.Leaderboard)
+        {
+            if(participationMode != ParticipationMode.Individual)
+                throw new InvalidOperationException("Leaderboard tournaments must use individual participation.");
+            if(!leaderboardRankingMetric.HasValue || !Enum.IsDefined(leaderboardRankingMetric.Value))
+                throw new InvalidOperationException("Leaderboard tournaments require a supported ranking metric.");
+
+            return leaderboardRankingMetric;
+        }
+
+        if(leaderboardRankingMetric.HasValue)
+            throw new InvalidOperationException("Ranking metric is only supported for leaderboard tournaments.");
+
+        return null;
+    }
+
+    private static int NormalizeLeaderboardScheduleDuration(BracketType bracketType, int durationMinutes) =>
+        bracketType == BracketType.Leaderboard ? 0 : durationMinutes;
+
+    private static LeaderboardRankingMetric ResolveLeaderboardMetric(TournamentExtended tournament) =>
+        tournament.LeaderboardRankingMetric ?? LeaderboardRankingMetric.HighestScore;
+
+    private List<MockLeaderboardParticipant> GetLeaderboardParticipants(Guid tournamentId) =>
+        _leaderboardParticipants.TryGetValue(tournamentId, out var participants) ? participants : [];
+
+    private List<MockLeaderboardParticipant> GetOrCreateLeaderboardParticipantList(Guid tournamentId)
+    {
+        if(!_leaderboardParticipants.TryGetValue(tournamentId, out var participants))
+        {
+            participants = [];
+            _leaderboardParticipants[tournamentId] = participants;
+        }
+
+        return participants;
+    }
+
+    private MockLeaderboardParticipant ResolveOrCreateLeaderboardParticipant(
+        TournamentExtended tournament,
+        List<MockLeaderboardParticipant> participants,
+        RecordLeaderboardAttemptDTO dto)
+    {
+        var selectorCount =
+            (dto.ParticipantId.HasValue ? 1 : 0) +
+            (dto.LinkedUserId.HasValue ? 1 : 0) +
+            (!string.IsNullOrWhiteSpace(dto.GuestDisplayName) ? 1 : 0);
+        if(selectorCount != 1)
+            throw new InvalidOperationException("Provide exactly one existing participant, linked user, or guest display name.");
+
+        if(dto.ParticipantId.HasValue)
+        {
+            return participants.FirstOrDefault(participant => participant.Id == dto.ParticipantId.Value)
+                ?? throw new InvalidOperationException("The leaderboard participant was not found for this tournament.");
+        }
+
+        if(dto.LinkedUserId.HasValue)
+        {
+            var linkedUserId = dto.LinkedUserId.Value;
+            var existing = participants.FirstOrDefault(participant => participant.LinkedUserId == linkedUserId);
+            if(existing is not null)
+                return existing;
+
+            var user = _document.Users.FirstOrDefault(candidate => candidate.Id == linkedUserId)
+                ?? throw new InvalidOperationException("The linked user was not found.");
+            var linkedParticipant = new MockLeaderboardParticipant
+            {
+                Id = Guid.NewGuid(),
+                DisplayName = ResolveUserDisplayName(user),
+                Kind = LeaderboardParticipantKind.LinkedUser,
+                LinkedUserId = linkedUserId
+            };
+            participants.Add(linkedParticipant);
+            return linkedParticipant;
+        }
+
+        var guestName = dto.GuestDisplayName!.Trim();
+        if(guestName.Length > 100)
+            throw new InvalidOperationException("A guest display name must be at most 100 characters.");
+
+        var guestParticipant = new MockLeaderboardParticipant
+        {
+            Id = Guid.NewGuid(),
+            DisplayName = guestName,
+            Kind = LeaderboardParticipantKind.Guest
+        };
+        participants.Add(guestParticipant);
+        return guestParticipant;
+    }
+
+    private static string ResolveUserDisplayName(UserDTO user)
+    {
+        if(!string.IsNullOrWhiteSpace(user.DisplayName))
+            return user.DisplayName.Trim();
+        if(!string.IsNullOrWhiteSpace(user.Username))
+            return user.Username.Trim();
+
+        return "Player";
+    }
+
+    private static void ValidateLeaderboardAttemptValue(
+        TournamentExtended tournament,
+        decimal? score,
+        long? durationMilliseconds)
+    {
+        if(ResolveLeaderboardMetric(tournament) == LeaderboardRankingMetric.HighestScore)
+        {
+            if(!score.HasValue || durationMilliseconds.HasValue)
+                throw new InvalidOperationException("A highest-score leaderboard attempt requires a score value.");
+            if(score.Value < 0 || decimal.Round(score.Value, 6) != score.Value || score.Value >= 1000000000000m)
+                throw new InvalidOperationException("A score must be non-negative with at most 12 integral and 6 fractional digits.");
+
+            return;
+        }
+
+        if(!durationMilliseconds.HasValue || score.HasValue)
+            throw new InvalidOperationException("A fastest-time leaderboard attempt requires a duration value.");
+        if(durationMilliseconds.Value <= 0)
+            throw new InvalidOperationException("A duration must be a positive whole number of milliseconds.");
+    }
+
+    private MockLeaderboardAttempt FindLeaderboardAttempt(Guid tournamentId, Guid attemptId) =>
+        GetLeaderboardParticipants(tournamentId)
+            .SelectMany(participant => participant.Attempts)
+            .FirstOrDefault(attempt => attempt.Id == attemptId)
+        ?? throw new InvalidOperationException("The leaderboard attempt was not found for this tournament.");
+
+    private static List<LeaderboardRowDTO> BuildLeaderboardRows(
+        TournamentExtended tournament,
+        IReadOnlyList<MockLeaderboardParticipant> participants)
+    {
+        var metric = ResolveLeaderboardMetric(tournament);
+        var ranked = participants
+            .Select(participant => (Participant: participant, Best: GetBestLeaderboardAttempt(participant, metric)))
+            .Where(entry => entry.Best is not null)
+            .Select(entry => (
+                entry.Participant,
+                Best: entry.Best!,
+                OrderKey: metric == LeaderboardRankingMetric.HighestScore
+                    ? -entry.Best!.Score!.Value
+                    : entry.Best!.DurationMilliseconds!.Value))
+            .OrderBy(entry => entry.OrderKey)
+            .ThenBy(entry => entry.Participant.Id)
+            .ToList();
+
+        var rows = new List<LeaderboardRowDTO>();
+        decimal? previousKey = null;
+        var place = 0;
+        for(var index = 0; index < ranked.Count; index++)
+        {
+            var entry = ranked[index];
+            if(previousKey is null || entry.OrderKey != previousKey.Value)
+                place = index + 1;
+            previousKey = entry.OrderKey;
+
+            rows.Add(new LeaderboardRowDTO
+            {
+                Rank = place,
+                ParticipantId = entry.Participant.Id,
+                DisplayName = entry.Participant.DisplayName,
+                ParticipantKind = entry.Participant.Kind,
+                LinkedUserId = entry.Participant.LinkedUserId,
+                Score = metric == LeaderboardRankingMetric.HighestScore ? entry.Best.Score : null,
+                DurationMilliseconds = metric == LeaderboardRankingMetric.FastestTime
+                    ? entry.Best.DurationMilliseconds
+                    : null
+            });
+        }
+
+        return rows;
+    }
+
+    private static MockLeaderboardAttempt? GetBestLeaderboardAttempt(
+        MockLeaderboardParticipant participant,
+        LeaderboardRankingMetric metric) =>
+        metric == LeaderboardRankingMetric.HighestScore
+            ? participant.Attempts
+                .Where(attempt => attempt.Score.HasValue)
+                .OrderBy(attempt => attempt.Score!.Value)
+                .LastOrDefault()
+            : participant.Attempts
+                .Where(attempt => attempt.DurationMilliseconds.HasValue)
+                .OrderBy(attempt => attempt.DurationMilliseconds!.Value)
+                .FirstOrDefault();
+
+    private AdminLeaderboardResponseDTO BuildAdminLeaderboardResponse(TournamentExtended tournament)
+    {
+        var participants = GetLeaderboardParticipants(tournament.Id);
+        var ranks = BuildLeaderboardRows(tournament, participants)
+            .ToDictionary(row => row.ParticipantId, row => row.Rank);
+
+        return new AdminLeaderboardResponseDTO
+        {
+            TournamentId = tournament.Id,
+            RankingMetric = ResolveLeaderboardMetric(tournament),
+            Participants = participants
+                .OrderBy(participant => ranks.TryGetValue(participant.Id, out var rank) ? rank : int.MaxValue)
+                .ThenBy(participant => participant.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(participant => participant.Id)
+                .Select(ToAdminLeaderboardParticipantDTO)
+                .ToList()
+        };
+    }
+
+    private static AdminLeaderboardParticipantDTO ToAdminLeaderboardParticipantDTO(
+        MockLeaderboardParticipant participant) =>
+        new()
+        {
+            Id = participant.Id,
+            DisplayName = participant.DisplayName,
+            ParticipantKind = participant.Kind,
+            LinkedUserId = participant.LinkedUserId,
+            Attempts = participant.Attempts
+                .OrderByDescending(attempt => attempt.CreatedAtUtc)
+                .ThenBy(attempt => attempt.Id)
+                .Select(ToLeaderboardAttemptDTO)
+                .ToList()
+        };
+
+    private static LeaderboardAttemptDTO ToLeaderboardAttemptDTO(MockLeaderboardAttempt attempt) =>
+        new()
+        {
+            Id = attempt.Id,
+            Score = attempt.Score,
+            DurationMilliseconds = attempt.DurationMilliseconds,
+            CreatedAtUtc = attempt.CreatedAtUtc,
+            UpdatedAtUtc = attempt.UpdatedAtUtc,
+            RowVersion = attempt.RowVersion
+        };
+
     private TournamentExtended GetRequiredTournament(Guid id) =>
         _document.Tournaments.FirstOrDefault(tournament => tournament.Id == id)
         ?? throw new InvalidOperationException($"Mock tournament '{id}' was not found.");
@@ -4097,6 +4576,25 @@ internal sealed class MockBackendStore
     }
 
     private sealed record MockRegistrationSnapshot(Guid? ParticipantId, string? DisplayName);
+
+    private sealed class MockLeaderboardParticipant
+    {
+        public Guid Id { get; init; }
+        public string DisplayName { get; init; } = string.Empty;
+        public LeaderboardParticipantKind Kind { get; init; }
+        public Guid? LinkedUserId { get; init; }
+        public List<MockLeaderboardAttempt> Attempts { get; } = [];
+    }
+
+    private sealed class MockLeaderboardAttempt
+    {
+        public Guid Id { get; init; }
+        public decimal? Score { get; set; }
+        public long? DurationMilliseconds { get; set; }
+        public DateTime CreatedAtUtc { get; init; }
+        public DateTime UpdatedAtUtc { get; set; }
+        public Guid RowVersion { get; set; }
+    }
 
     private static T? Clone<T>(T? value)
     {

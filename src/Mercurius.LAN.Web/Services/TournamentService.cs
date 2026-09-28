@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using Mercurius.LAN.Web.APIClients;
+using Mercurius.LAN.Web.DTOs.Leaderboards;
 using Mercurius.LAN.Web.DTOs.Tournaments;
 using Mercurius.LAN.Web.DTOs.Matches;
 using Mercurius.LAN.Web.DTOs.Registrations;
@@ -264,6 +265,36 @@ public sealed class TournamentService : ITournamentService
             new RemoveRegistrationDTO { Reason = reason },
             cancellationToken);
 
+    public Task<PublicLeaderboardDTO> GetLeaderboardAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.GetLeaderboardAsync(tournamentId, cancellationToken);
+
+    public Task<AdminLeaderboardResponseDTO> GetAdminLeaderboardAsync(
+        Guid tournamentId,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.GetAdminLeaderboardAsync(tournamentId, cancellationToken);
+
+    public Task<AdminLeaderboardParticipantDTO> RecordLeaderboardAttemptAsync(
+        Guid tournamentId,
+        RecordLeaderboardAttemptDTO request,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.RecordLeaderboardAttemptAsync(tournamentId, request, cancellationToken);
+
+    public Task<LeaderboardAttemptDTO> UpdateLeaderboardAttemptAsync(
+        Guid tournamentId,
+        Guid attemptId,
+        UpdateLeaderboardAttemptDTO request,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.UpdateLeaderboardAttemptAsync(tournamentId, attemptId, request, cancellationToken);
+
+    public Task DeleteLeaderboardAttemptAsync(
+        Guid tournamentId,
+        Guid attemptId,
+        Guid rowVersion,
+        CancellationToken cancellationToken = default) =>
+        _lanClient.DeleteLeaderboardAttemptAsync(tournamentId, attemptId, rowVersion, cancellationToken);
+
     private static MultipartFormDataContent BuildTournamentFormData(
         CreateTournamentDTO tournament,
         string? tempFilePath,
@@ -283,6 +314,7 @@ public sealed class TournamentService : ITournamentService
         };
 
         AddTeamSize(formData, tournament.TeamSize);
+        AddLeaderboardRankingMetric(formData, tournament.LeaderboardRankingMetric);
         AddImage(formData, tempFilePath, contentType, fileName);
         return formData;
     }
@@ -306,8 +338,17 @@ public sealed class TournamentService : ITournamentService
         };
 
         AddTeamSize(formData, tournament.TeamSize);
+        AddLeaderboardRankingMetric(formData, tournament.LeaderboardRankingMetric);
         AddImage(formData, tempFilePath, contentType, fileName);
         return formData;
+    }
+
+    private static void AddLeaderboardRankingMetric(
+        MultipartFormDataContent formData,
+        LeaderboardRankingMetric? rankingMetric)
+    {
+        if(rankingMetric.HasValue)
+            formData.Add(new StringContent(rankingMetric.Value.ToString()), "LeaderboardRankingMetric");
     }
 
     private static void AddTeamSize(MultipartFormDataContent formData, int? teamSize)
