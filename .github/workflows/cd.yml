@@ -61,3 +61,11 @@ jobs:
         with:
           push: true
           tags: livingwooods/mercurius-frontend:${{ needs.release-please.outputs.VERSION }}
+
+      - name: Announce to gitops
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITOPS_DISPATCH_TOKEN }}
+          repository: MercuriusAalst/gitops
+          event-type: new-image
+          client-payload: '{"app":"frontend","version":"${{ needs.release-please.outputs.VERSION }}"}'
