@@ -71,7 +71,7 @@ public interface ILANClient
         CancellationToken cancellationToken = default);
 
     [Put("/v1/lan/tournaments/{tournamentId}/lifecycle-state")]
-    Task<HttpResponseMessage> SetTournamentLifecycleStateAsync(
+    Task<IApiResponse> SetTournamentLifecycleStateAsync(
         Guid tournamentId,
         [Body] UpdateTournamentLifecycleStateRequestDTO request,
         CancellationToken cancellationToken = default);
