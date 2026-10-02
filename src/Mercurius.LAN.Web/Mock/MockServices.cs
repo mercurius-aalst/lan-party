@@ -102,6 +102,14 @@ internal sealed class MockTournamentService : ITournamentService
         return _store.GetMatchActionState(persona, matchId);
     }
 
+    public async Task<MatchOpponentProfileDTO> GetMatchOpponentProfileAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default)
+    {
+        var persona = await GetCurrentPersonaAsync();
+        return _store.GetMatchOpponentProfile(persona, matchId);
+    }
+
     public async Task<Match> ConfirmMatchEndedAsync(
         Guid matchId,
         CancellationToken cancellationToken = default)
@@ -531,10 +539,6 @@ internal sealed class MockPublicProfileService : IPublicProfileService
         return Task.FromResult(_store.GetPublicUserByUsername(username));
     }
 
-    public Task<PublicProfileMatchSummariesDTO?> GetPublicUserMatchSummariesAsync(string username, CancellationToken cancellationToken = default)
-    {
-        return Task.FromResult(_store.GetPublicUserMatchSummaries(username));
-    }
 }
 
 internal sealed class MockSponsorService : ISponsorService
@@ -618,6 +622,15 @@ internal sealed class MockUserClient : IUserClient
     public Task<IEnumerable<UserDTO>> GetAllUsersAsync() => Task.FromResult<IEnumerable<UserDTO>>(_store.GetUsers());
 
     public Task<UserDTO> GetUserByIdAsync(Guid id) => Task.FromResult(_store.GetUserById(id));
+
+    public Task<UserDTO> GetUserByUsernameAsync(string username, CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetUserByUsername(username));
+
+    public Task<PublicProfileMatchSummariesDTO> GetUserMatchSummariesAsync(
+        string username,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(_store.GetPublicUserMatchSummaries(username)
+            ?? throw new KeyNotFoundException("Mock user profile was not found."));
 
     public Task DeleteUserAsync(string username)
     {

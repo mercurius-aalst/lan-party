@@ -50,6 +50,7 @@ public partial class NavMenu : IAsyncDisposable
     private bool _isDropdownVisible = false;
     private bool _isInfoMenuVisible = false;
     private bool _isNotificationMenuVisible = false;
+    private bool _isAdmin;
     private string _searchQuery = string.Empty;
     private List<GlobalSearchResultDTO> _searchResults = [];
     private bool _isSearchLoading;
@@ -115,6 +116,7 @@ public partial class NavMenu : IAsyncDisposable
             return;
 
         var user = authState.User;
+        _isAdmin = user.IsInRole("admin");
         if(user.Identity?.IsAuthenticated != true)
         {
             CancelAuthenticatedNavigation();
@@ -441,6 +443,9 @@ public partial class NavMenu : IAsyncDisposable
 
     private async Task SelectSearchResultAsync(GlobalSearchResultDTO result)
     {
+        if(result.Type == GlobalSearchResultType.User && !_isAdmin)
+            return;
+
         var destination = BuildSearchDestination(result);
         if(string.IsNullOrWhiteSpace(destination))
             return;
@@ -449,6 +454,9 @@ public partial class NavMenu : IAsyncDisposable
         await OnNavigationSelected.InvokeAsync();
         NavigationManager.NavigateTo(destination);
     }
+
+    private bool IsSearchResultDisabled(GlobalSearchResultDTO result) =>
+        result.Type == GlobalSearchResultType.User && !_isAdmin;
 
     private Task ClearSearchInputAsync()
     {

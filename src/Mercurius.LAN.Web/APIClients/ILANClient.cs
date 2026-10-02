@@ -202,6 +202,11 @@ public interface ILANClient
         Guid matchId,
         CancellationToken cancellationToken = default);
 
+    [Get("/v1/lan/matches/{matchId}/opponent-profile")]
+    Task<MatchOpponentProfileDTO> GetMatchOpponentProfileAsync(
+        Guid matchId,
+        CancellationToken cancellationToken = default);
+
     [Post("/v1/lan/matches/{matchId}/confirm-ended")]
     Task<Match> ConfirmMatchEndedAsync(
         Guid matchId,
@@ -323,11 +328,6 @@ public interface ILANClient
 
     [Get("/v1/lan/public/users/{username}")]
     Task<PublicUserProfileDTO> GetPublicUserByUsernameAsync(
-        string username,
-        CancellationToken cancellationToken = default);
-
-    [Get("/v1/lan/public/users/{username}/match-summaries")]
-    Task<PublicProfileMatchSummariesDTO> GetPublicUserMatchSummariesAsync(
         string username,
         CancellationToken cancellationToken = default);
 

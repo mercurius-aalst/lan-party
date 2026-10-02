@@ -54,6 +54,8 @@ public interface ITournamentService
 
     Task<MatchActionStateDTO> GetMatchActionStateAsync(Guid matchId, CancellationToken cancellationToken = default);
 
+    Task<MatchOpponentProfileDTO> GetMatchOpponentProfileAsync(Guid matchId, CancellationToken cancellationToken = default);
+
     Task<Match> ConfirmMatchEndedAsync(Guid matchId, CancellationToken cancellationToken = default);
 
     Task<Match> SubmitMatchScoreAsync(Guid matchId, SubmitMatchScoreDTO request, CancellationToken cancellationToken = default);

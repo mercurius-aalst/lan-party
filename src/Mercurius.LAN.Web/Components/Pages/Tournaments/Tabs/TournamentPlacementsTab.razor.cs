@@ -37,9 +37,7 @@ public partial class TournamentPlacementsTab
         if(!string.IsNullOrWhiteSpace(user.Username))
             return user.Username.Trim();
 
-        return string.IsNullOrWhiteSpace(user.DisplayName)
-            ? Localization["Feature.tournaments.participant"]
-            : user.DisplayName.Trim();
+        return Localization["Feature.tournaments.participant"];
     }
 
     internal static string GetOrdinalLabel(ILocalizationService localization, int number)
