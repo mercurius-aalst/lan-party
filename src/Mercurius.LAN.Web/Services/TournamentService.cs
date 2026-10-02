@@ -91,7 +91,8 @@ public sealed class TournamentService : ITournamentService
             },
             cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        if(response.Error is not null)
+            throw response.Error;
     }
 
     public Task DeleteTournamentAsync(

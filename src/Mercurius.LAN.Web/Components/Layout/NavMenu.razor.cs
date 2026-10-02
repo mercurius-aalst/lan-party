@@ -83,6 +83,7 @@ public partial class NavMenu : IAsyncDisposable
     private string RegisterHref => $"/account/register?returnUrl={Uri.EscapeDataString(GetCurrentRelativeUrl())}";
 #if INCLUDE_MOCK_BACKEND
     private string MockAdminLoginHref => $"/account/login?persona=admin&returnUrl={Uri.EscapeDataString("/admin/sponsors")}";
+    private string MockUserLoginHref => $"/account/login?persona=user&returnUrl={Uri.EscapeDataString("/tournaments")}";
     private bool IsMockBackendEnabled => MockBackendOptions.Value.Enabled;
 #endif
     private bool ShouldShowInteractionOverlay => _isUserMenuVisible || _isDropdownVisible || _isInfoMenuVisible || _isNotificationMenuVisible;
