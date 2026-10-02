@@ -187,19 +187,29 @@ public sealed class LeaderboardUiConfigurationTests
     }
 
     [Fact]
-    public void UnrelatedLifecycleFailuresKeepTheGenericMessage()
+    public void LifecycleFailuresShowTheBackendExplanationAndLocalizeAnythingElse()
     {
         var detail = CreateTournamentDetail();
 
         Assert.Equal(
-            "Feature.tournaments.actionFailed",
+            "Tournament has to be in progress to be able to complete",
             detail.ResolveTournamentActionError(
                 CreateApiException(HttpStatusCode.BadRequest, "\"Tournament has to be in progress to be able to complete\"")));
 
         Assert.Equal(
-            "Feature.tournaments.actionFailed",
+            "At least 2 participants required.",
             detail.ResolveTournamentActionError(
                 CreateApiException(HttpStatusCode.BadRequest, "\"At least 2 participants required.\"")));
+
+        Assert.Equal(
+            "Feature.tournaments.actionFailed",
+            detail.ResolveTournamentActionError(
+                CreateApiException(HttpStatusCode.BadRequest, string.Empty)));
+
+        Assert.Equal(
+            "Feature.tournaments.actionFailed",
+            detail.ResolveTournamentActionError(
+                CreateApiException(HttpStatusCode.InternalServerError, """{"message":"The tournament service is unavailable."}""")));
 
         Assert.Equal(
             "Feature.tournaments.actionUnauthorized",
