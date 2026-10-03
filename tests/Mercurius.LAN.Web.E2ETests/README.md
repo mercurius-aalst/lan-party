@@ -21,6 +21,15 @@ Trust the ASP.NET Core development certificate once on the machine running the t
 dotnet dev-certs https --trust
 ```
 
+On Linux, OpenSSL only honors that trust when the dev-certs certificate directory is listed in
+`SSL_CERT_DIR`, so export it before trusting; without it the command exits with code 4 and reports
+the certificate as trusted by some clients only.
+
+```bash
+export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"
+dotnet dev-certs https --trust
+```
+
 By default, the fixture connects to `Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres`. Override that connection with `TEST_POSTGRES_CONNECTION` if needed. The fixture always creates and drops only its own `mercurius_e2e_*` database; the configured database is used only for administrative `CREATE DATABASE` / `DROP DATABASE` operations.
 
 The E2E project discovers a sibling backend checkout named `backend-playwright-e2e` or `mercurius-aalst-back-end`. If the backend is elsewhere, set `MERCURIUS_BACKEND_ROOT` to its repository root, or pass `-p:BackendProjectRoot=<path>` to `dotnet`.
@@ -86,7 +95,7 @@ The tests start and stop the API, frontend, OIDC provider, browser, and isolated
 
 The job starts a disposable `postgres:17` service, checks the frontend repository out at the workspace root and the backend repository into `backend-playwright-e2e`, points `MERCURIUS_BACKEND_ROOT` at that checkout, trusts the ASP.NET Core development certificate, installs Playwright Chromium with its OS dependencies, then restores and builds the E2E project and runs it with `--no-build --no-restore`.
 
-The automatic run resolves backend `main`, so a frontend pull request that depends on unmerged backend work only passes once the paired backend change has landed. Until then, start the workflow manually from the Actions tab and set the `backend_ref` input to the backend branch holding that work.
+The automatic run checks the backend out at the commit pinned in the workflow's `E2E_BACKEND_REF` value, so a frontend pull request that consumes unmerged backend work stays reproducible and can pass before that backend change lands. Once the paired backend change is on `main`, update `E2E_BACKEND_REF` to the merged `main` commit, or remove the pin and the `env.E2E_BACKEND_REF` fallback from the checkout step to restore the plain `main` default. A manual `workflow_dispatch` run can point at any other backend ref through the `backend_ref` input, which overrides the pin.
 
 The `workflow_dispatch` trigger only becomes usable once this workflow is registered on the default branch, so it cannot be dispatched from an unmerged branch.
 

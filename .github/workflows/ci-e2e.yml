@@ -19,7 +19,6 @@ on:
       backend_ref:
         description: Backend repository ref to run the E2E suite against
         required: false
-        default: main
         type: string
 
 permissions:
@@ -46,6 +45,10 @@ jobs:
     env:
       TEST_POSTGRES_CONNECTION: "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres"
       MERCURIUS_BACKEND_ROOT: ${{ github.workspace }}/backend-playwright-e2e
+      # Companion backend commit required by this suite until MercuriusAalst/lan-party-backend#139
+      # (team membership realtime fan-out) lands on main. Update to the final backend commit,
+      # then back to `main` once that change is merged.
+      E2E_BACKEND_REF: ca3b50f9e758b17fd8006dccde32abf25c8b4a4e
     steps:
       - name: Checkout frontend
         uses: actions/checkout@v4
@@ -54,7 +57,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: MercuriusAalst/lan-party-backend
-          ref: ${{ inputs.backend_ref || 'main' }}
+          ref: ${{ inputs.backend_ref || env.E2E_BACKEND_REF }}
           path: backend-playwright-e2e
 
       - name: Setup .NET
@@ -63,7 +66,11 @@ jobs:
           dotnet-version: "10.x"
 
       - name: Trust ASP.NET Core development certificate
-        run: dotnet dev-certs https --trust
+        run: |
+          export SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"
+          echo "SSL_CERT_DIR=$SSL_CERT_DIR" >> "$GITHUB_ENV"
+          dotnet dev-certs https --trust
+          dotnet dev-certs https --check --trust
 
       - name: Restore E2E test project
         run: dotnet restore tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj
