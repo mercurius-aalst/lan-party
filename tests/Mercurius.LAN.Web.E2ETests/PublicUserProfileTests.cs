@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
 using Xunit;
@@ -242,5 +243,79 @@ public class PublicUserProfileTests(PlaywrightE2EFixture app) : E2ETestBase(app)
         await Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Profile details" }))
             .ToBeVisibleAsync(new() { Timeout = 15000 });
         await Expect(page.GetByText(username).First).ToBeVisibleAsync();
+    }
+
+    [Theory]
+    [InlineData(1025)]
+    [InlineData(1100)]
+    [InlineData(1440)]
+    public async Task AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow(int viewportWidth)
+    {
+        var admin = await app.CreatePersonaAsync($"header-width-{viewportWidth}-admin", isAdmin: true);
+        var tournamentName = TournamentE2E.Unique("E2E Header Width");
+        using (var adminApi = app.CreateApiClient(admin))
+        {
+            await TournamentE2E.CreateTournamentAsync(adminApi, tournamentName, "SingleElimination", "Individual");
+        }
+
+        // The discovery projection is asynchronous; wait for the index to expose the tournament
+        // before driving the UI, otherwise the search box legitimately reports no matches.
+        await PublicSiteTests.WaitForSearchResultAsync(app, tournamentName, item =>
+            item.TryGetProperty("displayLabel", out var value) &&
+            string.Equals(value.GetString(), tournamentName, StringComparison.OrdinalIgnoreCase));
+
+        await using var context = await app.NewAuthenticatedContextAsync(admin);
+        var page = await context.NewPageAsync();
+        await page.SetViewportSizeAsync(viewportWidth, 900);
+        await page.GotoAsync(app.BaseUrl);
+        await page.WaitForInteractiveAsync();
+
+        var searchInput = page.Locator("#global-nav-search");
+        await Expect(searchInput).ToBeVisibleAsync();
+
+        // Desktop navigation is expanded above the 1024px collapse breakpoint: the admin controls,
+        // the account widget, and the organizer menu must all be present and readable.
+        await Expect(page.GetByRole(AriaRole.Button, new() { Name = "Admin" })).ToBeVisibleAsync();
+        await Expect(page.Locator(".nav-user-widget-controls")).ToBeVisibleAsync();
+        await Expect(page.Locator(".theme-toggle")).ToBeVisibleAsync();
+        await Expect(page.Locator(".menu-toggle")).ToBeHiddenAsync();
+        await Expect(page.Locator(".brand-nav-links")).ToHaveCSSAsync("flex-direction", "row");
+
+        // Real geometry: nothing in the header may exceed the header's own content box, and no
+        // header child may be pushed past the right edge of the viewport.
+        var geometry = await page.Locator(".brand-header-inner").EvaluateAsync<string>(
+            @"header => {
+                const box = header.getBoundingClientRect();
+                const children = [...header.querySelectorAll('img, button, input, a')];
+                const worstRight = Math.max(...children.map(c => c.getBoundingClientRect().right));
+                return JSON.stringify({
+                    scrollWidth: header.scrollWidth,
+                    clientWidth: header.clientWidth,
+                    headerRight: box.right,
+                    worstChildRight: worstRight,
+                    viewport: window.innerWidth
+                });
+            }");
+        using var metrics = JsonDocument.Parse(geometry);
+        var root = metrics.RootElement;
+        Assert.True(
+            root.GetProperty("scrollWidth").GetInt32() <= root.GetProperty("clientWidth").GetInt32(),
+            $"The authenticated header should not overflow horizontally at {viewportWidth}px: {geometry}");
+        Assert.True(
+            root.GetProperty("worstChildRight").GetDouble() <= root.GetProperty("viewport").GetInt32(),
+            $"No header control may be pushed past the viewport at {viewportWidth}px: {geometry}");
+
+        // The search field must keep real text room. `.brand-nav-search` is the flex item the header
+        // competes for; once it can no longer yield, the field collapses to the magnifier.
+        var searchFieldWidth = await page.Locator(".brand-nav-search")
+            .EvaluateAsync<double>("field => field.getBoundingClientRect().width");
+        Assert.True(
+            searchFieldWidth >= 120,
+            $"The authenticated desktop search field should keep usable text room at {viewportWidth}px but was {searchFieldWidth}px.");
+
+        // The field has to actually work, not just accept keystrokes: a real query returns a real result.
+        await searchInput.FillAsync(tournamentName);
+        var option = page.Locator("#global-nav-search-results button[role='option']").Filter(new() { HasText = tournamentName });
+        await Expect(option).ToBeVisibleAsync(new() { Timeout = 15000 });
     }
 }

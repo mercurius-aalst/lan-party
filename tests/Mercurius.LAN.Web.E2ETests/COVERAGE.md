@@ -4,9 +4,12 @@ Source-gap audit of the Playwright suite in this folder against the frontend
 `src/Mercurius.LAN.Web` and the backend checkout the fixture starts. The audited baseline is the
 main-line frontend and backend source, including the repairs listed under "Included repairs" below.
 
-- 229 executable cases across 30 test classes: 224 `[Fact]` plus 2 `[Theory]` carrying 5
+- 232 executable cases across 30 test classes: 224 `[Fact]` plus 3 `[Theory]` carrying 8
   `[InlineData]` (`AuthenticationFlowTests.CancellingSignInFromAProtectedRouteReturnsHomeAsAnonymousVisitor`
-  x2, `MatchScoringFormatTests.DialogShowsTheConfiguredMatchFormat` x3).
+  x2, `MatchScoringFormatTests.DialogShowsTheConfiguredMatchFormat` x3, and
+  `PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` x3 at
+  1025/1100/1440). The 229-case count in the evidence table below labels the earlier Windows and
+  Ubuntu runs and is intentionally not rewritten.
 - Three access levels (anonymous, member, admin) plus the ownership states (captain, invitee,
   non-member/stranger) are covered in the roles table below.
 - Every class joins the `Playwright E2E` xUnit collection (`DisableParallelization`). `E2ETestBase`
@@ -26,7 +29,7 @@ service claims use `file:line`; test references use the stable `Class.Method` na
 | Same-route status-page retry reruns the initial data load | `F/Components/Shared/StatusPage.razor:52`, `F/Components/Pages/Users/Profile.razor:15`, `F/Components/Pages/Teams/ManageTeams.razor:19` | `api-unavailable-resilience` | `ProfileAndOnboardingTests.ProfileLoadFailureShowsUnavailableStateAndRecovers`, `TeamManagementPageTests.TeamManagementLoadFailureShowsUnavailableStateAndRecovers`, `TournamentDetailLifecyclePlaywrightTests.TournamentDetailLoadFailureShowsRetryAndRecoversInPlace` |
 | Authentication failure does not retry the protected destination | `F/Components/Auth/RedirectToLogin.razor:7` | `account-access` | `AuthenticationFlowTests.CancellingSignInFromAProtectedRouteReturnsHomeAsAnonymousVisitor` (x2), `DeepLinkedProtectedRouteReturnsToTheRequestedPageAfterSignIn` |
 | Invite-dialog actions stay reachable during the empty search state | `F/Components/Pages/Teams/InviteUserDialog.razor:47-75`, `.razor.css:132-145,200-210` | `user-owned-team-management` | `TeamInviteFlowTests.InviteDialogShowsEmptyResultMessageAndCanBeCanceled` |
-| Global search stays usable with authenticated desktop navigation | `F/Components/Layout/NavMenu.razor.css:582-587` (`.brand-nav-search` `min-width: 10rem`) | `site-navigation` capability change `keep-authenticated-header-search-usable` | `PublicUserProfileTests.AdminOpensUserResultFromGlobalSearch` |
+| Global search stays usable with authenticated desktop navigation | `F/Components/Layout/NavMenu.razor.css:582-587` (`.brand-nav-search` `min-width: 10rem`); CSS unchanged for the P2 regression | `site-navigation` capability change `keep-authenticated-header-search-usable` | `PublicUserProfileTests.AdminOpensUserResultFromGlobalSearch`, `PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` (x3 at 1025/1100/1440, uncommitted regression rows) |
 | Personal-group fanout on member removal and team deletion | `B/Modules/Teams/Mercurius.Modules.Teams/Application/Services/TeamEventPublishingDecorator.cs` | removal/deletion live-refresh behavior | `TeamRealtimeTests.RemovingMemberUpdatesCaptainAndRemovedMemberWithoutReload`, `DeletingTeamRefreshesConnectedMembersAndInviteesWithoutReload` |
 
 ### Contact form email transport (test-only sink)
@@ -46,7 +49,7 @@ needs no external credentials, packages, or production changes. Covered on the r
   draft stays filled, the button re-enables, and the retry succeeds
   (`ContactFormSurfacesMailTransportFailureForValidMessage`).
 
-## Executed evidence (final pair green)
+## Executed evidence (229-case revision; 232 expected pending)
 
 | Artifact | Result |
 | --- | --- |
@@ -68,8 +71,13 @@ needs no external credentials, packages, or production changes. Covered on the r
 | `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\solo-forbidden-final\svenp_MEAN_MACHINE_2026-10-03_02_41_54_net10.0.trx` | 1 total, 1 passed, 0 failed (forbidden-page circuit) |
 | `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\solo-smtp-final\svenp_MEAN_MACHINE_2026-10-03_02_42_14_net10.0.trx` | 1 total, 1 passed, 0 failed (SMTP success) |
 | `PublicSiteTests` across three fresh fixtures | 33 of 33 passed |
+| GitHub Actions `37111821272` (frontend `ddc9b43`, backend pin `ca3b...`) | 229 passed, 0 failed, 0 skipped; `dotnet test` job 7 m 31 s, finished 09:14:18Z; log at `D:\Github Repositories\lan-party\.tmp\e2e-37111821272.log` |
+| GitHub Actions `37110243446` (frontend `1e84604`) | 228 passed, 1 failed; raw quoted-printable LF-marker wrap in the SMTP MIME assertion, fixed by `ddc9b43` |
+| `T/TestResults/public-user-profile-green/public-user-profile-green.trx` | 9 total, 9 passed, 0 failed (`PublicUserProfileTests`, including all three header widths) |
+| `T/TestResults/full-232/full-232.trx` | 231 passed, 1 failed; historical, 1025 header case hit the not-yet-indexed search read model |
+| `T/TestResults/full-232-final/full-232-final.trx` | 232 total, 232 passed, 0 failed, on backend `b98f197...`; finished 11:42:42 (+02:00) |
 
-The frozen source has 229 cases across 30 classes and is green on two consecutive full runs:
+The 229-case revision is green on two consecutive Windows full runs:
 `full-round10` and `full-round11` each pass all 229 cases with no failures and no unexecuted cases.
 `full-round9` is the historical failure: its one case,
 `RegistrationTeamAdministrationPlaywrightTests.CaptainCanKeepThenCycleTeamRegistrationCancellation`,
@@ -93,6 +101,20 @@ The 227-case runs postdate the forbidden-page circuit fix but predate the SMTP e
 226-case runs predate the forbidden-page circuit fix, so those four are historical prior coverage
 rather than evidence for this revision. The contact-assertion runs repeat the two SMTP-focused cases,
 and `PublicSiteTests` passes 33 of 33 across three fresh fixtures at the current source.
+
+The working tree has grown to **232 cases across 30 classes** with the test-only P2 theory
+`PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` at
+1025/1100/1440. The overflow was not reproducible with a real admin at 1100/1440 and the CSS is
+unchanged, so the three rows are regression guards rather than a product fix; the change is test-only
+(one file). Real header geometry at 1025/1100/1440 is asserted directly (no horizontal overflow and
+real search-field width). The first 232 run failed only the 1025 case because the search read model
+was not yet indexed, so the UI showed no matches; it was fixed by reusing the existing
+`PublicSiteTests.WaitForSearchResultAsync` deterministic API precondition without weakening any
+assertion. `full-232-final` then passed 232/232 on backend `b98f197...`.
+
+Header independent review is FINAL PASS: current diff + 9/9 `PublicUserProfileTests` + 232/232 full +
+the three header traces showing no overflow. The 229 labels above stay as the historical Windows and
+Ubuntu revision counts.
 
 The cancellation fix synchronizes five flows across three files: individual registration
 cancellation (`RegistrationPlaywrightTests.cs`), roster accept and roster decline
@@ -207,7 +229,7 @@ internal discovery jobs, which no client calls.
 | unknown username | `F/Components/Pages/Users/PublicUserProfile.razor.cs:77`, `.razor:13-31` | `PublicUserProfileTests.UnknownUsernameShowsTheUnavailableStateRatherThanNotFound` |
 | unknown team | `F/Components/Pages/Teams/PublicTeamProfile.razor` | `TeamPublicProfileTests.UnknownTeamNameShowsNotFoundStatusPage` |
 
-## Per-class inventory (229 cases)
+## Per-class inventory (232 cases)
 
 | Class | Cases |
 | --- | --- |
@@ -224,7 +246,7 @@ internal discovery jobs, which no client calls.
 | `MatchScoringFormatTests` | 8 |
 | `ProfileAndOnboardingTests` | 15 |
 | `PublicSiteTests` | 33 |
-| `PublicUserProfileTests` | 6 |
+| `PublicUserProfileTests` | 9 |
 | `RegistrationNotificationPlaywrightTests` | 2 |
 | `RegistrationPlaywrightTests` | 7 |
 | `RegistrationTeamAdministrationPlaywrightTests` | 5 |
@@ -365,8 +387,24 @@ and 31 on the backend, so the frontend count stays 32 rather than 33. The indepe
 review passed with no findings, and the receipt-bound, draft-preserved, retry, and hold-cleanup items
 were resolved against the real two-case TRXs. The runtime fatal-log review for `full-round8` and
 `full-round9` is closed: full9 carried the `ManageTeams` disposal recurrence and the
-`CustomAutocomplete` teardown record noted above. The source is frozen at 229 cases across 30
-classes and the five-flow synchronization review passed. The final frontend contracts pass 364/364,
-both final solo checks pass 1/1, the tester finished with 0 hosts left and PostgreSQL untouched, and
-the backend is unchanged since its 705-case run. The independent final review and the publication
-gate both passed, so the ledger is complete.
+`CustomAutocomplete` teardown record noted above. The five-flow synchronization review passed. The
+final frontend contracts pass 364/364, both final solo checks pass 1/1, and the tester finished with
+0 hosts left and PostgreSQL untouched.
+
+The backend revision moved to the published `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0`, which
+serializes team deletion with invite maintenance across 8 paths (concurrency/advisory lock for all
+writers and maintenance, logo, captured mutation recipients, and `None` post-commit on both deletes);
+Sol and DSE source review passed. Independent backend verification: restore/build of `LAN.API` with
+0 warnings and 0 errors; the full solution stood at 710/710 before the new test-only G1 addition,
+with focused 5x3, maintenance-G1 solos 2x1, new 6/6, and full Teams 100/100 all passing. The actual
+full 711-case run has **not** been executed and is not claimed.
+
+The interim frontend publish pins backend `b98f197...`: the 232-case suite is green on Windows, while
+the paired Ubuntu 232 run is pending. Two new backend review threads are also pending:
+`PRRT_kwDOOwmpHc6ol8HO` (post-commit `None` and other `MembershipChanged` calls) and
+`PRRT_kwDOOwmpHc6ol8HQ` (attempt all deleted recipients after the first failure). A backend worker is
+implementing that minimal scope on `b98f197...` (caller `None` plus aggregate after attempts); the new
+patch has no proven runtime yet and is not claimed.
+
+Still pending: the paired Ubuntu 232 run, the two backend review threads above, and the commit of
+these docs that will trigger the second paired run.

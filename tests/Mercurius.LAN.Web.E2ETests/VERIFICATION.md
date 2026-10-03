@@ -27,6 +27,20 @@ An earlier 364-case run under
 `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.ContractTests\TestResults\frontend-final`
 predates the expanded source and is superseded by the run above.
 
+## CI runs (GitHub Actions)
+
+| Run | Commit | Result |
+| --- | --- | --- |
+| `37111821272` | frontend `ddc9b43`, backend pin `ca3b...` | **229 passed, 0 failed, 0 skipped** |
+| `37110243446` | frontend `1e84604`, backend pin `ca3b...` | 228 passed, 1 failed |
+
+- `37111821272` ran the real `dotnet test` job in 7 m 31 s, finishing `2026-10-03T09:14:18Z`; the job
+  log is kept at `D:\Github Repositories\lan-party\.tmp\e2e-37111821272.log`. Trust, restore, build
+  (13 warnings, 0 errors), and the Playwright Chromium install all passed. The workflow uploads
+  test-results artifacts only on failure, so this green run has no uploaded artifact.
+- `37110243446` failed on the raw quoted-printable LF-marker wrap in the SMTP MIME assertion;
+  `ddc9b43` replaced that with the semantic MIME-decoded assertion.
+
 ## Backend solution
 
 ```powershell
@@ -38,8 +52,30 @@ dotnet test LAN.API.sln --no-build --no-restore --logger trx --results-directory
 - Restore and build exited 0 with 0 warnings.
 - Test result: **705 passed, 0 failed, 0 skipped across 8 projects**
   (`D:\Github Repositories\lan-party\.tmp\backend-playwright-e2e\tests\TestResults\backend-final`).
-- The backend has not changed since this run and is unchanged in the final state, so it remains the
-  backend proof.
+  This is the earlier backend revision.
+
+The current backend revision is `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` (published), which
+serializes team deletion with invite maintenance across 8 paths: concurrency/advisory-lock handling
+for all writers and maintenance, logo, captured mutation recipients, and `None` post-commit on both
+deletes. Sol and DSE source review passed.
+
+Backend verification on that revision:
+
+| Artifact | Result |
+| --- | --- |
+| `D:\Github Repositories\lan-party\.tmp\be-verify\full` (8 project TRXs) | 710 passed, 0 failed |
+| `D:\Github Repositories\lan-party\.tmp\be-verify\focused-1`, `focused-2`, `focused-3` | 5 passed, 0 failed each |
+| `D:\Github Repositories\lan-party\.tmp\be-verify\pg-only-1` | 3 passed, 0 failed |
+| `D:\Github Repositories\lan-party\.tmp\be-verify-2\maint-solo-1`, `maint-solo-2` | 1 passed, 0 failed each |
+| `D:\Github Repositories\lan-party\.tmp\be-verify-2\new-6` | 6 passed, 0 failed |
+| `D:\Github Repositories\lan-party\.tmp\be-verify-2\full-teams` | 100 passed, 0 failed |
+
+- Independent restore/build of `LAN.API` with `-m:1 -nr:false -p:UseSharedCompilation=false` reported
+  0 warnings and 0 errors.
+- The full solution stood at 710/710 before the new test-only G1 addition; the actual full 711-case
+  run has **not** been executed and is not claimed.
+- The paired new-backend `b98f197...` runtime is pending: the workflow is being repinned to it now,
+  and a paired green run is still required.
 
 ## E2E project
 
@@ -51,7 +87,7 @@ dotnet build tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj 
 - Restore exited 0 with one NU1900 advisory (service index unreachable).
 - Build exited 0 with 2 NU1900 warnings and 0 errors.
 
-## E2E suite (final pair, green)
+## E2E suite (229-case revision, green)
 
 ```powershell
 dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --logger "trx;LogFileName=full-round10.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\full-round10" -m:1 -nr:false -p:UseSharedCompilation=false --nologo
@@ -117,6 +153,21 @@ Historical runs at earlier revisions:
 
 The 227-case runs postdate the forbidden-page circuit fix but predate the SMTP expansion, and the
 226-case runs predate the forbidden-page circuit fix.
+
+### 232-case revision (header regression)
+
+| Artifact | Result |
+| --- | --- |
+| `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\public-user-profile-green\public-user-profile-green.trx` | 9 passed, 0 failed (`PublicUserProfileTests`, all three header widths) |
+| `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\full-232\full-232.trx` | 231 passed, 1 failed; historical 1025 failure from the not-yet-indexed search read model |
+| `D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\full-232-final\full-232-final.trx` | 232 passed, 0 failed, on backend `b98f197...`; finished 11:42:42 (+02:00) |
+
+- The fixer reported only a project `dotnet build`; that exact command line is not captured here.
+  The class and full-suite invocations were not recorded, so no flags are invented for them.
+- The 1025 failure was fixed by reusing the existing `PublicSiteTests.WaitForSearchResultAsync`
+  deterministic API precondition; no assertion was weakened.
+- Header independent review is FINAL PASS: current diff + 9/9 `PublicUserProfileTests` + 232/232 full
+  + the three header traces showing no overflow.
 
 ## Cancellation fix probes
 
@@ -202,8 +253,22 @@ dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj -
 | Strict OpenSpec validation, frontend (post-archive) | 32 passed, 0 failed | not recorded |
 | Strict OpenSpec validation, backend (post-archive) | 31 passed, 0 failed | not recorded |
 
-Actionlint is a static lint of the workflow file; the workflow runtime was not executed, and no
-remote CI result is claimed.
+Actionlint is a static lint of the workflow file. The workflow runtime has since executed remotely:
+run `37111821272` passed 229/229 on frontend `ddc9b43` with the then-current backend pin
+`ca3b...`, and run `37110243446` failed 228/229 on the SMTP MIME assertion that `ddc9b43` fixed.
+
+## Pending
+
+- The paired frontend/backend runtime with backend `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` is
+  pending; the workflow is being repinned to it, and a paired green run is still required.
+- The P2 header-overflow regression rows are on disk and test-only (one file, no CSS change):
+  `PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` adds three
+  `[InlineData]` rows (1025/1100/1440), taking the working tree to 232 cases across 30 classes. The
+  Windows 232 suite is green; the paired Ubuntu 232 run is pending.
+- Two backend review threads are open on `b98f197...`:
+  `PRRT_kwDOOwmpHc6ol8HO` (post-commit `None` and other `MembershipChanged` calls) and
+  `PRRT_kwDOOwmpHc6ol8HQ` (attempt all deleted recipients after the first failure). A minimal patch is
+  being implemented (caller `None` plus aggregate after attempts) and has no proven runtime yet.
 
 ## Notes
 
