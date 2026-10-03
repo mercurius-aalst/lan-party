@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Mail;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Microsoft.Playwright;
@@ -200,7 +201,7 @@ public class PublicSiteTests(PlaywrightE2EFixture app) : E2ETestBase(app)
             Assert.Equal("lan-contact@recipient.test", new MailAddress(ReadSmtpHeader(message, "To")).Address);
             Assert.Equal("robin@example.test", new MailAddress(ReadSmtpHeader(message, "Reply-To")).Address);
             Assert.Equal("Mercurius LAN contact: Robin Visitor", ReadSmtpHeader(message, "Subject"));
-            Assert.Contains("LANContactInquiry12345", message.Data);
+            Assert.Contains("LANContactInquiry12345", ReadSmtpBody(message));
 
             await Expect(page.GetByLabel("Name", new() { Exact = true })).ToHaveValueAsync("");
             await Expect(page.GetByLabel("Email or Discord", new() { Exact = true })).ToHaveValueAsync("");
@@ -229,7 +230,7 @@ public class PublicSiteTests(PlaywrightE2EFixture app) : E2ETestBase(app)
 
         Assert.True(message.Accepted);
         Assert.Equal("lan-contact@sender.test", new MailAddress(ReadSmtpHeader(message, "Reply-To")).Address);
-        Assert.Contains("robin#1234", message.Data);
+        Assert.Contains("robin#1234", ReadSmtpBody(message));
         await Expect(page.GetByLabel("Name", new() { Exact = true })).ToHaveValueAsync("");
     }
 
@@ -249,6 +250,55 @@ public class PublicSiteTests(PlaywrightE2EFixture app) : E2ETestBase(app)
         var header = unfoldedHeaders.Split("\r\n")
             .Single(line => line.StartsWith($"{name}:", StringComparison.OrdinalIgnoreCase));
         return header[(name.Length + 1)..].Trim();
+    }
+
+    // The transport encodes the body (quoted-printable for these ASCII payloads), so assert on the
+    // decoded text rather than on wire bytes that may carry soft line breaks.
+    private static string ReadSmtpBody(CapturedSmtpMessage message)
+    {
+        var headerEnd = message.Data.IndexOf("\r\n\r\n", StringComparison.Ordinal);
+        Assert.True(headerEnd >= 0, "The SMTP message has no header/body separator.");
+        var body = message.Data[(headerEnd + 4)..];
+        var decoded = ReadSmtpHeader(message, "Content-Transfer-Encoding") switch
+        {
+            var encoding when encoding.Equals("quoted-printable", StringComparison.OrdinalIgnoreCase)
+                => DecodeQuotedPrintable(body),
+            var encoding when encoding.Equals("base64", StringComparison.OrdinalIgnoreCase)
+                => Encoding.ASCII.GetString(Convert.FromBase64String(body)),
+            _ => body
+        };
+
+        return decoded.Replace("\r\n", "\n");
+    }
+
+    private static string DecodeQuotedPrintable(string body)
+    {
+        var bytes = new List<byte>(body.Length);
+        for (var i = 0; i < body.Length; i++)
+        {
+            if (body[i] != '=')
+            {
+                bytes.Add((byte)body[i]);
+                continue;
+            }
+
+            if (i + 2 < body.Length && body[i + 1] == '\r' && body[i + 2] == '\n')
+            {
+                i += 2;
+                continue;
+            }
+
+            if (i + 2 < body.Length && Uri.IsHexDigit(body[i + 1]) && Uri.IsHexDigit(body[i + 2]))
+            {
+                bytes.Add(Convert.ToByte(body.Substring(i + 1, 2), 16));
+                i += 2;
+                continue;
+            }
+
+            bytes.Add((byte)body[i]);
+        }
+
+        return Encoding.ASCII.GetString(bytes.ToArray());
     }
 
     [Fact]
