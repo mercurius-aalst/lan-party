@@ -33,6 +33,7 @@ predates the expanded source and is superseded by the run above.
 | --- | --- | --- |
 | `37111821272` | frontend `ddc9b43`, backend pin `ca3b...` | **229 passed, 0 failed, 0 skipped** |
 | `37110243446` | frontend `1e84604`, backend pin `ca3b...` | 228 passed, 1 failed |
+| `37114424083` | frontend `e9d58c1`, backend pin `b98f197...` | 232 total, 231 passed, 1 failed, 0 skipped |
 
 - `37111821272` ran the real `dotnet test` job in 7 m 31 s, finishing `2026-10-03T09:14:18Z`; the job
   log is kept at `D:\Github Repositories\lan-party\.tmp\e2e-37111821272.log`. Trust, restore, build
@@ -40,6 +41,13 @@ predates the expanded source and is superseded by the run above.
   test-results artifacts only on failure, so this green run has no uploaded artifact.
 - `37110243446` failed on the raw quoted-printable LF-marker wrap in the SMTP MIME assertion;
   `ddc9b43` replaced that with the semantic MIME-decoded assertion.
+- `37114424083` failed one case on Ubuntu:
+  `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline` (assertion line 305) expected the
+  invitee's "Notifications with 1 unread" button and saw an unread count of 0. The workflow's SSL
+  trust and check, restore, build, and Playwright Chromium install all passed, so the records do not
+  support an SSL cause. The failure artifact is unpacked at
+  `D:\Github Repositories\lan-party\.tmp\ci-artifacts-37114424083` (`e2e.trx` plus the fixture
+  traces).
 
 ## Backend solution
 
@@ -52,12 +60,39 @@ dotnet test LAN.API.sln --no-build --no-restore --logger trx --results-directory
 - Restore and build exited 0 with 0 warnings.
 - Test result: **705 passed, 0 failed, 0 skipped across 8 projects**
   (`D:\Github Repositories\lan-party\.tmp\backend-playwright-e2e\tests\TestResults\backend-final`).
-  This is the earlier backend revision.
+  This is an earlier backend revision.
 
-The current backend revision is `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` (published), which
-serializes team deletion with invite maintenance across 8 paths: concurrency/advisory-lock handling
-for all writers and maintenance, logo, captured mutation recipients, and `None` post-commit on both
-deletes. Sol and DSE source review passed.
+The current backend revision is `3cfc07f76cd6cb66b0ac17595e01359d3d966606` (published;
+`refs/pull/139/head`), which makes deleted-team notifications best-effort and cancellation-independent
+on top of the earlier serialization work. PR #139 is checked clean and Sol and DSE source review
+passed.
+
+```powershell
+dotnet restore LAN.API.sln -m:1 --nologo
+dotnet build LAN.API.sln -m:1 -nr:false -p:UseSharedCompilation=false --nologo --no-restore
+dotnet format --verify-no-changes --no-restore
+```
+
+- Restore exited 0 with all projects already up to date; the build exited 0 with **0 warnings and
+  0 errors**.
+- `dotnet format --verify-no-changes --no-restore` passed on two runs, each with an empty log.
+
+Post-commit test evidence on that revision:
+
+| Artifact | Result |
+| --- | --- |
+| `D:\Github Repositories\lan-party\.tmp\backend-playwright-e2e\tests\Mercurius.Modules.Teams.Tests\TestResults\backend-postcommit-fanout-verify1\verify-run1.trx` | 4 passed, 0 failed (new fan-out cases) |
+| `D:\Github Repositories\lan-party\.tmp\backend-playwright-e2e\tests\Mercurius.Modules.Teams.Tests\TestResults\backend-postcommit-fanout-verify2\verify-run2.trx` | 4 passed, 0 failed (repeat) |
+| `D:\Github Repositories\lan-party\.tmp\backend-playwright-e2e\tests\Mercurius.Modules.Teams.Tests\TestResults\backend-postcommit-fanout-verify-teams-full\verify-teams-full.trx` | 104 passed, 0 failed |
+| `dotnet test LAN.API.sln --no-build` (`%TEMP%\backend-postcommit-sln-full.log`) | **715 passed, 0 failed, 0 skipped** across 8 projects |
+
+- Per project: Api 194, Identity 53, Teams 104, Tournament 204, Sponsorship 18, Platform 117,
+  Discovery 16, Media 9 — 715 total.
+- Invocation logs: `%TEMP%\backend-postcommit-{restore,build,run1,run2,teams-full,sln-full,format}.log`.
+
+The earlier backend revision `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` (published) serialized team
+deletion with invite maintenance across 8 paths: concurrency/advisory-lock handling for all writers
+and maintenance, logo, captured mutation recipients, and `None` post-commit on both deletes.
 
 Backend verification on that revision:
 
@@ -72,10 +107,8 @@ Backend verification on that revision:
 
 - Independent restore/build of `LAN.API` with `-m:1 -nr:false -p:UseSharedCompilation=false` reported
   0 warnings and 0 errors.
-- The full solution stood at 710/710 before the new test-only G1 addition; the actual full 711-case
-  run has **not** been executed and is not claimed.
-- The paired new-backend `b98f197...` runtime is pending: the workflow is being repinned to it now,
-  and a paired green run is still required.
+- The full solution stood at 710/710 before the new test-only G1 addition; the full 711-case run at
+  that revision was never executed. The executed full-solution result is the 715-case run above.
 
 ## E2E project
 
@@ -229,10 +262,134 @@ dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj -
 
 - Results: **1 passed, 0 failed** each (`solo-search`, `solo-roster`).
 
+## Frontend notification and realtime probes (historical, pre-repair)
+
+These runs exercised the 232-case working tree with the notification reorder and the earlier realtime
+work. Each invocation was launched without a recorded command line; the TRX files are the
+evidence, and the relative paths below are under
+`D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults`.
+
+| Artifact | Result |
+| --- | --- |
+| `nfv-badge-focus-1\badge-focus-1.trx` | 1 passed, 0 failed (`TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline`) |
+| `nfv-badge-focus-2\badge-focus-2.trx` | 1 passed, 0 failed (repeat) |
+| `nfv-badge-focus-3\badge-focus-3.trx` | 1 passed, 0 failed (repeat) |
+| `nfv-team-invite-realtime\team-invite-realtime.trx` | 20 passed, 0 failed (16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests`) |
+| `nfv-realtime-1\realtime-1.trx` | 4 total, 3 passed, 1 failed, pre-repair (`TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload`) |
+| `nfv-realtime-leave-2\realtime-leave-2.trx` | 1 total, 0 passed, 1 failed, pre-repair (same leave case) |
+
+- The badge case that failed once on Ubuntu in `37114424083` now passes focused three times and again
+  inside the combined 20-case run. The change is test-only: it seeds the pending invite before the
+  invitee page initialises its notification summary, matching the mark-read and canceled siblings
+  (`TeamInviteFlowTests.cs:300-303`). Independent review of the reorder passed.
+- `CaptainRosterRefreshesWhenMemberLeavesWithoutReload` flaked here: the leaving member's participant
+  card was still visible after the leave (Playwright `ToBeVisibleAsync` expected not-visible; the card
+  resolved visible). The same case also passed in the 20/20 combined run, so the failure was
+  intermittent. The shared-`Connecting`/`Join` and REST-first repair for this path is frozen; see
+  "Realtime startup repair" below for the current gate and the superseded earlier evidence.
+
+## Realtime startup repair (frozen source, local gate PASS)
+
+The accepted source renders the first REST summary promptly and reconciles realtime state afterwards.
+It covers two production paths plus the E2E readiness marker:
+
+- `F/Services/TeamRealtimeService.cs` (unchanged, `8790B519...`) — `StartAsync` serialises connection
+  startup behind a gate and shares one in-flight start task, so concurrent callers share a single
+  `Connecting` start instead of silently returning; `JoinTeamsAsync` awaits that startup before
+  invoking `JoinTeam`.
+- `F/Components/Pages/Teams/ManageTeams.razor.cs` — `InitializeAsync` loads the REST summary and then
+  clears the loading state and renders it *before* `StartAsync` is called. Realtime startup, the join
+  of the displayed team ids, and `ReconcileSummaryAfterRealtimeStartupAsync` all run in that
+  non-loading state. The reconcile joins only the team ids missing from the displayed snapshot
+  *before* it assigns the reconciled summary, and it keeps the displayed snapshot when the reconcile
+  GET or the delta join fails. `_isRealtimeReady` is set once the initially displayed team ids have
+  joined and the reconcile attempt has run while the connection is still up; the page shows the
+  `Live updates unavailable` warning when the hub is not connected. That guarantees the displayed
+  snapshot is on screen and its ids joined, not that a latest atomic domain snapshot was fetched.
+- `F/Components/Pages/Teams/ManageTeams.razor` — the `#team-workspace` section carries
+  `data-live-updates-ready="@(_isRealtimeReady ? "true" : "false")"`, and the E2E helper waits on that
+  attribute; the marker is used only on `/teams/manage`.
+
+Frozen SHA-256 of the accepted sources:
+
+- `src/Mercurius.LAN.Web/Services/TeamRealtimeService.cs`:
+  `8790B519ECC52B6FBDFFCCD94FB10928947B6226E3F2CFD7CE353FD5B7F69D2C` (unchanged)
+- `src/Mercurius.LAN.Web/Components/Pages/Teams/ManageTeams.razor.cs`:
+  `BEF49C148912D270577F755ED8AEC1D1717D54566D0B1C81E656802B26153B48`
+- `src/Mercurius.LAN.Web/Components/Pages/Teams/ManageTeams.razor`:
+  `6ED0DD3677994BEBB87880DE104CE71227B6C207660406E6923614C71415B33D`
+- `tests/Mercurius.LAN.Web.E2ETests/TeamE2EHelpers.cs`:
+  `454783DB8D207D4C087B1F891617BAABDF1A69E5036865D2E0BA48C08B996E89`
+- `tests/Mercurius.LAN.Web.ContractTests/ComponentLifecycleBehaviorTests.cs`:
+  `94543E7030B912756579AF964340725B6C3EDF125D316130AD667C52D7FF1E6F`
+
+All five hashes were re-computed from the working tree. Sol's final source review passed with minor
+findings and DSE's final review passed on these sources; nothing blocking.
+
+New contract precondition:
+`ComponentLifecycleBehaviorTests.ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending` holds
+realtime startup open with a pending `TaskCompletionSource` plus a recorded render, then asserts the
+REST summary rendered with `IsLoading == false`. It protects the initial-render requirement as a
+non-E2E lifecycle/exception precondition; the normal flows stay real E2E.
+
+Historical (superseded, not the current proof): the earlier
+`...\TestResults\realtime-gate-final` run passed leave 1/2/3 (1 each), combined-20 (20), contracts
+(364), and the full suite (232 passed; the `dotnet test` stdout reports 5 m 37 s), but it was produced
+on the earlier `_isLoading`-held-through-join shape that was rejected on spec and then fixed. It is
+retained as historical evidence only.
+
+Current local gate (complete, all PASS) on the frozen source above, under
+`...\TestResults\realtime-rest-first-final`:
+
+| Artifact | Result |
+| --- | --- |
+| `new-case\new-case.trx` | 1 total, 1 passed, 0 failed (`ComponentLifecycleBehaviorTests.ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending`) |
+| `leave-1\leave-1.trx`, `leave-2\leave-2.trx`, `leave-3\leave-3.trx` | 1 total, 1 passed, 0 failed each (`TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload`) |
+| `combined-20\combined-20.trx` | 20 total, 20 passed, 0 failed (16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests`) |
+| `contracts\contracts.trx` | 365 total, 365 passed, 0 failed (`Mercurius.LAN.Web.ContractTests`) |
+| `full-232\full-232.trx` | 232 total, 232 executed, 232 passed, 0 failed, 0 skipped across 30 classes; `dotnet test` stdout duration 5 m 34 s |
+
+All five parts passed. The tester confirmed the exact argv: builds run as
+`dotnet build <project> --no-restore --nologo` and tests as
+`dotnet test <project> --no-build --no-restore [--filter <filter>] --logger ... --results-directory ...`,
+with no `-m:1`, `-nr:false`, or `-p:UseSharedCompilation` flags. The console logs record only the
+summary, not the invocation line. `MERCURIUS_E2E_ARTIFACTS=<base>\PlaywrightE2E` was set for the
+new-case, leave, combined, and full runs.
+
+```powershell
+dotnet build tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-restore --nologo
+dotnet build tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-restore --nologo
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --logger "trx;LogFileName=full-232.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\full-232"
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --filter "FullyQualifiedName~TeamRealtimeTests|FullyQualifiedName~TeamInviteFlowTests" --logger "trx;LogFileName=combined-20.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\combined-20"
+dotnet test tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-build --no-restore --filter "FullyQualifiedName~ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending" --logger "trx;LogFileName=new-case.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\new-case"
+dotnet test tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-build --no-restore --logger "trx;LogFileName=contracts.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\contracts"
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --filter "FullyQualifiedName~TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload" --logger "trx;LogFileName=leave-N.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\leave-N"
+```
+
+The last line runs three times with `N` = 1, 2, 3. Reported durations: full 5 m 34 s, contracts 5 s,
+combined 34 s, new-case 21 ms, leave-1 7 s, leave-2 and leave-3 5 s.
+
+REPRODUCTION only (not the commands that were executed): adding
+`-m:1 -nr:false -p:UseSharedCompilation=false` is optional when re-running these parts serially.
+
+- The repair is a frontend connection-startup fix. These records do not implicate SMTP outbox timing
+  or SSL trust.
+- Accepted limitation worth keeping explicit: the readiness marker covers the displayed initial
+  summary and the successful join of its ids, not a latest atomic domain snapshot; when the reconcile
+  refresh fails, the displayed summary is preserved.
+- The realtime double reports `IsConnected == false`, so the page renders its accurate
+  `Live updates unavailable` warning instead of a faked connection, and the pending-task contract
+  stub used by the new precondition does not model a real connection.
+
+This completes the local proof baseline for the repair; the change set is ready for publication, with
+the paired Ubuntu run as the remaining runtime gate.
+
 ## Hosts and runtime
 
 - The final tester finished with 0 hosts left running, and PostgreSQL was untouched.
-- The backend is unchanged since the 705-case run, so that result still stands.
+- At that session the backend was unchanged since the 705-case run, so that result stood at the time;
+  the backend has since moved on, and the current revision and its evidence are recorded under
+  "Backend solution" above.
 
 ## Final review
 
@@ -259,19 +416,31 @@ run `37111821272` passed 229/229 on frontend `ddc9b43` with the then-current bac
 
 ## Pending
 
-- The paired frontend/backend runtime with backend `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` is
-  pending; the workflow is being repinned to it, and a paired green run is still required.
+- The paired frontend/backend runtime with backend `3cfc07f76cd6cb66b0ac17595e01359d3d966606` is
+  pending; the workflow is repinned to it, and a paired green run is still required. The last paired
+  Ubuntu run (`37114424083`, pin `b98f197...`) finished 231/232 and is recorded above.
 - The P2 header-overflow regression rows are on disk and test-only (one file, no CSS change):
   `PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` adds three
   `[InlineData]` rows (1025/1100/1440), taking the working tree to 232 cases across 30 classes. The
   Windows 232 suite is green; the paired Ubuntu 232 run is pending.
-- Two backend review threads are open on `b98f197...`:
-  `PRRT_kwDOOwmpHc6ol8HO` (post-commit `None` and other `MembershipChanged` calls) and
-  `PRRT_kwDOOwmpHc6ol8HQ` (attempt all deleted recipients after the first failure). A minimal patch is
-  being implemented (caller `None` plus aggregate after attempts) and has no proven runtime yet.
+- The single Ubuntu failure in `37114424083`,
+  `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline`, now passes focused 3/3 and inside
+  the combined 20-case run; the test-only reorder that seeds the pending invite before the invitee
+  page loads its notification summary has a proven focused runtime (see the historical
+  "Frontend notification and realtime probes" above). A paired Ubuntu run is still required.
+- `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` flaked in the earlier
+  realtime repeats (1 of 4, then 1 of 1). The REST-first startup repair is frozen on the five hashes
+  above, and its local gate (`realtime-rest-first-final`) passed all five parts: the new lifecycle
+  case, the three leave repeats, the combined 20, the 365-case contracts suite, and the full 232-case
+  suite (232/232, 0 failed, 0 skipped, 30 classes). The paired Ubuntu run at backend `3cfc07f...` is
+  the only remaining runtime gate.
+- The two backend review threads raised on `b98f197...`
+  (`PRRT_kwDOOwmpHc6ol8HO` post-commit `None` and other `MembershipChanged` calls;
+  `PRRT_kwDOOwmpHc6ol8HQ` attempt all deleted recipients after the first failure) are implemented by
+  `3cfc07f...` (caller `None` plus aggregate after attempts), whose paired runtime is not yet proven.
 
 ## Notes
 
-- Every `dotnet` command above ran with `-m:1 -nr:false -p:UseSharedCompilation=false` to keep the
-  verification runs serial and deterministic.
+- Serial flags (`-m:1 -nr:false -p:UseSharedCompilation=false`) appear only on the historical runs
+  that recorded them. The current gate used the tester-confirmed argv above with no such flags.
 - All restore and build commands exited 0.

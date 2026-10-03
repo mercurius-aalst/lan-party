@@ -198,10 +198,8 @@ internal static class TeamE2E
     private static Task ClickAsync(IPage page, ILocator target) => page.ClickWhenInteractiveAsync(target);
 
     /// <summary>
-    /// Opens an authenticated page and waits for the Blazor circuit to be interactive.
-    /// The team hub is a server-side connection from the Blazor app to the API, so the browser
-    /// never owns a team-events socket; readiness is therefore the interactive circuit plus the
-    /// app's own "live updates unavailable" fallback staying silent.
+    /// Opens an authenticated page, waiting for team management's current groups when requested.
+    /// The hub is server-side, so the browser cannot observe its connection directly.
     /// </summary>
     internal static async Task<IPage> LoginAndOpenWithLiveUpdatesAsync(
         PlaywrightE2EFixture app,
@@ -212,6 +210,12 @@ internal static class TeamE2E
         var page = await LoginAndOpenAsync(app, context, persona, relativePath);
         await Expect(page.GetByText("Live updates are unavailable. Your changes will still appear after each action."))
             .Not.ToBeVisibleAsync();
+        if(string.Equals(relativePath, "/teams/manage", StringComparison.OrdinalIgnoreCase))
+        {
+            await Expect(page.Locator("#team-workspace"))
+                .ToHaveAttributeAsync("data-live-updates-ready", "true");
+        }
+
         return page;
     }
 

@@ -49,7 +49,7 @@ needs no external credentials, packages, or production changes. Covered on the r
   draft stays filled, the button re-enables, and the retry succeeds
   (`ContactFormSurfacesMailTransportFailureForValidMessage`).
 
-## Executed evidence (229-case revision; 232 expected pending)
+## Executed evidence (232-case suite current; earlier 229-case runs retained)
 
 | Artifact | Result |
 | --- | --- |
@@ -76,6 +76,20 @@ needs no external credentials, packages, or production changes. Covered on the r
 | `T/TestResults/public-user-profile-green/public-user-profile-green.trx` | 9 total, 9 passed, 0 failed (`PublicUserProfileTests`, including all three header widths) |
 | `T/TestResults/full-232/full-232.trx` | 231 passed, 1 failed; historical, 1025 header case hit the not-yet-indexed search read model |
 | `T/TestResults/full-232-final/full-232-final.trx` | 232 total, 232 passed, 0 failed, on backend `b98f197...`; finished 11:42:42 (+02:00) |
+| GitHub Actions `37114424083` (frontend `e9d58c1`, backend pin `b98f197...`) | 232 total, 231 passed, 1 failed, 0 skipped; failure artifact at `D:\Github Repositories\lan-party\.tmp\ci-artifacts-37114424083` |
+| `T/TestResults/nfv-badge-focus-{1,2,3}/badge-focus-{1,2,3}.trx` | 1 total, 1 passed, 0 failed each; historical probe; `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline` after the test-only preseed reorder |
+| `T/TestResults/nfv-team-invite-realtime/team-invite-realtime.trx` | 20 total, 20 passed, 0 failed; historical probe; 16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests` |
+| `T/TestResults/nfv-realtime-1/realtime-1.trx` | 4 total, 3 passed, 1 failed, pre-repair; `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` |
+| `T/TestResults/nfv-realtime-leave-2/realtime-leave-2.trx` | 1 total, 0 passed, 1 failed, pre-repair; same leave case, repeat |
+| `T/TestResults/realtime-gate-final/leave-{1,2,3}/leave-{1,2,3}.trx` | 1 total, 1 passed, 0 failed each; HISTORICAL, superseded source shape (see the repair notes below) |
+| `T/TestResults/realtime-gate-final/combined-20/combined-20.trx` | 20 total, 20 passed, 0 failed; HISTORICAL, 16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests` |
+| `T/TestResults/realtime-gate-final/contracts/contracts.trx` | 364 total, 364 passed, 0 failed; HISTORICAL (`Mercurius.LAN.Web.ContractTests`) |
+| `T/TestResults/realtime-gate-final/full-232/full-232.trx` | 232 total, 232 passed, 0 failed (`dotnet test` stdout duration 5 m 37 s); HISTORICAL, superseded source shape |
+| `T/TestResults/realtime-rest-first-final/new-case/new-case.trx` | 1 total, 1 passed, 0 failed (`ComponentLifecycleBehaviorTests.ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending`) |
+| `T/TestResults/realtime-rest-first-final/leave-{1,2,3}/leave-{1,2,3}.trx` | 1 total, 1 passed, 0 failed each; leave case on the current frozen source |
+| `T/TestResults/realtime-rest-first-final/combined-20/combined-20.trx` | 20 total, 20 passed, 0 failed; 16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests` |
+| `T/TestResults/realtime-rest-first-final/contracts/contracts.trx` | 365 total, 365 passed, 0 failed (`Mercurius.LAN.Web.ContractTests`) |
+| `T/TestResults/realtime-rest-first-final/full-232/full-232.trx` | 232 total, 232 executed, 232 passed, 0 failed, 0 skipped across 30 classes; `dotnet test` stdout duration 5 m 34 s |
 
 The 229-case revision is green on two consecutive Windows full runs:
 `full-round10` and `full-round11` each pass all 229 cases with no failures and no unexecuted cases.
@@ -391,20 +405,85 @@ were resolved against the real two-case TRXs. The runtime fatal-log review for `
 final frontend contracts pass 364/364, both final solo checks pass 1/1, and the tester finished with
 0 hosts left and PostgreSQL untouched.
 
-The backend revision moved to the published `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0`, which
-serializes team deletion with invite maintenance across 8 paths (concurrency/advisory lock for all
-writers and maintenance, logo, captured mutation recipients, and `None` post-commit on both deletes);
-Sol and DSE source review passed. Independent backend verification: restore/build of `LAN.API` with
-0 warnings and 0 errors; the full solution stood at 710/710 before the new test-only G1 addition,
-with focused 5x3, maintenance-G1 solos 2x1, new 6/6, and full Teams 100/100 all passing. The actual
-full 711-case run has **not** been executed and is not claimed.
+The backend revision moved to the published `3cfc07f76cd6cb66b0ac17595e01359d3d966606`
+(`refs/pull/139/head`), which makes deleted-team notifications best-effort and
+cancellation-independent on top of the earlier serialization work. PR #139 is checked clean and Sol
+and DSE source review passed. Fresh independent post-commit validation on that revision: `LAN.API.sln`
+restore (`dotnet restore LAN.API.sln -m:1 --nologo`) exited 0; the build
+(`--no-restore -m:1 -nr:false -p:UseSharedCompilation=false --nologo`) reported 0 warnings and
+0 errors; the new fan-out tests passed 4/4 twice; Teams passed 104/104; the full solution
+(`dotnet test LAN.API.sln --no-build`) passed **715/715** across 8 projects; and
+`dotnet format --verify-no-changes --no-restore` passed twice. TRXs are under
+`tests/Mercurius.Modules.Teams.Tests/TestResults/backend-postcommit-fanout-verify{1,2}/verify-run{1,2}.trx`
+and `.../backend-postcommit-fanout-verify-teams-full/verify-teams-full.trx`, with invocation logs at
+`%TEMP%/backend-postcommit-{restore,build,run1,run2,teams-full,sln-full,format}.log`.
 
-The interim frontend publish pins backend `b98f197...`: the 232-case suite is green on Windows, while
-the paired Ubuntu 232 run is pending. Two new backend review threads are also pending:
-`PRRT_kwDOOwmpHc6ol8HO` (post-commit `None` and other `MembershipChanged` calls) and
-`PRRT_kwDOOwmpHc6ol8HQ` (attempt all deleted recipients after the first failure). A backend worker is
-implementing that minimal scope on `b98f197...` (caller `None` plus aggregate after attempts); the new
-patch has no proven runtime yet and is not claimed.
+Historical: the earlier published pin `b98f197f8622f3108b56053a7bc97f7ddfd6a6b0` serialized team
+deletion with invite maintenance across 8 paths (concurrency/advisory lock for all writers and
+maintenance, logo, captured mutation recipients, and `None` post-commit on both deletes), with an
+independent `LAN.API` restore/build at 0 warnings and 0 errors, and focused 5x3, maintenance-G1 solos
+2x1, new 6/6, and full Teams 100/100 all passing. Its full solution stood at 710/710 before the new
+test-only G1 addition, and the full 711-case run at that revision was never executed; the executed
+full-solution number is the 715 above.
 
-Still pending: the paired Ubuntu 232 run, the two backend review threads above, and the commit of
-these docs that will trigger the second paired run.
+The workflow is repinned from `b98f197...` to `3cfc07f...`. The last published frontend tip
+(`e9d58c1`, pin `b98f197...`) ran the paired Ubuntu suite as GitHub Actions `37114424083` and
+finished 231/232: `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline` (assertion line 305)
+expected the invitee's "Notifications with 1 unread" button and saw an unread count of 0. The
+workflow's SSL trust and check, restore, build, and Playwright install all passed, so the records do
+not support an SSL cause. The test-only preseed reorder (seed the pending invite before the invitee
+page loads its notification summary) now passes focused 3/3 and inside the combined 20-case run, so
+that case has a proven focused runtime; the paired Ubuntu run is still required. The Windows 232 suite
+at `b98f197...` (`full-232-final`) stays green, and no CSS or production file is involved.
+Two backend review threads raised on `b98f197...` (`PRRT_kwDOOwmpHc6ol8HO` post-commit `None` and
+other `MembershipChanged` calls; `PRRT_kwDOOwmpHc6ol8HQ` attempt all deleted recipients after the
+first failure) are implemented by `3cfc07f...`.
+
+The `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` flake (1 of 4, then 1 of 1
+in the repeats above) now has a REST-first startup repair: `TeamRealtimeService.StartAsync` shares one
+in-flight start task behind a gate and `JoinTeamsAsync` awaits it; `ManageTeams` renders the first
+REST summary promptly before realtime startup begins, reconciles in that non-loading state, joins
+only the team ids missing from the displayed snapshot before assigning the reconciled summary, and
+keeps the displayed snapshot when the reconcile GET or the delta join fails. The `#team-workspace`
+section carries `data-live-updates-ready`, which the E2E helper waits on. Frozen SHA-256: service
+`8790B519ECC52B6FBDFFCCD94FB10928947B6226E3F2CFD7CE353FD5B7F69D2C` (unchanged), code-behind
+`BEF49C148912D270577F755ED8AEC1D1717D54566D0B1C81E656802B26153B48`, Razor
+`6ED0DD3677994BEBB87880DE104CE71227B6C207660406E6923614C71415B33D`, helper
+`454783DB8D207D4C087B1F891617BAABDF1A69E5036865D2E0BA48C08B996E89`, contract test
+`94543E7030B912756579AF964340725B6C3EDF125D316130AD667C52D7FF1E6F`. Sol's final source review
+passed with minor findings and DSE's final review passed on these sources; nothing blocking. The new
+precondition is
+`ComponentLifecycleBehaviorTests.ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending` (pending
+TCS plus recorded render; non-E2E lifecycle precondition, normal flows stay real E2E). The earlier
+`T/TestResults/realtime-gate-final` results (3 x leave, 20-case combined, 364 contracts, and a 232/232
+full run whose `dotnet test` stdout reports 5 m 37 s) were produced on the superseded
+`_isLoading`-held-through-join shape and are historical only.
+
+The current local gate `T/TestResults/realtime-rest-first-final` is complete and all green: the new
+lifecycle case (1), the three leave repeats (1 each), the combined 20 (20), the contracts suite (365),
+and the full suite (`full-232/full-232.trx`, 232 total, 232 passed, 0 failed, 0 skipped across 30
+classes, `dotnet test` stdout duration 5 m 34 s). The tester confirmed the exact argv: builds run as
+`dotnet build <project> --no-restore --nologo` and tests as
+`dotnet test <project> --no-build --no-restore [--filter <filter>] --logger ... --results-directory ...`,
+with no `-m:1`, `-nr:false`, or `-p:UseSharedCompilation` flags.
+`MERCURIUS_E2E_ARTIFACTS=<base>\PlaywrightE2E` was set for the new-case, leave, combined, and full
+runs.
+
+```powershell
+dotnet build tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-restore --nologo
+dotnet build tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-restore --nologo
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --logger "trx;LogFileName=full-232.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\full-232"
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --filter "FullyQualifiedName~TeamRealtimeTests|FullyQualifiedName~TeamInviteFlowTests" --logger "trx;LogFileName=combined-20.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\combined-20"
+dotnet test tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-build --no-restore --filter "FullyQualifiedName~ManageTeamsRendersRestSummaryWhileRealtimeStartupIsPending" --logger "trx;LogFileName=new-case.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\new-case"
+dotnet test tests/Mercurius.LAN.Web.ContractTests/Mercurius.LAN.Web.ContractTests.csproj --no-build --no-restore --logger "trx;LogFileName=contracts.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\contracts"
+dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --filter "FullyQualifiedName~TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload" --logger "trx;LogFileName=leave-N.trx" --results-directory "D:\Github Repositories\lan-party\.tmp\playwright-e2e\tests\Mercurius.LAN.Web.E2ETests\TestResults\realtime-rest-first-final\leave-N"
+```
+
+The last line runs three times with `N` = 1, 2, 3. Reported durations: full 5 m 34 s, contracts 5 s,
+combined 34 s, new-case 21 ms, leave-1 7 s, leave-2 and leave-3 5 s.
+
+REPRODUCTION only (not the commands that were executed): adding
+`-m:1 -nr:false -p:UseSharedCompilation=false` is optional when re-running these parts serially.
+
+Still pending: the paired Ubuntu 232 run at backend `3cfc07f...` only. The first published head will
+record its actual green run, and the following head gets the second run.

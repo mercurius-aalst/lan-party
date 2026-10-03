@@ -297,10 +297,14 @@ public sealed class TeamInviteFlowTests : E2ETestBase
         using var inviteeApi = _app.CreateApiClient(invitee);
         var team = await TeamE2E.CreateTeamAsync(captainApi, TeamE2E.UniqueTeamName());
 
+        // Seed the pending invite before the invitee page initialises its notifications, matching
+        // the mark-read/canceled siblings. Opening the page first hydrates the bell from a summary
+        // that ran before this invite existed, and nothing re-reads it afterwards.
+        await TeamE2E.InviteAsync(captainApi, team.Id, TeamE2E.RequireUserId(invitee));
+
         await using var context = await TeamE2E.TeamContext.CreateAsync(_app);
         var page = await TeamE2E.LoginAndOpenWithLiveUpdatesAsync(_app, context, invitee, "/");
 
-        await TeamE2E.InviteAsync(captainApi, team.Id, TeamE2E.RequireUserId(invitee));
         var bell = page.GetByRole(AriaRole.Button, new() { Name = "Notifications with 1 unread" });
         await Expect(bell).ToBeVisibleAsync();
         await page.ClickWhenInteractiveAsync(bell);
