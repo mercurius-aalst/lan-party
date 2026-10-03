@@ -76,7 +76,8 @@ needs no external credentials, packages, or production changes. Covered on the r
 | `T/TestResults/public-user-profile-green/public-user-profile-green.trx` | 9 total, 9 passed, 0 failed (`PublicUserProfileTests`, including all three header widths) |
 | `T/TestResults/full-232/full-232.trx` | 231 passed, 1 failed; historical, 1025 header case hit the not-yet-indexed search read model |
 | `T/TestResults/full-232-final/full-232-final.trx` | 232 total, 232 passed, 0 failed, on backend `b98f197...`; finished 11:42:42 (+02:00) |
-| GitHub Actions `37114424083` (frontend `e9d58c1`, backend pin `b98f197...`) | 232 total, 231 passed, 1 failed, 0 skipped; failure artifact at `D:\Github Repositories\lan-party\.tmp\ci-artifacts-37114424083` |
+| GitHub Actions `37114424083` (frontend `e9d58c1`, backend pin `b98f197...`) | 232 total, 231 passed, 1 failed, 0 skipped; historical failure, artifact at `D:\Github Repositories\lan-party\.tmp\ci-artifacts-37114424083` |
+| GitHub Actions `37146174575` (frontend `caea4a50`, backend pin `3cfc07f...`) | 232 passed, 0 failed, 0 skipped; first paired Ubuntu green, `dotnet test` stdout duration 7 m 41 s |
 | `T/TestResults/nfv-badge-focus-{1,2,3}/badge-focus-{1,2,3}.trx` | 1 total, 1 passed, 0 failed each; historical probe; `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline` after the test-only preseed reorder |
 | `T/TestResults/nfv-team-invite-realtime/team-invite-realtime.trx` | 20 total, 20 passed, 0 failed; historical probe; 16 `TeamInviteFlowTests` + 4 `TeamRealtimeTests` |
 | `T/TestResults/nfv-realtime-1/realtime-1.trx` | 4 total, 3 passed, 1 failed, pre-repair; `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` |
@@ -433,8 +434,9 @@ expected the invitee's "Notifications with 1 unread" button and saw an unread co
 workflow's SSL trust and check, restore, build, and Playwright install all passed, so the records do
 not support an SSL cause. The test-only preseed reorder (seed the pending invite before the invitee
 page loads its notification summary) now passes focused 3/3 and inside the combined 20-case run, so
-that case has a proven focused runtime; the paired Ubuntu run is still required. The Windows 232 suite
-at `b98f197...` (`full-232-final`) stays green, and no CSS or production file is involved.
+that case has a proven focused runtime, and it also passes on the paired Ubuntu run `37146174575`. The
+Windows 232 suite at `b98f197...` (`full-232-final`) stays green, and no CSS or production file is
+involved.
 Two backend review threads raised on `b98f197...` (`PRRT_kwDOOwmpHc6ol8HO` post-commit `None` and
 other `MembershipChanged` calls; `PRRT_kwDOOwmpHc6ol8HQ` attempt all deleted recipients after the
 first failure) are implemented by `3cfc07f...`.
@@ -485,5 +487,8 @@ combined 34 s, new-case 21 ms, leave-1 7 s, leave-2 and leave-3 5 s.
 REPRODUCTION only (not the commands that were executed): adding
 `-m:1 -nr:false -p:UseSharedCompilation=false` is optional when re-running these parts serially.
 
-Still pending: the paired Ubuntu 232 run at backend `3cfc07f...` only. The first published head will
-record its actual green run, and the following head gets the second run.
+The paired Ubuntu 232 run is green: GitHub Actions `37146174575` (frontend `caea4a50`, backend pin
+`3cfc07f...`) passed 232/232 with 0 failed and 0 skipped in a `dotnet test` stdout duration of
+7 m 41 s, closing the local-proof loop on the same product source. Its exact test command is
+`dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --logger "trx;LogFileName=e2e.trx"`,
+and no artifact was uploaded because the workflow's upload step runs only on failure.

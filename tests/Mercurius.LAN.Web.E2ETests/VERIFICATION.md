@@ -34,7 +34,25 @@ predates the expanded source and is superseded by the run above.
 | `37111821272` | frontend `ddc9b43`, backend pin `ca3b...` | **229 passed, 0 failed, 0 skipped** |
 | `37110243446` | frontend `1e84604`, backend pin `ca3b...` | 228 passed, 1 failed |
 | `37114424083` | frontend `e9d58c1`, backend pin `b98f197...` | 232 total, 231 passed, 1 failed, 0 skipped |
+| `37146174575` | frontend `caea4a50`, backend pin `3cfc07f...` | **232 passed, 0 failed, 0 skipped** |
 
+- `37146174575` is the first paired frontend/backend Ubuntu run
+  (`https://github.com/MercuriusAalst/lan-party-frontend/actions/runs/37146174575`). It completed
+  SUCCESS `2026-10-03T18:58:06Z` → `19:08:07Z`; checkout, .NET setup, certificate trust, restore,
+  build (0 errors), Playwright Chromium install, and the test step all passed. The test step printed
+  `Passed! - Failed: 0, Passed: 232, Skipped: 0, Total: 232, Duration: 7 m 41 s` at `19:08:04Z`.
+- Exact executed CI test command (no serial flags):
+
+  ```bash
+  dotnet test tests/Mercurius.LAN.Web.E2ETests/Mercurius.LAN.Web.E2ETests.csproj --no-build --no-restore --logger "trx;LogFileName=e2e.trx"
+  ```
+
+  The trust step exported `SSL_CERT_DIR="$HOME/.aspnet/dev-certs/trust:/usr/lib/ssl/certs"` into
+  `$GITHUB_ENV` and reported "Successfully trusted the existing HTTPS certificate." with a
+  `CN=localhost` trusted certificate found. No test-results artifact was uploaded because the upload
+  step runs only on failure; that is a skipped workflow step, not skipped tests (`Skipped: 0`). The
+  sibling Application workflow `37146174550` also succeeded (both jobs). The full job log is at
+  `D:\Github Repositories\lan-party\.tmp\e2e-37146174575.log` (parent temp, outside this repo).
 - `37111821272` ran the real `dotnet test` job in 7 m 31 s, finishing `2026-10-03T09:14:18Z`; the job
   log is kept at `D:\Github Repositories\lan-party\.tmp\e2e-37111821272.log`. Trust, restore, build
   (13 warnings, 0 errors), and the Playwright Chromium install all passed. The workflow uploads
@@ -414,30 +432,22 @@ Actionlint is a static lint of the workflow file. The workflow runtime has since
 run `37111821272` passed 229/229 on frontend `ddc9b43` with the then-current backend pin
 `ca3b...`, and run `37110243446` failed 228/229 on the SMTP MIME assertion that `ddc9b43` fixed.
 
-## Pending
+## Runtime gates closed
 
-- The paired frontend/backend runtime with backend `3cfc07f76cd6cb66b0ac17595e01359d3d966606` is
-  pending; the workflow is repinned to it, and a paired green run is still required. The last paired
-  Ubuntu run (`37114424083`, pin `b98f197...`) finished 231/232 and is recorded above.
-- The P2 header-overflow regression rows are on disk and test-only (one file, no CSS change):
-  `PublicUserProfileTests.AuthenticatedHeaderKeepsSearchUsableWithoutHorizontalOverflow` adds three
-  `[InlineData]` rows (1025/1100/1440), taking the working tree to 232 cases across 30 classes. The
-  Windows 232 suite is green; the paired Ubuntu 232 run is pending.
-- The single Ubuntu failure in `37114424083`,
-  `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline`, now passes focused 3/3 and inside
-  the combined 20-case run; the test-only reorder that seeds the pending invite before the invitee
-  page loads its notification summary has a proven focused runtime (see the historical
-  "Frontend notification and realtime probes" above). A paired Ubuntu run is still required.
-- `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` flaked in the earlier
-  realtime repeats (1 of 4, then 1 of 1). The REST-first startup repair is frozen on the five hashes
-  above, and its local gate (`realtime-rest-first-final`) passed all five parts: the new lifecycle
-  case, the three leave repeats, the combined 20, the 365-case contracts suite, and the full 232-case
-  suite (232/232, 0 failed, 0 skipped, 30 classes). The paired Ubuntu run at backend `3cfc07f...` is
-  the only remaining runtime gate.
-- The two backend review threads raised on `b98f197...`
-  (`PRRT_kwDOOwmpHc6ol8HO` post-commit `None` and other `MembershipChanged` calls;
-  `PRRT_kwDOOwmpHc6ol8HQ` attempt all deleted recipients after the first failure) are implemented by
-  `3cfc07f...` (caller `None` plus aggregate after attempts), whose paired runtime is not yet proven.
+- No runtime gate remains open. The paired Ubuntu run `37146174575` above closes the previous
+  `b98f197...` 231/232 gap, and the P2 header-overflow rows,
+  `TeamInviteFlowTests.InviteNotificationBadgeLetsInviteeDecline`, and
+  `TeamRealtimeTests.CaptainRosterRefreshesWhenMemberLeavesWithoutReload` all pass on it.
+- The two backend review threads raised on `b98f197...` (`PRRT_kwDOOwmpHc6ol8HO` post-commit `None`
+  and other `MembershipChanged` calls; `PRRT_kwDOOwmpHc6ol8HQ` attempt all deleted recipients after
+  the first failure) are implemented by `3cfc07f...` (caller `None` plus aggregate after attempts),
+  and that revision is what the green paired run pinned - no stale `b98f197` token remains in the
+  pinned workflow.
+- The genuine external coverage gaps are unchanged and listed under "Not E2E-applicable" in
+  `COVERAGE.md` (Auth0-hosted social/MFA flows, delivery to external mail recipients, and the
+  backend-only surfaces with no UI caller). The runtime logs are not claimed all-clean: the accepted
+  SSR `ObjectDisposedException` and `CustomAutocomplete` JS-disconnect teardown records remain
+  historical findings in `COVERAGE.md`.
 
 ## Notes
 
